@@ -131,7 +131,7 @@ const Footer = () => {
           {/* About Column */}
           <div>
             <div className="mb-6">
-              <img src="/logo.png" alt="Kozmocart Logo" className="h-9 object-contain" />
+              <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-9 object-contain" />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed mb-8 font-medium">
               {footer.aboutText || defaultAbout}

@@ -163,7 +163,7 @@ function LoginContent() {
         <div className="w-full max-w-md animate-fadeIn">
           <div className="mb-12">
             <Link href="/" className="md:hidden inline-block mb-8">
-              <img src="/logo.png" alt="Kozmocart Logo" className="h-8 object-contain" />
+              <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-8 object-contain" />
             </Link>
             <h1 className="text-3xl font-serif text-gray-900 mb-3 italic font-black">
               {step === 'send' ? 'Sign In' : 'Verify Account'}

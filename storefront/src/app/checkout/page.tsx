@@ -199,7 +199,7 @@ export default function Checkout() {
           currency: 'INR',
           name: 'Kozmocart',
           description: 'Luxury Fragrance Curations',
-          image: '/placeholder-perfume.png',
+          image: '/kozmocart/placeholder-perfume.png',
           handler: async function (response: any) {
             try {
               // Submit order to backend after successful Razorpay payment

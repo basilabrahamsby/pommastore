@@ -221,7 +221,7 @@ export default function StoryViewer({
                   src={categoryImageUrl} 
                   alt={activeCategory.name} 
                   className="w-full h-full object-cover rounded-full"
-                  onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
+                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                 />
               </div>
               <div>
@@ -263,7 +263,7 @@ export default function StoryViewer({
                 src={categoryImageUrl} 
                 alt={activeCategory.name} 
                 className="w-full h-full object-cover opacity-90 animate-out scale-105"
-                onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
+                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60" />
               
@@ -319,7 +319,7 @@ export default function StoryViewer({
                         src={getMediaUrl(featuredProduct.images?.[0])} 
                         alt={featuredProduct.name}
                         className="max-w-full max-h-full object-contain"
-                        onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
+                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                       />
                     </div>
 

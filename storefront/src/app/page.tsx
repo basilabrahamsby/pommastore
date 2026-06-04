@@ -106,7 +106,7 @@ export default function Home() {
       return (
          <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center font-sans">
             <div className="relative mb-8 text-center">
-               <img src="/logo.png" alt="Kozmocart Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
+               <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
                <div className="absolute -bottom-4 left-0 w-full h-[1px] bg-neutral-100 overflow-hidden">
                   <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
                </div>
@@ -249,7 +249,7 @@ export default function Home() {
                                        src={image} 
                                        alt={name} 
                                        className="w-full h-full object-cover group-hover/cat:scale-110 transition-transform duration-[1.5s]" 
-                                       onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
+                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
                                     />
                                  </div>
                               </div>
@@ -426,10 +426,10 @@ export default function Home() {
                                        {/* Image */}
                                        <div className="relative bg-white/95 mx-2 mt-2 rounded-sm overflow-hidden" style={{ aspectRatio: '1/1' }}>
                                           <img
-                                             src={getMediaUrl(product.images?.[0]) || '/placeholder-perfume.png'}
+                                             src={getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png'}
                                              alt={product.name}
                                              className="w-full h-full object-contain p-3 group-hover/card:scale-105 transition-transform duration-500"
-                                             onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
+                                             onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                                           />
                                           {hasDiscount ? (
                                              <div className="absolute top-1.5 right-1.5 bg-accent text-white text-[7px] font-black px-1.5 py-0.5 tracking-widest uppercase">{discPct}%</div>
@@ -548,7 +548,7 @@ export default function Home() {
                                     className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
                                        idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
                                     }`} 
-                                    onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }} 
+                                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
                                  />
                                  <div className="brand-card-shine" />
                                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
@@ -585,7 +585,7 @@ export default function Home() {
                               className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
                                  idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
                               }`} 
-                              onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }} 
+                              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
                            />
                            <div className="brand-card-shine" />
                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
@@ -735,7 +735,7 @@ export default function Home() {
          {/* Mid Quote Banner */}
          <section className="bg-black text-white py-32 relative overflow-hidden flex items-center justify-center text-center">
             <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none overflow-hidden">
-               <img src="/logo.png" alt="Kozmocart Logo Watermark" className="w-[60vw] max-w-[700px] object-contain" />
+               <img src="/kozmocart/logo.png" alt="Kozmocart Logo Watermark" className="w-[60vw] max-w-[700px] object-contain" />
             </div>
             <div className="relative z-10 max-w-3xl px-8">
                <h3 className="text-xs font-bold tracking-[0.3em] text-accent uppercase mb-8 font-sans">

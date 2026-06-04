@@ -106,7 +106,7 @@ const Navbar = () => {
             {/* Left Logo Area */}
             <div className="flex-shrink-0 flex items-center">
                <Link href="/" className="flex items-center">
-                 <img src="/logo.png" alt="Kozmocart Logo" className="h-8 md:h-9 object-contain" />
+                 <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-8 md:h-9 object-contain" />
                </Link>
             </div>
 
@@ -181,7 +181,7 @@ const Navbar = () => {
                       <div className="px-3 py-1 text-[9px] font-bold text-neutral-400 tracking-wider uppercase mb-1">Suggested Products</div>
                       {filteredProducts.map((p: any) => {
                         const price = p.variants?.[0]?.selling_price;
-                        const img = p.images?.[0] ? getMediaUrl(p.images[0]) : '/placeholder-perfume.png';
+                        const img = p.images?.[0] ? getMediaUrl(p.images[0]) : '/kozmocart/placeholder-perfume.png';
                         return (
                           <Link
                             key={p.id}
@@ -196,7 +196,7 @@ const Navbar = () => {
                               src={img} 
                               alt={p.name} 
                               className="w-8 h-8 object-contain rounded bg-neutral-50 border border-neutral-100 p-0.5"
-                              onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
+                              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                             />
                             <div className="flex-1 min-w-0">
                               <div className="text-[9px] font-bold uppercase text-neutral-400 leading-none mb-0.5">{p.brand_name}</div>
@@ -306,7 +306,7 @@ const Navbar = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-6 border-b border-gray-100">
-             <img src="/logo.png" alt="Kozmocart Logo" className="h-6 object-contain" />
+             <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-6 object-contain" />
              <button onClick={() => setIsMobileMenuOpen(false)}><X size={20} /></button>
           </div>
           <nav className="flex flex-col p-6 font-black tracking-[0.2em] uppercase text-xs space-y-6">
