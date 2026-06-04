@@ -56,7 +56,7 @@ export default function Login() {
         <div style={styles.formHeader}>
           {/* Logo */}
           <div style={styles.logoBlock}>
-            <img src="/logo.png" alt="Kozmocart Logo" style={{ height: '56px', objectFit: 'contain', marginBottom: 12, marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
+            <img src="/kozmocart/admin/logo.png" alt="Kozmocart Logo" style={{ height: '56px', objectFit: 'contain', marginBottom: 12, marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
             <p style={styles.logoSub}>Admin ERP Platform</p>
           </div>
         </div>

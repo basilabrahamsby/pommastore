@@ -1,4 +1,4 @@
-const BACKEND_URL = typeof window === 'undefined' ? 'http://api:8000' : (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
+const BACKEND_URL = typeof window === 'undefined' ? '' : (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 
 export const getMediaUrl = (path: string | null | undefined): string => {
   if (!path) return '/kozmocart/placeholder-perfume.png';
@@ -7,5 +7,17 @@ export const getMediaUrl = (path: string | null | undefined): string => {
   
   // Ensure the path starts with /
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  // Storefront local public assets should be prefix-routed under Next.js basePath
+  const isStorefrontAsset = cleanPath === '/logo.png' || 
+                            cleanPath === '/placeholder-perfume.png' || 
+                            cleanPath.startsWith('/hero-') || 
+                            cleanPath.startsWith('/arch-') || 
+                            cleanPath.startsWith('/banner-');
+                            
+  if (isStorefrontAsset) {
+    return `/kozmocart${cleanPath}`;
+  }
+  
   return `${BACKEND_URL}${cleanPath}`;
 };
