@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Package, Tag, Boxes, ShoppingCart,
-  Users, LogOut, X, Sun, Moon, Palette, Settings
+  LayoutDashboard, Package, Tag, Boxes, ShoppingCart, Star,
+  Users, LogOut, X, Sun, Moon, Palette, Settings, BarChart3, Monitor, HelpCircle
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 const NAV = [
   { label: 'Overview', items: [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/analytics', icon: BarChart3,       label: 'Analytics' },
   ]},
   { label: 'Catalog', items: [
     { to: '/catalog',   icon: Package, label: 'Catalog Manager' },
@@ -17,17 +18,19 @@ const NAV = [
   { label: 'Operations', items: [
     { to: '/inventory', icon: Boxes,        label: 'Inventory' },
     { to: '/orders',    icon: ShoppingCart, label: 'Orders & CRM' },
-    { to: '/offers',    icon: Tag,          label: 'Offers' },
+    { to: '/offers',    icon: Tag,          label: 'Marketing & Loyalty Hub' },
   ]},
   { label: 'System', items: [
+    { to: '/storefront', icon: Monitor,      label: 'Storefront CMS' },
     { to: '/settings',  icon: Settings,     label: 'Settings' },
+    { to: '/help',      icon: HelpCircle,   label: 'System Manual' },
   ]},
 ]
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const [theme, setTheme] = useState(() => localStorage.getItem('kzm-theme') || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem('kzm-theme') || 'light')
   const [colorTheme, setColorTheme] = useState(() => localStorage.getItem('kzm-color-theme') || 'classic')
 
   useEffect(() => {
@@ -88,10 +91,8 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Logo row — includes close button on mobile */}
       <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: '1.5rem', background: 'linear-gradient(135deg, var(--gold), var(--gold-bright))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '0.05em', margin: 0, lineHeight: 1.1 }}>
-            KOZMOCART
-          </h1>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', display: 'block', marginTop: 2 }}>
+          <img src="/logo.png" alt="Kozmocart Logo" style={{ height: '32px', objectFit: 'contain', display: 'block' }} />
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', display: 'block', marginTop: 6 }}>
             Admin ERP
           </span>
         </div>

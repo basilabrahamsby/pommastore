@@ -5,12 +5,38 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_manager
-from app.models.inventory import InventoryBatch, Supplier, Warehouse
+from app.models.inventory import InventoryBatch, Supplier, Warehouse, InventoryMovement
 from app.models.product import ProductVariant, Product
 from app.models.user import User
-from app.schemas.inventory import BatchCreate, BatchOut, SupplierCreate, SupplierUpdate, SupplierOut, WarehouseOut, StockSummary, StockAdjustSchema
+from app.schemas.inventory import BatchCreate, BatchOut, SupplierCreate, SupplierUpdate, SupplierOut, WarehouseOut, StockSummary, StockAdjustSchema, MovementOut
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
+
+
+@router.get("/movements", response_model=list[MovementOut])
+async def list_movements(
+    skip: int = 0,
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(InventoryMovement)
+        .options(selectinload(InventoryMovement.batch).selectinload(InventoryBatch.variant).selectinload(ProductVariant.product))
+        .order_by(InventoryMovement.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    movements = result.scalars().all()
+    out = []
+    for m in movements:
+        data = MovementOut.model_validate(m)
+        if m.batch and m.batch.variant:
+            data.sku = m.batch.variant.sku
+            if m.batch.variant.product:
+                data.product_name = m.batch.variant.product.name
+        out.append(data)
+    return out
 
 
 @router.get("/warehouses", response_model=list[WarehouseOut])
@@ -104,6 +130,17 @@ async def receive_batch(
         **body.model_dump(),
     )
     db.add(batch)
+    await db.flush()
+
+    # Log movement
+    movement = InventoryMovement(
+        batch_id=batch.id,
+        type="Restock",
+        quantity=body.initial_quantity,
+        reason=f"Received Batch Shipment (Lot: {body.batch_code or 'N/A'})"
+    )
+    db.add(movement)
+
     await db.commit()
     await db.refresh(batch)
 
@@ -143,7 +180,10 @@ async def get_stock_summary(
     stock_map = {row[0]: int(row[1]) for row in stock_result.all()}
 
     variant_result = await db.execute(
-        select(ProductVariant).options(selectinload(ProductVariant.product))
+        select(ProductVariant).options(
+            selectinload(ProductVariant.product).selectinload(Product.brand),
+            selectinload(ProductVariant.product).selectinload(Product.category)
+        )
     )
     variants = variant_result.scalars().all()
 
@@ -157,6 +197,8 @@ async def get_stock_summary(
             variant_id=v.id,
             sku=v.sku,
             product_name=v.product.name if v.product else "",
+            brand_name=v.product.brand.name if v.product and v.product.brand else "",
+            category_name=v.product.category.name if v.product and v.product.category else "",
             current_stock=current,
             min_stock_alert=v.min_stock_alert,
             is_low_stock=is_low,
@@ -190,6 +232,17 @@ async def adjust_stock(
             notes=body.reason
         )
         db.add(batch)
+        await db.flush()
+
+        # Log movement
+        movement = InventoryMovement(
+            batch_id=batch.id,
+            type="Adjustment",
+            quantity=body.quantity,
+            reason=body.reason or "Manual stock addition"
+        )
+        db.add(movement)
+
         await db.commit()
         return {"detail": "Stock added successfully"}
 
@@ -206,15 +259,22 @@ async def adjust_stock(
         if total_avail < to_deduct:
             raise HTTPException(status_code=400, detail=f"Insufficient stock. Available: {total_avail}, Requested deduction: {to_deduct}")
 
+        actual_deducted = body.quantity
         for b in batches:
             if to_deduct <= 0:
                 break
-            if b.current_quantity >= to_deduct:
-                b.current_quantity -= to_deduct
-                to_deduct = 0
-            else:
-                to_deduct -= b.current_quantity
-                b.current_quantity = 0
+            deduct_from_this = min(b.current_quantity, to_deduct)
+            b.current_quantity -= deduct_from_this
+            to_deduct -= deduct_from_this
+
+            # Log movement for EACH batch affected
+            mov = InventoryMovement(
+                batch_id=b.id,
+                type="Adjustment",
+                quantity=-deduct_from_this,
+                reason=body.reason or "Manual stock deduction"
+            )
+            db.add(mov)
 
         await db.commit()
         return {"detail": "Stock deducted successfully via FIFO"}
@@ -227,6 +287,14 @@ async def adjust_stock(
         )
         batches = result.scalars().all()
         for b in batches:
+            # Log negative adjustment for each batch being cleared
+            mov_clear = InventoryMovement(
+                batch_id=b.id,
+                type="Adjustment",
+                quantity=-b.current_quantity,
+                reason="Stock override: Batch cleared"
+            )
+            db.add(mov_clear)
             b.current_quantity = 0
 
         wh_result = await db.execute(select(Warehouse).where(Warehouse.is_default == True))
@@ -246,5 +314,16 @@ async def adjust_stock(
             notes=body.reason
         )
         db.add(batch)
+        await db.flush()
+
+        # Log new balance adjustment
+        mov_new = InventoryMovement(
+            batch_id=batch.id,
+            type="Adjustment",
+            quantity=body.quantity,
+            reason=body.reason or "Manual stock override"
+        )
+        db.add(mov_new)
+
         await db.commit()
         return {"detail": "Stock override completed successfully"}

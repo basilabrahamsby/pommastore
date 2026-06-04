@@ -62,6 +62,20 @@ class InventoryBatch(Base):
     variant: Mapped["ProductVariant"] = relationship("ProductVariant", back_populates="batches")
     warehouse: Mapped["Warehouse"] = relationship("Warehouse", back_populates="batches")
     supplier: Mapped["Supplier | None"] = relationship("Supplier", back_populates="batches")
+    movements: Mapped[List["InventoryMovement"]] = relationship("InventoryMovement", back_populates="batch")
+
+
+class InventoryMovement(Base):
+    __tablename__ = "inventory_movements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    batch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("inventory_batches.id"), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False) # Restock, Deduction, Adjustment
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    batch: Mapped["InventoryBatch"] = relationship("InventoryBatch", back_populates="movements")
 
 
 from app.models.product import ProductVariant  # noqa: E402, F401

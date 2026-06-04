@@ -8,15 +8,19 @@ import {
   BarChart, Bar, ComposedChart, Line
 } from 'recharts'
 import api from '../../services/api'
+import InfoButton from '../../components/ui/InfoButton'
 
 // Shared formatting
 const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`
 
-const StatCard = ({ label, value, icon: Icon, color, trend, trendLabel, sub }) => (
+const StatCard = ({ label, value, icon: Icon, color, trend, trendLabel, sub, info }) => (
   <div className="stat-card" style={{ background: 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))', border: '1px solid rgba(201,168,76,0.08)' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
-        <div className="stat-card-label" style={{ color: 'var(--text-secondary)' }}>{label}</div>
+        <div className="stat-card-label" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+          {label}
+          {info && <InfoButton text={info} size={11} />}
+        </div>
         <div className="stat-card-value" style={{ marginTop: 4, fontSize: '1.6rem' }}>{value}</div>
       </div>
       <div className="stat-card-icon" style={{ background: color + '15', padding: 10, borderRadius: 12 }}>
@@ -87,62 +91,13 @@ export default function Dashboard() {
     </div>
   )
 
-  // Interactive dynamic scaling factor for realistic data simulation based on Time Range
-  const mult = timeRange === '7' ? 0.25 : (timeRange === '90' ? 2.85 : 1.0)
-
-  // Interactive channel-specific filters
-  const channelMult = selectedChannel === 'direct' ? 0.65 : (selectedChannel === 'retail' ? 0.20 : (selectedChannel === 'b2b' ? 0.15 : 1.0))
-
-  const finalMult = mult * channelMult
-
-  // Breathtaking default luxury analytics to showcase theme if DB has no seed data yet
-  const baseRevenue = stats?.total_revenue || 3482500
-  const baseMonthly = stats?.monthly_revenue || 1245000
-  const baseOrders = stats?.total_orders || 142
-  const baseCustomers = stats?.total_customers || 89
-  const basePending = stats?.orders_pending || 3
-  const baseAOV = stats?.average_order_value || 24500
-  const baseGrossProfit = stats?.gross_profit || 1845000
-
-  const scaledRevenue = baseRevenue * finalMult
-  const scaledOrders = Math.round(baseOrders * finalMult)
-  const scaledMonthly = baseMonthly * finalMult
-  const scaledGrossProfit = baseGrossProfit * finalMult
-  const scaledCustomers = Math.round(baseCustomers * finalMult)
-
-  const defaultRevenueLast7Days = [
-    { date: "Mon", revenue: 145000 * finalMult, orders: Math.round(12 * finalMult) },
-    { date: "Tue", revenue: 232000 * finalMult, orders: Math.round(18 * finalMult) },
-    { date: "Wed", revenue: 198000 * finalMult, orders: Math.round(14 * finalMult) },
-    { date: "Thu", revenue: 310000 * finalMult, orders: Math.round(25 * finalMult) },
-    { date: "Fri", revenue: 285000 * finalMult, orders: Math.round(22 * finalMult) },
-    { date: "Sat", revenue: 412000 * finalMult, orders: Math.round(34 * finalMult) },
-    { date: "Sun", revenue: 385000 * finalMult, orders: Math.round(30 * finalMult) }
-  ]
-
-  const defaultProfitTimeline = [
-    { day: "Mon", revenue: 145000 * finalMult, profit: 98000 * finalMult },
-    { day: "Tue", revenue: 232000 * finalMult, profit: 162000 * finalMult },
-    { day: "Wed", revenue: 198000 * finalMult, profit: 135000 * finalMult },
-    { day: "Thu", revenue: 310000 * finalMult, profit: 215000 * finalMult },
-    { day: "Fri", revenue: 285000 * finalMult, profit: 195000 * finalMult },
-    { day: "Sat", revenue: 412000 * finalMult, profit: 288000 * finalMult },
-    { day: "Sun", revenue: 385000 * finalMult, profit: 265000 * finalMult }
-  ]
-
-  const defaultRecentOrders = [
-    { id: "o1", order_number: "KZM-2026-9041", total_amount: 14500, status: "delivered", created_at: new Date(Date.now() - 3600000).toISOString() },
-    { id: "o2", order_number: "KZM-2026-9042", total_amount: 22000, status: "processing", created_at: new Date(Date.now() - 10800000).toISOString() },
-    { id: "o3", order_number: "KZM-2026-9043", total_amount: 8500, status: "pending", created_at: new Date(Date.now() - 18000000).toISOString() },
-    { id: "o4", order_number: "KZM-2026-9044", total_amount: 32000, status: "shipped", created_at: new Date(Date.now() - 25200000).toISOString() },
-    { id: "o5", order_number: "KZM-2026-9045", total_amount: 12500, status: "completed", created_at: new Date(Date.now() - 32400000).toISOString() }
-  ]
-
-  const defaultChannelPerformance = [
-    { name: "Direct E-Commerce", orders: Math.round(92 * finalMult), revenue: 2245000 * finalMult },
-    { name: "Retail Boutiques", orders: Math.round(34 * finalMult), revenue: 845000 * finalMult },
-    { name: "B2B Wholesalers", orders: Math.round(16 * finalMult), revenue: 392500 * finalMult }
-  ]
+  const realRevenue = stats?.total_revenue || 0
+  const realOrders = stats?.total_orders || 0
+  const realMonthly = stats?.monthly_revenue || 0
+  const realGrossProfit = stats?.gross_profit || 0
+  const realCustomers = stats?.total_customers || 0
+  const realPending = stats?.orders_pending || 0
+  const realAOV = stats?.average_order_value || 0
 
   return (
     <div style={{ paddingBottom: 40 }}>
@@ -151,7 +106,7 @@ export default function Dashboard() {
           <div className="page-title" style={{ fontSize: '1.8rem', background: 'linear-gradient(to right, var(--text-primary), var(--gold))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Executive Dashboard
           </div>
-          <div className="page-subtitle">Comprehensive business growth and traffic analytics</div>
+          <div className="page-subtitle">Comprehensive business growth and traffic analytics <InfoButton text="Consolidated intelligence from POS, Online, and B2B channels. Data refreshes in real-time." position="right" /></div>
         </div>
         
         {/* ── 3 PREMIUM INTERACTIVE DASHBOARD CONTROLS ── */}
@@ -191,36 +146,128 @@ export default function Dashboard() {
       </div>
 
       {/* ── PRIMARY GROWTH KPIs ── */}
-      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Growth & Revenue</h3>
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 32 }}>
+      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8, display: 'flex', alignItems: 'center' }}>
+        Growth & Revenue
+        <InfoButton text="Financial performance metrics based on net sales revenue." />
+      </h3>
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: 32 }}>
         <StatCard 
-          label="Total Revenue" value={fmt(scaledRevenue)} 
+          label="Total Revenue" value={fmt(realRevenue)} 
           icon={TrendingUp} color="var(--gold-bright)" 
-          trend={stats?.weekly_growth} trendLabel="growth this week" 
+          trend={stats?.weekly_growth} trendLabel="growth this week"
+          info="Cumulative revenue from all successful orders across all selected time periods and channels."
         />
         <StatCard 
-          label="Monthly Run Rate" value={fmt(scaledMonthly)} 
+          label="Today's Sales" value={fmt(stats?.revenue_today || 0)} 
+          icon={CalendarDays} color="#f59e0b" 
+          sub={`${stats?.orders_today || 0} orders today`}
+          info="Net revenue generated from orders created today (starting 12:00 AM)."
+        />
+        <StatCard 
+          label="Monthly Run Rate" value={fmt(realMonthly)} 
           icon={Target} color="#60a5fa" 
+          info="Projected monthly revenue based on the average daily performance observed in the last 30 days."
         />
         <StatCard 
-          label="Average Order Value" value={fmt((stats?.average_order_value || baseAOV) * (finalMult > 0 ? finalMult : 1))} 
+          label="Average Order Value" value={fmt(realAOV)} 
           icon={ShoppingCart} color="#34d399" 
+          info="Calculated as Total Revenue divided by Total Number of Orders. Represents the average basket size."
         />
         <StatCard 
-          label="Gross Profit" value={fmt(scaledGrossProfit)} 
+          label="Gross Profit" value={fmt(realGrossProfit)} 
           icon={Percent} color="#a78bfa" 
-          trend={stats?.gross_margin || "53%"} trendLabel="margin" 
+          trend={stats?.gross_margin || 0} trendLabel="margin" 
+          info="Revenue minus Cost of Goods Sold (COGS). The margin represents (Gross Profit / Revenue) * 100."
         />
       </div>
 
       {/* ── TRAFFIC & OPERATIONS KPIs ── */}
-      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Sales & Operations</h3>
+      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8, display: 'flex', alignItems: 'center' }}>
+        Sales & Operations
+        <InfoButton text="Operational efficiency and volume tracking." />
+      </h3>
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: 32 }}>
-        <StatCard label="Fulfillment Rate" value={`${stats?.fulfillment_rate || 98.4}%`} icon={Package} color="#f472b6" />
-        <StatCard label="Total Orders" value={scaledOrders.toLocaleString()} icon={ShoppingCart} color="var(--info)" sub={`${Math.round((stats?.orders_today || 12) * finalMult)} today`} />
-        <StatCard label="Active Customers" value={scaledCustomers.toLocaleString()} icon={Users} color="var(--success)" />
-        <StatCard label="Pending Orders" value={Math.round((stats?.orders_pending || basePending) * finalMult)} icon={AlertTriangle} color="var(--warning)" />
-        <StatCard label="Low Stock SKUs" value={stats?.low_stock_count || 4} icon={Package} color="var(--error)" />
+        <StatCard label="Fulfillment Rate" value={`${stats?.fulfillment_rate || 0}%`} icon={Package} color="#f472b6" info="Percentage of orders that have been successfully shipped or delivered out of total orders." />
+        <StatCard label="Total Orders" value={realOrders.toLocaleString()} icon={ShoppingCart} color="var(--info)" info="Total count of unique orders placed by customers." />
+        <StatCard label="Active Customers" value={realCustomers.toLocaleString()} icon={Users} color="var(--success)" info="Unique customers who have placed at least one successful order in the selected period." />
+        <StatCard label="Pending Orders" value={realPending} icon={AlertTriangle} color="var(--warning)" info="Orders that are currently in 'pending', 'confirmed', or 'processing' states." />
+        <StatCard label="Low Stock SKUs" value={stats?.low_stock_count || 0} icon={Package} color="var(--error)" info="Number of unique product variants where current inventory is below the 10-unit safety threshold." />
+      </div>
+
+      {/* ── PRODUCT INTELLIGENCE ── */}
+      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8, display: 'flex', alignItems: 'center' }}>
+        Product Velocity & Health Intelligence
+        <InfoButton text="Heuristic analysis of inventory movement and risk factors." />
+      </h3>
+      <div className="grid-3" style={{ gap: 24, marginBottom: 32 }}>
+         {/* Fast Moving Items */}
+         <div className="card" style={{ padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+               <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                  🚀 Fast Moving Creations
+                  <InfoButton text="SKUs with the highest sales volume in the last 30 days." />
+               </h4>
+               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Last 30 Days</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+               {(stats?.fast_moving_items || []).map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.name}</span>
+                     <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>{item.units} units sold</span>
+                  </div>
+               ))}
+               {(!stats?.fast_moving_items?.length) && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No sales recorded in period.</p>}
+            </div>
+         </div>
+
+         {/* Slow Moving Items */}
+         <div className="card" style={{ padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+               <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                  🐢 Stagnant Inventory
+                  <InfoButton text="Items with high stock levels but low sales velocity (less than 5 units sold in 30 days)." />
+               </h4>
+               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>At Risk Items</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+               {(stats?.slow_moving_items || []).map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.name}</div>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Stock: {item.stock} units</div>
+                     </div>
+                     <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>{item.sales} sold</span>
+                  </div>
+               ))}
+               {(!stats?.slow_moving_items?.length) && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>All items moving healthy.</p>}
+            </div>
+         </div>
+
+         {/* Expiry Risk */}
+         <div className="card" style={{ padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+               <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                  ⚠️ Upcoming Shelf-Life Expiry
+                  <InfoButton text="Inventory batches approaching their expiration date within the next 90 days." />
+               </h4>
+               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Next 90 Days</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+               {(stats?.upcoming_expiries || []).map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.name}</div>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Batch: {item.batch}</div>
+                     </div>
+                     <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--error)', fontWeight: 700 }}>{new Date(item.date).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}</div>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{item.qty} units</div>
+                     </div>
+                  </div>
+               ))}
+               {(!stats?.upcoming_expiries?.length) && <p style={{ fontSize: '0.75rem', color: 'var(--success)' }}>No expiry risks detected.</p>}
+            </div>
+         </div>
       </div>
 
       <div className="chart-grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 24, marginBottom: 24 }}>
@@ -228,16 +275,19 @@ export default function Dashboard() {
         <div className="card" style={{ padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div>
-              <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem' }}>Revenue Trends</p>
+              <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>
+                Revenue Trends
+                <InfoButton text="Visualizes daily revenue accumulation compared against order volume over the last 7 days." />
+              </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Daily revenue vs order volume</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={280}>
-            <ComposedChart data={stats?.revenue_last_7_days?.length ? stats.revenue_last_7_days : defaultRevenueLast7Days}>
+            <ComposedChart data={stats?.revenue_last_7_days || []}>
               <defs>
                 <linearGradient id="revGrad2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#c9a84c" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#c9a84c" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="var(--gold)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="var(--gold)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
@@ -246,9 +296,9 @@ export default function Dashboard() {
               <YAxis yAxisId="right" orientation="right" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dx={10} />
               <Tooltip content={<CustomTooltip isCurrency={true} />} />
               {chartType === 'area' ? (
-                <Area yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="#c9a84c" strokeWidth={3} fill="url(#revGrad2)" activeDot={{ r: 6, fill: '#c9a84c', stroke: '#08080f', strokeWidth: 2 }} />
+                <Area yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="var(--gold)" strokeWidth={3} fill="url(#revGrad2)" activeDot={{ r: 6, fill: 'var(--gold)', stroke: '#08080f', strokeWidth: 2 }} />
               ) : (
-                <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="#c9a84c" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--gold)" radius={[4, 4, 0, 0]} />
               )}
               <Line yAxisId="right" type="monotone" dataKey="orders" name="Orders" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: '#6366f1' }} />
             </ComposedChart>
@@ -258,11 +308,14 @@ export default function Dashboard() {
         {/* PROFIT & REVENUE COMPARISON CHART */}
         <div className="card" style={{ padding: 24 }}>
           <div style={{ marginBottom: 20 }}>
-            <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem' }}>Profit Margins</p>
+            <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>
+              Profit Margins
+              <InfoButton text="Compares daily gross revenue against calculated gross profit to highlight margin consistency." />
+            </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Daily gross profit vs revenue</p>
           </div>
           <ResponsiveContainer width="100%" height={280}>
-            <ComposedChart data={stats?.profit_timeline?.length ? stats.profit_timeline : defaultProfitTimeline}>
+            <ComposedChart data={stats?.profit_timeline || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
               <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} dx={-10} />
@@ -279,12 +332,15 @@ export default function Dashboard() {
         {/* Recent Orders Report */}
         <div className="card" style={{ padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem' }}>Live Order Stream</p>
+            <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>
+              Live Order Stream
+              <InfoButton text="A real-time feed of the latest orders entering the system from all channels." />
+            </p>
             <button className="btn btn-ghost" style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>View All <ArrowUpRight size={14} /></button>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {(stats?.recent_orders?.length ? stats.recent_orders : defaultRecentOrders).map(o => (
+            {(stats?.recent_orders || []).map(o => (
               <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }} className="hover-bg-surface">
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(201,168,76,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
@@ -306,13 +362,16 @@ export default function Dashboard() {
 
         {/* Sales by Channel Report */}
         <div className="card" style={{ padding: 24 }}>
-          <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem', marginBottom: 20 }}>Sales by Channel</p>
+          <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem', marginBottom: 20, display: 'flex', alignItems: 'center' }}>
+            Sales by Channel
+            <InfoButton text="Breaks down total revenue and volume contribution from different sales touchpoints." />
+          </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {(stats?.channel_performance?.length ? stats.channel_performance : defaultChannelPerformance).map((channel, i) => {
+            {(stats?.channel_performance || []).map((channel, i) => {
               const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b'];
               const color = colors[i % colors.length];
-              const activeChannels = stats?.channel_performance?.length ? stats.channel_performance : defaultChannelPerformance;
+              const activeChannels = stats?.channel_performance || [];
               const maxRev = Math.max(...activeChannels.map(c => c.revenue), 1);
               const barWidth = `${(channel.revenue / maxRev) * 100}%`;
               
@@ -336,7 +395,52 @@ export default function Dashboard() {
           <div style={{ marginTop: 32, padding: 16, background: 'linear-gradient(to right, rgba(201,168,76,0.1), transparent)', borderLeft: '3px solid var(--gold)', borderRadius: '0 8px 8px 0' }}>
             <h4 style={{ fontSize: '0.85rem', color: 'var(--gold-bright)', margin: '0 0 4px' }}>Real-time Insight</h4>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-              This data is pulled 100% live from the database. Gross profit margins are dynamically calculated by comparing unit sale prices against tracked Cost of Goods Sold (COGS).
+              This data is pulled 100% live from the database. Gross profit margins are dynamically calculated.
+            </p>
+          </div>
+        </div>
+
+        {/* Customer Acquisition Report */}
+        <div className="card" style={{ padding: 24 }}>
+          <p className="chart-title" style={{ margin: 0, fontSize: '1.1rem', marginBottom: 20, display: 'flex', alignItems: 'center' }}>
+            Customer Acquisition Breakdown
+            <InfoButton text="Distinguishes between 'Social Media' customers and 'Userend' (Webstore) registrations." />
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {(stats?.customer_source_breakdown || []).map((source, i) => {
+              const colors = ['#8b5cf6', '#06b6d4', '#f43f5e', '#10b981'];
+              const color = colors[i % colors.length];
+              const totalCusts = stats?.total_customers || 1;
+              const barWidth = `${(source.count / totalCusts) * 100}%`;
+              
+              // Friendly labels
+              let sourceLabel = source.source;
+              if (sourceLabel.toLowerCase() === 'pos') sourceLabel = '🏪 Retail / POS';
+              if (sourceLabel.toLowerCase() === 'online') sourceLabel = '💻 Webstore (Userend)';
+              if (sourceLabel.toLowerCase() === 'whatsapp') sourceLabel = '💬 WhatsApp Social';
+              if (sourceLabel.toLowerCase() === 'instagram') sourceLabel = '📸 Instagram Social';
+
+              return (
+                <div key={source.source}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{sourceLabel}</span>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{source.count} customers</span>
+                      <span style={{ color: 'var(--gold-bright)' }}>{Math.round((source.count / totalCusts) * 100)}%</span>
+                    </div>
+                  </div>
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ width: barWidth, height: '100%', background: color, borderRadius: 3 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: 32, padding: 16, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              💡 <strong>Strategy:</strong> Group "WhatsApp" and "Instagram" to calculate total **Social Media** reach vs. **Userend** organic traffic.
             </p>
           </div>
         </div>
@@ -345,3 +449,4 @@ export default function Dashboard() {
     </div>
   )
 }
+

@@ -27,6 +27,11 @@ class OrderCreate(BaseModel):
     gift_message: str | None = None
     coupon_code: str | None = None
     shipping_address: Dict[str, Any] | None = None
+    billing_address: Dict[str, Any] | None = None
+    transaction_id: str | None = None
+    payment_gateway: str | None = None
+    payment_details: Dict[str, Any] | None = None
+    payment_status: PaymentStatus | None = None
     items: List[OrderItemCreate]
 
 
@@ -37,15 +42,32 @@ class OrderStatusUpdate(BaseModel):
     notes: str | None = None
 
 
+class OrderContactUpdate(BaseModel):
+    customer_name: str | None = None
+    customer_phone: str | None = None
+    customer_email: str | None = None
+
+
 class OrderItemOut(BaseModel):
     id: UUID
     variant_id: UUID
     sku: str = ""
     product_name: str = ""
+    product_image: Optional[str] = None
+    size_ml: Optional[int] = None
     quantity: int
     unit_price: float
     discount_amount: float
     total_price: float
+
+    model_config = {"from_attributes": True}
+
+
+class OrderStatusHistoryOut(BaseModel):
+    id: UUID
+    status: OrderStatus
+    notes: Optional[str] = None
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 
@@ -55,6 +77,8 @@ class OrderOut(BaseModel):
     order_number: str
     customer_id: UUID | None
     customer_name: str | None = None
+    customer_phone: str | None = None
+    customer_email: str | None = None
     channel: str
     status: OrderStatus
     payment_method: PaymentMethod | None
@@ -65,11 +89,17 @@ class OrderOut(BaseModel):
     tax_amount: float
     shipping_amount: float
     total_amount: float
+    shipping_address: Dict[str, Any] | None = None
+    billing_address: Dict[str, Any] | None = None
+    transaction_id: str | None = None
+    payment_gateway: str | None = None
+    payment_details: Dict[str, Any] | None = None
     notes: str | None
     coupon_code: str | None
     tracking_number: str | None
     carrier: str | None
     items: List[OrderItemOut] = []
+    status_history: List[OrderStatusHistoryOut] = []
     created_at: datetime
     updated_at: datetime
 

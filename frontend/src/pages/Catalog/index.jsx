@@ -9,6 +9,7 @@ import {
   Clock, ArrowRight, ChevronRight, Filter
 } from 'lucide-react'
 import api from '../../services/api'
+import InfoButton from '../../components/ui/InfoButton'
 
 function CatalogOverview({ setActiveTab }) {
   const [products, setProducts] = useState([])
@@ -101,6 +102,30 @@ function CatalogOverview({ setActiveTab }) {
     (b.origin_country && b.origin_country.toLowerCase().includes(searchQuery.toLowerCase()))
   ).slice(0, 5)
 
+  // Toggle Actions
+  const handleToggleBrand = async (brand) => {
+    const newStatus = !brand.is_active
+    if (!newStatus) {
+      if (!confirm(`Deactivating "${brand.name}" will also deactivate all its products. Continue?`)) return
+    }
+    try {
+      await api.patch(`/brands/${brand.id}`, { is_active: newStatus })
+      toast.success(newStatus ? 'Brand activated' : 'Brand deactivated')
+      // Refresh local state
+      setBrands(prev => prev.map(b => b.id === brand.id ? { ...b, is_active: newStatus } : b))
+    } catch { toast.error('Toggle failed') }
+  }
+
+  const handleToggleProduct = async (product) => {
+    const newStatus = !product.is_active
+    try {
+      await api.patch(`/products/${product.id}`, { is_active: newStatus })
+      toast.success(newStatus ? 'Product activated' : 'Product deactivated')
+      // Refresh local state
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_active: newStatus } : p))
+    } catch { toast.error('Toggle failed') }
+  }
+
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -176,7 +201,9 @@ function CatalogOverview({ setActiveTab }) {
         {/* Card 1: Products */}
         <div className="stat-card" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(0,0,0,0.4))', border: '1px solid rgba(201,168,76,0.3)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>LUXURY PRODUCTS</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>
+              LUXURY PRODUCTS <InfoButton text="Master directory of core merchandise offerings across global catalog hierarchy." />
+            </span>
             <button onClick={() => setActiveTab('products')} className="btn-icon" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', color: 'var(--gold)' }}>
               <Plus size={14} />
             </button>
@@ -191,7 +218,9 @@ function CatalogOverview({ setActiveTab }) {
         {/* Card 2: Brands */}
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>PRESTIGE BRANDS</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>
+              PRESTIGE BRANDS <InfoButton text="Registered perfume houses and corporate manufacturer entities mapped to offerings." />
+            </span>
             <button onClick={() => setActiveTab('brands')} className="btn-icon" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
               <Plus size={14} />
             </button>
@@ -206,7 +235,9 @@ function CatalogOverview({ setActiveTab }) {
         {/* Card 3: Categories */}
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>COLLECTIONS</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>
+              COLLECTIONS <InfoButton text="Taxonomic hierarchies and parent/child collections enabling structured routing logic." />
+            </span>
             <button onClick={() => setActiveTab('categories')} className="btn-icon" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '50%', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
               <Plus size={14} />
             </button>
@@ -222,7 +253,9 @@ function CatalogOverview({ setActiveTab }) {
                background: outOfStockSkus.length > 0 ? 'linear-gradient(135deg, rgba(239,68,68,0.05), var(--bg-card))' : 'var(--bg-card)'
              }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>INVENTORY HEALTH</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: '800' }}>
+              INVENTORY HEALTH <InfoButton text="Calculated aggregate safety across variants. Red indicates depletion levels requiring replenishment." />
+            </span>
             <AlertTriangle size={14} color={outOfStockSkus.length > 0 ? 'var(--error)' : 'var(--warning)'} />
           </div>
           <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{totalSkus} <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-muted)' }}>SKUs</span></div>
@@ -255,7 +288,7 @@ function CatalogOverview({ setActiveTab }) {
         <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '20px 24px', borderRadius: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.2rem' }}>👃</span> Olfactory Gender Profile
+              <span style={{ fontSize: '1.2rem' }}>👃</span> Olfactory Gender Profile <InfoButton text="Distribution breakdown tracking percentage counts allocated towards targeted gender definitions." />
             </h3>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -293,7 +326,7 @@ function CatalogOverview({ setActiveTab }) {
         <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '20px 24px', borderRadius: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <TrendingUp size={16} color="var(--gold-bright)" /> Price Range Distribution
+              <TrendingUp size={16} color="var(--gold-bright)" /> Price Range Distribution <InfoButton text="Volume clustering plotting variants distinct across designated affordability bands." />
             </h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', height: 110, gap: 12, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -327,7 +360,7 @@ function CatalogOverview({ setActiveTab }) {
         <div style={{ background: 'rgba(239,68,68,0.03)', border: '1px solid rgba(239,68,68,0.2)', padding: '16px 20px', borderRadius: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
              <h4 style={{ color: 'var(--error)', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-               <AlertTriangle size={16} /> Critical Stock Alerts
+               <AlertTriangle size={16} /> Critical Stock Alerts <InfoButton text="Real-time notification queue listing variants in imminent need of manufacturing re-orders." />
              </h4>
              <button onClick={() => setActiveTab('skus')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                View All Replenishments <ChevronRight size={14} />
@@ -374,11 +407,13 @@ function CatalogOverview({ setActiveTab }) {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="badge badge-neutral" style={{ fontSize: '0.62rem' }}>{p.variants?.length || 0} Var</span>
-                  {p.is_active ? (
-                    <span className="badge badge-success" style={{ fontSize: '0.62rem' }}>Live</span>
-                  ) : (
-                    <span className="badge badge-neutral" style={{ fontSize: '0.62rem', background: 'rgba(255,255,255,0.05)' }}>Draft</span>
-                  )}
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleToggleProduct(p); }}
+                    className={`badge ${p.is_active ? 'badge-success' : 'badge-neutral'}`}
+                    style={{ fontSize: '0.62rem', border: 'none', cursor: 'pointer', outline: 'none', background: !p.is_active ? 'rgba(255,255,255,0.05)' : undefined }}
+                  >
+                    {p.is_active ? 'Live' : 'Draft'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -405,11 +440,13 @@ function CatalogOverview({ setActiveTab }) {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="badge badge-gold" style={{ fontSize: '0.62rem' }}>{b.product_count || 0} Models</span>
-                  {b.is_active ? (
-                    <span className="badge badge-success" style={{ fontSize: '0.62rem' }}>Live</span>
-                  ) : (
-                    <span className="badge badge-neutral" style={{ fontSize: '0.62rem' }}>Inactive</span>
-                  )}
+                  <button 
+                    onClick={() => handleToggleBrand(b)}
+                    className={`badge ${b.is_active ? 'badge-success' : 'badge-neutral'}`}
+                    style={{ fontSize: '0.62rem', border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
+                    {b.is_active ? 'Live' : 'Inactive'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -421,7 +458,7 @@ function CatalogOverview({ setActiveTab }) {
         <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: 24, borderRadius: 16, gridColumn: 'span 2' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--gold-bright)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              🎁 Live Promotions Performance
+              🎁 Live Promotions Performance <InfoButton text="Tracks effectiveness of existing voucher codes and campaign redemptions in current scope." />
             </h3>
             <div style={{ display: 'flex', gap: 16, fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> Active now</span>
@@ -482,7 +519,7 @@ export default function Catalog() {
   return (
     <div style={{ paddingBottom: 40 }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 className="page-title" style={{ fontSize: '1.8rem', background: 'linear-gradient(to right, #fff, #c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 className="page-title" style={{ fontSize: '1.8rem', background: 'linear-gradient(to right, var(--text-primary), var(--gold))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Catalog Manager
         </h1>
         <p className="page-subtitle">Centralized control for your brands, categories, products, and inventory SKUs</p>

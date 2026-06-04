@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_manager
-from app.models.product import Brand, Product
+from app.models.product import Brand, Product, ProductVariant
 from app.models.user import User
 from app.schemas.brand import BrandCreate, BrandUpdate, BrandOut
 
@@ -80,7 +80,26 @@ async def update_brand(
     brand = result.scalar_one_or_none()
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
-    for field, value in body.model_dump(exclude_none=True).items():
+    
+    data = body.model_dump(exclude_none=True)
+    
+    # Check if is_active is being changed to False
+    if data.get("is_active") is False and brand.is_active is True:
+        # Cascade deactivation to products
+        await db.execute(
+            update(Product)
+            .where(Product.brand_id == brand.id)
+            .values(is_active=False)
+        )
+        # Cascade deactivation to variants of those products
+        product_ids_subquery = select(Product.id).where(Product.brand_id == brand.id)
+        await db.execute(
+            update(ProductVariant)
+            .where(ProductVariant.product_id.in_(product_ids_subquery))
+            .values(is_active=False)
+        )
+
+    for field, value in data.items():
         setattr(brand, field, value)
     await db.commit()
     await db.refresh(brand)

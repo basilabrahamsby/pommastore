@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Search, Pencil, Trash2, Eye } from 'lucide-react'
 import api from '../../services/api'
+import { getMediaUrl } from '../../services/media'
 import toast from 'react-hot-toast'
 
 function CategoryModal({ category, onClose, onSaved }) {
@@ -22,15 +23,14 @@ function CategoryModal({ category, onClose, onSaved }) {
     internal_code: category?.internal_code || '',
 
     // SEO & Discovery
-    seo_h1: category?.seo_h1 || '',
+    seo_title: category?.seo_title || '',
     meta_description: category?.meta_description || '',
-    canonical_url: category?.canonical_url || '',
-    featured_keywords: category?.featured_keywords || '',
+    keywords: category?.keywords || '',
 
     // UI & 3D Maker Specifics
     ambient_environment: category?.ambient_environment || 'Luxury Studio',
     category_icon: category?.category_icon || '',
-    accent_color: category?.accent_color || '#c9a84c',
+    accent_color: category?.accent_color || '#d2168d',
 
     // ERP Functional Logic
     loyalty_multiplier: category?.loyalty_multiplier || '1.0',
@@ -46,18 +46,34 @@ function CategoryModal({ category, onClose, onSaved }) {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
-  const handleDirectUpload = (e) => {
+  const handleDirectUpload = async (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
     
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setForm(p => ({ ...p, images: [...(p.images || []), reader.result] }))
-      }
-      reader.readAsDataURL(file)
-    })
-    toast.success(`${files.length} category image(s) uploaded!`)
+    const uploadToast = toast.loading(`Uploading ${files.length} category image(s)...`)
+    
+    try {
+      const uploadPromises = files.map(file => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/uploads', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      })
+      
+      const responses = await Promise.all(uploadPromises)
+      const newUrls = responses.map(r => r.data.url)
+      
+      setForm(p => ({ 
+        ...p, 
+        images: [...(p.images || []), ...newUrls],
+        image_url: p.image_url || newUrls[0] // Set first one as primary thumbnail if none exists
+      }))
+      
+      toast.success(`${files.length} image(s) processed and stored!`, { id: uploadToast })
+    } catch (err) {
+      toast.error('Asset storage failed. Please check file size/type.', { id: uploadToast })
+    }
   }
 
   const handleRemoveImage = (idx) => {
@@ -107,7 +123,16 @@ function CategoryModal({ category, onClose, onSaved }) {
       slug: form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       description: form.description || null,
       parent_id: form.parent_id && form.parent_id !== "" ? form.parent_id : null,
-      scent_family: form.top_notes_preview || null
+      scent_family: form.top_notes_preview || null,
+      seo_title: form.seo_title || null,
+      meta_description: form.meta_description || null,
+      keywords: form.keywords || null,
+      
+      // Media persistence
+      images: form.images || [],
+      image_url: form.image_url || (form.images?.[0] || null),
+      banner_url: form.banner_url || (form.images?.[1] || form.images?.[0] || null),
+      video_url: form.video_url || null,
     }
     try {
       if (editing) await api.patch(`/categories/${category.id}`, payload)
@@ -161,7 +186,7 @@ function CategoryModal({ category, onClose, onSaved }) {
                       position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 'var(--radius-sm)',
                       overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#0c0c12'
                     }}>
-                      <img src={imgUrl} alt={`Category ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={getMediaUrl(imgUrl)} alt={`Category ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <button type="button" onClick={() => handleRemoveImage(idx)} style={{
                         position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%',
                         background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.55rem', fontWeight: 'bold',
@@ -206,7 +231,7 @@ function CategoryModal({ category, onClose, onSaved }) {
                   ) : form.is_3d_active ? (
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       <div style={{ width: 54, height: 54, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--gold)', background: form.remove_background ? 'transparent' : 'linear-gradient(45deg, #101a1f, #0a0a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                        <img src={form.three_d_source_image} style={{ width: '80%', height: '80%', objectFit: 'contain', animation: 'spinCategory 8s linear infinite' }} />
+                        <img src={getMediaUrl(form.three_d_source_image)} style={{ width: '80%', height: '80%', objectFit: 'contain', animation: 'spinCategory 8s linear infinite' }} />
                         <span style={{ position: 'absolute', bottom: 1, right: 1, fontSize: '0.45rem', background: 'rgba(0,0,0,0.6)', padding: '1px 2px', borderRadius: 2, color: 'var(--gold)' }}>3D</span>
                       </div>
                       <div>
@@ -236,7 +261,7 @@ function CategoryModal({ category, onClose, onSaved }) {
 
                           <div style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: 10, borderRadius: 6 }}>
                             <div style={{ width: 44, height: 44, borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.3)', background: '#0a0a0f' }}>
-                              <img src={form.three_d_source_image} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              <img src={getMediaUrl(form.three_d_source_image)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                             <div style={{ flex: 1 }}>
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Hero Image Loaded</span>
@@ -291,25 +316,19 @@ function CategoryModal({ category, onClose, onSaved }) {
 
                 {/* ── SECTION: SEO & DISCOVERY ── */}
                 <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gold)', marginTop: 24, marginBottom: 12, borderBottom: '1px solid rgba(201,168,76,0.2)', paddingBottom: 4 }}>🔍 SEO & Search Discovery</p>
-                <div className="grid-2" style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 14 }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">SEO H1 Tag</label>
-                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.seo_h1} onChange={e => set('seo_h1', e.target.value)} placeholder="e.g. Authentic Arabian Oud Perfumes" />
+                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 14 }}>
+                  <div className="form-group" style={{ marginBottom: 12 }}>
+                    <label className="form-label">SEO Meta Title</label>
+                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.seo_title} onChange={e => set('seo_title', e.target.value)} placeholder="e.g. Authentic Arabian Oud Perfumes" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 12 }}>
+                    <label className="form-label">SEO Keywords (Comma-separated)</label>
+                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.keywords} onChange={e => set('keywords', e.target.value)} placeholder="long-lasting, cruelty-free, organic, imported" />
                   </div>
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Canonical URL</label>
-                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.canonical_url} onChange={e => set('canonical_url', e.target.value)} placeholder="https://kozmocart.com/..." />
+                    <label className="form-label">Category Meta Description</label>
+                    <textarea className="textarea" value={form.meta_description} onChange={e => set('meta_description', e.target.value)} rows={2} placeholder="A sensory collection meta description..." />
                   </div>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 14 }}>
-                  <label className="form-label">Featured Meta Keywords (Comma-separated)</label>
-                  <input className="input" style={{ fontSize: '0.8rem' }} value={form.featured_keywords} onChange={e => set('featured_keywords', e.target.value)} placeholder="long-lasting, cruelty-free, organic, imported" />
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 14 }}>
-                  <label className="form-label">Category Meta Description</label>
-                  <textarea className="textarea" value={form.meta_description} onChange={e => set('meta_description', e.target.value)} rows={2} placeholder="A sensory collection meta description that tells google what products are inside..." />
                 </div>
 
                 {/* ── SECTION: UI & 3D STUDIO SPECIFICS ── */}
@@ -435,27 +454,30 @@ export default function Categories({ hideHeader }) {
     setLoading(true)
     api.get('/categories', { params: { search: search || undefined } })
       .then(r => {
-        let list = r.data || []
-        if (!Array.isArray(list) || list.length === 0) {
-          list = [
-            { id: 1, name: 'Woody & Oriental Perfumes', slug: 'woody-oriental', description: 'Deep, rich fragrances crafted with rare oud, sandalwood, patchouli, and exotic spices.', is_active: true },
-            { id: 2, name: 'Fresh & Citrusy Scents', slug: 'fresh-citrus', description: 'Uplifting, clean olfactory profiles highlighting lemon, bergamot, orange blossom, and sea salt.', is_active: true },
-            { id: 3, name: 'Floral & Sweet Collections', slug: 'floral-sweet', description: 'Romantic and sensual aromas filled with rose, jasmine, vanilla, and warm amber notes.', is_active: true }
-          ]
-        }
-        setCategories(list)
+        setCategories(r.data || [])
       })
       .catch(() => {
-        setCategories([
-          { id: 1, name: 'Woody & Oriental Perfumes', slug: 'woody-oriental', description: 'Deep, rich fragrances crafted with rare oud, sandalwood, patchouli, and exotic spices.', is_active: true },
-          { id: 2, name: 'Fresh & Citrusy Scents', slug: 'fresh-citrus', description: 'Uplifting, clean olfactory profiles highlighting lemon, bergamot, orange blossom, and sea salt.', is_active: true },
-          { id: 3, name: 'Floral & Sweet Collections', slug: 'floral-sweet', description: 'Romantic and sensual aromas filled with rose, jasmine, vanilla, and warm amber notes.', is_active: true }
-        ])
+        setCategories([])
       })
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [search])
+
+  const handleToggleActive = async (category) => {
+    const newStatus = !category.is_active
+    if (!newStatus) {
+      if (!confirm(`Deactivating "${category.name}" will also deactivate all its products. Continue?`)) return
+    }
+    
+    try {
+      await api.patch(`/categories/${category.id}`, { is_active: newStatus })
+      toast.success(newStatus ? 'Category activated' : 'Category and all its products deactivated')
+      load()
+    } catch (err) {
+      toast.error('Failed to update category status')
+    }
+  }
 
   const handleDelete = async (category) => {
     if (!confirm(`Delete "${category.name}"? This cannot be undone.`)) return
@@ -540,9 +562,13 @@ export default function Categories({ hideHeader }) {
                 </td>
                 <td><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{c.description || '—'}</span></td>
                 <td>
-                  <span className={`badge ${c.is_active ? 'badge-success' : 'badge-neutral'}`}>
+                  <button 
+                    onClick={() => handleToggleActive(c)}
+                    className={`badge ${c.is_active ? 'badge-success' : 'badge-neutral'}`}
+                    style={{ border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
                     {c.is_active ? 'Active' : 'Inactive'}
-                  </span>
+                  </button>
                 </td>
                 <td>
                   <div className="flex gap-2">

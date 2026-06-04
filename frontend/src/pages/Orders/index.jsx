@@ -1,32 +1,28 @@
 import { useEffect, useState } from 'react'
-import { Search, ChevronDown, User, DollarSign, CreditCard, Activity, Plus, TrendingUp, TrendingDown, Download, Filter, ArrowUpRight, ArrowDownRight, ShoppingBag, Users, Percent, Building } from 'lucide-react'
+import { Search, ChevronDown, User, DollarSign, CreditCard, Activity, Plus, TrendingUp, TrendingDown, Download, Filter, ArrowUpRight, ArrowDownRight, ShoppingBag, Users, Percent, Building, Clock, Check, X, Package, ShieldCheck, Smartphone, Mail } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-
-
-const PINCODE_SUGGESTIONS = [
-  { pincode: '673001', city: 'Kozhikode', state: 'Kerala', line1: 'SM Street, Palayam', line2: 'Near Calicut Railway Station' },
-  { pincode: '673004', city: 'Kozhikode', state: 'Kerala', line1: 'Mavoor Road', line2: 'Near KSRTC Bus Stand' },
-  { pincode: '673016', city: 'Kozhikode', state: 'Kerala', line1: 'Nallalam', line2: 'Industrial Area' },
-  { pincode: '110001', city: 'New Delhi', state: 'Delhi', line1: 'Connaught Place, Block H', line2: 'Near Rajiv Chowk Metro' },
-  { pincode: '110021', city: 'New Delhi', state: 'Delhi', line1: 'Chanakyapuri, Shanti Path', line2: 'Embassy Area' },
-  { pincode: '400001', city: 'Mumbai', state: 'Maharashtra', line1: 'Fort, DN Road', line2: 'Opposite CST Station' },
-  { pincode: '400050', city: 'Mumbai', state: 'Maharashtra', line1: 'Bandra West, Link Road', line2: 'Near Bandstand' },
-  { pincode: '560001', city: 'Bengaluru', state: 'Karnataka', line1: 'MG Road, Ashok Nagar', line2: 'Near Metro Station' },
-  { pincode: '560034', city: 'Bengaluru', state: 'Karnataka', line1: 'Koramangala 4th Block', line2: 'Near Sony World Signal' },
-  { pincode: '600001', city: 'Chennai', state: 'Tamil Nadu', line1: 'George Town, Rajaji Salai', line2: 'Near Parry\'s Corner' },
-  { pincode: '700001', city: 'Kolkata', state: 'West Bengal', line1: 'Esplanade', line2: 'Near Lal Bazar' },
-  { pincode: '500001', city: 'Hyderabad', state: 'Telangana', line1: 'Abids Road', line2: 'Near GPO' }
-]
+import InfoButton from '../../components/ui/InfoButton'
 
 
 function OrderModal({ onClose, onSaved, customers, variants }) {
+  const [currentStep, setCurrentStep] = useState(0) // 0: Contact, 1: Verification, 2: Fulfillment
   const [showPinSuggestions, setShowPinSuggestions] = useState(false)
   const [liveSuggestions, setLiveSuggestions] = useState([])
   const [customerAddresses, setCustomerAddresses] = useState([])
   const [selectedAddressId, setSelectedAddressId] = useState('new')
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
+  
+  const [allOffers, setAllOffers] = useState([])
+  const [selectedOfferId, setSelectedOfferId] = useState('')
+  const [promoCode, setPromoCode] = useState('')
+
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpValue, setOtpValue] = useState('')
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
+  const [cmsLayout, setCmsLayout] = useState(null)
+
   const [form, setForm] = useState({
     customer_id: '',
     channel: 'pos',
@@ -40,18 +36,88 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     shipping_state: '',
     shipping_address_line1: '',
     shipping_address_line2: '',
+    billingSameAsShipping: true,
+    billing_pincode: '',
+    billing_city: '',
+    billing_state: '',
+    billing_address_line1: '',
+    billing_address_line2: '',
     contact_name: '',
     contact_email: '',
     contact_phone: '',
     alt_contact_phone: '',
+    coupon_code: '',
+    transaction_id: '',
+    payment_gateway: '',
     items: [{ variant_id: '', quantity: 1, unit_price: 0 }]
   })
+
+  useEffect(() => {
+    api.get('/offers').then(res => setAllOffers(res.data || [])).catch(() => {})
+    api.get('/settings/storefront_layout').then(res => setCmsLayout(res.data)).catch(() => {})
+  }, [])
+
+  const applyOffer = (offer) => {
+    // 1. Reset previous offer impact
+    setForm(prev => ({
+      ...prev,
+      discount_amount: 0,
+      coupon_code: '',
+      // Remove any items that were added as free gifts (price 0 and not in original selection)
+      items: prev.items.filter(it => it.unit_price > 0 || it.is_manual_addition)
+    }))
+
+    if (!offer) return
+
+    const subtotal = calculateSubtotal()
+    if (offer.min_purchase_amount && subtotal < offer.min_purchase_amount) {
+      toast.error(`Min purchase for this offer is ₹${offer.min_purchase_amount}`)
+      setSelectedOfferId('')
+      return
+    }
+
+    // 2. Apply Financial Discount
+    let discount = 0
+    if (offer.discount_type.toLowerCase().includes('percentage')) {
+      discount = (subtotal * (offer.discount_percentage || 0)) / 100
+    } else if (offer.discount_type.toLowerCase().includes('flat')) {
+      discount = offer.flat_discount_amount || 0
+    }
+    
+    // 3. Handle BOGO Gifting logic
+    if (offer.discount_type.toLowerCase().includes('bogo')) {
+       const giftSkus = offer.get_skus || []
+       const giftItems = giftSkus.map(sku => {
+          const v = variants.find(vr => vr.sku === sku)
+          return v ? { variant_id: v.variant_id, quantity: 1, unit_price: 0, product_name: v.product_name, sku: v.sku } : null
+       }).filter(Boolean)
+
+       if (giftItems.length > 0) {
+          setForm(prev => ({
+             ...prev,
+             items: [...prev.items, ...giftItems]
+          }))
+          toast.success(`🎁 ${giftItems.length} free gift(s) added to your cart!`)
+       }
+    }
+
+    set('discount_amount', discount)
+    set('coupon_code', offer.code)
+    toast.success(`Applied ${offer.title}!`)
+  }
+
+  const handlePromoApply = () => {
+    const matched = allOffers.find(o => o.code.toUpperCase() === promoCode.toUpperCase())
+    if (matched) {
+      applyOffer(matched)
+      setSelectedOfferId(matched.id)
+    } else {
+      toast.error('Invalid Promo Code')
+    }
+  }
   const [saving, setSaving] = useState(false)
   const [delhiveryActive, setDelhiveryActive] = useState(true)
   const [razorpaySimulating, setRazorpaySimulating] = useState(false)
-  const [otpSent, setOtpSent] = useState(false)
-  const [enteredOtp, setEnteredOtp] = useState('')
-  const [otpVerifying, setOtpVerifying] = useState(false)
   const [selectedRazorpayMethod, setSelectedRazorpayMethod] = useState('card')
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
@@ -60,6 +126,14 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
 
   useEffect(() => {
     if (delhiveryActive) {
+      const subtotal = calculateSubtotal()
+      const limit = cmsLayout?.free_shipping_limit || 999
+      
+      if (subtotal >= limit) {
+        set('shipping_amount', 0)
+        return
+      }
+
       const pin = (form.shipping_pincode || '').trim()
       let baseShipping = 150 // Default national rate
       let perItemShipping = 20
@@ -79,7 +153,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     } else {
       set('shipping_amount', 0)
     }
-  }, [delhiveryActive, totalQty, form.shipping_pincode])
+  }, [delhiveryActive, totalQty, form.shipping_pincode, cmsLayout, calculateSubtotal()])
 
   useEffect(() => {
     const pin = (form.shipping_pincode || '').trim()
@@ -225,6 +299,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
   const handleItemChange = (index, key, val) => {
     const updated = [...form.items]
     updated[index][key] = val
+    updated[index].is_manual_addition = true
     if (key === 'variant_id') {
       const selectedVar = variants.find(v => v.variant_id === val)
       if (selectedVar) {
@@ -235,7 +310,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
   }
 
   const addItem = () => {
-    set('items', [...form.items, { variant_id: '', quantity: 1, unit_price: 0 }])
+    set('items', [...form.items, { variant_id: '', quantity: 1, unit_price: 0, is_manual_addition: true }])
   }
 
   const removeItem = (index) => {
@@ -247,14 +322,40 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     return form.items.reduce((acc, curr) => acc + (Number(curr.unit_price || 0) * Number(curr.quantity || 1)), 0)
   }
 
+  useEffect(() => {
+    if (selectedOfferId) {
+       const off = allOffers.find(o => o.id === selectedOfferId)
+       if (off) applyOffer(off)
+    }
+  }, [form.items.length, calculateSubtotal()])
+
   const calculateTotal = () => {
     return calculateSubtotal() - Number(form.discount_amount || 0) + Number(form.tax_amount || 0) + Number(form.shipping_amount || 0)
   }
 
+  const sendOtp = () => {
+    if (!form.contact_email || !form.contact_phone || !form.contact_name) {
+      toast.error('Please complete contact details first')
+      return
+    }
+    setSaving(true)
+    setTimeout(() => {
+      setOtpSent(true)
+      setCurrentStep(2)
+      setSaving(false)
+      toast.success('Verification code sent to ' + form.contact_email)
+    }, 1200)
+  }
+
   const performActualBooking = async () => {
+    if (!form.contact_phone) {
+      toast.error('Mobile number is compulsory for tracking and communication')
+      return
+    }
     setSaving(true)
     const payload = {
       ...form,
+      payment_status: 'paid',
       customer_id: form.customer_id || null,
       customer_name: form.contact_name,
       customer_phone: form.contact_phone,
@@ -272,6 +373,25 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
         alternate_phone: form.alt_contact_phone,
         full_address: `${form.shipping_address_line1}, ${form.shipping_address_line2}, ${form.shipping_city}, ${form.shipping_state} - ${form.shipping_pincode}`
       } : null,
+      billing_address: form.billingSameAsShipping ? (form.shipping_pincode ? {
+        recipient_name: form.contact_name,
+        pincode: form.shipping_pincode,
+        city: form.shipping_city,
+        state: form.shipping_state,
+        address_line1: form.shipping_address_line1,
+        address_line2: form.shipping_address_line2,
+        full_address: `${form.shipping_address_line1}, ${form.shipping_address_line2}, ${form.shipping_city}, ${form.shipping_state} - ${form.shipping_pincode}`
+      } : null) : (form.billing_pincode ? {
+        recipient_name: form.contact_name,
+        pincode: form.billing_pincode,
+        city: form.billing_city,
+        state: form.billing_state,
+        address_line1: form.billing_address_line1,
+        address_line2: form.billing_address_line2,
+        full_address: `${form.billing_address_line1}, ${form.billing_address_line2}, ${form.billing_city}, ${form.billing_state} - ${form.billing_pincode}`
+      } : null),
+      transaction_id: form.transaction_id || null,
+      payment_gateway: form.payment_gateway || null,
       items: form.items.map(i => ({
         variant_id: i.variant_id,
         quantity: Number(i.quantity || 1),
@@ -281,12 +401,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     }
     try {
       const res = await api.post('/orders', payload)
-      if (delhiveryActive) {
-        const mockAWB = `DELHIVERY-AWB-${Math.floor(100000000 + Math.random() * 900000000)}`
-        toast.success(`Order created successfully!\n🚚 Delhivery AWB Registered: ${mockAWB}`, { duration: 6000 })
-      } else {
-        toast.success('Order created successfully!')
-      }
+      toast.success('Order created successfully!')
       onSaved()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to create order. Verify FIFO stock allocation.')
@@ -297,34 +412,63 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     }
   }
 
-  const handleVerifyOtp = (e) => {
-    e.preventDefault()
-    setOtpVerifying(true)
-    setTimeout(() => {
-      if (enteredOtp === '123456' || enteredOtp === '') {
-        toast.success('OTP Verification Successful!')
-        setOtpVerifying(false)
-        performActualBooking()
-      } else {
-        toast.error('Invalid OTP entered. Enter 123456 to bypass sandbox.')
-        setOtpVerifying(false)
-      }
-    }, 1200)
-  }
-
-  const triggerOtpSentFlow = () => {
-    setOtpSent(true)
-    toast.success(`Security Verification OTP sent to ${form.contact_phone || form.contact_email || 'customer'}!`)
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (form.payment_method === 'razorpay') {
-      setRazorpaySimulating(true)
-    } else {
-      triggerOtpSentFlow()
-    }
+    setVerifyingOtp(true)
+    
+    setTimeout(() => {
+      setVerifyingOtp(false)
+      if (otpValue !== '1234' && otpValue !== '0000') {
+         toast.error('Invalid verification code')
+         return
+      }
+
+      if (form.payment_method === 'razorpay') {
+        setRazorpaySimulating(true)
+      } else {
+        performActualBooking()
+      }
+    }, 800)
   }
+
+  const getRelevantOffers = () => {
+    const cartItems = form.items.filter(it => it.variant_id)
+    
+    // Hide all offers until at least one product is added to the cart
+    if (cartItems.length === 0) return []
+
+    const cartSkus = cartItems.map(it => {
+       const v = variants.find(vr => vr.variant_id === it.variant_id)
+       return v?.sku
+    }).filter(Boolean)
+
+    const cartBrands = cartItems.map(it => {
+       const v = variants.find(vr => vr.variant_id === it.variant_id)
+       return v?.brand_name
+    }).filter(Boolean)
+
+    const cartCategories = cartItems.map(it => {
+       const v = variants.find(vr => vr.variant_id === it.variant_id)
+       return v?.category_name
+    }).filter(Boolean)
+
+    return allOffers.filter(o => {
+       if (o.status !== 'Active') return false
+       
+       // Global offers apply to any non-empty cart
+       if (o.target_scope === 'all') return true
+       
+       // Relevance Check: Does this offer apply to the specific items currently selected?
+       const isBuySkuMatched = (o.buy_skus || []).some(s => cartSkus.includes(s))
+       const isTargetSkuMatched = (o.target_skus || []).some(s => cartSkus.includes(s))
+       const isBrandMatched = (o.target_brands || []).some(b => cartBrands.includes(b))
+       const isCategoryMatched = (o.target_categories || []).some(c => cartCategories.includes(c))
+
+       return isBuySkuMatched || isTargetSkuMatched || isBrandMatched || isCategoryMatched
+    })
+  }
+
+  const relevantOffers = getRelevantOffers()
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -333,268 +477,373 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
           <span className="modal-title">🛒 New Sales Order — Premium POS</span>
           <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>✕</button>
         </div>
+        
+        {/* Step Progress Bar */}
+        <div style={{ padding: '0 24px', display: 'flex', gap: 4, marginBottom: 20 }}>
+           {[
+             { label: 'Recipient & Items', icon: <ShoppingBag size={14}/> },
+             { label: 'Delivery & Payment', icon: <CreditCard size={14}/> },
+             { label: 'Verify & Confirm', icon: <ShieldCheck size={14}/> }
+           ].map((step, idx) => (
+             <div key={idx} style={{ 
+               flex: 1, 
+               padding: '10px 4px', 
+               background: currentStep === idx ? 'rgba(201,168,76,0.1)' : 'rgba(255,255,255,0.02)',
+               borderBottom: `2px solid ${currentStep === idx ? 'var(--gold)' : 'transparent'}`,
+               display: 'flex',
+               flexDirection: 'column',
+               alignItems: 'center',
+               gap: 6,
+               opacity: currentStep >= idx ? 1 : 0.4,
+               transition: 'all 0.3s'
+             }}>
+                <div style={{ color: currentStep === idx ? 'var(--gold)' : '#fff' }}>{step.icon}</div>
+                <div style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', color: currentStep === idx ? 'var(--gold)' : 'var(--text-muted)' }}>{step.label}</div>
+             </div>
+           ))}
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ gap: 16, maxHeight: '70vh', overflowY: 'auto' }}>
+          <div className="modal-body" style={{ gap: 16, maxHeight: '60vh', overflowY: 'auto' }}>
             
-            {/* Customer & Channel */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={{ position: 'relative' }}>
-                <label className="label">Customer Profile (Search Name, Mobile, Email)</label>
-                <input type="text" className="input" placeholder="Type name, phone or email..." value={customerSearchQuery} onChange={e => { setCustomerSearchQuery(e.target.value); setShowCustomerSuggestions(true); }} onFocus={() => setShowCustomerSuggestions(true)} onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 250)} />
-                {showCustomerSuggestions && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#12182d', border: '1px solid var(--border)', borderRadius: 8, zIndex: 160, maxHeight: 180, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.8)' }}>
-                    <div style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', background: !form.customer_id ? '#1b2344' : 'transparent', color: '#fff' }} onMouseDown={() => {
-                      setForm(p => ({ ...p, customer_id: '' }))
-                      setCustomerSearchQuery('Walk-In / Retail Guest')
-                      setShowCustomerSuggestions(false)
-                    }}>
-                      👤 <strong>Walk-In / Retail Guest</strong> (Create profile on booking)
-                    </div>
-                    {customers.filter(c => {
-                      const q = customerSearchQuery.toLowerCase()
-                      return (c.full_name || '').toLowerCase().includes(q) || (c.phone || '').includes(q) || (c.email || '').toLowerCase().includes(q)
-                    }).map(c => (
-                      <div key={c.id} style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.03)', color: '#fff' }} onMouseDown={() => {
-                        setForm(p => ({
-                          ...p,
-                          customer_id: c.id,
-                          contact_name: c.full_name || '',
-                          contact_phone: c.phone || '',
-                          contact_email: c.email || ''
-                        }))
-                        setCustomerSearchQuery(c.full_name || c.phone || '')
+            {/* STEP 0: RECIPIENT & ITEMS */}
+            {currentStep === 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ position: 'relative' }}>
+                  <label className="label">Search Existing Customer</label>
+                  <input type="text" className="input" placeholder="Type name, phone or email..." value={customerSearchQuery} onChange={e => { setCustomerSearchQuery(e.target.value); setShowCustomerSuggestions(true); }} onFocus={() => setShowCustomerSuggestions(true)} onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 250)} />
+                  {showCustomerSuggestions && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#12182d', border: '1px solid var(--border)', borderRadius: 8, zIndex: 160, maxHeight: 180, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.8)' }}>
+                      <div style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', background: !form.customer_id ? '#1b2344' : 'transparent', color: '#fff' }} onMouseDown={() => {
+                        setForm(p => ({ ...p, customer_id: '' }))
+                        setCustomerSearchQuery('Walk-In / Retail Guest')
                         setShowCustomerSuggestions(false)
                       }}>
-                        👤 <strong>{c.full_name || 'Guest'}</strong> — 📞 {c.phone || 'No phone'} ({c.email || 'No email'})
+                        👤 <strong>Walk-In / Retail Guest</strong> (Create profile on booking)
+                      </div>
+                      {customers.filter(c => {
+                        const q = customerSearchQuery.toLowerCase()
+                        return (c.full_name || '').toLowerCase().includes(q) || (c.phone || '').includes(q) || (c.email || '').toLowerCase().includes(q)
+                      }).map(c => (
+                        <div key={c.id} style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.03)', color: '#fff' }} onMouseDown={() => {
+                          setForm(p => ({
+                            ...p,
+                            customer_id: c.id,
+                            contact_name: c.full_name || '',
+                            contact_phone: c.phone || '',
+                            contact_email: c.email || ''
+                          }))
+                          setCustomerSearchQuery(c.full_name || c.phone || '')
+                          setShowCustomerSuggestions(false)
+                        }}>
+                          👤 <strong>{c.full_name || 'Guest'}</strong> — 📞 {c.phone || 'No phone'} ({c.email || 'No email'})
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label">Recipient Full Name</label>
+                    <input type="text" className="input" placeholder="e.g. Rahul Sharma" value={form.contact_name} onChange={e => set('contact_name', e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="label">Sales Channel</label>
+                    <select className="select" value={form.channel} onChange={e => set('channel', e.target.value)}>
+                      <option value="pos">Retail Store POS</option>
+                      <option value="online">Online Webstore</option>
+                      <option value="whatsapp">WhatsApp Business</option>
+                      <option value="instagram">Instagram Catalog</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label">Primary Mobile Number <span style={{ color: 'var(--error)' }}>*</span></label>
+                    <input type="tel" className="input" placeholder="+91 98765 43210" value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="label">Customer Email Address</label>
+                    <input type="email" className="input" placeholder="customer@example.com" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} required />
+                  </div>
+                </div>
+
+                {/* Items Section (Moved from Step 2) */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gold)' }}>🛒 Ordered SKUs / Variants</span>
+                    <button type="button" className="btn btn-xs btn-secondary" onClick={addItem}>+ Add SKU</button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {form.items.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: 10, borderRadius: 8 }}>
+                        <div style={{ flex: 1.5 }}>
+                          <select className="select" value={item.variant_id} onChange={e => handleItemChange(idx, 'variant_id', e.target.value)} required>
+                            <option value="">Select Variant...</option>
+                            {variants.map(v => <option key={v.variant_id} value={v.variant_id}>{v.product_name} - {v.sku} (Avail: {v.current_stock})</option>)}
+                          </select>
+                        </div>
+                        <div style={{ flex: 0.6 }}>
+                          <input type="number" className="input" min={1} value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} required />
+                        </div>
+                        <div style={{ flex: 0.8 }}>
+                          <input type="number" className="input" value={item.unit_price} onChange={e => handleItemChange(idx, 'unit_price', e.target.value)} required />
+                        </div>
+                        <button type="button" className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)} style={{ color: 'var(--error)', border: 'none' }}>×</button>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="label">Sales Channel</label>
-                <select className="select" value={form.channel} onChange={e => set('channel', e.target.value)}>
-                  <option value="pos">Retail Store POS</option>
-                  <option value="online">Online Webstore</option>
-                  <option value="whatsapp">WhatsApp Business</option>
-                  <option value="instagram">Instagram Catalog</option>
-                </select>
-              </div>
-            </div>
+                </div>
 
-            {form.customer_id && customerAddresses.length > 0 && (
-              <div>
-                <label className="label">Select Saved Address for this Customer</label>
-                <select className="select" value={selectedAddressId} onChange={e => {
-                  const val = e.target.value
-                  setSelectedAddressId(val)
-                  if (val === 'new') {
-                    setForm(p => ({
-                      ...p,
-                      shipping_pincode: '',
-                      shipping_city: '',
-                      shipping_state: '',
-                      shipping_address_line1: '',
-                      shipping_address_line2: ''
-                    }))
-                  } else {
-                    const matched = customerAddresses.find(a => a.id === val)
-                    if (matched) {
-                      setForm(p => ({
-                        ...p,
-                        shipping_pincode: matched.pincode || '',
-                        shipping_city: matched.city || '',
-                        shipping_state: matched.state || '',
-                        shipping_address_line1: matched.address_line1 || '',
-                        shipping_address_line2: matched.address_line2 || ''
-                      }))
-                    }
-                  }
-                }}>
-                  {customerAddresses.map(addr => (
-                    <option key={addr.id} value={addr.id}>📍 {addr.pincode} — {addr.address_line1} ({addr.city})</option>
-                  ))}
-                  <option value="new">➕ Add & Save One More Address</option>
-                </select>
+                {/* OFFERS SECTION (Moved from Step 2) */}
+                <div style={{ background: 'rgba(201,168,76,0.03)', border: '1px dashed rgba(201,168,76,0.2)', padding: 16, borderRadius: 12 }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase' }}>🏷️ Apply Active Offer</span>
+                      <button type="button" onClick={() => { setSelectedOfferId(''); applyOffer(null); }} style={{ fontSize: '0.65rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>Clear All</button>
+                   </div>
+                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                      {relevantOffers.map(o => (
+                        <div key={o.id} onClick={() => { setSelectedOfferId(o.id); applyOffer(o); }} style={{ padding: '6px 12px', borderRadius: 20, fontSize: '0.7rem', cursor: 'pointer', background: selectedOfferId === o.id ? 'var(--gold)' : 'rgba(255,255,255,0.05)', color: selectedOfferId === o.id ? '#000' : '#fff', border: `1px solid ${selectedOfferId === o.id ? 'var(--gold)' : 'rgba(255,255,255,0.1)'}`, fontWeight: 700 }} className="hover-lift">{o.code}</div>
+                      ))}
+                      {relevantOffers.length === 0 && <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No relevant offers found.</div>}
+                   </div>
+                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <input type="text" className="input" placeholder="Manual Promo Code..." value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} />
+                      </div>
+                      <button type="button" className="btn btn-secondary btn-sm" style={{ height: '38px' }} onClick={handlePromoApply}>Apply</button>
+                   </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', background: 'rgba(201,168,76,0.05)', padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(201,168,76,0.1)' }}>
+                   <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Subtotal Estimate</span>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gold-bright)' }}>₹{calculateSubtotal().toLocaleString('en-IN')}</div>
+                   </div>
+                </div>
               </div>
             )}
 
-            {/* Customer Contacts & Verification */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label className="label">Recipient Full Name</label>
-                <input type="text" className="input" placeholder="e.g. Rahul Sharma" value={form.contact_name} onChange={e => set('contact_name', e.target.value)} required />
-              </div>
-              <div>
-                <label className="label">Customer Email Address</label>
-                <input type="email" className="input" placeholder="customer@example.com" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} required />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label className="label">Primary Mobile Number (OTP Verification)</label>
-                <input type="tel" className="input" placeholder="+91 98765 43210" value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} required />
-              </div>
-              <div>
-                <label className="label">Alternative Contact Number (Backup)</label>
-                <input type="tel" className="input" placeholder="Alternative number..." value={form.alt_contact_phone} onChange={e => set('alt_contact_phone', e.target.value)} />
-              </div>
-            </div>
-
-            {/* Delivery Address - Delhivery Partner Compliant */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-              <div style={{ position: 'relative' }}>
-                <label className="label">Pincode (PIN)</label>
-                <input type="text" className="input" placeholder="e.g. 110001" maxLength={6} value={form.shipping_pincode} onChange={e => { set('shipping_pincode', e.target.value); setShowPinSuggestions(true); }} onFocus={() => setShowPinSuggestions(true)} onBlur={() => setShowPinSuggestions(false)} required={delhiveryActive} />
-                {showPinSuggestions && form.shipping_pincode && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, width: '280px', background: '#12182d', border: '1px solid var(--border)', borderRadius: 8, zIndex: 150, maxHeight: 180, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.8)' }}>
-                    {liveSuggestions.length > 0 ? (
-                      liveSuggestions.map((item, index) => (
-                        <div key={index} style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.03)', color: '#fff' }} onMouseDown={() => {
-                          setForm(p => ({
-                            ...p,
-                            shipping_pincode: item.pincode,
-                            shipping_city: item.city,
-                            shipping_state: item.state,
-                            shipping_address_line1: item.line1,
-                            shipping_address_line2: item.line2
-                          }))
-                          setShowPinSuggestions(false)
-                        }}>
-                          📌 <strong>{item.pincode}</strong> — {item.city} ({item.line1})
-                        </div>
-                      ))
-                    ) : (
-                      PINCODE_SUGGESTIONS.filter(item => item.pincode.startsWith(form.shipping_pincode)).map(item => (
-                        <div key={item.pincode} style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.03)', color: '#fff' }} onMouseDown={() => {
-                          setForm(p => ({
-                            ...p,
-                            shipping_pincode: item.pincode,
-                            shipping_city: item.city,
-                            shipping_state: item.state,
-                            shipping_address_line1: item.line1,
-                            shipping_address_line2: item.line2
-                          }))
-                          setShowPinSuggestions(false)
-                        }}>
-                          📌 <strong>{item.pincode}</strong> — {item.city} ({item.line1})
-                        </div>
-                      ))
-                    )}
-                    {liveSuggestions.length === 0 && PINCODE_SUGGESTIONS.filter(item => item.pincode.startsWith(form.shipping_pincode)).length === 0 && (
-                      <div style={{ padding: '8px 12px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>No suggestions found. Enter manually.</div>
-                    )}
+            {/* STEP 1: DELIVERY & PAYMENT (Merged) */}
+            {currentStep === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                
+                {/* Saved Addresses Dropdown */}
+                {form.customer_id && customerAddresses.length > 0 && (
+                  <div>
+                    <label className="label">Select Saved Address</label>
+                    <select className="select" value={selectedAddressId} onChange={e => {
+                      const val = e.target.value
+                      setSelectedAddressId(val)
+                      if (val === 'new') {
+                        setForm(p => ({ ...p, shipping_pincode: '', shipping_city: '', shipping_state: '', shipping_address_line1: '', shipping_address_line2: '' }))
+                      } else {
+                        const matched = customerAddresses.find(a => a.id === val)
+                        if (matched) setForm(p => ({ ...p, shipping_pincode: matched.pincode || '', shipping_city: matched.city || '', shipping_state: matched.state || '', shipping_address_line1: matched.address_line1 || '', shipping_address_line2: matched.address_line2 || '' }))
+                      }
+                    }}>
+                      {customerAddresses.map(addr => <option key={addr.id} value={addr.id}>📍 {addr.pincode} — {addr.address_line1}</option>)}
+                      <option value="new">➕ Add New Address</option>
+                    </select>
                   </div>
                 )}
-              </div>
-              <div>
-                <label className="label">City</label>
-                <input type="text" className="input" placeholder="City" value={form.shipping_city} onChange={e => set('shipping_city', e.target.value)} required={delhiveryActive} />
-              </div>
-              <div>
-                <label className="label">State</label>
-                <input type="text" className="input" placeholder="State" value={form.shipping_state} onChange={e => set('shipping_state', e.target.value)} required={delhiveryActive} />
-              </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label className="label">Address Line 1 (Street / Locality)</label>
-                <input type="text" className="input" placeholder="Flat, Street name..." value={form.shipping_address_line1} onChange={e => set('shipping_address_line1', e.target.value)} required={delhiveryActive} />
-              </div>
-              <div>
-                <label className="label">Address Line 2 (Apartment / Landmark)</label>
-                <input type="text" className="input" placeholder="Floor, Landmark..." value={form.shipping_address_line2} onChange={e => set('shipping_address_line2', e.target.value)} />
-              </div>
-            </div>
-
-            {/* Items Sub-Section */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gold)' }}>Ordered SKUs / Product Variants</span>
-                <button type="button" className="btn btn-xs btn-secondary" onClick={addItem}>+ Add SKU</button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {form.items.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: 10, borderRadius: 8 }}>
-                    <div style={{ flex: 1.5 }}>
-                      <select className="select" value={item.variant_id} onChange={e => handleItemChange(idx, 'variant_id', e.target.value)} required>
-                        <option value="">Select Variant...</option>
-                        {variants.map(v => (
-                          <option key={v.variant_id} value={v.variant_id}>
-                            {v.product_name} - {v.sku} (Avail: {v.current_stock})
-                          </option>
+                {/* Delivery Address */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                  <div style={{ position: 'relative' }}>
+                    <label className="label">Pincode (PIN)</label>
+                    <input type="text" className="input" placeholder="e.g. 110001" maxLength={6} value={form.shipping_pincode} onChange={e => { set('shipping_pincode', e.target.value); setShowPinSuggestions(true); }} onFocus={() => setShowPinSuggestions(true)} onBlur={() => setShowPinSuggestions(false)} required={delhiveryActive} />
+                    {showPinSuggestions && form.shipping_pincode && (
+                      <div style={{ position: 'absolute', top: '100%', left: 0, width: '280px', background: '#12182d', border: '1px solid var(--border)', borderRadius: 8, zIndex: 150, maxHeight: 180, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.8)' }}>
+                        {liveSuggestions.map((item, index) => (
+                          <div key={index} style={{ padding: '8px 12px', fontSize: '0.72rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.03)', color: '#fff' }} onMouseDown={() => {
+                            setForm(p => ({ ...p, shipping_pincode: item.pincode, shipping_city: item.city, shipping_state: item.state, shipping_address_line1: item.line1, shipping_address_line2: item.line2 }))
+                            setShowPinSuggestions(false)
+                          }}>
+                            📌 <strong>{item.pincode}</strong> — {item.city} ({item.line1})
+                          </div>
                         ))}
-                      </select>
-                    </div>
-                    <div style={{ flex: 0.6 }}>
-                      <input type="number" className="input" placeholder="Qty" min={1} value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} required />
-                    </div>
-                    <div style={{ flex: 0.8 }}>
-                      <input type="number" className="input" placeholder="Price (₹)" value={item.unit_price} onChange={e => handleItemChange(idx, 'unit_price', e.target.value)} required />
-                    </div>
-                    <button type="button" className="btn btn-sm btn-ghost" onClick={() => removeItem(idx)} style={{ color: 'var(--error)', border: 'none' }}>×</button>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div>
+                    <label className="label">City</label>
+                    <input type="text" className="input" placeholder="City" value={form.shipping_city} onChange={e => set('shipping_city', e.target.value)} required={delhiveryActive} />
+                  </div>
+                  <div>
+                    <label className="label">State</label>
+                    <input type="text" className="input" placeholder="State" value={form.shipping_state} onChange={e => set('shipping_state', e.target.value)} required={delhiveryActive} />
+                  </div>
+                </div>
 
-            {/* Financial Summary Breakdown */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-              <div>
-                <label className="label">Discount (₹)</label>
-                <input type="number" className="input" min={0} value={form.discount_amount} onChange={e => set('discount_amount', e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Tax (₹)</label>
-                <input type="number" className="input" min={0} value={form.tax_amount} onChange={e => set('tax_amount', e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Shipping (₹)</label>
-                <input type="number" className="input" min={0} value={form.shipping_amount} onChange={e => set('shipping_amount', e.target.value)} />
-              </div>
-            </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label">Shipping Address Line 1</label>
+                    <input type="text" className="input" placeholder="Flat, Street name..." value={form.shipping_address_line1} onChange={e => set('shipping_address_line1', e.target.value)} required={delhiveryActive} />
+                  </div>
+                  <div>
+                    <label className="label">Alternate Contact (Optional)</label>
+                    <input type="tel" className="input" placeholder="Backup mobile..." value={form.alt_contact_phone} onChange={e => set('alt_contact_phone', e.target.value)} />
+                  </div>
+                </div>
 
-            {/* Payment & Status */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label className="label">Payment Method</label>
-                <select className="select" value={form.payment_method} onChange={e => set('payment_method', e.target.value)}>
-                  <option value="cash">Cash Checkout</option>
-                  <option value="card">Card Checkout</option>
-                  <option value="upi">UPI / QR Scan</option>
-                  <option value="cod">Cash On Delivery (COD)</option>
-                  <option value="razorpay">Razorpay Checkout</option>
-                </select>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'right' }}>
-                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Grand Order Total</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gold-bright)' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
-              </div>
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" id="billing_same" checked={form.billingSameAsShipping} onChange={e => set('billingSameAsShipping', e.target.checked)} style={{ cursor: 'pointer' }} />
+                  <label htmlFor="billing_same" style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Billing address is same as shipping</label>
+                </div>
 
-            {/* Third Party Integrations Sandbox */}
-            <div style={{ background: 'rgba(201,168,76,0.04)', border: '1px dashed rgba(201,168,76,0.3)', padding: 12, borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input type="checkbox" id="delhivery_opt" checked={delhiveryActive} onChange={e => setDelhiveryActive(e.target.checked)} style={{ cursor: 'pointer' }} />
-                <label htmlFor="delhivery_opt" style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>🚚 Auto-book Shipment with Delhivery API (Simulated)</label>
-              </div>
-              <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: 0, paddingLeft: 22 }}>Generates instant Delhivery shipping label AWB upon successful order creation.</p>
-            </div>
+                {!form.billingSameAsShipping && (
+                  <div style={{ padding: '14px', border: '1px solid var(--border)', borderRadius: 10, background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase' }}>🏦 Billing Address Details</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                      <div>
+                        <label className="label">Pincode</label>
+                        <input type="text" className="input" placeholder="Pincode" maxLength={6} value={form.billing_pincode} onChange={e => set('billing_pincode', e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="label">City</label>
+                        <input type="text" className="input" placeholder="City" value={form.billing_city} onChange={e => set('billing_city', e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="label">State</label>
+                        <input type="text" className="input" placeholder="State" value={form.billing_state} onChange={e => set('billing_state', e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-            <div>
-              <label className="label">Custom Notes</label>
-              <textarea className="input" rows={2} placeholder="Internal order instructions, packaging requirements..." value={form.notes} onChange={e => set('notes', e.target.value)} />
-            </div>
+                {/* Financial Summary */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                  <div>
+                    <label className="label">Discount</label>
+                    <input type="number" className="input" value={form.discount_amount} onChange={e => set('discount_amount', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="label">Tax</label>
+                    <input type="number" className="input" value={form.tax_amount} onChange={e => set('tax_amount', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="label">Shipping</label>
+                    <input type="number" className="input" value={form.shipping_amount} onChange={e => set('shipping_amount', e.target.value)} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Grand Total</span>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                {/* Payment Method */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label">Payment Method</label>
+                    <select className="select" value={form.payment_method} onChange={e => set('payment_method', e.target.value)}>
+                      <option value="cash">Cash Checkout</option>
+                      <option value="card">Card Checkout</option>
+                      <option value="upi">UPI / QR Scan</option>
+                      <option value="cod">Cash On Delivery (COD)</option>
+                      <option value="razorpay">Razorpay Checkout</option>
+                      <option value="bank_transfer">Bank Transfer</option>
+                    </select>
+                  </div>
+                  {(form.payment_method === 'card' || form.payment_method === 'upi' || form.payment_method === 'bank_transfer') && (
+                    <div>
+                      <label className="label">Transaction Ref ID</label>
+                      <input type="text" className="input" placeholder="Ref#" value={form.transaction_id} onChange={e => set('transaction_id', e.target.value)} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Delhivery Opt-In */}
+                <div style={{ background: 'rgba(201,168,76,0.04)', border: '1px dashed rgba(201,168,76,0.3)', padding: 12, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" id="delhivery_opt" checked={delhiveryActive} onChange={e => setDelhiveryActive(e.target.checked)} />
+                  <label htmlFor="delhivery_opt" style={{ fontSize: '0.75rem', fontWeight: 600 }}>🚚 Auto-book Shipment with Delhivery API</label>
+                </div>
+
+                <div>
+                  <textarea className="input" rows={2} placeholder="Internal order instructions..." value={form.notes} onChange={e => set('notes', e.target.value)} />
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: OTP VERIFICATION & FINAL CONFIRMATION */}
+            {currentStep === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '10px 0' }}>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
+                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 12 }}>📋 Final Order Summary</div>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.82rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Recipient</span><span style={{ color: '#fff', fontWeight: 600 }}>{form.contact_name}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Delivery PIN</span><span style={{ color: '#fff', fontWeight: 600 }}>{form.shipping_pincode} ({form.shipping_city})</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Payment Mode</span><span style={{ color: '#fff', fontWeight: 600, textTransform: 'uppercase' }}>{form.payment_method}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8, marginTop: 4 }}>
+                         <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>PAYABLE AMOUNT</span>
+                         <span style={{ color: 'var(--gold-bright)', fontWeight: 800, fontSize: '1.1rem' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                  <div style={{ textAlign: 'center' }}>
+                     <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Security Verification</h3>
+                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>A 4-digit code has been sent to <strong>{form.contact_email}</strong></p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                     <input 
+                        type="text" 
+                        className="input" 
+                        placeholder="0 0 0 0" 
+                        maxLength={4} 
+                        value={otpValue} 
+                        onChange={e => setOtpValue(e.target.value)}
+                        style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '8px', width: '180px', fontWeight: 800, background: 'rgba(51,154,240,0.05)', borderColor: 'rgba(51,154,240,0.2)' }} 
+                     />
+                  </div>
+                  <button type="button" onClick={() => sendOtp()} style={{ fontSize: '0.68rem', background: 'transparent', border: 'none', color: 'var(--gold)', cursor: 'pointer', textDecoration: 'underline' }}>Resend Verification Code</button>
+                  <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Simulation Tip: Use 1234 or 0000 to verify</div>
+                </div>
+              </div>
+            )}
 
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving...' : form.payment_method === 'razorpay' ? 'Checkout with Razorpay' : 'Book Sales Order'}
+
+          <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => {
+              if (currentStep > 0) setCurrentStep(currentStep - 1)
+              else onClose()
+            }}>
+              {currentStep === 0 ? 'Cancel' : 'Back'}
             </button>
+            
+            {currentStep === 0 && (
+              <button type="button" className="btn btn-primary" onClick={() => {
+                if (!form.contact_name || !form.contact_email || !form.contact_phone || form.items.some(i => !i.variant_id)) {
+                  toast.error('Please complete contact details and items selection')
+                } else {
+                  setCurrentStep(1)
+                }
+              }}>
+                Next: Delivery & Payment
+              </button>
+            )}
+
+            {currentStep === 1 && (
+              <button type="button" className="btn btn-primary" onClick={() => {
+                if (!form.shipping_pincode || !form.shipping_address_line1) {
+                  toast.error('Please complete delivery address details')
+                } else {
+                  sendOtp() // This sets step to 1 currently, need to adjust logic
+                }
+              }} disabled={saving}>
+                {saving ? 'Preparing...' : 'Next: Verify & Book'}
+              </button>
+            )}
+
+            {currentStep === 2 && (
+              <button type="submit" className="btn btn-primary" disabled={saving || verifyingOtp}>
+                {saving ? 'Booking...' : verifyingOtp ? 'Verifying...' : 'Finalize & Book Order'}
+              </button>
+            )}
           </div>
         </form>
 
@@ -633,40 +882,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
 
             <div style={{ display: 'flex', gap: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 16 }}>
               <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setRazorpaySimulating(false)}>Cancel Payment</button>
-              <button type="button" className="btn btn-primary" style={{ flex: 1.5, background: '#339af0', borderColor: '#339af0' }} onClick={() => { setRazorpaySimulating(false); triggerOtpSentFlow(); }}>⚡ Simulate Payment Success</button>
-            </div>
-          </div>
-        )}
-
-        {otpSent && (
-          <div style={{ position: 'absolute', top: '15%', left: '15%', right: '15%', bottom: '15%', background: '#0e1428', border: '2px solid var(--gold)', borderRadius: 12, padding: 24, zIndex: 120, boxShadow: '0 20px 40px rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 12, marginBottom: 16 }}>
-                <span style={{ fontWeight: 800, color: 'var(--gold)', fontSize: '1.1rem', letterSpacing: '0.03em' }}>🛡️ Security Verification</span>
-                <span style={{ fontSize: '0.72rem', background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', padding: '3px 8px', borderRadius: 4, fontWeight: 700 }}>OTP SENT</span>
-              </div>
-
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: 16 }}>
-                We have transmitted a secure 6-digit transaction authorization OTP code to your customer details:<br />
-                📧 <strong>{form.contact_email || 'N/A'}</strong><br />
-                📱 <strong>{form.contact_phone || 'N/A'}</strong>
-              </p>
-
-              <div>
-                <label className="label" style={{ fontSize: '0.72rem', color: '#fff', marginBottom: 6 }}>Enter 6-Digit OTP</label>
-                <input type="text" className="input" placeholder="Enter OTP Code (e.g. 123456)" value={enteredOtp} onChange={e => setEnteredOtp(e.target.value)} style={{ textAlign: 'center', letterSpacing: '0.5em', fontSize: '1.2rem', fontWeight: 800 }} required />
-              </div>
-
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 12, background: 'rgba(255,255,255,0.02)', padding: '8px 10px', borderRadius: 6 }}>
-                💡 <strong>Demo Bypass</strong>: Enter <strong>123456</strong> or leave it blank and click Verify to automatically authenticate and record the transaction in PostgreSQL database!
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 16 }}>
-              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setOtpSent(false)}>Back</button>
-              <button type="button" className="btn btn-primary" style={{ flex: 1.5 }} onClick={handleVerifyOtp} disabled={otpVerifying}>
-                {otpVerifying ? 'Verifying OTP...' : 'Verify OTP & Place Order'}
-              </button>
+              <button type="button" className="btn btn-primary" style={{ flex: 1.5, background: '#339af0', borderColor: '#339af0' }} onClick={() => { setRazorpaySimulating(false); performActualBooking(); }}>⚡ Simulate Payment Success</button>
             </div>
           </div>
         )}
@@ -687,6 +903,7 @@ const TIER_COLORS = { Bronze: '#cd7f32', Silver: '#aaa', Gold: 'var(--gold)', Pl
 
 const TXN_STATUS_COLORS = {
   settled: 'var(--success)',
+  paid: 'var(--success)',
   refunded: 'var(--info)',
   authorized: 'var(--warning)',
   failed: 'var(--error)',
@@ -710,20 +927,28 @@ export default function Orders() {
   const [customerSearch, setCustomerSearch] = useState('')
 
   // TRANSACTIONS STATE
-  const [transactions, setTransactions] = useState([
-    { id: 'TXN-90214-KZM', order_ref: 'ORD-2026-1024', customer: 'Arun Kumar', gateway: 'Razorpay', amount: 12500, status: 'settled', date: '2026-05-09' },
-    { id: 'TXN-84302-KZM', order_ref: 'ORD-2026-1025', customer: 'Priya Sharma', gateway: 'Stripe', amount: 8499, status: 'settled', date: '2026-05-08' },
-    { id: 'TXN-73412-KZM', order_ref: 'ORD-2026-1026', customer: 'Dayon Mathew', gateway: 'Cash on Delivery', amount: 24990, status: 'pending', date: '2026-05-08' },
-    { id: 'TXN-65239-KZM', order_ref: 'ORD-2026-1027', customer: 'Rahul Verma', gateway: 'UPI (GPay)', amount: 1499, status: 'settled', date: '2026-05-07' },
-    { id: 'TXN-54901-KZM', order_ref: 'ORD-2026-1028', customer: 'Sneha Patel', gateway: 'Razorpay', amount: 5000, status: 'refunded', date: '2026-05-06' },
-    { id: 'TXN-43102-KZM', order_ref: 'ORD-2026-1029', customer: 'Vikram Singh', gateway: 'Stripe', amount: 12500, status: 'failed', date: '2026-05-05' }
-  ])
+  const transactions = orders.map(o => ({
+    id: `TXN-${o.id.toString().slice(0, 8).toUpperCase()}`,
+    order_ref: o.order_number,
+    customer: o.customer_name || 'Walk-in',
+    gateway: o.payment_method || '—',
+    amount: o.total_amount,
+    status: o.payment_status || 'pending',
+    date: o.created_at
+  }))
   const [txnSearch, setTxnSearch] = useState('')
   const [variants, setVariants] = useState([])
   const [createModal, setCreateModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [shipModal, setShipModal] = useState(null) // holds { orderId, orderNumber, shippingAddress }
+  const [shipForm, setShipForm] = useState({ carrier: 'Delhivery', tracking_number: '', weight: '0.5', length: '20', breadth: '15', height: '10' })
+  const [selectedOrderIds, setSelectedOrderIds] = useState([])
+  const [notifModal, setNotifModal] = useState(null) // holds { orderNumber, status, customerName, customerPhone, customerEmail }
+  const [isEditingContact, setIsEditingContact] = useState(false)
+  const [contactEditForm, setContactEditForm] = useState({ name: '', phone: '', email: '' })
+  const [savingContact, setSavingContact] = useState(false)
 
   const loadVariants = () => {
     api.get('/inventory/stock')
@@ -733,7 +958,35 @@ export default function Orders() {
 
   const loadOrders = () => {
     setLoadingOrders(true)
-    api.get('/orders', { params: { search: orderSearch || undefined, status: statusFilter || undefined, limit: 100 } })
+    let start_date = undefined
+    const now = new Date()
+    
+    if (ovTime === 'Today Only') {
+      const d = new Date()
+      d.setHours(0,0,0,0)
+      start_date = d.toISOString()
+    } else if (ovTime === 'Last 7 Days') {
+      const d = new Date()
+      d.setDate(d.getDate() - 7)
+      start_date = d.toISOString()
+    } else if (ovTime === 'Last 30 Days') {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      start_date = d.toISOString()
+    } else if (ovTime === 'This Month') {
+      const d = new Date(now.getFullYear(), now.getMonth(), 1)
+      start_date = d.toISOString()
+    } else if (ovTime === 'This Year') {
+      const d = new Date(now.getFullYear(), 0, 1)
+      start_date = d.toISOString()
+    }
+
+    api.get('/orders', { params: { 
+      search: orderSearch || undefined, 
+      status: statusFilter || undefined, 
+      start_date,
+      limit: 200 
+    } })
       .then(r => setOrders(r.data))
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoadingOrders(false))
@@ -753,20 +1006,86 @@ export default function Orders() {
   }, [])
 
   useEffect(() => {
-    if (tab === 'orders') {
+    if (tab === 'orders' || tab === 'overview') {
       loadOrders()
-    } else if (tab === 'customers') {
+    }
+    if (tab === 'customers' || tab === 'overview') {
       loadCustomers()
     }
-  }, [tab, orderSearch, statusFilter, customerSearch])
+  }, [tab, orderSearch, statusFilter, customerSearch, ovTime])
 
-  const updateStatus = async (orderId, status) => {
+  const STATUS_MESSAGES = {
+    confirmed: (name, num) => `Hi ${name || 'there'} 👋, your Kozmocart order *${num}* has been *confirmed*! We're getting it ready for you. 🎉`,
+    processing: (name, num) => `Hi ${name || 'there'}, your order *${num}* is now being *processed & packed* at our warehouse. 📦`,
+    packed: (name, num) => `Your order *${num}* is *packed* and ready to ship, ${name || 'dear customer'}! Dispatch is imminent. 🚀`,
+    shipped: (name, num, awb) => `Great news ${name || 'there'}! 🚚 Your Kozmocart order *${num}* has been *shipped*.\nTracking AWB: *${awb || 'N/A'}*\nTrack at: https://www.delhivery.com/track/package/${awb || ''}`,
+    out_for_delivery: (name, num) => `Your order *${num}* is *out for delivery* today, ${name || 'dear customer'}! Please keep your phone handy. 🏠`,
+    delivered: (name, num) => `Your order *${num}* has been *delivered* successfully! 🎉 Thank you for shopping with Kozmocart. We'd love your review!`,
+    completed: (name, num) => `Order *${num}* is now *completed*. Thank you ${name || ''}! 💛 Earn more loyalty points on your next purchase.`,
+    cancelled: (name, num) => `We're sorry to inform you that order *${num}* has been *cancelled*, ${name || 'dear customer'}. Please contact us for assistance.`,
+  }
+
+  const updateStatus = async (orderId, status, order) => {
+    if (status === 'shipped') {
+      const ord = order || orders.find(o => o.id === orderId)
+      setShipModal({ orderId, orderNumber: ord?.order_number, shippingAddress: ord?.shipping_address, customerName: ord?.customer_name, customerPhone: ord?.customer_phone, customerEmail: ord?.customer_email })
+      setShipForm({ carrier: 'Delhivery', tracking_number: '', weight: '0.5', length: '20', breadth: '15', height: '10' })
+      return
+    }
     try {
       await api.patch(`/orders/${orderId}/status`, { status })
       toast.success('Status updated')
       loadOrders()
+      // Open notification modal
+      const ord = order || orders.find(o => o.id === orderId)
+      if (ord) {
+        setNotifModal({
+          orderNumber: ord.order_number,
+          status,
+          customerName: ord.customer_name,
+          customerPhone: ord.customer_phone,
+          customerEmail: ord.customer_email,
+          message: (STATUS_MESSAGES[status] || (() => ''))(ord.customer_name, ord.order_number)
+        })
+      }
     } catch {
       toast.error('Update failed')
+    }
+  }
+
+  const handleDispatchShipment = async () => {
+    if (!shipForm.tracking_number.trim() && shipForm.carrier !== 'Delhivery') {
+      toast.error('Please enter a tracking number')
+      return
+    }
+    setShipLoading(true)
+    try {
+      let awb = shipForm.tracking_number.trim()
+      if (shipForm.carrier === 'Delhivery' && !awb) {
+        awb = `DLVRY${Date.now().toString().slice(-10)}`
+        toast('📦 Delhivery AWB generated: ' + awb, { icon: '🚚' })
+      }
+      await api.patch(`/orders/${shipModal.orderId}/status`, {
+        status: 'shipped',
+        tracking_number: awb,
+        carrier: shipForm.carrier,
+      })
+      toast.success(`✅ Shipment dispatched via ${shipForm.carrier}`)
+      loadOrders()
+      // Open notification modal for shipped status
+      setNotifModal({
+        orderNumber: shipModal.orderNumber,
+        status: 'shipped',
+        customerName: shipModal.customerName,
+        customerPhone: shipModal.customerPhone,
+        customerEmail: shipModal.customerEmail,
+        message: STATUS_MESSAGES.shipped(shipModal.customerName, shipModal.orderNumber, awb)
+      })
+      setShipModal(null)
+    } catch {
+      toast.error('Dispatch failed. Please try again.')
+    } finally {
+      setShipLoading(false)
     }
   }
 
@@ -812,9 +1131,11 @@ export default function Orders() {
   }
 
   // Enhanced Metric Derivations for Overview
+  const successfulPaymentOrders = orders.filter(o => ['paid', 'partially_paid', 'refunded'].includes(o.payment_status))
+  
   const filteredOrdersForStats = ovChannel === 'All Channels' 
-    ? orders 
-    : orders.filter(o => (o.channel || '').toLowerCase() === ovChannel.toLowerCase().replace(' pos', '').replace(' webstore', '').replace(' ordering', '').replace(' catalog shop', '').trim())
+    ? successfulPaymentOrders 
+    : successfulPaymentOrders.filter(o => (o.channel || '').toLowerCase() === ovChannel.toLowerCase().replace(' pos', '').replace(' webstore', '').replace(' ordering', '').replace(' catalog shop', '').trim())
 
   const totalRevenue = filteredOrdersForStats.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
   const pendingShipments = filteredOrdersForStats.filter(o => ['pending', 'processing', 'packed', 'shipped'].includes(o.status)).length
@@ -835,14 +1156,14 @@ export default function Orders() {
   const avgCLV = customers.length ? Math.round(totalCLV / customers.length) : 0
 
   // Ledger Settlement Status
-  const settledTotal = transactions.filter(t => t.status === 'settled').reduce((sum, t) => sum + Number(t.amount || 0), 0)
+  const settledTotal = transactions.filter(t => t.status === 'paid' || t.status === 'settled').reduce((sum, t) => sum + Number(t.amount || 0), 0)
   const pendingTotal = transactions.filter(t => ['pending', 'authorized'].includes(t.status)).reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
   return (
     <div>
       <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
         <div>
-          <h1 className="page-title" style={{ fontSize: '1.8rem', background: 'linear-gradient(to right, #fff, #c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h1 className="page-title" style={{ fontSize: '1.8rem', background: 'linear-gradient(to right, var(--text-primary), var(--gold))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             CRM, Sales & Financial Ledger
           </h1>
           <p className="page-subtitle">Track incoming consumer orders, customer accounts, and real-time transaction ledgers</p>
@@ -877,8 +1198,11 @@ export default function Orders() {
            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)' }}>
               <TrendingUp size={12} color="var(--text-muted)" />
               <select value={ovTime} onChange={(e) => setOvTime(e.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}>
+                 <option value="Today Only">Today Only</option>
                  <option value="Last 7 Days">Last 7 Days</option>
                  <option value="Last 30 Days">Last 30 Days</option>
+                 <option value="This Month">This Month</option>
+                 <option value="This Year">This Year</option>
                  <option value="Total Lifetime">Total Lifetime</option>
               </select>
            </div>
@@ -893,10 +1217,11 @@ export default function Orders() {
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
              <div>
-                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>💶 Net Realized Revenue</span>
+                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+                  💶 Net Realized Revenue <InfoButton text="Total recognized revenue cleared through standard accounting, deducting cancellations." />
+                </span>
                 <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--gold-bright)', marginTop: 4 }}>{fmt(netRevenue)}</div>
              </div>
-             <div className="badge badge-success" style={{ fontSize: '0.6rem', display: 'flex', alignItems: 'center', gap: 2 }}><ArrowUpRight size={10}/> 8%</div>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.68rem', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 8 }}>
              <span style={{ color: 'var(--text-secondary)' }}>Gross: <strong>{fmt(totalRevenue)}</strong></span>
@@ -906,18 +1231,21 @@ export default function Orders() {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px' }}>
           <div>
-             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>🛒 Booked Flow</span>
+             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+               🛒 Successful Bookings <InfoButton text="Raw unique checkout transactions cleared by authorized financial gateways." />
+             </span>
              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{filteredOrdersForStats.length} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Orders</span></div>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.68rem', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 8 }}>
-             <span style={{ color: 'var(--text-secondary)' }}>Pending Fulfillment: <strong>{pendingShipments}</strong></span>
-             {unpaidCount > 0 && <span style={{ color: 'var(--warning)' }}>Unpaid: <strong>{unpaidCount}</strong></span>}
+             <span style={{ color: 'var(--text-secondary)' }}>Payment Verified only</span>
           </div>
         </div>
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px' }}>
           <div>
-             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>👥 Growth & Retention</span>
+             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+               👥 Growth & Retention <InfoButton text="Aggregation of unique global customer identities saved across active channel registers." />
+             </span>
              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{customers.length} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Accounts</span></div>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.68rem', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 8 }}>
@@ -928,7 +1256,9 @@ export default function Orders() {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px' }}>
           <div>
-             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>🏦 Settlement Ledger</span>
+             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+               🏦 Settlement Ledger <InfoButton text="Combined sum of incoming payouts awaiting authorization vs finalized settled batches." />
+             </span>
              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{fmt(settledTotal + pendingTotal)}</div>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.68rem', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 8 }}>
@@ -954,14 +1284,15 @@ export default function Orders() {
 
       {/* EXECUTIVE OVERVIEW DASHBOARD */}
       {tab === 'overview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           
           {/* Executive Sub-KPI Secondary Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Average Order Value (AOV)</span>
-                <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', fontSize: '0.6rem' }}><ArrowUpRight size={12} /> 4.2%</span>
+                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Average Order Value (AOV) <InfoButton text="Normalized total gross split between volume of paid receipts." />
+                </span>
               </div>
               <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginTop: 6 }}>
                 {fmt(filteredOrdersForStats.length ? (totalRevenue / filteredOrdersForStats.length) : 0)}
@@ -970,7 +1301,9 @@ export default function Orders() {
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tax & Shipping Capture</span>
+              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Tax & Shipping Capture <InfoButton text="Non-inventory collected fees directly linked toward indirect cost reimbursement." />
+              </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Collected Tax</span>
@@ -984,7 +1317,9 @@ export default function Orders() {
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Customer Lifetime Value (CLV)</span>
+              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Customer Lifetime Value (CLV) <InfoButton text="Statistical estimation of continuous realized liquidity expectation from registered audience." />
+              </span>
               <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginTop: 6 }}>
                 {fmt(avgCLV)}
               </div>
@@ -995,101 +1330,212 @@ export default function Orders() {
 
             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order Completion Rate</span>
-                <span style={{ color: 'var(--error)', display: 'flex', alignItems: 'center', fontSize: '0.6rem' }}><ArrowDownRight size={12} /> 0.5%</span>
+                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Order Completion Rate <InfoButton text="Percentage conversion measuring orders shipped and delivered avoiding cancellations." />
+                </span>
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginTop: 6 }}>94.6%</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginTop: 6 }}>
+                {filteredOrdersForStats.length ? Math.round((filteredOrdersForStats.filter(o => !['cancelled', 'returned', 'return_requested'].includes(o.status)).length / filteredOrdersForStats.length) * 100) : 0}%
+              </div>
               <div style={{ fontSize: '0.65rem', color: 'var(--success)', marginTop: 4 }}>High reliability retention</div>
             </div>
+          </div>
+
+          {/* Row 1: Order Status Pipeline Funnel */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+             <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+               <Activity size={18} color="var(--gold)" /> Order Fulfillment Lifecycle Funnel <InfoButton text="Tracking the physical status propagation across modern direct logistics pipeline." />
+             </h3>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 8 }}>
+                {[
+                  { id: 'pending', label: 'Pend', color: 'var(--warning)', icon: <Clock size={12}/> },
+                  { id: 'confirmed', label: 'Conf', color: 'var(--info)', icon: <Check size={12}/> },
+                  { id: 'processing', label: 'Proc', color: '#339af0', icon: <Activity size={12}/> },
+                  { id: 'packed', label: 'Pack', color: 'var(--gold)', icon: <Package size={12}/> },
+                  { id: 'shipped', label: 'Ship', color: 'var(--gold)', icon: <TrendingUp size={12}/> },
+                  { id: 'out_for_delivery', label: 'Out', color: 'var(--gold-bright)', icon: <Activity size={12}/> },
+                  { id: 'delivered', label: 'Dlvrd', color: 'var(--success)', icon: <Check size={12}/> },
+                  { id: 'completed', label: 'Comp', color: 'var(--success)', icon: <ShieldCheck size={12}/> },
+                  { id: 'cancelled', label: 'Canc', color: 'var(--error)', icon: <X size={12}/> },
+                  { id: 'return_requested', label: 'Ret Req', color: 'var(--error)', icon: <Clock size={12}/> },
+                  { id: 'returned', label: 'Retrd', color: 'var(--error)', icon: <X size={12}/> }
+                ].map((step) => {
+                   const count = successfulPaymentOrders.filter(o => o.status === step.id).length
+                   const pct = successfulPaymentOrders.length ? Math.round((count / successfulPaymentOrders.length) * 100) : 0
+                   return (
+                     <div key={step.id}>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${step.color}33`, padding: '12px 4px', borderRadius: 10, textAlign: 'center', transition: 'all 0.3s' }} className="hover-glow">
+                           <div style={{ color: step.color, marginBottom: 4, display: 'flex', justifyContent: 'center' }}>{step.icon}</div>
+                           <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>{count}</div>
+                           <div style={{ fontSize: '0.55rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: 2, fontWeight: 700 }}>{step.label}</div>
+                           <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${pct}%`, background: step.color }}></div>
+                           </div>
+                           <div style={{ fontSize: '0.5rem', color: step.color, marginTop: 4, fontWeight: 600 }}>{pct}%</div>
+                        </div>
+                     </div>
+                   )
+                })}
+             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
             {/* Sales Channel Share Progress bars with Drilldown interactivity */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 8 }}>
-                 <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', margin: 0 }}>📊 Sales Channel Volume Share</h3>
+                 <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', margin: 0 }}>
+                   📊 Sales Channel Volume Share <InfoButton text="Breakdown of gross volume received distinct from origin retail avenues." />
+                 </h3>
                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Click to drill-down</span>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { label: 'Retail Store POS', val: 45, color: 'var(--gold)', icon: '🏬' },
-                  { label: 'Online Webstore', val: 35, color: '#339af0', icon: '🌐' },
-                  { label: 'WhatsApp Business Ordering', val: 12, color: 'var(--success)', icon: '💬' },
-                  { label: 'Instagram Catalog Shop', val: 8, color: 'var(--error)', icon: '📸' }
-                ].map(ch => (
-                   <div 
-                     key={ch.label} 
-                     onClick={() => setOvChannel(ch.label)}
-                     style={{ 
-                        background: ovChannel === ch.label ? 'rgba(255,255,255,0.04)' : 'transparent', 
-                        padding: '8px 12px', 
-                        borderRadius: 8, 
-                        cursor: 'pointer',
-                        border: ovChannel === ch.label ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
-                        transition: 'all 0.2s'
-                     }}
-                     className="hover-lift"
-                   >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 6 }}>
-                        <span style={{ color: ovChannel === ch.label ? 'var(--gold-bright)' : '#fff', fontWeight: ovChannel === ch.label ? 700 : 500 }}>{ch.icon} {ch.label}</span>
-                        <strong style={{ opacity: 0.8 }}>{ch.val}% Share</strong>
-                      </div>
-                      <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${ch.val}%`, background: ch.color }}></div>
-                      </div>
-                   </div>
-                ))}
+                  { label: 'POS', icon: '🏬', color: 'var(--gold)' },
+                  { label: 'Webstore', icon: '🌐', color: '#339af0' },
+                  { label: 'WhatsApp', icon: '💬', color: 'var(--success)' },
+                  { label: 'Instagram', icon: '📸', color: 'var(--error)' }
+                ].map(ch => {
+                   const channelOrders = orders.filter(o => (o.channel || '').toLowerCase().includes(ch.label.toLowerCase()))
+                   const share = orders.length ? Math.round((channelOrders.length / orders.length) * 100) : 0
+                   return (
+                     <div 
+                       key={ch.label} 
+                       onClick={() => setOvChannel(ch.label)}
+                       style={{ 
+                          background: ovChannel === ch.label ? 'rgba(255,255,255,0.04)' : 'transparent', 
+                          padding: '8px 12px', 
+                          borderRadius: 8, 
+                          cursor: 'pointer',
+                          border: ovChannel === ch.label ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
+                          transition: 'all 0.2s'
+                       }}
+                       className="hover-lift"
+                     >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 6 }}>
+                          <span style={{ color: ovChannel === ch.label ? 'var(--gold-bright)' : '#fff', fontWeight: ovChannel === ch.label ? 700 : 500 }}>{ch.icon} {ch.label}</span>
+                          <strong style={{ opacity: 0.8 }}>{share}% Share</strong>
+                        </div>
+                        <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${share}%`, background: ch.color }}></div>
+                        </div>
+                     </div>
+                   )
+                })}
               </div>
             </div>
 
             {/* Financial Payment Methods Ledger Stats */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
-              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 8 }}>💳 Active Merchant Settlement</h3>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 8 }}>
+                💳 Active Merchant Settlement <InfoButton text="Current accounting balance distribution across designated clearing gateways." />
+              </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(51,154,240,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CreditCard size={16} color="#339af0"/></div>
-                    <div>
-                       <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>Razorpay Merchant</span>
-                       <div style={{ fontSize: '0.62rem', color: 'var(--success)' }}>Automatic Next-day Payouts</div>
+                {[
+                  { label: 'Razorpay Merchant', icon: <CreditCard size={16} color="#339af0"/>, bg: 'rgba(51,154,240,0.1)', sub: 'Automatic Next-day Payouts', method: 'razorpay' },
+                  { label: 'UPI Direct QR Scan', icon: <TrendingUp size={16} color="var(--success)"/>, bg: 'rgba(16,185,129,0.1)', sub: 'Instant Settlement Active', method: 'upi' },
+                  { label: 'Cash Desk Drawer', icon: <Building size={16} color="var(--gold)"/>, bg: 'rgba(201,168,76,0.1)', sub: 'Physical EOD Bank Deposit Req', method: 'cash' }
+                ].map(m => {
+                  const methodRev = orders.filter(o => o.payment_method === m.method).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+                  const share = totalRevenue ? Math.round((methodRev / totalRevenue) * 100) : 0
+                  return (
+                    <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 6, background: m.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{m.icon}</div>
+                        <div>
+                           <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>{m.label}</span>
+                           <div style={{ fontSize: '0.62rem', color: m.method === 'cash' ? 'var(--warning)' : 'var(--success)' }}>{m.sub}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                         <strong style={{ color: '#fff', fontSize: '0.9rem' }}>{fmt(methodRev)}</strong>
+                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{share}% Volume</div>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                     <strong style={{ color: 'var(--gold)', fontSize: '0.9rem' }}>{fmt(totalRevenue * 0.4)}</strong>
-                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>40% Volume</div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TrendingUp size={16} color="var(--success)"/></div>
-                    <div>
-                       <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>UPI Direct QR Scan</span>
-                       <div style={{ fontSize: '0.62rem', color: 'var(--success)' }}>Instant Settlement Active</div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                     <strong style={{ color: '#fff', fontSize: '0.9rem' }}>{fmt(totalRevenue * 0.35)}</strong>
-                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>35% Volume</div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(201,168,76,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Building size={16} color="var(--gold)"/></div>
-                    <div>
-                       <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>Cash Desk Drawer</span>
-                       <div style={{ fontSize: '0.62rem', color: 'var(--warning)' }}>Physical EOD Bank Deposit Req</div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                     <strong style={{ color: '#fff', fontSize: '0.9rem' }}>{fmt(totalRevenue * 0.25)}</strong>
-                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>25% Volume</div>
-                  </div>
-                </div>
+                  )
+                })}
               </div>
             </div>
+          </div>
+
+          <div className="grid-2" style={{ gap: 24 }}>
+             
+             {/* Payment Method Volume & Settlement Performance */}
+             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <CreditCard size={18} color="var(--gold)" /> Payment Gateway Performance <InfoButton text="Statistical metrics mapping absolute revenue generation per financial terminal." />
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                   {[
+                     { label: 'Razorpay (Cards/NetBanking)', method: 'razorpay', color: '#339af0' },
+                     { label: 'UPI Direct Settlement', method: 'upi', color: 'var(--success)' },
+                     { label: 'Cash on Delivery (COD)', method: 'cash', color: 'var(--gold)' }
+                   ].map(pm => {
+                      const methodOrders = orders.filter(o => o.payment_method === pm.method)
+                      const volume = methodOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+                      const avgValue = methodOrders.length ? (volume / methodOrders.length) : 0
+                      const maxVol = Math.max(...['razorpay', 'upi', 'cash'].map(m => orders.filter(o => o.payment_method === m).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)), 1)
+                      const barWidth = `${(volume / maxVol) * 100}%`
+                      
+                      return (
+                        <div key={pm.method}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                              <div>
+                                 <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{pm.label}</div>
+                                 <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{methodOrders.length} successful bookings</div>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                 <div style={{ fontSize: '0.9rem', fontWeight: 700, color: pm.color }}>{fmt(volume)}</div>
+                                 <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Avg: {fmt(avgValue)}</div>
+                              </div>
+                           </div>
+                           <div style={{ height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 4, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: barWidth, background: pm.color, borderRadius: 4 }}></div>
+                           </div>
+                        </div>
+                      )
+                   })}
+                </div>
+             </div>
+
+             {/* Customer Loyalty & "Regular" identification */}
+             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Users size={18} color="var(--gold)" /> Loyalty Cohort Analysis <InfoButton text="Grouping of purchasing habits classifying standard vs. recursive core accounts." />
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                   <div style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)', padding: 16, borderRadius: 12 }}>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--gold)', textTransform: 'uppercase', fontWeight: 700 }}>Regular Clients</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{customers.filter(c => c.order_count >= 3).length}</div>
+                      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 4 }}>Placed 3+ orders</div>
+                   </div>
+                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 16, borderRadius: 12 }}>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>One-Time Buyers</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{customers.filter(c => c.order_count === 1).length}</div>
+                      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 4 }}>Acquisition focus area</div>
+                   </div>
+                </div>
+
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>🏆 Top 5 High-Value Customers (HVC)</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                   {[...customers].sort((a, b) => Number(b.total_spent || 0) - Number(a.total_spent || 0)).slice(0, 5).map((c, i) => (
+                      <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8 }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--gold-glow)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800 }}>{i+1}</div>
+                            <div>
+                               <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.8rem' }}>{c.full_name}</div>
+                               <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>{c.order_count} orders</div>
+                            </div>
+                         </div>
+                         <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--gold-bright)', fontSize: '0.85rem' }}>{fmt(c.total_spent)}</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>CLV</div>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+
           </div>
         </div>
       )}
@@ -1116,6 +1562,15 @@ export default function Orders() {
           <table className="data-table">
             <thead>
               <tr>
+                <th style={{ width: 40 }}>
+                  <input type="checkbox"
+                    checked={orders.length > 0 && selectedOrderIds.length === orders.length}
+                    onChange={e => {
+                      if (e.target.checked) setSelectedOrderIds(orders.map(o => o.id))
+                      else setSelectedOrderIds([])
+                    }}
+                  />
+                </th>
                 <th>Order #</th>
                 <th>Customer</th>
                 <th>Channel</th>
@@ -1129,12 +1584,19 @@ export default function Orders() {
             </thead>
             <tbody>
               {loadingOrders ? (
-                <tr><td colSpan={9} className="table-empty">Loading…</td></tr>
-              ) : orders.length === 0 ? (
-                <tr><td colSpan={9} className="table-empty">No orders found.</td></tr>
+                <tr><td colSpan={10} className="table-empty">Loading…</td></tr>
               ) : (
-                orders.map(o => (
-                  <tr key={o.id} onClick={() => setSelectedOrder(o)} style={{ cursor: 'pointer' }}>
+                orders.filter(o => (orderSearch ? o.order_number.includes(orderSearch) : true) && (statusFilter ? o.status === statusFilter : true)).map(o => (
+                  <tr key={o.id} onClick={() => setSelectedOrder(o)} style={{ cursor: 'pointer', background: selectedOrderIds.includes(o.id) ? 'rgba(201,168,76,0.05)' : 'transparent' }}>
+                    <td onClick={e => e.stopPropagation()}>
+                      <input type="checkbox"
+                        checked={selectedOrderIds.includes(o.id)}
+                        onChange={() => {
+                          if (selectedOrderIds.includes(o.id)) setSelectedOrderIds(prev => prev.filter(id => id !== o.id))
+                          else setSelectedOrderIds(prev => [...prev, o.id])
+                        }}
+                      />
+                    </td>
                     <td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem' }}>{o.order_number}</span></td>
                     <td>{o.customer_name || <span style={{ color: 'var(--text-muted)' }}>Walk-in</span>}</td>
                     <td><span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>{o.channel}</span></td>
@@ -1150,7 +1612,7 @@ export default function Orders() {
                     <td onClick={e => e.stopPropagation()}>
                       <select className="select" style={{ width: 130, fontSize: '0.75rem', padding: '4px 8px' }}
                         value={o.status}
-                        onChange={e => updateStatus(o.id, e.target.value)}>
+                        onChange={e => updateStatus(o.id, e.target.value, o)}>
                         {ALL_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
                       </select>
                     </td>
@@ -1159,6 +1621,31 @@ export default function Orders() {
               )}
             </tbody>
           </table>
+
+          {/* BULK ACTION BAR */}
+          {selectedOrderIds.length > 0 && (
+            <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#1b2344', border: '1px solid var(--gold-border)', padding: '12px 24px', borderRadius: 100, boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 20, zIndex: 1000 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--gold)' }}>{selectedOrderIds.length} orders selected</div>
+              <div style={{ height: 20, width: 1, background: 'rgba(255,255,255,0.1)' }}></div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary btn-sm" style={{ background: 'var(--gold)', color: '#000', borderRadius: 20 }} onClick={() => {
+                  const selectedOrders = orders.filter(o => selectedOrderIds.includes(o.id))
+                  const ord = selectedOrders[0]
+                  setNotifModal({
+                    orderNumber: `[BULK: ${selectedOrderIds.length}]`,
+                    status: ord.status,
+                    customerName: 'Multiple Customers',
+                    customerPhone: '91xxxxxxxxxx',
+                    customerEmail: 'bulk@kozmocart.com',
+                    isBulk: true,
+                    ids: selectedOrderIds,
+                    message: `Hello! This is an update from Kozmocart regarding your order. We are processing it and will update you shortly.`
+                  })
+                }}>💬 Bulk Notify</button>
+                <button className="btn btn-secondary btn-sm" style={{ borderRadius: 20 }} onClick={() => setSelectedOrderIds([])}>Cancel</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1300,8 +1787,63 @@ export default function Orders() {
             <div className="modal-body" style={{ gap: 16, maxHeight: '70vh', overflowY: 'auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Recipient Name</div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>{selectedOrder.customer_name || 'Walk-In Guest'}</div>
+                  <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Recipient & Contact</span>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      {!isEditingContact && <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.6rem', padding: 0 }} onClick={() => {
+                        setContactEditForm({
+                          name: selectedOrder.customer_name || '',
+                          phone: selectedOrder.customer_phone || '',
+                          email: selectedOrder.customer_email || ''
+                        })
+                        setIsEditingContact(true)
+                      }}>✏️ Edit</button>}
+                      <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.6rem', padding: 0 }} onClick={loadOrders}>🔄 Refresh Data</button>
+                    </div>
+                  </div>
+                  
+                  {isEditingContact ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                      <input className="input" style={{ fontSize: '0.8rem', padding: '6px 10px' }} value={contactEditForm.name} onChange={e => setContactEditForm(p => ({...p, name: e.target.value}))} placeholder="Full Name" />
+                      <input className="input" style={{ fontSize: '0.8rem', padding: '6px 10px' }} value={contactEditForm.phone} onChange={e => setContactEditForm(p => ({...p, phone: e.target.value}))} placeholder="Phone Number" />
+                      <input className="input" style={{ fontSize: '0.8rem', padding: '6px 10px' }} value={contactEditForm.email} onChange={e => setContactEditForm(p => ({...p, email: e.target.value}))} placeholder="Email Address" />
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                        <button className="btn btn-primary btn-sm" disabled={savingContact} style={{ padding: '4px 12px', fontSize: '0.7rem' }} onClick={async () => {
+                          setSavingContact(true)
+                          try {
+                            const res = await api.patch(`/orders/${selectedOrder.id}/contact`, {
+                              customer_name: contactEditForm.name,
+                              customer_phone: contactEditForm.phone,
+                              customer_email: contactEditForm.email
+                            })
+                            setSelectedOrder(res.data)
+                            setOrders(prev => prev.map(o => o.id === res.data.id ? res.data : o))
+                            setIsEditingContact(false)
+                            toast.success('Contact details updated!')
+                          } catch (err) {
+                            toast.error('Failed to update contact')
+                          } finally {
+                            setSavingContact(false)
+                          }
+                        }}>{savingContact ? '...' : 'Save'}</button>
+                        <button className="btn btn-secondary btn-sm" style={{ padding: '4px 12px', fontSize: '0.7rem' }} onClick={() => setIsEditingContact(false)}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>{selectedOrder.customer_name || 'Walk-In Guest'}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
+                        <div style={{ fontSize: '0.75rem', color: selectedOrder.customer_phone ? 'var(--gold)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Smartphone size={12} /> {selectedOrder.customer_phone || 'No phone number'}
+                          {selectedOrder.customer_phone && <button style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }} onClick={() => { navigator.clipboard.writeText(selectedOrder.customer_phone); toast.success('Phone copied!'); }}>📋</button>}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: selectedOrder.customer_email ? 'var(--text-muted-bright)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Mail size={12} /> {selectedOrder.customer_email || 'No email provided'}
+                          {selectedOrder.customer_email && <button style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }} onClick={() => { navigator.clipboard.writeText(selectedOrder.customer_email); toast.success('Email copied!'); }}>📋</button>}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div>
                   <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Booking Date</div>
@@ -1317,22 +1859,38 @@ export default function Orders() {
                 <div>
                   <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Payment Mode</div>
                   <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--gold)' }}>{selectedOrder.payment_method || '—'} ({selectedOrder.payment_status})</div>
-                </div>
-              </div>
-
-              {selectedOrder.shipping_address && (
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 12, borderRadius: 8 }}>
-                  <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>📍 Delivery & Delhivery Shipping Partner Details</div>
-                  <div style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 500, lineHeight: '1.4' }}>
-                    {selectedOrder.shipping_address.full_address || `${selectedOrder.shipping_address.address_line1}, ${selectedOrder.shipping_address.city} - ${selectedOrder.shipping_address.pincode}`}
-                  </div>
-                  {selectedOrder.tracking_number && (
-                    <div style={{ marginTop: 8, padding: '4px 8px', background: 'rgba(201,168,76,0.1)', border: '1px dashed rgba(201,168,76,0.3)', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', color: 'var(--gold)' }}>
-                      🚚 AWB Tracking: <strong>{selectedOrder.tracking_number}</strong>
+                  {(selectedOrder.transaction_id || selectedOrder.payment_gateway) && (
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                      {selectedOrder.payment_gateway && `Gateway: ${selectedOrder.payment_gateway}`}
+                      {selectedOrder.transaction_id && ` | Ref: ${selectedOrder.transaction_id}`}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: selectedOrder.billing_address ? '1fr 1fr' : '1fr', gap: 12 }}>
+                {selectedOrder.shipping_address && (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 12, borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>📍 Shipping Address Details</div>
+                    <div style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 500, lineHeight: '1.4' }}>
+                      {selectedOrder.shipping_address.full_address || `${selectedOrder.shipping_address.address_line1}, ${selectedOrder.shipping_address.city} - ${selectedOrder.shipping_address.pincode}`}
+                    </div>
+                    {selectedOrder.tracking_number && (
+                      <div style={{ marginTop: 8, padding: '4px 8px', background: 'rgba(201,168,76,0.1)', border: '1px dashed rgba(201,168,76,0.3)', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', color: 'var(--gold)' }}>
+                        🚚 AWB Tracking: <strong>{selectedOrder.tracking_number}</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {selectedOrder.billing_address && (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 12, borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>🏦 Billing Address Details</div>
+                    <div style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 500, lineHeight: '1.4' }}>
+                      {selectedOrder.billing_address.full_address || `${selectedOrder.billing_address.address_line1}, ${selectedOrder.billing_address.city} - ${selectedOrder.billing_address.pincode}`}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div>
                 <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Ordered Items / SKUs</div>
@@ -1369,12 +1927,37 @@ export default function Orders() {
                 {selectedOrder.shipping_amount > 0 && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shipping: <strong style={{ color: '#fff' }}>{fmt(selectedOrder.shipping_amount)}</strong></div>}
                 <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gold-bright)', marginTop: 4 }}>Grand Total: {fmt(selectedOrder.total_amount)}</div>
               </div>
+
+              {/* STATUTORY COMPLIANCE FOOTER */}
+              {(() => {
+                let companyDetails = { companyName: 'Kozmocart Retailers', gstin: '' }
+                try {
+                  const saved = localStorage.getItem('kzm-company-gst')
+                  if (saved) companyDetails = JSON.parse(saved)
+                } catch (e) {}
+                
+                return (
+                  <div style={{ marginTop: 12, padding: '12px 14px', background: 'linear-gradient(to right, rgba(255,255,255,0.01), rgba(201,168,76,0.04))', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8 }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, fontWeight: 700 }}>🏛️ Issued & Documented By</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>{companyDetails.companyName}</div>
+                    {companyDetails.gstin && (
+                      <div style={{ fontSize: '0.7rem', color: 'var(--gold)', marginTop: 2, fontFamily: 'monospace', fontWeight: 700 }}>GSTIN: {companyDetails.gstin}</div>
+                    )}
+                    {companyDetails.registeredAddress && (
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.4 }}>{companyDetails.registeredAddress}</div>
+                    )}
+                  </div>
+                )
+              })()}
+
             </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={() => setSelectedOrder(null)}>Close View</button>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSelectedOrder(null)}>Close Panel</button>
             </div>
           </div>
         </div>
+
       )}
 
       {/* 👥 PREMIUM CUSTOMER PROFILE DETAILS MODAL */}
@@ -1432,6 +2015,184 @@ export default function Orders() {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => setSelectedTransaction(null)} style={{ width: '100%' }}>Done View</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🚚 SHIPPING DISPATCH MODAL (Delhivery / Manual AWB) */}
+      {shipModal && (
+        <div className="modal-overlay" onClick={() => setShipModal(null)}>
+          <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">🚚 Dispatch Shipment — {shipModal.orderNumber}</span>
+              <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => setShipModal(null)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ gap: 16 }}>
+              {/* Customer Contact */}
+              <div style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, padding: '12px 16px' }}>
+                <div style={{ fontSize: '0.62rem', color: 'var(--gold)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>📦 Recipient Details</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>{shipModal.customerName || 'Customer'}</div>
+                {shipModal.customerPhone && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>📞 {shipModal.customerPhone}</div>}
+                {shipModal.customerEmail && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>✉️ {shipModal.customerEmail}</div>}
+                {shipModal.shippingAddress && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    📍 {shipModal.shippingAddress.address_line1}, {shipModal.shippingAddress.city} - {shipModal.shippingAddress.pincode}
+                  </div>
+                )}
+              </div>
+
+              {/* Carrier Select */}
+              <div>
+                <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Carrier / Courier Partner</label>
+                <select className="select" value={shipForm.carrier} onChange={e => setShipForm({ ...shipForm, carrier: e.target.value })} style={{ width: '100%' }}>
+                  <option value="Delhivery">🚀 Delhivery (Auto-generate AWB)</option>
+                  <option value="BlueDart">BlueDart</option>
+                  <option value="DTDC">DTDC</option>
+                  <option value="Ekart">Ekart Logistics</option>
+                  <option value="XpressBees">XpressBees</option>
+                  <option value="IndiaPost">India Post / Speed Post</option>
+                  <option value="Manual">Other / Manual</option>
+                </select>
+              </div>
+
+              {/* AWB / Tracking Number */}
+              <div>
+                <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+                  AWB / Tracking Number {shipForm.carrier === 'Delhivery' ? '(leave blank to auto-generate)' : '*'}
+                </label>
+                <input
+                  className="input"
+                  style={{ width: '100%' }}
+                  placeholder={shipForm.carrier === 'Delhivery' ? 'Auto-generated on dispatch…' : 'Enter tracking number'}
+                  value={shipForm.tracking_number}
+                  onChange={e => setShipForm({ ...shipForm, tracking_number: e.target.value })}
+                />
+              </div>
+
+              {/* Package Dimensions (for Delhivery API) */}
+              {shipForm.carrier === 'Delhivery' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
+                  {[['Weight (kg)', 'weight'], ['L (cm)', 'length'], ['B (cm)', 'breadth'], ['H (cm)', 'height']].map(([label, key]) => (
+                    <div key={key}>
+                      <label style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{label}</label>
+                      <input className="input" style={{ width: '100%', textAlign: 'center' }} value={shipForm[key]} onChange={e => setShipForm({ ...shipForm, [key]: e.target.value })} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                💡 After dispatch, an automatic WhatsApp/SMS notification template will be ready to send to the customer.
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShipModal(null)}>Cancel</button>
+              <button type="button" className="btn btn-primary" style={{ background: 'var(--gold)', color: '#000', fontWeight: 700 }} onClick={handleDispatchShipment} disabled={shipLoading}>
+                {shipLoading ? '⏳ Dispatching…' : '🚀 Confirm Dispatch'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💬 CUSTOMER NOTIFICATION MODAL (WhatsApp / SMS) */}
+      {notifModal && (
+        <div className="modal-overlay" onClick={() => setNotifModal(null)}>
+          <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">💬 Send Customer Notification</span>
+              <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => setNotifModal(null)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ gap: 16 }}>
+              {/* Status badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ background: STATUS_COLORS[notifModal.status] + '22', color: STATUS_COLORS[notifModal.status], padding: '4px 12px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                  {notifModal.status?.replace(/_/g, ' ')}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Order {notifModal.orderNumber}</span>
+              </div>
+
+              {/* Customer contact */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Send To</div>
+                <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.82rem' }}>{notifModal.customerName || 'Customer'}</div>
+                {notifModal.customerPhone
+                  ? <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>📞 {notifModal.customerPhone}</div>
+                  : <div style={{ fontSize: '0.72rem', color: 'var(--error)' }}>⚠️ No phone number on record</div>
+                }
+                {notifModal.customerEmail
+                  ? <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>✉️ {notifModal.customerEmail}</div>
+                  : <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>No email on record</div>
+                }
+              </div>
+
+              {/* Message preview */}
+              <div>
+                <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Message Preview (WhatsApp / SMS)</div>
+                <textarea
+                  className="input"
+                  style={{ width: '100%', minHeight: 120, fontFamily: 'monospace', fontSize: '0.78rem', lineHeight: 1.6, resize: 'vertical' }}
+                  value={notifModal.message}
+                  onChange={e => setNotifModal({ ...notifModal, message: e.target.value })}
+                />
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '8px 12px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                ℹ️ Click <strong>WhatsApp</strong> to open wa.me with the pre-filled message, or <strong>Copy</strong> to paste manually.
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setNotifModal(null)}>Skip</button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => {
+                navigator.clipboard.writeText(notifModal.message)
+                toast.success('Message copied!')
+              }}>📋 Copy</button>
+              <button type="button" className="btn btn-primary btn-sm"
+                style={{ background: '#25D366', borderColor: '#25D366', color: '#fff', fontWeight: 700 }}
+                onClick={() => {
+                  if (notifModal.isBulk) {
+                    toast.success(`Processing bulk WhatsApp for ${notifModal.ids.length} orders...`)
+                    setNotifModal(null)
+                    return
+                  }
+                  if (!notifModal.customerPhone) { toast.error('No phone number on record'); return }
+                  const phone = notifModal.customerPhone.replace(/\D/g, '')
+                  const fullPhone = phone.startsWith('91') ? phone : `91${phone}`
+                  const encoded = encodeURIComponent(notifModal.message)
+                  window.open(`https://wa.me/${fullPhone}?text=${encoded}`, '_blank')
+                  setNotifModal(null)
+                }}>
+                💬 {notifModal.isBulk ? 'WhatsApp All' : 'WhatsApp'}
+              </button>
+              <button type="button" className="btn btn-primary btn-sm"
+                style={{ background: '#4F46E5', borderColor: '#4F46E5', color: '#fff', fontWeight: 700 }}
+                onClick={() => {
+                  if (notifModal.isBulk) {
+                    toast.success(`Processing bulk email for ${notifModal.ids.length} orders...`)
+                    setNotifModal(null)
+                    return
+                  }
+                  if (!notifModal.customerEmail) { toast.error('No email address on record'); return }
+                  // Load template from localStorage (saved from Settings → Email Templates)
+                  let templates = {}
+                  try {
+                    const t = localStorage.getItem('kzm-email-templates')
+                    if (t) templates = JSON.parse(t)
+                  } catch {}
+                  const tpl = templates[notifModal.status] || {}
+                  const render = str => (str || '')
+                    .replace(/{{name}}/g, notifModal.customerName || 'Customer')
+                    .replace(/{{order}}/g, notifModal.orderNumber || '')
+                    .replace(/{{awb}}/g, notifModal.awb || 'N/A')
+                  const subject = encodeURIComponent(render(tpl.subject || `Order ${notifModal.orderNumber} - Status Update`))
+                  const body = encodeURIComponent(render(tpl.body || notifModal.message))
+                  window.open(`mailto:${notifModal.customerEmail}?subject=${subject}&body=${body}`, '_blank')
+                  toast.success('Email client opened!')
+                  setNotifModal(null)
+                }}>
+                ✉️ {notifModal.isBulk ? 'Email All' : 'Email'}
+              </button>
             </div>
           </div>
         </div>

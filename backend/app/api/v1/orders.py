@@ -1,19 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from datetime import datetime, timezone
 from decimal import Decimal
 import uuid
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_manager
-from app.models.order import Order, OrderItem, OrderStatus
+from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, OrderStatusHistory
 from app.models.customer import Customer, CustomerAddress
 from app.models.product import ProductVariant, Product
-from app.models.inventory import InventoryBatch
+from app.models.inventory import InventoryBatch, InventoryMovement
+from app.models.offer import Offer
 from app.models.user import User
-from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderStatusUpdate, CustomerCreate, CustomerOut
+from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderStatusUpdate, OrderContactUpdate, CustomerCreate, CustomerOut
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -29,14 +30,17 @@ async def list_orders(
     status: str | None = Query(None),
     channel: str | None = Query(None),
     search: str | None = Query(None),
+    start_date: datetime | None = Query(None),
+    end_date: datetime | None = Query(None),
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     q = select(Order).options(
-        selectinload(Order.items).selectinload(OrderItem.variant).selectinload(ProductVariant.product),
-        selectinload(Order.customer),
+        selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+        selectinload(Order.status_history),
+        joinedload(Order.customer),
     )
     if status:
         q = q.where(Order.status == status)
@@ -44,6 +48,10 @@ async def list_orders(
         q = q.where(Order.channel == channel)
     if search:
         q = q.where(Order.order_number.ilike(f"%{search}%"))
+    if start_date:
+        q = q.where(Order.created_at >= start_date)
+    if end_date:
+        q = q.where(Order.created_at <= end_date)
     q = q.order_by(Order.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(q)
     orders = result.scalars().all()
@@ -56,8 +64,9 @@ async def get_order(order_id: str, db: AsyncSession = Depends(get_db), _: User =
         select(Order)
         .where(Order.id == order_id)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.variant).selectinload(ProductVariant.product),
-            selectinload(Order.customer),
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            selectinload(Order.status_history),
+            joinedload(Order.customer),
         )
     )
     order = result.scalar_one_or_none()
@@ -72,8 +81,30 @@ async def create_order(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not body.customer_phone or not body.customer_email:
+        raise HTTPException(
+            status_code=400, 
+            detail="Mobile and email are compulsory to complete checkout."
+        )
     subtotal = sum(item.unit_price * item.quantity - item.discount_amount for item in body.items)
-    total = subtotal - body.discount_amount + body.tax_amount + body.shipping_amount
+    
+    # Loyalty points redemption logic (1 point = ₹1)
+    redemption_amount = 0.0
+    if body.loyalty_points_used > 0:
+        # Redemption only possible for identified customers
+        if not body.customer_id:
+            raise HTTPException(status_code=400, detail="Loyalty points can only be redeemed for identified customers.")
+        
+        # We need to fetch the customer to check points
+        res_redemption_cust = await db.execute(select(Customer).where(Customer.id == body.customer_id))
+        redemption_cust = res_redemption_cust.scalar_one_or_none()
+        if not redemption_cust or redemption_cust.loyalty_points < body.loyalty_points_used:
+            raise HTTPException(status_code=400, detail="Insufficient loyalty points for redemption.")
+        
+        redemption_amount = float(body.loyalty_points_used)
+        redemption_cust.loyalty_points -= body.loyalty_points_used
+
+    total = subtotal - body.discount_amount + body.tax_amount + body.shipping_amount - redemption_amount
 
     customer_id = body.customer_id
     if not customer_id and (body.customer_name or body.customer_phone or body.customer_email):
@@ -88,9 +119,6 @@ async def create_order(
             
         if existing_cust:
             customer_id = existing_cust.id
-            existing_cust.order_count += 1
-            existing_cust.total_spent += Decimal(str(total))
-            existing_cust.last_order_at = datetime.now(timezone.utc)
         else:
             # Create a brand new Customer record automatically!
             new_cust = Customer(
@@ -99,21 +127,18 @@ async def create_order(
                 email=body.customer_email,
                 loyalty_tier="Bronze",
                 loyalty_points=10, # Gift 10 points on signup
-                total_spent=Decimal(str(total)),
-                order_count=1,
-                last_order_at=datetime.now(timezone.utc),
+                total_spent=Decimal('0'),
+                order_count=0,
                 acquisition_source="pos"
             )
             db.add(new_cust)
             await db.flush()
             customer_id = new_cust.id
     elif customer_id:
+        # Just verify existence
         res_cust = await db.execute(select(Customer).where(Customer.id == customer_id))
-        cust = res_cust.scalar_one_or_none()
-        if cust:
-            cust.order_count += 1
-            cust.total_spent += Decimal(str(total))
-            cust.last_order_at = datetime.now(timezone.utc)
+        if not res_cust.scalar_one_or_none():
+            customer_id = None
 
     # Automatically save unique addresses to CustomerAddress table
     if customer_id and body.shipping_address:
@@ -149,6 +174,7 @@ async def create_order(
         processed_by=current_user.id,
         channel=body.channel,
         payment_method=body.payment_method,
+        payment_status=body.payment_status or PaymentStatus.pending,
         subtotal=subtotal,
         discount_amount=body.discount_amount,
         loyalty_points_used=body.loyalty_points_used,
@@ -159,9 +185,24 @@ async def create_order(
         gift_message=body.gift_message,
         coupon_code=body.coupon_code,
         shipping_address=body.shipping_address,
+        billing_address=body.billing_address,
+        customer_name=body.customer_name,
+        customer_phone=body.customer_phone,
+        customer_email=body.customer_email,
+        transaction_id=body.transaction_id,
+        payment_gateway=body.payment_gateway,
+        payment_details=body.payment_details,
     )
     db.add(order)
     await db.flush()
+
+    # Record initial status
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=order.status,
+        notes="Order placed"
+    )
+    db.add(history)
 
     for item_data in body.items:
         # Get FIFO batch
@@ -181,6 +222,15 @@ async def create_order(
         # Deduct stock
         batch.current_quantity -= item_data.quantity
 
+        # Log movement
+        movement = InventoryMovement(
+            batch_id=batch.id,
+            type="Deduction",
+            quantity=-item_data.quantity,
+            reason=f"Sales Order Fulfilment ({order.order_number})"
+        )
+        db.add(movement)
+
         item = OrderItem(
             order_id=order.id,
             variant_id=item_data.variant_id,
@@ -193,14 +243,26 @@ async def create_order(
         )
         db.add(item)
 
-    # Update customer stats
-    if body.customer_id:
-        cust_result = await db.execute(select(Customer).where(Customer.id == body.customer_id))
+    # Update customer stats and earn points
+    if customer_id:
+        cust_result = await db.execute(select(Customer).where(Customer.id == customer_id))
         customer = cust_result.scalar_one_or_none()
         if customer:
             customer.order_count += 1
             customer.total_spent += Decimal(str(total))
             customer.last_order_at = datetime.now(timezone.utc)
+            # Earn points on net amount spent
+            earned_points = int(total // 100)
+            if earned_points > 0:
+                customer.loyalty_points += earned_points
+
+    # Update Offer Performance Stats
+    if body.coupon_code:
+        offer_result = await db.execute(select(Offer).where(Offer.code == body.coupon_code))
+        db_offer = offer_result.scalar_one_or_none()
+        if db_offer:
+            db_offer.redemption_count += 1
+            db_offer.attributed_revenue += Decimal(str(total))
 
     await db.commit()
 
@@ -208,8 +270,9 @@ async def create_order(
         select(Order)
         .where(Order.id == order.id)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.variant).selectinload(ProductVariant.product),
-            selectinload(Order.customer),
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            selectinload(Order.status_history),
+            joinedload(Order.customer),
         )
     )
     order = result.scalar_one()
@@ -227,15 +290,25 @@ async def update_order_status(
         select(Order)
         .where(Order.id == order_id)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.variant).selectinload(ProductVariant.product),
-            selectinload(Order.customer),
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            selectinload(Order.status_history),
+            joinedload(Order.customer),
         )
     )
     order = result.scalar_one_or_none()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    order.status = body.status
+    if order.status != body.status:
+        order.status = body.status
+        # Record status change
+        history = OrderStatusHistory(
+            order_id=order.id,
+            status=body.status,
+            notes=body.notes or f"Status changed to {body.status}"
+        )
+        db.add(history)
+
     if body.tracking_number:
         order.tracking_number = body.tracking_number
     if body.carrier:
@@ -250,15 +323,46 @@ async def update_order_status(
     return _enrich_order(order)
 
 
+@router.patch("/{order_id}/contact", response_model=OrderOut)
+async def update_order_contact(
+    order_id: str,
+    body: OrderContactUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_manager),
+):
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_id)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            joinedload(Order.customer),
+        )
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if body.customer_name is not None:
+        order.customer_name = body.customer_name
+    if body.customer_phone is not None:
+        order.customer_phone = body.customer_phone
+    if body.customer_email is not None:
+        order.customer_email = body.customer_email
+
+    await db.commit()
+    await db.refresh(order)
+    return _enrich_order(order)
+
+
 def _enrich_order(order: Order) -> OrderOut:
     out = OrderOut.model_validate(order)
     if order.customer:
-        out.customer_name = order.customer.full_name
-    for i, item_model in enumerate(order.items):
-        if i < len(out.items) and item_model.variant:
-            out.items[i].sku = item_model.variant.sku
-            if item_model.variant.product:
-                out.items[i].product_name = item_model.variant.product.name
+        if not out.customer_name or out.customer_name == "New Customer":
+            out.customer_name = order.customer.full_name
+        if not out.customer_email:
+            out.customer_email = order.customer.email
+        if not out.customer_phone:
+            out.customer_phone = order.customer.phone
     return out
 
 

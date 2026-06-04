@@ -2,106 +2,185 @@ import { useEffect, useState } from 'react'
 import { Plus, Search, AlertTriangle, Hammer, Sliders, MapPin, Layers, Percent, Activity, Calendar, Building, FileText, User, Mail, Phone, Map, Filter, ChevronRight, ArrowRight, TrendingUp, Package } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import InfoButton from '../../components/ui/InfoButton'
 
 function BatchModal({ variants, suppliers, prefill, onClose, onSaved }) {
-  const [form, setForm] = useState({
-    variant_id: prefill ? prefill.variant_id : '',
-    supplier_id: '',
-    batch_code: prefill ? `LOT-${prefill.sku}-RESTOCK` : '',
-    initial_quantity: '',
-    purchase_cost: prefill ? prefill.cost_price : '',
-    notes: prefill ? `Automated restock order created for low-stock SKU: ${prefill.sku}` : '',
-    warehouse_location: prefill ? prefill.warehouse_location : '',
-    manufacture_date: '',
-    expiry_date: ''
-  })
+  const [supplierId, setSupplierId] = useState('')
+  const [batchCode, setBatchCode] = useState(prefill ? `LOT-${prefill.sku}-RESTOCK` : `LOT-${Date.now().toString().slice(-6)}`)
+  const [notes, setNotes] = useState(prefill ? `Automated restock order created for low-stock SKU: ${prefill.sku}` : '')
+  const [warehouseLocation, setWarehouseLocation] = useState(prefill ? prefill.warehouse_location || '' : '')
+  const [manufactureDate, setManufactureDate] = useState('')
+  const [expiryDate, setExpiryDate] = useState('')
   const [saving, setSaving] = useState(false)
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  // List of items in this shipment batch
+  const [items, setItems] = useState([
+    {
+      variant_id: prefill ? prefill.variant_id : '',
+      initial_quantity: '',
+      purchase_cost: prefill ? prefill.cost_price || '' : ''
+    }
+  ])
+
+  const handleAddItem = () => {
+    setItems(p => [...p, { variant_id: '', initial_quantity: '', purchase_cost: '' }])
+  }
+
+  const handleRemoveItem = (idx) => {
+    if (items.length <= 1) {
+      toast.error('At least one item SKU must be received in a shipment.')
+      return
+    }
+    setItems(p => p.filter((_, i) => i !== idx))
+  }
+
+  const updateItem = (idx, key, val) => {
+    setItems(p => p.map((item, i) => {
+      if (i === idx) {
+        if (key === 'variant_id') {
+          const selectedVar = variants.find(v => v.variant_id === val)
+          return {
+            ...item,
+            [key]: val,
+            purchase_cost: selectedVar ? selectedVar.cost_price || '' : ''
+          }
+        }
+        return { ...item, [key]: val }
+      }
+      return item
+    }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault(); setSaving(true)
-    const isMockSupplier = form.supplier_id && form.supplier_id.startsWith('123e4567-e89b-12d3-a456-4266141740')
-    const payload = {
-      variant_id: form.variant_id || null,
-      supplier_id: isMockSupplier ? null : (form.supplier_id || null),
-      batch_code: form.batch_code,
-      initial_quantity: Number(form.initial_quantity),
-      purchase_cost: form.purchase_cost ? Number(form.purchase_cost) : null,
-      notes: form.notes || null,
-      warehouse_location: form.warehouse_location || null,
-      manufacture_date: form.manufacture_date || null,
-      expiry_date: form.expiry_date || null
+
+    // Validation
+    const invalidItem = items.find(item => !item.variant_id || !item.initial_quantity || Number(item.initial_quantity) <= 0)
+    if (invalidItem) {
+      toast.error('Please specify a valid Variant SKU and positive Quantity for all items.')
+      setSaving(false)
+      return
     }
+
+    const uploadToast = toast.loading(`Receiving shipment of ${items.length} item(s)...`)
     try {
-      await api.post('/inventory/batches', payload);
-      toast.success('Stock received with batch and logistics parameters!')
+      const promises = items.map(item => {
+        const payload = {
+          variant_id: item.variant_id,
+          supplier_id: supplierId || null,
+          batch_code: batchCode,
+          initial_quantity: Number(item.initial_quantity),
+          purchase_cost: item.purchase_cost ? Number(item.purchase_cost) : null,
+          notes: notes || null,
+          warehouse_location: warehouseLocation || null,
+          manufacture_date: manufactureDate || null,
+          expiry_date: expiryDate || null
+        }
+        return api.post('/inventory/batches', payload)
+      })
+
+      await Promise.all(promises)
+      toast.success(`Shipment received successfully: ${items.length} item lots stored!`, { id: uploadToast })
       onSaved()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to receive bulk stock shipment', { id: uploadToast })
+    } finally {
+      setSaving(false)
     }
-    catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to receive stock batch')
-    }
-    finally { setSaving(false) }
   }
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 620 }}>
+      <div className="modal" style={{ maxWidth: 750 }}>
         <div className="modal-header">
-          <span className="modal-title">Receive Stock Batch</span>
+          <span className="modal-title">Receive Stock Shipment (Bulk Support)</span>
           <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
-            <div className="form-group">
-              <label className="form-label">Variant (SKU) *</label>
-              <select className="select" value={form.variant_id} onChange={e => set('variant_id', e.target.value)} required>
-                <option value="">Select variant SKU…</option>
-                {variants.map(v => <option key={v.variant_id} value={v.variant_id}>{v.sku} — {v.product_name}</option>)}
-              </select>
-            </div>
+            
+            {/* ── PART 1: SHIPMENT PARAMETERS ── */}
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold)', marginBottom: 12, borderBottom: '1px solid rgba(201,168,76,0.2)', paddingBottom: 4 }}>🚚 Shipment & Lot Parameters</p>
+            
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Supplier</label>
-                <select className="select" value={form.supplier_id} onChange={e => set('supplier_id', e.target.value)}>
-                  <option value="">None</option>
+                <select className="select" value={supplierId} onChange={e => setSupplierId(e.target.value)}>
+                  <option value="">None / Direct Wholesale</option>
                   {suppliers.map(s => <option key={s.id} value={s.id}>{s.company_name}</option>)}
                 </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Batch Code / Lot ID *</label>
-                <input className="input" value={form.batch_code} onChange={e => set('batch_code', e.target.value)} placeholder="e.g. 3X01-OUD" required />
+                <input className="input" value={batchCode} onChange={e => setBatchCode(e.target.value)} placeholder="e.g. SHIP-LOT01" required />
               </div>
             </div>
-            <div className="grid-2">
-              <div className="form-group">
-                <label className="form-label">Quantity received *</label>
-                <input className="input" type="number" min="1" value={form.initial_quantity} onChange={e => set('initial_quantity', e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Purchase Cost/unit (₹)</label>
-                <input className="input" type="number" value={form.purchase_cost} onChange={e => set('purchase_cost', e.target.value)} placeholder="1200" />
-              </div>
-            </div>
+
             <div className="grid-3">
               <div className="form-group">
                 <label className="form-label">Warehouse Location</label>
-                <input className="input" value={form.warehouse_location} onChange={e => set('warehouse_location', e.target.value)} placeholder="Aisle 4, Shelf B" />
+                <input className="input" value={warehouseLocation} onChange={e => setWarehouseLocation(e.target.value)} placeholder="Aisle 4, Shelf B" />
               </div>
               <div className="form-group">
                 <label className="form-label">Manufacture Date</label>
-                <input className="input" type="date" value={form.manufacture_date} onChange={e => set('manufacture_date', e.target.value)} />
+                <input className="input" type="date" value={manufactureDate} onChange={e => setManufactureDate(e.target.value)} />
               </div>
               <div className="form-group">
                 <label className="form-label">Expiry Date</label>
-                <input className="input" type="date" value={form.expiry_date} onChange={e => set('expiry_date', e.target.value)} />
+                <input className="input" type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
               </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Notes</label>
-              <textarea className="textarea" rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Supply chain notes, condition, or QC flags..." />
+
+            {/* ── PART 2: ITEMS IN SHIPMENT ── */}
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold)', marginTop: 24, marginBottom: 12, borderBottom: '1px solid rgba(201,168,76,0.2)', paddingBottom: 4 }}>🏺 Items in Shipment</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+              {items.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: 12, borderRadius: 'var(--radius-sm)' }}>
+                  
+                  {/* SKU Dropdown */}
+                  <div className="form-group" style={{ margin: 0, flex: 1 }}>
+                    <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: 4 }}>Variant SKU *</label>
+                    <select className="select" value={item.variant_id} onChange={e => updateItem(idx, 'variant_id', e.target.value)} required style={{ fontSize: '0.8rem', height: '36px' }}>
+                      <option value="">Select variant SKU…</option>
+                      {variants.map(v => <option key={v.variant_id} value={v.variant_id}>{v.sku} — {v.product_name}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Quantity received */}
+                  <div className="form-group" style={{ margin: 0, width: 100 }}>
+                    <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: 4 }}>Quantity *</label>
+                    <input className="input" type="number" min="1" value={item.initial_quantity} onChange={e => updateItem(idx, 'initial_quantity', e.target.value)} required placeholder="10" style={{ fontSize: '0.8rem', height: '36px' }} />
+                  </div>
+
+                  {/* Purchase Cost */}
+                  <div className="form-group" style={{ margin: 0, width: 140 }}>
+                    <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: 4 }}>Purchase Cost (₹)</label>
+                    <input className="input" type="number" min="0" value={item.purchase_cost} onChange={e => updateItem(idx, 'purchase_cost', e.target.value)} placeholder="1200" style={{ fontSize: '0.8rem', height: '36px' }} />
+                  </div>
+
+                  {/* Remove Button */}
+                  <button type="button" className="btn btn-danger btn-icon" onClick={() => handleRemoveItem(idx)} style={{ height: 36, width: 36, padding: 0, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', border: '1px solid rgba(239, 68, 68, 0.2)' }} title="Remove Item">
+                    ✕
+                  </button>
+
+                </div>
+              ))}
             </div>
+
+            <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddItem} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.78rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.3)', color: 'var(--gold-bright)' }}>
+              ➕ Add Another Item to Shipment
+            </button>
+
+            <div className="form-group" style={{ marginTop: 20 }}>
+              <label className="form-label">Shipment Notes / QC Flags</label>
+              <textarea className="textarea" rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Supply chain notes, condition, or QC flags..." />
+            </div>
+
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Receive Stock'}</button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Receive Bulk Stock'}</button>
           </div>
         </form>
       </div>
@@ -127,8 +206,7 @@ function AddSupplierModal({ onClose, onSaved }) {
       toast.success('New luxury supplier registered successfully!')
       onSaved()
     } catch {
-      toast.success('New luxury supplier registered successfully! (Simulator Active)')
-      onSaved()
+      toast.error('Failed to register supplier')
     } finally { setSaving(false) }
   }
   return (
@@ -179,8 +257,8 @@ function AddSupplierModal({ onClose, onSaved }) {
 
 function LedgerReportModal({ supplier, onClose }) {
   const fmt = n => `₹${Number(n || 0).toLocaleString('en-IN')}`
-  const totalInvoiced = supplier.total_invoiced || 450000
-  const totalPaid = totalInvoiced - (supplier.outstanding || 150000)
+  const totalInvoiced = supplier.total_invoiced || 0
+  const totalPaid = totalInvoiced - (supplier.outstanding || 0)
   
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -216,35 +294,16 @@ function LedgerReportModal({ supplier, onClose }) {
             <div className="table-container" style={{ margin: 0 }}>
               <table className="data-table">
                 <thead>
-                  <tr>
-                    <th>Ref ID</th>
-                    <th>Batch Delivered</th>
-                    <th>Subtotal</th>
-                    <th>Tax (GST 18%)</th>
-                    <th>Grand Total</th>
-                    <th>Status</th>
-                  </tr>
+                  <tr><th>Ref ID</th><th>Batch Delivered</th><th>Subtotal</th><th>Tax (GST 18%)</th><th>Grand Total</th><th>Status</th></tr>
                 </thead>
                 <tbody>
-                  {[
-                    { ref: 'INV-2026-042', batch: 'LOT-3X01-OUD', sub: totalInvoiced * 0.6, tax: totalInvoiced * 0.6 * 0.18, total: totalInvoiced * 0.6 * 1.18, status: 'Settled' },
-                    { ref: 'INV-2026-049', batch: 'LOT-BDC-50', sub: totalInvoiced * 0.4, tax: totalInvoiced * 0.4 * 0.18, total: totalInvoiced * 0.4 * 1.18, status: supplier.outstanding > 0 ? 'Partially Settled' : 'Settled' }
-                  ].map(txn => (
-                    <tr key={txn.ref}>
-                      <td><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{txn.ref}</span></td>
-                      <td><span style={{ fontFamily: 'monospace', color: '#fff' }}>{txn.batch}</span></td>
-                      <td>{fmt(txn.sub)}</td>
-                      <td>{fmt(txn.tax)}</td>
-                      <td style={{ fontWeight: 700, color: 'var(--gold)' }}>{fmt(txn.total)}</td>
-                      <td>
-                        <span className="badge" style={{
+                  {(supplier.ledger || []).map(txn => (
+                    <tr key={txn.ref}><td><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{txn.ref}</span></td><td><span style={{ fontFamily: 'monospace', color: '#fff' }}>{txn.batch}</span></td><td>{fmt(txn.sub)}</td><td>{fmt(txn.tax)}</td><td style={{ fontWeight: 700, color: 'var(--gold)' }}>{fmt(txn.total)}</td><td><span className="badge" style={{
                           background: txn.status === 'Settled' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
                           color: txn.status === 'Settled' ? 'var(--success)' : '#f59e0b'
                         }}>
                           {txn.status}
-                        </span>
-                      </td>
-                    </tr>
+                        </span></td></tr>
                   ))}
                 </tbody>
               </table>
@@ -317,20 +376,14 @@ function StockDetailsModal({ item, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Points Multiplier</span>
-              <strong style={{ color: 'var(--success)' }}>{item.points_multiplier || '1x'}</strong>
+              <strong style={{ color: 'var(--success)' }}>{item.points_multiplier || '—'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Profit Margin</span>
-              <strong style={{ color: 'var(--success)' }}>{item.margin_pct}%</strong>
+              <strong style={{ color: 'var(--success)' }}>{item.selling_price ? Math.round(((item.selling_price - item.cost_price) / item.selling_price) * 100) : 0}%</strong>
             </div>
           </div>
 
-          <div style={{ background: 'rgba(201,168,76,0.03)', border: '1px dashed rgba(201,168,76,0.2)', padding: 12, borderRadius: 8 }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, textTransform: 'uppercase' }}>QC & Storage Audit Log</span>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: '1.4' }}>
-              Batch verified under optimal temperature control conditions. Humidity levels stable at 45%. Expiry and reorder indicators monitored continuously.
-            </p>
-          </div>
         </div>
         <div className="modal-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
           <button type="button" className="btn btn-secondary" onClick={onClose} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: '#fff' }}>
@@ -384,11 +437,11 @@ function BatchDetailsModal({ batch, onClose }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,0.15)', padding: 14, borderRadius: 8, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Corporate Supplier</span>
-              <strong style={{ color: '#fff' }}>{batch.supplier_name || 'Direct Wholesale / Mock Supplier'}</strong>
+              <strong style={{ color: '#fff' }}>{batch.supplier_name || 'Direct Wholesale'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Warehouse Storage Location</span>
-              <strong style={{ color: '#fff' }}>{batch.warehouse_location || 'Aisle 4, Shelf B'}</strong>
+              <strong style={{ color: '#fff' }}>{batch.warehouse_location || '—'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Receipt / Creation Date</span>
@@ -484,8 +537,8 @@ function StockAdjustmentModal({ item, onClose, onSaved }) {
     adjustment_type: 'add', // 'add' | 'deduct' | 'override'
     quantity: '',
     reason: '',
-    warehouse_location: item.warehouse_location || 'Aisle 4, Shelf B',
-    batch_id: item.batch_code || '3X01-OUD'
+    warehouse_location: item.warehouse_location || '',
+    batch_id: item.batch_code || ''
   })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
@@ -587,14 +640,10 @@ export default function Inventory() {
   const [ovWh, setOvWh] = useState('All Warehouses')
 
   // INVENTORY MOVEMENTS STATE
-  const [movements, setMovements] = useState([
-    { id: 'ITX-8401', sku: 'KL-OUD-100', product_name: 'Midnight Oud EDP', type: 'Restock', qty: 100, reason: 'Received Batch Shipment (Lot: LOT-3X01-OUD)', date: '2026-05-09' },
-    { id: 'ITX-8392', sku: 'BDC-EDP-50', product_name: 'Bleu de Chanel Eau de Parfum', type: 'Deduction', qty: -3, reason: 'Sales Order Fulfilment (ORD-2026-1024)', date: '2026-05-09' },
-    { id: 'ITX-8381', sku: 'CH-EDT-30', product_name: 'Coco Mademoiselle Intense', type: 'Deduction', qty: -1, reason: 'Damaged / Leaked Bottle reported during QC', date: '2026-05-08' },
-    { id: 'ITX-8374', sku: 'DIOR-SAUV-100', product_name: 'Dior Sauvage Elixir', type: 'Adjustment', qty: 5, reason: 'Manual correction following stockroom audit', date: '2026-05-07' },
-    { id: 'ITX-8361', sku: 'KL-OUD-100', product_name: 'Midnight Oud EDP', type: 'Restock', qty: 25, reason: 'Sales Return received & reintegrated to lot', date: '2026-05-06' }
-  ])
+  const [movements, setMovements] = useState([])
   const [movementSearch, setMovementSearch] = useState('')
+  
+  const [dashboardStats, setDashboardStats] = useState(null)
 
   const load = () => {
     setLoading(true)
@@ -602,57 +651,14 @@ export default function Inventory() {
       api.get('/inventory/stock', { params: { low_stock_only: lowOnly } }),
       api.get('/inventory/batches'),
       api.get('/inventory/suppliers'),
-    ]).then(([s, b, sup]) => {
-      let rawStock = s.data || []
-      if (!rawStock.length) {
-        rawStock = [
-          { variant_id: '123e4567-e89b-12d3-a456-426614174000', sku: 'KL-OUD-100', product_name: 'Midnight Oud EDP', current_stock: 12, min_stock_alert: 5, is_low_stock: false },
-          { variant_id: '123e4567-e89b-12d3-a456-426614174001', sku: 'BDC-EDP-50', product_name: 'Bleu de Chanel Eau de Parfum', current_stock: 3, min_stock_alert: 6, is_low_stock: true },
-          { variant_id: '123e4567-e89b-12d3-a456-426614174002', sku: 'CH-EDT-30', product_name: 'Coco Mademoiselle Intense', current_stock: 0, min_stock_alert: 2, is_low_stock: true }
-        ]
-      }
-      const enrichedStock = rawStock.map((item, idx) => {
-        const costPrice = item.cost_price || (idx === 0 ? 5500 : idx === 1 ? 1200 : 800)
-        const sellingPrice = item.selling_price || (idx === 0 ? 12500 : idx === 1 ? 2499 : 1499)
-        const margin = Math.round(((sellingPrice - costPrice) / sellingPrice) * 100)
-        const warehouse = item.warehouse_location || (idx === 0 ? 'Aisle 4, Shelf B' : idx === 1 ? 'Cold Storage 1' : 'Aisle 2, Shelf C')
-        const weight = item.weight || (idx === 0 ? '240g / 100ml' : idx === 1 ? '110g / 50ml' : '75g / 30ml')
-        const batchCode = item.batch_code || (idx === 0 ? 'LOT-3X01-OUD' : idx === 1 ? 'LOT-BDC-50' : 'LOT-CH-30')
-        const expiryDate = item.expiry_date || (idx === 0 ? '2026-09-12' : idx === 1 ? '2027-11-20' : '2026-06-15')
-        const pointsMultiplier = item.points_multiplier || (idx === 0 ? '2x' : '1x')
-        const status = item.is_low_stock ? 'Low Stock' : (idx === 2 ? 'Discontinued' : 'Active')
-
-        return {
-          ...item,
-          cost_price: costPrice,
-          selling_price: sellingPrice,
-          margin_pct: margin,
-          warehouse_location: warehouse,
-          weight: weight,
-          batch_code: batchCode,
-          expiry_date: expiryDate,
-          points_multiplier: pointsMultiplier,
-          status: status
-        }
-      })
-      setStock(enrichedStock)
+      api.get('/inventory/movements'),
+      api.get('/dashboard/stats')
+    ]).then(([s, b, sup, m, ds]) => {
+      setStock(s.data || [])
       setBatches(b.data || [])
-
-      let rawSups = sup.data || []
-      if (!rawSups.length) {
-        rawSups = [
-          { id: '123e4567-e89b-12d3-a456-426614174003', company_name: 'Grasse Fragrance Oils Inc.', contact_name: 'Pierre Jean', email: 'pierre@grasse.fr', phone: '+33 4 93 09 20 00', address: 'Grasse, France', gst_number: 'FR-9204928410', outstanding: 150000, total_invoiced: 450000 },
-          { id: '123e4567-e89b-12d3-a456-426614174004', company_name: 'Glassworks Vials & Co.', contact_name: 'Sarah Jenkins', email: 'sarah@glassworks.co.uk', phone: '+44 20 7946 0192', address: 'London, UK', gst_number: 'GB-839201948', outstanding: 45000, total_invoiced: 120000 },
-          { id: '123e4567-e89b-12d3-a456-426614174005', company_name: 'Oud Extracts Corp.', contact_name: 'Fatima Al-Saeed', email: 'orders@oudextracts.ae', phone: '+971 4 820 9300', address: 'Dubai, UAE', gst_number: 'AE-930481039', outstanding: 0, total_invoiced: 500000 }
-        ]
-      } else {
-        rawSups = rawSups.map((s, idx) => ({
-          ...s,
-          outstanding: idx === 0 ? 150000 : idx === 1 ? 45000 : 0,
-          total_invoiced: idx === 0 ? 450000 : idx === 1 ? 120000 : 500000
-        }))
-      }
-      setSuppliers(rawSups)
+      setSuppliers(sup.data || [])
+      setMovements(m.data || [])
+      setDashboardStats(ds.data || null)
     })
     .catch(() => toast.error('Failed to load inventory data'))
     .finally(() => setLoading(false))
@@ -669,9 +675,9 @@ export default function Inventory() {
   )
 
   const filteredSuppliers = suppliers.filter(s =>
-    s.company_name.toLowerCase().includes(supplierSearch.toLowerCase()) ||
-    s.contact_name.toLowerCase().includes(supplierSearch.toLowerCase()) ||
-    s.email.toLowerCase().includes(supplierSearch.toLowerCase())
+    (s.company_name || '').toLowerCase().includes(supplierSearch.toLowerCase()) ||
+    (s.contact_name || '').toLowerCase().includes(supplierSearch.toLowerCase()) ||
+    (s.email || '').toLowerCase().includes(supplierSearch.toLowerCase())
   )
 
   // Derived Logic for Enhanced Overview
@@ -686,7 +692,7 @@ export default function Inventory() {
     b.batch_code?.toLowerCase().includes(ovSearch.toLowerCase())
   )
 
-  // Mock computation for visualization
+  // Derived analytics for visualization
   const healthyCount = stock.filter(s => !s.is_low_stock && s.current_stock > 0).length
   const totalStatus = (healthyCount + lowCount) || 1
   const healthyPct = Math.round((healthyCount / totalStatus) * 100)
@@ -720,34 +726,138 @@ export default function Inventory() {
 
       {/* Financial Valuation Ledger */}
       {tab === 'stock' && (
-        <div className="grid-4" style={{ marginBottom: 20 }}>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '14px 18px', borderRadius: 12 }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Stock Cost Basis</span>
-            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>
+        <div className="grid-4" style={{ gap: 12, marginBottom: 20 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Stock Cost Basis <InfoButton text="Summation of purchase cost across all batch inventory units currently sitting in distribution centers." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>
               ₹{stock.reduce((acc, curr) => acc + (curr.current_stock * curr.cost_price), 0).toLocaleString('en-IN')}
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Asset capital locked in warehouse</p>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '14px 18px', borderRadius: 12 }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Potential Revenue</span>
-            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 4 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Potential Revenue <InfoButton text="Gross realized value generated if every tracked unit sells at the current active listing price." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 2 }}>
               ₹{stock.reduce((acc, curr) => acc + (curr.current_stock * curr.selling_price), 0).toLocaleString('en-IN')}
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Estimated retail collection value</p>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '14px 18px', borderRadius: 12 }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Projected Profit Yield</span>
-            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--success)', marginTop: 4 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Projected Profit Yield <InfoButton text="Calculated net liquidity variance separating potential revenue against verified stock costs." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)', marginTop: 2 }}>
               ₹{(stock.reduce((acc, curr) => acc + (curr.current_stock * curr.selling_price), 0) - stock.reduce((acc, curr) => acc + (curr.current_stock * curr.cost_price), 0)).toLocaleString('en-IN')}
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Gross return upon full clearance</p>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '14px 18px', borderRadius: 12 }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Avg Brand Markup</span>
-            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Avg Brand Markup <InfoButton text="Standardized percentage disparity between acquisition and consumer pricing across standard items." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>
               {stock.length > 0 ? Math.round(stock.reduce((acc, curr) => acc + curr.margin_pct, 0) / stock.length) : 0}%
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Mean margin across active SKUs</p>
+          </div>
+        </div>
+      )}
+
+      {/* TABS KPI: BATCHES */}
+      {tab === 'batches' && (
+        <div className="grid-4" style={{ gap: 12, marginBottom: 20 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Total Inflow Lots <InfoButton text="Aggregated sum of unique registered batch trackingIDs recognized within master database." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>{batches.length}</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Active Lots (Non-Zero) <InfoButton text="Batches that currently encompass non-exhausted physical count on facility shelves." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)', marginTop: 2 }}>
+              {batches.filter(b => b.current_quantity > 0).length}
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Batch Capitalization <InfoButton text="Gross historical locked investment utilized directly towards active logistics receipts." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 2 }}>
+              ₹{batches.reduce((acc, b) => acc + (b.initial_quantity * (b.purchase_cost || 0)), 0).toLocaleString('en-IN')}
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Avg Lot Size <InfoButton text="Statistical mean calculated total capacity per inbound batch replenishment order." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>
+              {batches.length > 0 ? Math.round(batches.reduce((acc, b) => acc + b.initial_quantity, 0) / batches.length) : 0} units
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TABS KPI: TRANSACTIONS */}
+      {tab === 'transactions' && (
+        <div className="grid-4" style={{ gap: 12, marginBottom: 20 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Movements Logged</span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>{movements.length}</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Today's Activity</span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 2 }}>
+              {movements.filter(m => new Date(m.date).toDateString() === new Date().toDateString()).length} entries
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Restock vs Deduction</span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>
+              <span style={{ color: 'var(--success)' }}>{movements.filter(m => m.type === 'Restock').length}</span> / <span style={{ color: 'var(--error)' }}>{movements.filter(m => m.type === 'Deduction').length}</span>
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Net Unit Variance</span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: movements.reduce((acc, m) => acc + m.qty, 0) >= 0 ? 'var(--success)' : 'var(--error)', marginTop: 2 }}>
+              {movements.reduce((acc, m) => acc + m.qty, 0).toLocaleString()} units
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TABS KPI: SUPPLIERS */}
+      {tab === 'suppliers' && (
+        <div className="grid-4" style={{ gap: 12, marginBottom: 20 }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Registered Vendors <InfoButton text="Count of luxury upstream manufacturing relationships active in ledger system." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>{suppliers.length}</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Total Payables <InfoButton text="Cumulative absolute balance remaining outstanding due directly to manufacturing supply channels." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--error)', marginTop: 2 }}>
+              ₹{suppliers.reduce((acc, s) => acc + s.outstanding, 0).toLocaleString('en-IN')}
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Pending Settlements <InfoButton text="Entities with current balances above threshold waiting accounting allocation." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--warning)', marginTop: 2 }}>
+              {suppliers.filter(s => s.outstanding > 0).length} Partners
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>
+              Settled Accounts <InfoButton text="Partners which have zero remaining balance and finalized payment cycles." />
+            </span>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)', marginTop: 2 }}>
+              {suppliers.filter(s => s.outstanding === 0).length} Partners
+            </div>
           </div>
         </div>
       )}
@@ -776,260 +886,305 @@ export default function Inventory() {
       {tab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 24 }}>
           
-          {/* GLOBAL FILTERS & OVERVIEW SEARCH */}
+          {/* ── TOP LAYER: INTELLIGENT FILTERS & SEARCH ── */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            background: 'rgba(255,255,255,0.02)', 
-            padding: '14px 18px', 
-            borderRadius: 12, 
+            background: 'linear-gradient(to right, rgba(255,255,255,0.03), transparent)', 
+            padding: '16px 20px', 
+            borderRadius: 16, 
             border: '1px solid var(--border)',
-            gap: 16,
+            gap: 20,
             flexWrap: 'wrap'
           }}>
-            <div className="search-box" style={{ flex: 1, minWidth: 240 }}>
-              <Search className="search-icon" />
+            <div className="search-box" style={{ flex: 1, minWidth: 300 }}>
+              <Search className="search-icon" color="var(--gold)" />
               <input 
                 type="text" 
                 className="input" 
-                placeholder="Scan inventory items, SKUs, or batches..." 
+                placeholder="Search global assets, SKUs, or received batch codes..." 
                 value={ovSearch}
                 onChange={(e) => setOvSearch(e.target.value)}
-                style={{ width: '100%', background: 'var(--bg-surface)' }}
+                style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', height: 42 }}
               />
             </div>
             
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-surface)', padding: '4px 12px', borderRadius: 8, border: '1px solid var(--border)' }}>
-                <Calendar size={14} color="var(--text-muted)" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.2)', padding: '0 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', height: 42 }}>
+                <Calendar size={14} color="var(--gold)" />
                 <select 
                   value={ovTime} 
                   onChange={(e) => setOvTime(e.target.value)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.82rem', outline: 'none', cursor: 'pointer', padding: '6px 0' }}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
                 >
-                  <option value="Today">Today</option>
-                  <option value="Last 7 Days">Last 7 Days</option>
-                  <option value="Last 30 Days">Last 30 Days</option>
-                  <option value="Total">Lifetime</option>
+                  <option value="Today">Today's Pulse</option>
+                  <option value="Last 7 Days">Weekly View</option>
+                  <option value="Last 30 Days">Monthly Snapshot</option>
+                  <option value="Total">Total Lifetime</option>
                 </select>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-surface)', padding: '4px 12px', borderRadius: 8, border: '1px solid var(--border)' }}>
-                <MapPin size={14} color="var(--text-muted)" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.2)', padding: '0 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', height: 42 }}>
+                <MapPin size={14} color="var(--gold)" />
                 <select 
                   value={ovWh} 
                   onChange={(e) => setOvWh(e.target.value)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.82rem', outline: 'none', cursor: 'pointer', padding: '6px 0' }}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
                 >
-                  <option value="All Warehouses">All Sites</option>
+                  <option value="All Warehouses">Global Inventory</option>
                   {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Quick Metrics Cards Row with Action Triggers */}
-          <div className="grid-4">
-            <div className="stat-card" style={{ padding: 20 }}>
+          {/* ── MIDDLE LAYER: EXECUTIVE KPI CLUSTER (SMALLER) ── */}
+          <div className="grid-5" style={{ gap: 10 }}>
+            <div className="stat-card" style={{ padding: '12px', background: 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))', border: '1px solid rgba(201,168,76,0.08)', borderRadius: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Unique SKUs</span>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{stock.length}</div>
+                  <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                    Unique SKUs <InfoButton text="Distinct count of recognized inventory tracking numbers." />
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginTop: 2 }}>{stock.length}</div>
                 </div>
-                <button onClick={() => setTab('stock')} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', padding: 8, cursor: 'pointer', color: 'var(--text-muted)' }}>
-                  <Package size={16} />
-                </button>
+                <div style={{ background: 'rgba(201,168,76,0.08)', padding: 6, borderRadius: 8 }}>
+                  <Package size={12} style={{ color: 'var(--gold)' }} />
+                </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>Total units stacked: <strong>{totalInventoryCount}</strong></p>
             </div>
 
-            <div className="stat-card" style={{ padding: 20 }}>
+            <div className="stat-card" style={{ padding: '12px', background: 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))', border: '1px solid rgba(201,168,76,0.08)', borderRadius: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Batch Intake</span>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{batches.length}</div>
+                  <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                    Today's Inflow <InfoButton text="Quantity additions logged to facility within current 24hr window." />
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--success)', marginTop: 2 }}>
+                    {movements.filter(m => m.type === 'Restock' && new Date(m.date).toDateString() === new Date().toDateString()).reduce((acc, curr) => acc + curr.qty, 0)}
+                  </div>
                 </div>
-                <button onClick={() => setModal(true)} style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid var(--gold-border)', borderRadius: '50%', padding: 8, cursor: 'pointer', color: 'var(--gold)' }}>
-                  <Plus size={16} />
-                </button>
+                <div style={{ background: 'rgba(34, 197, 94, 0.08)', padding: 6, borderRadius: 8 }}>
+                  <TrendingUp size={12} style={{ color: 'var(--success)' }} />
+                </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>Recently managed batches</p>
             </div>
 
-            <div className="stat-card" style={{ padding: 20 }}>
+            <div className="stat-card" style={{ padding: '12px', background: 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))', border: '1px solid rgba(201,168,76,0.08)', borderRadius: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Active Suppliers</span>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{suppliers.length}</div>
+                  <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                    Batch Intake <InfoButton text="Total individual bulk delivery tracking files recorded." />
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginTop: 2 }}>{batches.length}</div>
                 </div>
-                <button onClick={() => setSupplierModal(true)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', padding: 8, cursor: 'pointer', color: 'var(--text-muted)' }}>
-                  <Building size={16} />
-                </button>
+                <div style={{ background: 'rgba(201,168,76,0.08)', padding: 6, borderRadius: 8 }}>
+                  <FileText size={12} style={{ color: 'var(--gold)' }} />
+                </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>Corporate supply chain active</p>
+            </div>
+
+            <div className="stat-card" style={{ padding: '12px', background: 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))', border: '1px solid rgba(201,168,76,0.08)', borderRadius: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                    Partners <InfoButton text="Verified contracted corporate manufacturing vendors." />
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginTop: 2 }}>{suppliers.length}</div>
+                </div>
+                <div style={{ background: 'rgba(201,168,76,0.08)', padding: 6, borderRadius: 8 }}>
+                  <Building size={12} style={{ color: 'var(--gold)' }} />
+                </div>
+              </div>
             </div>
 
             <div className={`stat-card ${outCount > 0 || lowCount > 0 ? 'pulse-border' : ''}`} 
                  style={{ 
-                   padding: 20,
-                   border: outCount > 0 ? '1px solid rgba(239,68,68,0.3)' : (lowCount > 0 ? '1px solid rgba(245,158,11,0.3)' : '1px solid var(--border)'),
-                   background: outCount > 0 ? 'linear-gradient(135deg, rgba(239,68,68,0.05), var(--bg-card))' : 'var(--bg-card)'
+                   padding: '12px',
+                   borderRadius: 10,
+                   border: outCount > 0 ? '1px solid rgba(239,68,68,0.3)' : (lowCount > 0 ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(201,168,76,0.08)'),
+                   background: outCount > 0 ? 'rgba(239,68,68,0.05)' : (lowCount > 0 ? 'rgba(245,158,11,0.05)' : 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))')
                  }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Critical Alerts</span>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: outCount > 0 ? 'var(--error)' : (lowCount > 0 ? 'var(--warning)' : 'var(--success)'), marginTop: 4 }}>
+                  <div style={{ fontSize: '0.55rem', color: outCount > 0 ? 'var(--error)' : 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                    Alerts <InfoButton text="Current intersection of items either completely exhausted or hovering near depletion warning thresholds." />
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: outCount > 0 ? 'var(--error)' : (lowCount > 0 ? 'var(--warning)' : 'var(--success)'), marginTop: 2 }}>
                     {lowCount + outCount}
                   </div>
                 </div>
-                <AlertTriangle size={20} color={outCount > 0 ? 'var(--error)' : 'var(--warning)'} />
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                 {outCount > 0 && <span className="badge badge-error" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>{outCount} Empty</span>}
-                 {lowCount > 0 && <span className="badge badge-warning" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>{lowCount} Reorder</span>}
-                 {outCount === 0 && lowCount === 0 && <span className="badge badge-success" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>Healthy</span>}
-              </div>
-            </div>
-          </div>
-
-          {/* Data Intelligence Strip: Visual Composition */}
-          <div className="grid-2">
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '20px 24px', borderRadius: 16 }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <Activity size={16} color="var(--gold)" /> Inventory Health Profile
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                 <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: '0.75rem' }}>
-                       <span style={{ color: 'var(--text-secondary)' }}>Full Supply Health</span>
-                       <span style={{ fontWeight: 700, color: '#fff' }}>{healthyPct}%</span>
-                    </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, width: '100%' }}>
-                       <div style={{ height: '100%', background: 'var(--success)', width: `${healthyPct}%`, borderRadius: 3 }} />
-                    </div>
-                 </div>
-                 <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: '0.75rem' }}>
-                       <span style={{ color: 'var(--text-secondary)' }}>Restock Pipeline Required</span>
-                       <span style={{ fontWeight: 700, color: '#fff' }}>{lowPct}%</span>
-                    </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, width: '100%' }}>
-                       <div style={{ height: '100%', background: 'var(--warning)', width: `${lowPct}%`, borderRadius: 3 }} />
-                    </div>
-                 </div>
-              </div>
-            </div>
-
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '20px 24px', borderRadius: 16 }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <TrendingUp size={16} color="var(--gold)" /> Site Load Distribution
-              </h3>
-              <div style={{ display: 'flex', alignItems: 'flex-end', height: 70, gap: 12, borderBottom: '1px solid var(--border)' }}>
-                 <div style={{ flex: 1, background: 'var(--gold)', height: '80%', borderRadius: '4px 4px 0 0', position: 'relative' }}>
-                   <span style={{ position: 'absolute', top: -18, width: '100%', textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)' }}>Main Hub</span>
-                 </div>
-                 <div style={{ flex: 1, background: 'var(--gold-dim)', height: '40%', borderRadius: '4px 4px 0 0', position: 'relative' }}>
-                   <span style={{ position: 'absolute', top: -18, width: '100%', textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)' }}>Cold Chain</span>
-                 </div>
-                 <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', height: '25%', borderRadius: '4px 4px 0 0', position: 'relative' }}>
-                   <span style={{ position: 'absolute', top: -18, width: '100%', textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)' }}>Transit</span>
-                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Left: Restock Proposals vs Right: Supplier Index */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 20 }}>
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ background: 'rgba(239,68,68,0.1)', padding: '4px', borderRadius: 6 }}><AlertTriangle size={16} color="var(--error)" /></span> 
-                  Smart Restock Pipeline 
-                  <span className="badge" style={{ fontSize: '0.65rem', background: 'rgba(239,68,68,0.1)', color: 'var(--error)', border: '1px solid rgba(239,68,68,0.2)' }}>{lowCount} Alerted</span>
-                </h4>
-                <button className="btn btn-xs btn-ghost" onClick={() => setTab('stock')} style={{ color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: 4 }}>Manage All <ArrowRight size={12} /></button>
-              </div>
-
-              {stock.filter(s => s.is_low_stock).length === 0 ? (
-                <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border)', borderRadius: 12 }}>
-                  <div style={{ fontSize: '2rem', marginBottom: 10 }}>✅</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>All Inventory is healthy!</div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>No critical reorder suggestions generated currently.</p>
+                <div style={{ background: outCount > 0 ? 'rgba(239, 68, 68, 0.08)' : 'rgba(245, 158, 11, 0.08)', padding: 6, borderRadius: 8 }}>
+                  <AlertTriangle size={12} style={{ color: outCount > 0 ? 'var(--error)' : 'var(--warning)' }} />
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {stock.filter(s => s.is_low_stock).slice(0, 3).map(s => (
-                    <div key={s.variant_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', padding: '14px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
+              </div>
+            </div>
+          </div>
+
+          {/* ── BOTTOM LAYER: PRODUCT INTELLIGENCE & HEALTH ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+             
+             {/* Velocity: Fast Moving Creations */}
+             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                     <TrendingUp size={18} color="var(--success)" /> High Velocity Creations <InfoButton text="Products exhibiting fastest turnover cycles and highest immediate volumetric sales." />
+                   </h3>
+                   <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 4 }}>Last 30D</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                   {(dashboardStats?.fast_moving_items || []).map((item, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
+                         <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{item.name}</span>
+                         <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: 800 }}>{item.units} sold</span>
+                      </div>
+                   ))}
+                   {(!dashboardStats?.fast_moving_items?.length) && <div style={{ padding: 20, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 10 }}>Waiting for sale records...</div>}
+                </div>
+             </div>
+
+             {/* Risk: Stagnant Assets */}
+             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                     <Activity size={18} color="var(--warning)" /> Stagnant Asset Exposure <InfoButton text="Identifies low volume SKUs potentially incurring unnecessary overhead with locked capital." />
+                   </h3>
+                   <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 4 }}>Attention Req</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                   {(dashboardStats?.slow_moving_items || []).map((item, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
+                         <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{item.name}</span>
+                         <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--warning)', fontWeight: 800 }}>{item.sales} sold</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Stock: {item.stock}</div>
+                         </div>
+                      </div>
+                   ))}
+                   {(!dashboardStats?.slow_moving_items?.length) && <div style={{ padding: 20, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 10 }}>No exposure risks detected.</div>}
+                </div>
+             </div>
+
+             {/* Shelf Life: Upcoming Expiries */}
+             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                     <AlertTriangle size={18} color="var(--error)" /> Shelf-Life Expiry Risk <InfoButton text="Time-based sensitivity scanner warning against lot codes reaching theoretical obsolescence." />
+                   </h3>
+                   <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 4 }}>Next 90D</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                   {(dashboardStats?.upcoming_expiries || []).map((item, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
+                         <div>
+                            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{item.name}</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Batch: {item.batch}</div>
+                         </div>
+                         <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--error)', fontWeight: 800 }}>{new Date(item.date).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{item.qty} units</div>
+                         </div>
+                      </div>
+                   ))}
+                   {(!dashboardStats?.upcoming_expiries?.length) && <div style={{ padding: 20, textAlign: 'center', fontSize: '0.75rem', color: 'var(--success)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 10 }}>No upcoming shelf-life risks.</div>}
+                </div>
+             </div>
+          </div>
+
+          {/* ── LOWER LAYER: OPERATIONAL HEALTH & DISTRIBUTION ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 24 }}>
+             
+             {/* Inventory Health & Pipeline Summary */}
+             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                   <Activity size={18} color="var(--gold)" /> Operational Health Profile <InfoButton text="Aggregate sanity overview detailing safety capacity vs depletion crisis risk probabilities." />
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 32 }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                       <div>
-                        <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>{s.product_name}</div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{s.sku}</span>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.8rem' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>Full Supply Availability</span>
+                            <strong style={{ color: 'var(--success)' }}>{healthyPct}%</strong>
+                         </div>
+                         <div style={{ height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', background: 'var(--success)', width: `${healthyPct}%`, borderRadius: 4, transition: 'width 1s ease' }} />
+                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '0.85rem', color: s.current_stock === 0 ? 'var(--error)' : 'var(--warning)', fontWeight: 800 }}>{s.current_stock} Units</div>
-                          <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Threshold: {s.min_stock_alert}</div>
-                        </div>
-                        <button className="btn btn-xs" onClick={() => setModal(s)} style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--error)', border: '1px solid rgba(239,68,68,0.25)', padding: '6px 12px', fontSize: '0.68rem', fontWeight: 700 }}>
-                          Restock
-                        </button>
+                      <div>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.8rem' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>Restock Pipeline Urgency</span>
+                            <strong style={{ color: 'var(--warning)' }}>{lowPct}%</strong>
+                         </div>
+                         <div style={{ height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', background: 'var(--warning)', width: `${lowPct}%`, borderRadius: 4, transition: 'width 1s ease' }} />
+                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                   </div>
 
-            {/* Supplier Index */}
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Building size={16} color="var(--gold)" /> Top Partner Index
-                </h4>
-                <button onClick={() => setTab('suppliers')} style={{ border: 'none', background: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.75rem' }}><ArrowRight size={14}/></button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {suppliers.slice(0, 3).map(sup => (
-                  <div key={sup.id} onClick={() => setSelectedLedger(sup)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: 10, cursor: 'pointer' }}>
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>{sup.company_name}</div>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{sup.contact_name}</span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                       <div style={{ fontSize: '0.82rem', fontWeight: 800, color: sup.outstanding > 0 ? 'var(--error)' : 'var(--success)' }}>₹{sup.outstanding.toLocaleString('en-IN')}</div>
-                       <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Payable</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                   <div style={{ background: 'rgba(0,0,0,0.2)', padding: 16, borderRadius: 12, border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Quick Restock Proposal</span>
+                      {stock.filter(s => s.is_low_stock).length === 0 ? (
+                         <div style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: 8 }}>✅ All stock levels are healthy.</div>
+                      ) : (
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+                            {stock.filter(s => s.is_low_stock).slice(0, 2).map(s => (
+                               <div key={s.variant_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ fontSize: '0.78rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>{s.product_name}</div>
+                                  <button onClick={() => setModal(s)} style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--error)', border: 'none', padding: '2px 8px', borderRadius: 4, fontSize: '0.65rem', cursor: 'pointer' }}>Restock</button>
+                               </div>
+                            ))}
+                         </div>
+                      )}
+                   </div>
+                </div>
+             </div>
+
+             {/* Site Load Visualizer */}
+             <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                   <MapPin size={18} color="var(--gold)" /> Site Load Distribution <InfoButton text="Volumetric breakdown explaining geographic distribution density across global warehouses." />
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'flex-end', height: 100, gap: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 4 }}>
+                   <div style={{ flex: 1, background: 'var(--gold)', height: '85%', borderRadius: '6px 6px 0 0', position: 'relative' }} className="hover-glow">
+                      <span style={{ position: 'absolute', bottom: -20, width: '100%', textAlign: 'center', fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Main Hub</span>
+                   </div>
+                   <div style={{ flex: 1, background: 'var(--gold-dim)', height: '35%', borderRadius: '6px 6px 0 0', position: 'relative' }} className="hover-glow">
+                      <span style={{ position: 'absolute', bottom: -20, width: '100%', textAlign: 'center', fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cold Chain</span>
+                   </div>
+                   <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', height: '15%', borderRadius: '6px 6px 0 0', position: 'relative' }} className="hover-glow">
+                      <span style={{ position: 'absolute', bottom: -20, width: '100%', textAlign: 'center', fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Transit</span>
+                   </div>
+                </div>
+             </div>
+
           </div>
 
-          {/* Bottom Full-Width section for Inflows tailored with search */}
-          <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>
-              <h4 style={{ margin: 0, color: 'var(--gold-bright)', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileText size={18} /> Intelligent Inflow Ledger
+          {/* ── FINAL LAYER: INTELLIGENT INFLOW LOG ── */}
+          <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 16 }}>
+              <h4 style={{ margin: 0, color: 'var(--gold-bright)', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FileText size={20} /> Verified Inventory Inflow Ledger <InfoButton text="Historical chain tracking incoming batch acknowledgements at receiving bay." />
               </h4>
-              <button className="btn btn-xs btn-ghost" onClick={() => setTab('batches')} style={{ color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: 4 }}>View Full Log <ChevronRight size={14} /></button>
+              <button className="btn btn-sm btn-ghost" onClick={() => setTab('batches')} style={{ color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: 6 }}>View Comprehensive Log <ChevronRight size={16} /></button>
             </div>
             
             {filteredBatchesForOv.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 10 }}>
-                No inventory inflow results matching your filters.
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 16 }}>
+                No batch inflow records detected for the selected filters.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
                 {filteredBatchesForOv.slice(0, 3).map(b => (
-                  <div key={b.id} onClick={() => setSelectedBatch(b)} style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.05)', padding: '14px 16px', borderRadius: 12, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.2s' }} className="hover-lift">
+                  <div key={b.id} onClick={() => setSelectedBatch(b)} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: 18, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, transition: 'all 0.3s' }} className="hover-glow">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--gold)', fontWeight: 800, background: 'rgba(201,168,76,0.1)', padding: '2px 6px', borderRadius: 4 }}>{b.batch_code || 'LOT'}</span>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{new Date(b.received_at).toLocaleDateString('en-IN')}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--gold)', fontWeight: 800, background: 'rgba(201,168,76,0.1)', padding: '3px 8px', borderRadius: 4 }}>{b.batch_code || 'LOT'}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>{new Date(b.received_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                     </div>
-                    <div style={{ fontSize: '0.88rem', color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.product_name}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 8 }}>
-                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Inflow: <strong>{b.initial_quantity} units</strong></span>
-                       <span className="badge badge-success" style={{ fontSize: '0.58rem' }}>Received</span>
+                    <div style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>{b.product_name}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 10 }}>
+                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Inflow Units: <strong style={{ color: '#fff' }}>{b.initial_quantity}</strong></span>
+                       <span style={{ fontSize: '0.62rem', color: 'var(--success)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>✓ Received</span>
                     </div>
                   </div>
                 ))}
@@ -1044,18 +1199,7 @@ export default function Inventory() {
         <div className="table-container">
           <table className="data-table">
             <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Product Name</th>
-                <th>Selling / Cost (₹)</th>
-                <th>Margin</th>
-                <th>Stock (Avail/Total)</th>
-                <th>Location</th>
-                <th>Weight</th>
-                <th>Expiry</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
+              <tr><th>SKU</th><th>Product Name</th><th>Selling / Cost (₹)</th><th>Margin</th><th>Stock (Avail/Total)</th><th>Location</th><th>Weight</th><th>Expiry</th><th>Status</th><th style={{ textAlign: 'center' }}>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -1067,38 +1211,13 @@ export default function Inventory() {
                   const isExpiringSoon = s.expiry_date && (new Date(s.expiry_date) - new Date()) < (6 * 30 * 24 * 60 * 60 * 1000)
                   return (
                     <tr key={s.variant_id} onClick={() => setSelectedStockItem(s)} style={{ cursor: 'pointer' }} className="clickable-row">
-                      <td>
-                        <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fff' }}>{s.sku}</span>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{s.product_name}</div>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Lot: {s.batch_code}</span>
-                      </td>
-                      <td>
-                        <div style={{ color: '#fff', fontWeight: 600 }}>₹{s.selling_price.toLocaleString('en-IN')}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Cost: ₹{s.cost_price.toLocaleString('en-IN')}</div>
-                      </td>
-                      <td>
-                        <span style={{ color: s.margin_pct >= 40 ? 'var(--success)' : 'var(--gold)', fontWeight: 700 }}>
+                      <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fff' }}>{s.sku}</span></td><td><div style={{ fontWeight: 600 }}>{s.product_name}</div><span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Lot: {s.batch_code}</span></td><td><div style={{ color: '#fff', fontWeight: 600 }}>₹{s.selling_price.toLocaleString('en-IN')}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Cost: ₹{s.cost_price.toLocaleString('en-IN')}</div></td><td><span style={{ color: s.margin_pct >= 40 ? 'var(--success)' : 'var(--gold)', fontWeight: 700 }}>
                           {s.margin_pct}%
-                        </span>
-                      </td>
-                      <td>
-                        <strong style={{ color: s.is_low_stock ? 'var(--error)' : 'var(--success)' }}>
+                        </span></td><td><strong style={{ color: s.is_low_stock ? 'var(--error)' : 'var(--success)' }}>
                           {s.current_stock}
-                        </strong>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}> / {s.current_stock + 4}</span>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>Min Alert: {s.min_stock_alert}</div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                          <MapPin size={10} color="var(--gold)" />
+                        </strong><span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}> / {s.current_stock + 4}</span><div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>Min Alert: {s.min_stock_alert}</div></td><td><div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-secondary)' }}><MapPin size={10} color="var(--gold)" />
                           {s.warehouse_location}
-                        </div>
-                      </td>
-                      <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.weight}</td>
-                      <td>
-                        <span style={{
+                        </div></td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.weight}</td><td><span style={{
                           fontSize: '0.75rem', fontWeight: 600,
                           color: isExpiringSoon ? 'var(--error)' : 'var(--text-secondary)',
                           background: isExpiringSoon ? 'rgba(239,68,68,0.1)' : 'transparent',
@@ -1106,10 +1225,7 @@ export default function Inventory() {
                         }}>
                           {new Date(s.expiry_date).toLocaleDateString('en-IN')}
                           {isExpiringSoon && <span style={{ display: 'block', fontSize: '0.58rem', fontWeight: 'bold' }}>⚠️ EXPIRING</span>}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="badge" style={{
+                        </span></td><td><span className="badge" style={{
                           fontSize: '0.68rem', fontWeight: 700,
                           background: s.status === 'Low Stock' ? 'rgba(245,158,11,0.15)' : (s.status === 'Discontinued' ? 'rgba(255,255,255,0.05)' : 'rgba(201,168,76,0.15)'),
                           color: s.status === 'Low Stock' ? '#f59e0b' : (s.status === 'Discontinued' ? '#9ca3af' : 'var(--gold)'),
@@ -1117,21 +1233,14 @@ export default function Inventory() {
                           boxShadow: s.status === 'Active' ? '0 0 8px rgba(201,168,76,0.15)' : 'none'
                         }}>
                           {s.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center' }}>
+                        </span></td><td><div style={{ display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center' }}>
                           {s.is_low_stock && (
                             <button className="btn btn-xs" onClick={(e) => { e.stopPropagation(); setModal(s) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(239,68,68,0.15)', color: 'var(--error)', border: '1px solid rgba(239,68,68,0.25)', padding: '4px 8px', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
                               <Layers size={10} /> Reorder
                             </button>
                           )}
                           <button className="btn btn-sm btn-ghost btn-icon" onClick={(e) => { e.stopPropagation(); setAdjustModal(s) }} title="Adjust Stock / Quick Plus" style={{ background: 'rgba(201,168,76,0.1)', color: 'var(--gold)' }}>
-                            <Sliders size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                            <Sliders size={12} /></button></div></td></tr>
                   )
                 })
               )}
@@ -1145,16 +1254,7 @@ export default function Inventory() {
         <div className="table-container">
           <table className="data-table">
             <thead>
-              <tr>
-                <th>Batch</th>
-                <th>Product/SKU</th>
-                <th>Supplier</th>
-                <th>Initial</th>
-                <th>Current</th>
-                <th>Cost/Unit</th>
-                <th>Warehouse Location</th>
-                <th>Date</th>
-              </tr>
+              <tr><th>Batch</th><th>Product/SKU</th><th>Supplier</th><th>Initial</th><th>Current</th><th>Cost/Unit</th><th>Warehouse Location</th><th>Date</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -1164,22 +1264,9 @@ export default function Inventory() {
               ) : (
                 batches.map(b => (
                   <tr key={b.id} onClick={() => setSelectedBatch(b)} style={{ cursor: 'pointer' }}>
-                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{b.batch_code || '—'}</span></td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{b.product_name}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{b.variant_sku}</div>
-                    </td>
-                    <td>{b.supplier_name || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                    <td>{b.initial_quantity}</td>
-                    <td><strong style={{ color: b.current_quantity === 0 ? 'var(--error)' : 'var(--text-primary)' }}>{b.current_quantity}</strong></td>
-                    <td>{b.purchase_cost ? `₹${b.purchase_cost}` : '—'}</td>
-                    <td>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {b.warehouse_location || 'Aisle 4, Shelf B'}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(b.received_at).toLocaleDateString('en-IN')}</td>
-                  </tr>
+                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{b.batch_code || '—'}</span></td><td><div style={{ fontWeight: 600 }}>{b.product_name}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{b.variant_sku}</div></td><td>{b.supplier_name || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td><td>{b.initial_quantity}</td><td><strong style={{ color: b.current_quantity === 0 ? 'var(--error)' : 'var(--text-primary)' }}>{b.current_quantity}</strong></td><td>{b.purchase_cost ? `₹${b.purchase_cost}` : '—'}</td><td><span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {b.warehouse_location || '—'}
+                      </span></td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(b.received_at).toLocaleDateString('en-IN')}</td></tr>
                 ))
               )}
             </tbody>
@@ -1199,15 +1286,7 @@ export default function Inventory() {
           </div>
           <table className="data-table">
             <thead>
-              <tr>
-                <th>Movement ID</th>
-                <th>SKU</th>
-                <th>Product Name</th>
-                <th>Movement Type</th>
-                <th>Qty Change</th>
-                <th>Reason / Description</th>
-                <th>Date Logged</th>
-              </tr>
+              <tr><th>Movement ID</th><th>SKU</th><th>Product Name</th><th>Movement Type</th><th>Qty Change</th><th>Reason / Description</th><th>Date Logged</th></tr>
             </thead>
             <tbody>
               {filteredMovements.length === 0 ? (
@@ -1215,26 +1294,15 @@ export default function Inventory() {
               ) : (
                 filteredMovements.map(m => (
                   <tr key={m.id} onClick={() => setSelectedMovement(m)} style={{ cursor: 'pointer' }}>
-                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--gold)' }}>{m.id}</span></td>
-                    <td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#fff' }}>{m.sku}</span></td>
-                    <td style={{ fontWeight: 600 }}>{m.product_name}</td>
-                    <td>
-                      <span className="badge" style={{
+                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--gold)' }}>{m.id}</span></td><td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#fff' }}>{m.sku}</span></td><td style={{ fontWeight: 600 }}>{m.product_name}</td><td><span className="badge" style={{
                         background: m.type === 'Restock' ? 'rgba(16,185,129,0.15)' : (m.type === 'Deduction' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'),
                         color: m.type === 'Restock' ? 'var(--success)' : (m.type === 'Deduction' ? 'var(--error)' : '#f59e0b'),
                         fontWeight: 700, fontSize: '0.68rem'
                       }}>
                         {m.type}
-                      </span>
-                    </td>
-                    <td>
-                      <strong style={{ color: m.qty > 0 ? 'var(--success)' : 'var(--error)' }}>
+                      </span></td><td><strong style={{ color: m.qty > 0 ? 'var(--success)' : 'var(--error)' }}>
                         {m.qty > 0 ? `+${m.qty}` : m.qty}
-                      </strong>
-                    </td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.reason}</td>
-                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleDateString('en-IN')}</td>
-                  </tr>
+                      </strong></td><td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.reason}</td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleDateString('en-IN')}</td></tr>
                 ))
               )}
             </tbody>
@@ -1254,15 +1322,7 @@ export default function Inventory() {
           </div>
           <table className="data-table">
             <thead>
-              <tr>
-                <th>Company Name</th>
-                <th>Contact Representative</th>
-                <th>Email / Phone</th>
-                <th>GSTIN / Import ID</th>
-                <th>Corporate Location</th>
-                <th>Outstanding Bal.</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
+              <tr><th>Company Name</th><th>Contact Representative</th><th>Email / Phone</th><th>GSTIN / Import ID</th><th>Corporate Location</th><th>Outstanding Bal.</th><th style={{ textAlign: 'center' }}>Actions</th></tr>
             </thead>
             <tbody>
               {filteredSuppliers.length === 0 ? (
@@ -1270,52 +1330,19 @@ export default function Inventory() {
               ) : (
                 filteredSuppliers.map(s => (
                   <tr key={s.id} onClick={() => setSelectedLedger(s)} style={{ cursor: 'pointer' }}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ background: 'var(--gold-glow)', border: '1px solid var(--gold-border)', color: 'var(--gold)', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Building size={14} />
-                        </div>
-                        <div>
-                          <strong style={{ color: '#fff' }}>{s.company_name}</strong>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.85rem' }}>
-                        <User size={12} color="var(--text-secondary)" />
+                    <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ background: 'var(--gold-glow)', border: '1px solid var(--gold-border)', color: 'var(--gold)', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Building size={14} /></div><div><strong style={{ color: '#fff' }}>{s.company_name}</strong></div></div></td><td><div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.85rem' }}><User size={12} color="var(--text-secondary)" />
                         {s.contact_name}
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem' }}>
-                        <Mail size={11} color="var(--text-muted)" />
+                      </div></td><td><div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem' }}><Mail size={11} color="var(--text-muted)" />
                         {s.email}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                        <Phone size={11} />
+                      </div><div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}><Phone size={11} />
                         {s.phone}
-                      </div>
-                    </td>
-                    <td><span style={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 600 }}>{s.gst_number || '—'}</span></td>
-                    <td style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <MapPin size={11} color="var(--gold)" />
+                      </div></td><td><span style={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 600 }}>{s.gst_number || '—'}</span></td><td style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} color="var(--gold)" />
                         {s.address}
-                      </div>
-                    </td>
-                    <td>
-                      <strong style={{ color: s.outstanding > 0 ? 'var(--error)' : 'var(--success)' }}>
-                        ₹{s.outstanding.toLocaleString('en-IN')}
-                      </strong>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <button className="btn btn-sm btn-ghost" onClick={() => setSelectedLedger(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)' }}>
+                      </div></td><td><strong style={{ color: (s.outstanding || 0) > 0 ? 'var(--error)' : 'var(--success)' }}>
+                        ₹{(s.outstanding || 0).toLocaleString('en-IN')}
+                      </strong></td><td><div style={{ display: 'flex', justifyContent: 'center' }}><button className="btn btn-sm btn-ghost" onClick={() => setSelectedLedger(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)' }}>
                           <FileText size={11} /> Ledger Report
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                        </button></div></td></tr>
                 ))
               )}
             </tbody>

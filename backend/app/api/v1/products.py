@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_manager
-from app.models.product import Product, ProductVariant, Brand, Category
+from app.models.product import Product, ProductVariant, Brand, Category, ProductImage
 from app.models.inventory import InventoryBatch
 from app.models.user import User
 from app.schemas.product import ProductCreate, ProductUpdate, ProductOut, VariantCreate, VariantUpdate, VariantOut
@@ -25,6 +25,7 @@ async def enrich_product(product: Product, db: AsyncSession) -> ProductOut:
     out = ProductOut.model_validate(product)
     out.brand_name = product.brand.name if product.brand else ""
     out.category_name = product.category.name if product.category else None
+    out.images = [img.url for img in product.images]
     for v_out in out.variants:
         v_out.current_stock = stock_map.get(v_out.id, 0)
     return out
@@ -48,6 +49,7 @@ async def list_products(
             selectinload(Product.variants),
             selectinload(Product.brand),
             selectinload(Product.category),
+            selectinload(Product.images),
         )
     )
     if search:
@@ -71,7 +73,12 @@ async def get_product(product_id: str, db: AsyncSession = Depends(get_db), _: Us
     result = await db.execute(
         select(Product)
         .where(Product.id == product_id)
-        .options(selectinload(Product.variants), selectinload(Product.brand), selectinload(Product.category))
+        .options(
+            selectinload(Product.variants), 
+            selectinload(Product.brand), 
+            selectinload(Product.category),
+            selectinload(Product.images)
+        )
     )
     product = result.scalar_one_or_none()
     if not product:
@@ -89,7 +96,7 @@ async def create_product(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Product with this slug already exists")
 
-    product_data = body.model_dump(exclude={"variants"})
+    product_data = body.model_dump(exclude={"variants", "images"})
     product_data["scent_notes"] = body.scent_notes.model_dump()
     product = Product(**product_data)
     db.add(product)
@@ -99,13 +106,21 @@ async def create_product(
         variant = ProductVariant(product_id=product.id, **v.model_dump())
         db.add(variant)
 
+    for img_url in body.images:
+        db.add(ProductImage(product_id=product.id, url=img_url))
+
     await db.commit()
     await db.refresh(product)
 
     result = await db.execute(
         select(Product)
         .where(Product.id == product.id)
-        .options(selectinload(Product.variants), selectinload(Product.brand), selectinload(Product.category))
+        .options(
+            selectinload(Product.variants), 
+            selectinload(Product.brand), 
+            selectinload(Product.category),
+            selectinload(Product.images)
+        )
     )
     product = result.scalar_one()
     return await enrich_product(product, db)
@@ -120,7 +135,12 @@ async def update_product(
 ):
     result = await db.execute(
         select(Product).where(Product.id == product_id)
-        .options(selectinload(Product.variants), selectinload(Product.brand), selectinload(Product.category))
+        .options(
+            selectinload(Product.variants), 
+            selectinload(Product.brand), 
+            selectinload(Product.category),
+            selectinload(Product.images)
+        )
     )
     product = result.scalar_one_or_none()
     if not product:
@@ -130,7 +150,14 @@ async def update_product(
     if "scent_notes" in data and body.scent_notes:
         data["scent_notes"] = body.scent_notes.model_dump()
     for field, value in data.items():
-        setattr(product, field, value)
+        if field == "images":
+            from sqlalchemy import delete
+            # Full sync: remove old, add new
+            await db.execute(delete(ProductImage).where(ProductImage.product_id == product.id))
+            for img_url in value:
+                db.add(ProductImage(product_id=product.id, url=img_url))
+        else:
+            setattr(product, field, value)
     await db.commit()
     await db.refresh(product)
     return await enrich_product(product, db)

@@ -8,6 +8,7 @@ function EditTaxModal({ sku, onClose, onSaved }) {
     id: sku.id,
     sku_code: sku.sku,
     selling_price: sku.selling_price || 5000,
+    compare_at_price: sku.compare_at_price || '',
     tax_type: sku.tax_type || 'Inclusive', // 'Inclusive' | 'Exclusive'
     gst_slab: sku.gst_slab || '18', // '0' | '5' | '12' | '18' | '28'
     hsn_code: sku.hsn_code || '3303.00',
@@ -38,8 +39,9 @@ function EditTaxModal({ sku, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault(); setSaving(true)
     try {
-      await api.put(`/products/variants/${form.id}`, {
+      await api.patch(`/products/variants/${form.id}`, {
         selling_price: form.selling_price,
+        compare_at_price: form.compare_at_price ? parseFloat(form.compare_at_price) : null,
         tax_type: form.tax_type,
         gst_slab: form.gst_slab,
         hsn_code: form.hsn_code,
@@ -48,8 +50,7 @@ function EditTaxModal({ sku, onClose, onSaved }) {
       toast.success(`Tax settings for SKU ${form.sku_code} saved!`)
       onSaved()
     } catch (err) {
-      toast.success(`Tax settings for SKU ${form.sku_code} successfully saved! (Simulator Active)`)
-      onSaved()
+      toast.error('Failed to save tax settings')
     } finally { setSaving(false) }
   }
 
@@ -67,7 +68,11 @@ function EditTaxModal({ sku, onClose, onSaved }) {
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{sku.brand_name} • {sku.size_ml}ml {sku.concentration}</div>
             </div>
 
-            <div className="grid-2">
+            <div className="grid-3">
+              <div className="form-group">
+                <label className="form-label">Compare At Price (MRP) (₹) *</label>
+                <input className="input" type="number" value={form.compare_at_price} onChange={e => set('compare_at_price', e.target.value)} required />
+              </div>
               <div className="form-group">
                 <label className="form-label">Selling Price (₹) *</label>
                 <input className="input" type="number" value={form.selling_price} onChange={e => set('selling_price', e.target.value)} required />
@@ -176,7 +181,11 @@ function ViewSkuModal({ sku, onClose }) {
               <strong style={{ color: 'var(--success)' }}>{sku.current_stock || 10} Units</strong>
             </div>
           </div>
-          <div className="grid-2">
+          <div className="grid-3">
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>COMPARE AT / MRP</span>
+              <strong style={{ fontSize: '1rem', color: 'var(--gold-bright)' }}>{sku.compare_at_price ? `₹${Number(sku.compare_at_price).toLocaleString('en-IN')}` : '—'}</strong>
+            </div>
             <div>
               <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>SELLING PRICE</span>
               <strong style={{ fontSize: '1rem', color: '#fff' }}>₹{Number(sku.selling_price).toLocaleString('en-IN')}</strong>
@@ -216,6 +225,7 @@ function AddSkuModal({ products, onClose, onSaved }) {
     size_ml: '100',
     concentration: 'EDP',
     selling_price: '',
+    compare_at_price: '',
     cost_price: '',
     min_stock_alert: '5',
     batch_number: 'BATCH-2026A',
@@ -236,6 +246,7 @@ function AddSkuModal({ products, onClose, onSaved }) {
         size_ml: form.size_ml,
         concentration: form.concentration,
         selling_price: form.selling_price,
+        compare_at_price: form.compare_at_price ? parseFloat(form.compare_at_price) : null,
         cost_price: form.cost_price,
         min_stock_alert: form.min_stock_alert,
         batch_number: form.batch_number,
@@ -288,7 +299,11 @@ function AddSkuModal({ products, onClose, onSaved }) {
               </div>
             </div>
 
-            <div className="grid-3">
+            <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              <div className="form-group">
+                <label className="form-label">Compare At / MRP (₹) *</label>
+                <input className="input" type="number" value={form.compare_at_price} onChange={e => set('compare_at_price', e.target.value)} required placeholder="2999" />
+              </div>
               <div className="form-group">
                 <label className="form-label">Selling Price (₹) *</label>
                 <input className="input" type="number" value={form.selling_price} onChange={e => set('selling_price', e.target.value)} required placeholder="2499" />
@@ -363,32 +378,13 @@ export default function SKUs({ hideHeader }) {
     setLoading(true)
     api.get('/products', { params: { search: search || undefined, limit: 100 } })
       .then(r => {
-        let productsList = r.data || []
-        if (!productsList.length) {
-          // Fallback realistic products with variants to display sales-GST logic perfectly
-          productsList = [
-            {
-              id: 101, name: 'Midnight Oud EDP', brand_name: 'Kozmo Labs',
-              variants: [
-                { id: 201, sku: 'KL-OUD-100', selling_price: 12500, cost_price: 5500, size_ml: 100, concentration: 'EDP', current_stock: 12, min_stock_alert: 5, tax_type: 'Inclusive', gst_slab: '18' },
-                { id: 202, sku: 'KL-OUD-50', selling_price: 5000, cost_price: 2200, size_ml: 50, concentration: 'EDP', current_stock: 4, min_stock_alert: 2, tax_type: 'Inclusive', gst_slab: '18' }
-              ]
-            },
-            {
-              id: 102, name: 'Bleu de Chanel', brand_name: 'Chanel',
-              variants: [
-                { id: 203, sku: 'BDC-EDP-50', selling_price: 2499, cost_price: 1200, size_ml: 50, concentration: 'EDP', current_stock: 3, min_stock_alert: 6, tax_type: 'Exclusive', gst_slab: '18' }
-              ]
-            }
-          ]
-        }
+        const productsList = r.data || []
         setRawProducts(productsList)
         const flattened = []
         productsList.forEach((p, idx) => {
           if (p.variants) {
             p.variants.forEach((v, vidx) => {
-              // Add mock Tax values to display beautifully in the table
-              const taxType = v.tax_type || (vidx === 0 ? 'Inclusive' : 'Exclusive')
+              const taxType = v.tax_type || 'Exclusive'
               const gstSlab = v.gst_slab || '18'
               const selling = Number(v.selling_price) || 5000
               const gst = Number(gstSlab)
@@ -410,8 +406,23 @@ export default function SKUs({ hideHeader }) {
         })
         setSkus(flattened)
       })
-      .catch(() => toast.error('Failed to load SKUs'))
+      .catch(() => {
+        setRawProducts([])
+        setSkus([])
+        toast.error('Failed to load SKUs')
+      })
       .finally(() => setLoading(false))
+  }
+
+  const handleToggleActive = async (sku) => {
+    const newStatus = !sku.is_active
+    try {
+      await api.patch(`/products/variants/${sku.id}`, { is_active: newStatus })
+      toast.success(newStatus ? 'SKU activated' : 'SKU deactivated')
+      load()
+    } catch (err) {
+      toast.error('Failed to update SKU status')
+    }
   }
 
   useEffect(() => { load() }, [search])
@@ -460,7 +471,14 @@ export default function SKUs({ hideHeader }) {
             <Search className="search-icon" />
             <input className="input" placeholder="Search by SKU or product name…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{skus.length} SKUs</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{skus.length} SKUs</span>
+            {hideHeader && (
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => setAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                ➕ Add SKU
+              </button>
+            )}
+          </div>
         </div>
         <table className="data-table">
           <thead>
@@ -473,15 +491,16 @@ export default function SKUs({ hideHeader }) {
               <th>GST Slab</th>
               <th>Final MRP (₹)</th>
               <th>Stock</th>
+              <th>Status</th>
               <th>Loyalty Points</th>
               <th style={{ textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="table-empty">Loading…</td></tr>
+              <tr><td colSpan={10} className="table-empty">Loading…</td></tr>
             ) : skus.length === 0 ? (
-              <tr><td colSpan={9} className="table-empty">No SKUs found.</td></tr>
+              <tr><td colSpan={10} className="table-empty">No SKUs found.</td></tr>
             ) : skus.map(s => (
               <tr key={s.id}>
                 <td>
@@ -496,6 +515,7 @@ export default function SKUs({ hideHeader }) {
                 </td>
                 <td>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>₹{Number(s.selling_price).toLocaleString('en-IN')}</div>
+                  {s.compare_at_price && <div style={{ fontSize: '0.7rem', color: 'var(--gold-bright)' }}>MRP: ₹{Number(s.compare_at_price).toLocaleString('en-IN')}</div>}
                   {s.cost_price && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cost: ₹{Number(s.cost_price).toLocaleString('en-IN')}</div>}
                 </td>
                 <td>
@@ -519,6 +539,15 @@ export default function SKUs({ hideHeader }) {
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: s.current_stock <= s.min_stock_alert ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)', padding: '4px 8px', borderRadius: 4, color: s.current_stock <= s.min_stock_alert ? 'var(--error)' : 'var(--success)' }}>
                     <span style={{ fontWeight: 700 }}>{s.current_stock || 0}</span>
                   </div>
+                </td>
+                <td>
+                  <button 
+                    onClick={() => handleToggleActive(s)}
+                    className={`badge ${s.is_active ? 'badge-success' : 'badge-neutral'}`}
+                    style={{ border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
+                    {s.is_active ? 'Active' : 'Inactive'}
+                  </button>
                 </td>
                 <td>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(201,168,76,0.1)', padding: '4px 8px', borderRadius: 4, color: 'var(--gold)' }}>

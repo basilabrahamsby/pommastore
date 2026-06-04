@@ -20,7 +20,7 @@ export default function Layout() {
       <main className="main-content">
         {/* Mobile top bar with hamburger */}
         <div className="mobile-topbar">
-          <span className="mobile-topbar-logo">KOZMOCART</span>
+          <img src="/logo.png" alt="Kozmocart Logo" style={{ height: '24px', objectFit: 'contain' }} />
           <button
             className="hamburger"
             onClick={() => setSidebarOpen(o => !o)}

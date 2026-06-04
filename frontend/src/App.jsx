@@ -8,6 +8,10 @@ import Inventory from './pages/Inventory'
 import Orders from './pages/Orders'
 import Settings from './pages/Settings'
 import Offers from './pages/Offers'
+import Analytics from './pages/Analytics'
+import Storefront from './pages/Storefront'
+
+import Help from './pages/Help'
 
 function PrivateRoute({ children }) {
   const token = useAuthStore(s => s.token)
@@ -27,7 +31,10 @@ export default function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="customers" element={<Navigate to="/orders" replace />} />
           <Route path="offers" element={<Offers />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="storefront" element={<Storefront />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="help" element={<Help />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

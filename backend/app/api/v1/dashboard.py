@@ -40,6 +40,12 @@ class DashboardStats(BaseModel):
     profit_timeline: list
     channel_performance: list
 
+    # Movement & Expiry Insights
+    fast_moving_items: list
+    slow_moving_items: list
+    upcoming_expiries: list
+    customer_source_breakdown: list
+
 
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(
@@ -49,20 +55,25 @@ async def get_dashboard_stats(
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=6)
+    month_start = today_start - timedelta(days=30)
 
     # Total revenue & orders
     rev_result = await db.execute(
         select(func.sum(Order.total_amount), func.count(Order.id))
         .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
     )
-    total_revenue, total_orders = rev_result.one()
+    row = rev_result.one()
+    safe_revenue = float(row[0] or 0)
+    safe_orders = int(row[1] or 0)
 
     # Today
     today_result = await db.execute(
         select(func.sum(Order.total_amount), func.count(Order.id))
         .where(Order.created_at >= today_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
     )
-    revenue_today, orders_today = today_result.one()
+    today_row = today_result.one()
+    revenue_today = float(today_row[0] or 0)
+    orders_today = int(today_row[1] or 0)
 
     # Pending orders
     pending_result = await db.execute(
@@ -89,7 +100,7 @@ async def get_dashboard_stats(
     # Revenue last 7 days
     daily_result = await db.execute(
         select(
-            func.date_trunc("day", Order.created_at).label("day"),
+            func.date_trunc('day', Order.created_at).label("day"),
             func.sum(Order.total_amount).label("revenue"),
             func.count(Order.id).label("orders"),
         )
@@ -123,14 +134,13 @@ async def get_dashboard_stats(
         .join(Order, Order.id == OrderItem.order_id)
         .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
     )
-    total_sales, total_cost = profit_result.one()
-    safe_sales = float(total_sales or 0)
-    safe_cost = float(total_cost or 0)
+    prof_row = profit_result.one()
+    safe_sales = float(prof_row[0] or 0)
+    safe_cost = float(prof_row[1] or 0)
     gross_profit = safe_sales - safe_cost
     gross_margin = (gross_profit / safe_sales * 100) if safe_sales > 0 else 0
 
     # Monthly Revenue (last 30 days)
-    month_start = today_start - timedelta(days=30)
     month_result = await db.execute(
         select(func.sum(Order.total_amount))
         .where(Order.created_at >= month_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
@@ -153,27 +163,29 @@ async def get_dashboard_stats(
     else:
         weekly_growth = 100.0 if this_week_rev > 0 else 0.0
 
-    # Fulfillment Rate (percent of orders that are shipped/delivered/completed out of non-cancelled)
+    # Fulfillment Rate
     fulfilled_result = await db.execute(
         select(func.count(Order.id))
         .where(Order.status.in_([OrderStatus.shipped, OrderStatus.delivered, OrderStatus.completed]))
     )
     fulfilled_orders = fulfilled_result.scalar() or 0
-    valid_orders = safe_orders # from earlier
-    fulfillment_rate = (fulfilled_orders / valid_orders * 100) if valid_orders > 0 else 0
+    fulfillment_rate = (fulfilled_orders / safe_orders * 100) if safe_orders > 0 else 0
 
     # Profit Timeline (Last 7 Days)
-    profit_daily_result = await db.execute(
+    profit_daily_stmt = (
         select(
-            func.date_trunc("day", Order.created_at).label("day"),
+            func.date_trunc('day', Order.created_at).label("day"),
             func.sum(OrderItem.total_price).label("revenue"),
             func.sum(OrderItem.cost_price * OrderItem.quantity).label("cost")
         )
         .join(Order, Order.id == OrderItem.order_id)
         .where(Order.created_at >= week_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
-        .group_by(func.date_trunc("day", Order.created_at))
-        .order_by(func.date_trunc("day", Order.created_at))
+        .group_by(text("day"))
+        .order_by(text("day"))
     )
+    
+    profit_daily_result = await db.execute(profit_daily_stmt)
+    
     profit_timeline = [
         {
             "day": row[0].strftime("%a"), 
@@ -183,7 +195,7 @@ async def get_dashboard_stats(
         for row in profit_daily_result.all()
     ]
 
-    # Channel Performance (Sales by Channel)
+    # Channel Performance
     channel_result = await db.execute(
         select(Order.channel, func.count(Order.id), func.sum(Order.total_amount))
         .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
@@ -192,6 +204,72 @@ async def get_dashboard_stats(
     channel_performance = [
         {"name": row[0] or "Direct", "orders": int(row[1] or 0), "revenue": float(row[2] or 0)}
         for row in channel_result.all()
+    ]
+
+    # Fast Moving Items (Last 30 Days)
+    fast_result = await db.execute(
+        select(Product.name, func.sum(OrderItem.quantity).label("units"))
+        .join(ProductVariant, ProductVariant.id == OrderItem.variant_id)
+        .join(Product, Product.id == ProductVariant.product_id)
+        .join(Order, Order.id == OrderItem.order_id)
+        .where(Order.created_at >= month_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
+        .group_by(Product.name)
+        .order_by(text("units DESC"))
+        .limit(5)
+    )
+    fast_moving_items = [{"name": row[0], "units": int(row[1])} for row in fast_result.all()]
+
+    # Slow Moving Items (Lowest sales last 30 days, but has stock)
+    # 1. Get all variants with stock
+    active_variants_res = await db.execute(
+        select(ProductVariant.id, Product.name)
+        .join(Product, Product.id == ProductVariant.product_id)
+        .where(ProductVariant.is_active == True)
+    )
+    variant_info = active_variants_res.all()
+    
+    # 2. Get sales for each in last 30 days
+    sales_res = await db.execute(
+        select(OrderItem.variant_id, func.sum(OrderItem.quantity))
+        .join(Order, Order.id == OrderItem.order_id)
+        .where(Order.created_at >= month_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
+        .group_by(OrderItem.variant_id)
+    )
+    sales_map = {row[0]: int(row[1]) for row in sales_res.all()}
+
+    slow_moving_items = []
+    for vid, name in variant_info:
+        stock = stock_map.get(vid, 0)
+        if stock > 0:
+            sales = sales_map.get(vid, 0)
+            slow_moving_items.append({"name": name, "sales": sales, "stock": stock})
+    
+    slow_moving_items.sort(key=lambda x: x["sales"])
+    slow_moving_items = slow_moving_items[:5]
+
+    # Upcoming Expiries (Next 90 days)
+    expiry_limit = now + timedelta(days=90)
+    expiry_result = await db.execute(
+        select(Product.name, InventoryBatch.batch_code, InventoryBatch.expiry_date, InventoryBatch.current_quantity)
+        .join(ProductVariant, ProductVariant.id == InventoryBatch.variant_id)
+        .join(Product, Product.id == ProductVariant.product_id)
+        .where(InventoryBatch.expiry_date.isnot(None), InventoryBatch.expiry_date <= expiry_limit, InventoryBatch.current_quantity > 0)
+        .order_by(InventoryBatch.expiry_date.asc())
+        .limit(5)
+    )
+    upcoming_expiries = [
+        {"name": row[0], "batch": row[1], "date": row[2].isoformat(), "qty": row[3]}
+        for row in expiry_result.all()
+    ]
+
+    # Customer Source Breakdown
+    source_result = await db.execute(
+        select(Customer.acquisition_source, func.count(Customer.id))
+        .group_by(Customer.acquisition_source)
+    )
+    customer_source_breakdown = [
+        {"source": (row[0] or "Direct").capitalize(), "count": int(row[1] or 0)}
+        for row in source_result.all()
     ]
 
     return DashboardStats(
@@ -214,4 +292,8 @@ async def get_dashboard_stats(
         revenue_last_7_days=revenue_last_7_days,
         profit_timeline=profit_timeline,
         channel_performance=channel_performance,
+        fast_moving_items=fast_moving_items,
+        slow_moving_items=slow_moving_items,
+        upcoming_expiries=upcoming_expiries,
+        customer_source_breakdown=customer_source_breakdown,
     )

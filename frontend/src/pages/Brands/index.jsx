@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Plus, Search, Pencil, Trash2, Globe, Eye } from 'lucide-react'
 import api from '../../services/api'
+import { getMediaUrl } from '../../services/media'
 import toast from 'react-hot-toast'
+import InfoButton from '../../components/ui/InfoButton'
 
 function BrandModal({ brand, onClose, onSaved }) {
   const editing = !!brand
   const [form, setForm] = useState({
     name: brand?.name || '', slug: brand?.slug || '',
     description: brand?.description || '', logo_url: brand?.logo_url || '',
-    images: brand?.images || (brand?.logo_url ? [brand.logo_url] : []),
+    gallery: brand?.gallery || (brand?.logo_url ? [brand.logo_url] : []),
     is_active: brand?.is_active ?? true,
+    origin_country: brand?.origin_country || '',
     video_url: brand?.video_url || '',
     three_d_source_image: brand?.three_d_source_image || '',
     is_3d_active: brand?.is_3d_active || false,
@@ -28,8 +31,9 @@ function BrandModal({ brand, onClose, onSaved }) {
     brand_banner: brand?.brand_banner || '',
     primary_color: brand?.primary_color || '#d4af37',
     secondary_color: brand?.secondary_color || '#000000',
-    seo_meta_title: brand?.seo_meta_title || '',
-    seo_meta_desc: brand?.seo_meta_desc || '',
+    seo_title: brand?.seo_title || '',
+    meta_description: brand?.meta_description || '',
+    keywords: brand?.keywords || '',
 
     // Legal & Logistics (ERP Brain)
     trademark_number: brand?.trademark_number || '',
@@ -51,25 +55,41 @@ function BrandModal({ brand, onClose, onSaved }) {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
-  const handleDirectUpload = (e) => {
+  const handleDirectUpload = async (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
     
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setForm(p => ({ ...p, images: [...(p.images || []), reader.result] }))
-      }
-      reader.readAsDataURL(file)
-    })
-    toast.success(`${files.length} brand image(s) uploaded!`)
+    const uploadToast = toast.loading(`Uploading ${files.length} brand image(s)...`)
+    
+    try {
+      const uploadPromises = files.map(file => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/uploads', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      })
+      
+      const responses = await Promise.all(uploadPromises)
+      const newUrls = responses.map(r => r.data.url)
+      
+      setForm(p => ({ 
+        ...p, 
+        gallery: [...(p.gallery || []), ...newUrls],
+        logo_url: p.logo_url || newUrls[0] // Set first one as primary logo if none exists
+      }))
+      
+      toast.success(`${files.length} image(s) processed and stored!`, { id: uploadToast })
+    } catch (err) {
+      toast.error('Asset storage failed. Please check file size/type.', { id: uploadToast })
+    }
   }
 
   const handleRemoveImage = (idx) => {
     setForm(p => {
-      const list = [...(p.images || [])]
+      const list = [...(p.gallery || [])]
       list.splice(idx, 1)
-      return { ...p, images: list }
+      return { ...p, gallery: list }
     })
   }
 
@@ -129,13 +149,23 @@ function BrandModal({ brand, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setSaving(true)
+    const payload = {
+      ...form,
+      brand_commission: form.brand_commission === '' ? null : parseFloat(form.brand_commission),
+      logo_url: form.logo_url || (form.gallery?.[0] || null),
+    }
     try {
-      if (editing) await api.patch(`/brands/${brand.id}`, form)
-      else await api.post('/brands', form)
+      if (editing) await api.patch(`/brands/${brand.id}`, payload)
+      else await api.post('/brands', payload)
       toast.success(editing ? 'Brand updated' : 'Brand created')
       onSaved()
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Save failed')
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        toast.error(detail.map(d => `${d.loc[d.loc.length-1]}: ${d.msg}`).join('\n'))
+      } else {
+        toast.error(detail || 'Save failed')
+      }
     } finally { setSaving(false) }
   }
 
@@ -178,14 +208,14 @@ function BrandModal({ brand, onClose, onSaved }) {
                 <input id="brand-logo-upload" type="file" multiple accept="image/*" onChange={handleDirectUpload} style={{ display: 'none' }} />
               </label>
 
-              {form.images?.length > 0 && (
+              {form.gallery?.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))', gap: 8, marginTop: 10 }}>
-                  {form.images.map((imgUrl, idx) => (
+                  {form.gallery.map((imgUrl, idx) => (
                     <div key={idx} style={{
                       position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 'var(--radius-sm)',
                       overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#0c0c12'
                     }}>
-                      <img src={imgUrl} alt={`Brand ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={getMediaUrl(imgUrl)} alt={`Brand ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <button type="button" onClick={() => handleRemoveImage(idx)} style={{
                         position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%',
                         background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.55rem', fontWeight: 'bold',
@@ -230,7 +260,7 @@ function BrandModal({ brand, onClose, onSaved }) {
                   ) : form.is_3d_active ? (
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       <div style={{ width: 54, height: 54, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--gold)', background: form.remove_background ? 'transparent' : 'linear-gradient(45deg, #1f1a10, #0a0a0f)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                        <img src={form.three_d_source_image} style={{ width: '80%', height: '80%', objectFit: 'contain', animation: 'spinLogo 8s linear infinite' }} />
+                        <img src={getMediaUrl(form.three_d_source_image)} style={{ width: '80%', height: '80%', objectFit: 'contain', animation: 'spinLogo 8s linear infinite' }} />
                         <span style={{ position: 'absolute', bottom: 1, right: 1, fontSize: '0.4rem', background: 'rgba(0,0,0,0.6)', padding: '1px 2px', borderRadius: 2, color: 'var(--gold)' }}>3D</span>
                       </div>
                       <div>
@@ -260,7 +290,7 @@ function BrandModal({ brand, onClose, onSaved }) {
 
                           <div style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: 10, borderRadius: 6 }}>
                             <div style={{ width: 44, height: 44, borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.3)', background: '#0a0a0f' }}>
-                              <img src={form.three_d_source_image} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              <img src={getMediaUrl(form.three_d_source_image)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                             <div style={{ flex: 1 }}>
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Logo Image Loaded</span>
@@ -326,7 +356,7 @@ function BrandModal({ brand, onClose, onSaved }) {
                     <label className="form-label" style={{ marginBottom: 8, display: 'block' }}>Square Favicon / App Icon</label>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       {form.brand_icon && (
-                        <img src={form.brand_icon} alt="Icon Preview" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--gold-border)' }} />
+                        <img src={getMediaUrl(form.brand_icon)} alt="Icon Preview" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--gold-border)' }} />
                       )}
                       <label style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 'var(--radius-sm)', border: '1px dashed rgba(201,168,76,0.3)', background: 'rgba(255,255,255,0.01)', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                         <span>📁 Choose/Drag Icon</span>
@@ -338,7 +368,7 @@ function BrandModal({ brand, onClose, onSaved }) {
                     <label className="form-label" style={{ marginBottom: 8, display: 'block' }}>Cinematic Wide Banner Image</label>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       {form.brand_banner && (
-                        <img src={form.brand_banner} alt="Banner Preview" style={{ width: 80, height: 44, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--gold-border)' }} />
+                        <img src={getMediaUrl(form.brand_banner)} alt="Banner Preview" style={{ width: 80, height: 44, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--gold-border)' }} />
                       )}
                       <label style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 'var(--radius-sm)', border: '1px dashed rgba(201,168,76,0.3)', background: 'rgba(255,255,255,0.01)', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                         <span>📁 Choose/Drag Banner</span>
@@ -365,14 +395,20 @@ function BrandModal({ brand, onClose, onSaved }) {
                   </div>
                 </div>
 
-                <div className="grid-2" style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 14 }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">SEO Meta Title</label>
-                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.seo_meta_title} onChange={e => set('seo_meta_title', e.target.value)} placeholder="e.g. The Finest Oud Perfumes in India" />
+                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 14 }}>
+                  <div className="grid-2" style={{ marginBottom: 12 }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">SEO Meta Title</label>
+                      <input className="input" style={{ fontSize: '0.8rem' }} value={form.seo_title} onChange={e => set('seo_title', e.target.value)} placeholder="e.g. The Finest Oud Perfumes in India" />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">SEO Meta Description</label>
+                      <input className="input" style={{ fontSize: '0.8rem' }} value={form.meta_description} onChange={e => set('meta_description', e.target.value)} placeholder="A sensory brand meta description..." />
+                    </div>
                   </div>
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">SEO Meta Description</label>
-                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.seo_meta_desc} onChange={e => set('seo_meta_desc', e.target.value)} placeholder="A sensory brand meta description for google clicks..." />
+                    <label className="form-label">SEO Keywords (Comma separated)</label>
+                    <input className="input" style={{ fontSize: '0.8rem' }} value={form.keywords} onChange={e => set('keywords', e.target.value)} placeholder="luxury, oud, perfume, france" />
                   </div>
                 </div>
 
@@ -474,7 +510,7 @@ function ViewBrandModal({ brand, onClose }) {
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {brand.logo_url && (
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-              <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: 60, maxWidth: 120, objectFit: 'contain', borderRadius: 4 }} />
+              <img src={getMediaUrl(brand.logo_url)} alt={brand.name} style={{ maxHeight: 60, maxWidth: 120, objectFit: 'contain', borderRadius: 4 }} />
             </div>
           )}
           <div style={{ background: 'rgba(201,168,76,0.06)', padding: 14, borderRadius: 8, border: '1px solid rgba(201,168,76,0.2)' }}>
@@ -513,6 +549,21 @@ export default function Brands({ hideHeader }) {
 
   useEffect(() => { load() }, [search])
 
+  const handleToggleActive = async (brand) => {
+    const newStatus = !brand.is_active
+    if (!newStatus) {
+      if (!confirm(`Deactivating "${brand.name}" will also deactivate all its products. Continue?`)) return
+    }
+    
+    try {
+      await api.patch(`/brands/${brand.id}`, { is_active: newStatus })
+      toast.success(newStatus ? 'Brand activated' : 'Brand and all its products deactivated')
+      load()
+    } catch (err) {
+      toast.error('Failed to update brand status')
+    }
+  }
+
   const handleDelete = async (brand) => {
     if (!confirm(`Delete "${brand.name}"? This cannot be undone.`)) return
     try {
@@ -540,22 +591,22 @@ export default function Brands({ hideHeader }) {
       {/* Dynamic KPI Cards */}
       <div className="grid-4" style={{ marginBottom: 20 }}>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Brands</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Total Brands <InfoButton text="Aggregated summary of corporate corporate perfume creator entities." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{brands.length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Registered perfume houses</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Active Houses</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Active Houses <InfoButton text="Authorized and listed brands having status set to online." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 4 }}>{brands.filter(b => b.is_active).length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Currently active on catalog</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Avg Products / House</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Avg Products / House <InfoButton text="Mathematical standard density of merchandise catalog size divided by total volume of brand entries." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{brands.length ? Math.round(brands.reduce((acc, b) => acc + (b.product_count || 0), 0) / brands.length) : 0}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Mean density per brand</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Global Origins</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Global Origins <InfoButton text="Count of geopolitical sovereign states referenced across brand origin designations." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{new Set(brands.map(b => b.origin_country).filter(Boolean)).size || 'Global'}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Sovereign countries represented</p>
         </div>
@@ -602,9 +653,13 @@ export default function Brands({ hideHeader }) {
                 </td>
                 <td><span className="badge badge-info">{b.product_count}</span></td>
                 <td>
-                  <span className={`badge ${b.is_active ? 'badge-success' : 'badge-neutral'}`}>
+                  <button 
+                    onClick={() => handleToggleActive(b)}
+                    className={`badge ${b.is_active ? 'badge-success' : 'badge-neutral'}`}
+                    style={{ border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
                     {b.is_active ? 'Active' : 'Inactive'}
-                  </span>
+                  </button>
                 </td>
                 <td>
                   <div className="flex gap-2">

@@ -29,6 +29,7 @@ class ConcentrationType(str, enum.Enum):
 
 class Brand(Base):
     __tablename__ = "brands"
+    
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
@@ -36,7 +37,44 @@ class Brand(Base):
     origin_country: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(Text)
     logo_url: Mapped[str | None] = mapped_column(Text)
+    gallery: Mapped[List[str] | None] = mapped_column(JSONB, default=[])
+    banner_url: Mapped[str | None] = mapped_column(Text)
+    video_url: Mapped[str | None] = mapped_column(Text)
+    
+    # 3D & AI Assets
+    three_d_source_image: Mapped[str | None] = mapped_column(Text)
+    is_3d_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    remove_background: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Heritage & Authority
+    founding_year: Mapped[str | None] = mapped_column(String(50))
+    lead_perfumer: Mapped[str | None] = mapped_column(String(255))
+    philosophy: Mapped[str | None] = mapped_column(Text)
+    instagram_url: Mapped[str | None] = mapped_column(Text)
+    tiktok_url: Mapped[str | None] = mapped_column(Text)
+    fragrantica_url: Mapped[str | None] = mapped_column(Text)
+    
+    # Visual Identity
+    brand_icon: Mapped[str | None] = mapped_column(Text)
+    brand_banner: Mapped[str | None] = mapped_column(Text)
+    primary_color: Mapped[str | None] = mapped_column(String(20), default="#d4af37")
+    secondary_color: Mapped[str | None] = mapped_column(String(20), default="#000000")
+    font_preference: Mapped[str | None] = mapped_column(String(50), default="Serif")
+    brand_keywords: Mapped[str | None] = mapped_column(Text)
+    default_hashtags: Mapped[str | None] = mapped_column(Text)
+    
+    # ERP & Logistics
+    trademark_number: Mapped[str | None] = mapped_column(String(100))
+    manufacturer_info: Mapped[str | None] = mapped_column(Text)
+    brand_commission: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    exclusivity_toggle: Mapped[bool] = mapped_column(Boolean, default=False)
+    brand_tier: Mapped[str | None] = mapped_column(String(50), default="Niche")
+    gst_category: Mapped[str | None] = mapped_column(String(100), default="Perfumes (18% GST)")
+    
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    seo_title: Mapped[str | None] = mapped_column(String(70))
+    meta_description: Mapped[str | None] = mapped_column(String(165))
+    keywords: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -52,6 +90,17 @@ class Category(Base):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True)
     scent_family: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    seo_title: Mapped[str | None] = mapped_column(String(70))
+    meta_description: Mapped[str | None] = mapped_column(String(165))
+    keywords: Mapped[str | None] = mapped_column(Text)
+    
+    # Media & Rich Content
+    image_url: Mapped[str | None] = mapped_column(Text)
+    banner_url: Mapped[str | None] = mapped_column(Text)
+    video_url: Mapped[str | None] = mapped_column(Text)
+    images: Mapped[list | None] = mapped_column(JSONB, default=list)
+    
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     products: Mapped[List["Product"]] = relationship("Product", back_populates="category", lazy="select")
@@ -78,6 +127,7 @@ class Product(Base):
     meta_description: Mapped[str | None] = mapped_column(String(165))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    shipping_zones_excluded: Mapped[list | None] = mapped_column(JSONB, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -101,6 +151,7 @@ class ProductVariant(Base):
     cost_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
     weight_grams: Mapped[int | None] = mapped_column(Integer)
     min_stock_alert: Mapped[int] = mapped_column(Integer, default=5)
+    loyalty_points: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

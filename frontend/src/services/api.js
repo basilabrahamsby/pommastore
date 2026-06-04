@@ -12,9 +12,14 @@ api.interceptors.request.use(cfg => {
 api.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) {
+    const isLoginRequest = err.config?.url?.includes('/auth/login')
+
+    // 401 (Unauthorized) or 403 (Forbidden) means session is invalid or restricted
+    // We don't redirect if it's the login request itself, so we can show "Invalid credentials"
+    if ((err.response?.status === 401 || err.response?.status === 403) && !isLoginRequest) {
       useAuthStore.getState().logout()
-      window.location.href = '/login'
+      // Use replace to prevent navigation loops in history
+      window.location.replace('/login')
     }
     return Promise.reject(err)
   }

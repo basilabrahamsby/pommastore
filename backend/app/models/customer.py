@@ -21,6 +21,7 @@ class Customer(Base):
     date_of_birth: Mapped[datetime | None] = mapped_column(Date)
     gender: Mapped[str | None] = mapped_column(String(20))
     scent_profile: Mapped[dict | None] = mapped_column(JSONB)
+    cart_data: Mapped[list | None] = mapped_column(JSONB, server_default='[]')
     loyalty_tier: Mapped[str] = mapped_column(String(20), default="Bronze")
     loyalty_points: Mapped[int] = mapped_column(Integer, default=0)
     total_spent: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
@@ -48,10 +49,24 @@ class CustomerAddress(Base):
     city: Mapped[str | None] = mapped_column(String(100))
     state: Mapped[str | None] = mapped_column(String(100))
     pincode: Mapped[str | None] = mapped_column(String(20))
+    phone: Mapped[str | None] = mapped_column(String(20))
     country: Mapped[str] = mapped_column(String(100), default="India")
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
 
     customer: Mapped["Customer"] = relationship("Customer", back_populates="addresses")
 
 
+class WishlistItem(Base):
+    __tablename__ = "customer_wishlist"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False)
+    product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    customer: Mapped["Customer"] = relationship("Customer")
+    product: Mapped["Product"] = relationship("Product")
+
+
 from app.models.order import Order  # noqa: E402, F401
+from app.models.product import Product  # noqa: E402, F401

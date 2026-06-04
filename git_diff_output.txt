@@ -1,0 +1,1 @@
+Exception: write() argument must be str, not None

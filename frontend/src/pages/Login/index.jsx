@@ -56,8 +56,7 @@ export default function Login() {
         <div style={styles.formHeader}>
           {/* Logo */}
           <div style={styles.logoBlock}>
-            <div style={styles.logoIcon}>🌸</div>
-            <h1 style={styles.logoText}>KOZMOCART</h1>
+            <img src="/logo.png" alt="Kozmocart Logo" style={{ height: '56px', objectFit: 'contain', marginBottom: 12, marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
             <p style={styles.logoSub}>Admin ERP Platform</p>
           </div>
         </div>
@@ -179,7 +178,7 @@ const styles = {
     position: 'absolute',
     width: 240, height: 240,
     borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 60%)',
+    background: 'radial-gradient(circle, rgba(210, 22, 141, 0.06) 0%, transparent 60%)',
     pointerEvents: 'none',
     zIndex: 0,
   },
@@ -187,8 +186,8 @@ const styles = {
     position: 'absolute',
     width: 3, height: 3,
     borderRadius: '50%',
-    background: '#c9a84c',
-    boxShadow: '0 0 12px 3px rgba(201,168,76,0.6)',
+    background: '#d2168d',
+    boxShadow: '0 0 12px 3px rgba(210, 22, 141, 0.6)',
     pointerEvents: 'none',
     zIndex: 0,
   },
@@ -269,7 +268,7 @@ const styles = {
   submitBtn: {
     width: '100%',
     height: 50,
-    background: 'linear-gradient(135deg, #9a7530, #c9a84c, #e8c96a)',
+    background: 'linear-gradient(135deg, #9b1067, #d2168d, #f731ad)',
     border: 'none',
     borderRadius: 10,
     color: '#08080f',
@@ -279,7 +278,7 @@ const styles = {
     fontFamily: 'inherit',
     letterSpacing: '0.03em',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 20px rgba(201,168,76,0.25)',
+    boxShadow: '0 4px 20px rgba(210, 22, 141, 0.25)',
     marginTop: 4,
   },
 

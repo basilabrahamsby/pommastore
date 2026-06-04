@@ -11,6 +11,7 @@ from app.models.user import User, UserRole
 from app.schemas.auth import LoginRequest, TokenResponse, UserOut, UserCreate, UserUpdate
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+users_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -31,12 +32,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.get("/me", response_model=UserOut)
+@users_router.get("/me", response_model=UserOut)
 async def get_me(current_user: User = Depends(get_current_user)):
     return UserOut.model_validate(current_user)
 
 
-@router.get("/users", response_model=list[UserOut])
+@users_router.get("", response_model=list[UserOut])
 async def list_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -45,7 +46,7 @@ async def list_users(
     return [UserOut.model_validate(u) for u in result.scalars().all()]
 
 
-@router.post("/users", response_model=UserOut, status_code=201)
+@users_router.post("", response_model=UserOut, status_code=201)
 async def create_user(
     body: UserCreate,
     db: AsyncSession = Depends(get_db),
@@ -67,7 +68,7 @@ async def create_user(
     return UserOut.model_validate(user)
 
 
-@router.patch("/users/{user_id}", response_model=UserOut)
+@users_router.patch("/{user_id}", response_model=UserOut)
 async def update_user(
     user_id: str,
     body: UserUpdate,

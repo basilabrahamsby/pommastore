@@ -4,6 +4,8 @@ from app.models.inventory import Warehouse, Supplier, InventoryBatch
 from app.models.order import Order, OrderItem
 from app.models.customer import Customer, CustomerAddress
 from app.models.offer import Offer
+from app.models.loyalty import LoyaltyReward
+from app.models.system import SystemSettings
 
 __all__ = [
     "User",
@@ -12,4 +14,6 @@ __all__ = [
     "Order", "OrderItem",
     "Customer", "CustomerAddress",
     "Offer",
+    "LoyaltyReward",
+    "SystemSettings",
 ]

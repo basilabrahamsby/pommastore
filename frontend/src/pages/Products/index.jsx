@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Plus, Search, Pencil, Package, Info, Eye, Trash2 } from 'lucide-react'
 import api from '../../services/api'
+import { getMediaUrl } from '../../services/media'
 import toast from 'react-hot-toast'
+import InfoButton from '../../components/ui/InfoButton'
 
 const CONCENTRATIONS = ['Parfum','EDP','EDT','EDC','Mist','Oil','Other']
 const GENDERS = ['Men','Women','Unisex']
@@ -23,6 +25,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     name: product?.name || '', brand_id: product?.brand_id || '',
     category_id: product?.category_id || '', gender: product?.gender || '',
     short_description: product?.short_description || '',
+    full_description: product?.full_description || '',
     longevity_hours: product?.longevity_hours || '',
     sillage_rating: product?.sillage_rating || '',
     is_active: product?.is_active ?? true,
@@ -30,7 +33,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     scent_notes: product?.scent_notes || { top: [], heart: [], base: [] },
     
     // Extended Perfume Specific Fields
-    olfactory_family: product?.olfactory_family || 'Woody',
+    olfactory_family: product?.occasion_tags?.find(t => t.startsWith('family:'))?.replace('family:', '') || product?.olfactory_family || 'Woody',
     seo_title: product?.seo_title || '',
     meta_description: product?.meta_description || '',
     keywords: product?.keywords || '',
@@ -68,13 +71,13 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     compare_to_tag: product?.compare_to_tag || '',
 
     // Media & 3D Assets
-    images: product?.images?.map(img => img.url) || ['https://images.unsplash.com/photo-1541643600914-78b084683601?w=500'],
+    images: product?.images?.map(img => typeof img === 'string' ? img : img.url).filter(Boolean) || [],
     video_url: product?.video_url || '',
     three_d_source_image: product?.three_d_source_image || '',
     is_3d_active: product?.is_3d_active || false,
 
     variants: product?.variants?.length ? [] : [{
-      sku: '', size_ml: '', concentration: 'EDP', selling_price: '', cost_price: '', min_stock_alert: 5,
+      sku: '', size_ml: '', concentration: 'EDP', selling_price: '', compare_at_price: '', cost_price: '', min_stock_alert: 5, loyalty_points: 0,
       barcode: '', batch_number: '', expiry_date: ''
     }],
   })
@@ -85,9 +88,9 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
   const [addingCategory, setAddingCategory] = useState(false)
 
   // 3D & Media States
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [converting3D, setConverting3D] = useState(false)
   const [threeDProgress, setThreeDProgress] = useState(0)
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
   const setNote = (tier, val) => setForm(p => ({
@@ -96,6 +99,21 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
   const setVariant = (i, k, v) => setForm(p => {
     const vs = [...p.variants]; vs[i] = { ...vs[i], [k]: v }; return { ...p, variants: vs }
   })
+
+  useEffect(() => {
+    if (editing && product?.id) {
+      api.get(`/products/${product.id}`)
+        .then(res => {
+          const fullProd = res.data;
+          setForm(p => ({
+            ...p,
+            full_description: fullProd.full_description || '',
+            olfactory_family: fullProd.occasion_tags?.find(t => t.startsWith('family:'))?.replace('family:', '') || fullProd.olfactory_family || 'Woody',
+          }));
+        })
+        .catch(err => console.warn('Failed to fetch full product details', err));
+    }
+  }, [editing, product?.id]);
 
   const handleConvert3D = () => {
     if (!form.three_d_source_image) {
@@ -115,24 +133,36 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
         }
         return p + 20
       })
-    }, 300)
+    }, 250)
   }
 
-  const handleDirectUpload = (e) => {
+  const handleDirectUpload = async (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
     
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setForm(p => {
-          const cleaned = (p.images || []).filter(img => !img.startsWith('https://images.unsplash.com'))
-          return { ...p, images: [...cleaned, reader.result] }
+    const uploadToast = toast.loading(`Processing ${files.length} product image(s)...`)
+    
+    try {
+      const uploadPromises = files.map(file => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/uploads', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         })
-      }
-      reader.readAsDataURL(file)
-    })
-    toast.success(`${files.length} image(s) uploaded successfully!`)
+      })
+      
+      const responses = await Promise.all(uploadPromises)
+      const newUrls = responses.map(r => r.data.url)
+      
+      setForm(p => ({ 
+        ...p, 
+        images: [...(p.images || []), ...newUrls]
+      }))
+      
+      toast.success(`${files.length} image(s) uploaded successfully!`, { id: uploadToast })
+    } catch (err) {
+      toast.error('Failed to store assets. Check file size/type.', { id: uploadToast })
+    }
   }
 
   const handleRemoveImage = (idx) => {
@@ -196,6 +226,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
       compare_at_price: firstVariant.compare_at_price ? parseFloat(firstVariant.compare_at_price) : null,
       cost_price: firstVariant.cost_price ? parseFloat(firstVariant.cost_price) : null,
       min_stock_alert: firstVariant.min_stock_alert ? parseInt(firstVariant.min_stock_alert) : 5,
+      loyalty_points: firstVariant.loyalty_points ? parseInt(firstVariant.loyalty_points) : 0,
       is_active: true
     }]
 
@@ -212,15 +243,19 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
       },
       longevity_hours: form.longevity_hours ? parseInt(form.longevity_hours) : null,
       sillage_rating: form.sillage_rating ? parseInt(form.sillage_rating) : null,
-      occasion_tags: form.occasion_tags || [],
+      occasion_tags: [
+        ...(form.occasion_tags || []).filter(t => !t.startsWith('family:')),
+        `family:${form.olfactory_family || 'Woody'}`
+      ],
       season_tags: form.season_tags || [],
       short_description: form.short_description || null,
-      full_description: form.meta_description || null,
+      full_description: form.full_description || null,
       meta_title: form.seo_title || null,
       meta_description: form.meta_description || null,
       is_active: !!form.is_active,
       is_featured: !!form.is_featured,
-      variants: sanitizedVariants
+      variants: sanitizedVariants,
+      images: form.images || []
     }
 
     try {
@@ -315,7 +350,10 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                 <LabelWithInfo label="Sillage / Projection" info="The distance the scent cloud projects outward from the wearer." />
                 <select className="select" value={form.sillage_rating} onChange={e => set('sillage_rating', e.target.value)}>
                   <option value="">Select projection…</option>
-                  {['Intimate', 'Moderate', 'Strong', 'Enormous'].map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="1">Intimate</option>
+                  <option value="2">Moderate</option>
+                  <option value="3">Strong</option>
+                  <option value="4">Enormous</option>
                 </select>
               </div>
             </div>
@@ -335,6 +373,24 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
             <div className="form-group" style={{ marginTop: 14 }}>
               <LabelWithInfo label="Short Description" info="A captivating story or description of the perfume's olfactory journey." />
               <textarea className="textarea" rows={2} value={form.short_description} onChange={e => set('short_description', e.target.value)} placeholder="Describe the olfactory journey..." />
+            </div>
+
+            {/* Full Narrative Story */}
+            <div className="form-group" style={{ marginTop: 14 }}>
+              <LabelWithInfo label="Creation Narrative / Full Story" info="The detailed, dynamic background story or creation narrative displayed on the storefront product page." />
+              <textarea className="textarea" rows={4} value={form.full_description} onChange={e => set('full_description', e.target.value)} placeholder="Tell the complete detailed story of the perfume, raw extracts, and design..." />
+            </div>
+
+            {/* Catalog Visibility & Featured Status */}
+            <div style={{ display: 'flex', gap: 24, marginBottom: 14, background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+                <input type="checkbox" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} style={{ accentColor: 'var(--success)' }} />
+                🟢 Active in Catalog
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem', color: 'var(--gold-bright)' }}>
+                <input type="checkbox" checked={form.is_featured} onChange={e => set('is_featured', e.target.checked)} style={{ accentColor: 'var(--gold)' }} />
+                ⭐ Featured / Popular Pick (Homepage)
+              </label>
             </div>
 
             {/* Toggle Advanced ERP & 3D Parameters */}
@@ -501,45 +557,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                   <div key={i} style={{ background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', padding: 16, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div className="grid-3">
                       <div className="form-group" style={{ margin: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <label className="form-label" style={{ margin: 0 }}>SKU *</label>
-                          <select className="select" style={{ width: 'auto', padding: '2px 6px', height: 'auto', fontSize: '0.68rem', background: 'rgba(201,168,76,0.1)', color: 'var(--gold-bright)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: 4, cursor: 'pointer' }} onChange={e => {
-                            const val = e.target.value
-                            if (val === 'KZM-OUD-100') {
-                              setVariant(i, 'sku', 'KZM-OUD-100')
-                              setVariant(i, 'size_ml', 100)
-                              setVariant(i, 'concentration', 'EDP')
-                              setVariant(i, 'selling_price', 4500)
-                              setVariant(i, 'cost_price', 1800)
-                              setVariant(i, 'min_stock_alert', 5)
-                              setVariant(i, 'batch_number', 'BATCH-2026-OUD')
-                              toast.success('Autofilled saved Midnight Oud 100ml SKU!')
-                            } else if (val === 'KZM-OUD-50') {
-                              setVariant(i, 'sku', 'KZM-OUD-50')
-                              setVariant(i, 'size_ml', 50)
-                              setVariant(i, 'concentration', 'Parfum')
-                              setVariant(i, 'selling_price', 2800)
-                              setVariant(i, 'cost_price', 1100)
-                              setVariant(i, 'min_stock_alert', 3)
-                              setVariant(i, 'batch_number', 'BATCH-2026-OUD50')
-                              toast.success('Autofilled saved Midnight Oud 50ml SKU!')
-                            } else if (val === 'KZM-BDC-50') {
-                              setVariant(i, 'sku', 'KZM-BDC-50')
-                              setVariant(i, 'size_ml', 50)
-                              setVariant(i, 'concentration', 'EDT')
-                              setVariant(i, 'selling_price', 8500)
-                              setVariant(i, 'cost_price', 4200)
-                              setVariant(i, 'min_stock_alert', 2)
-                              setVariant(i, 'batch_number', 'BATCH-2026-BDC')
-                              toast.success('Autofilled saved Bleu de Chanel SKU!')
-                            }
-                          }}>
-                            <option value="">⚡ Autofill Saved SKU...</option>
-                            <option value="KZM-OUD-100">Midnight Oud 100ml (KZM-OUD-100)</option>
-                            <option value="KZM-OUD-50">Midnight Oud 50ml (KZM-OUD-50)</option>
-                            <option value="KZM-BDC-50">Bleu de Chanel 50ml (KZM-BDC-50)</option>
-                          </select>
-                        </div>
+                        <label className="form-label">SKU *</label>
                         <input className="input" value={v.sku} onChange={e => setVariant(i,'sku',e.target.value)} required placeholder="BDC-100-EDP" />
                       </div>
                       <div className="form-group" style={{ margin: 0 }}>
@@ -555,6 +573,10 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                     </div>
                     <div className="grid-3">
                       <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Compare At Price (MRP) (₹) *</label>
+                        <input className="input" type="number" value={v.compare_at_price} onChange={e => setVariant(i,'compare_at_price',e.target.value)} required placeholder="2999" />
+                      </div>
+                      <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label">Selling Price (₹) *</label>
                         <input className="input" type="number" value={v.selling_price} onChange={e => setVariant(i,'selling_price',e.target.value)} required placeholder="2499" />
                       </div>
@@ -562,9 +584,15 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                         <label className="form-label">Cost Price (₹)</label>
                         <input className="input" type="number" value={v.cost_price} onChange={e => setVariant(i,'cost_price',e.target.value)} placeholder="1200" />
                       </div>
+                    </div>
+                    <div className="grid-3" style={{ marginTop: 12 }}>
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label">Min Stock Alert *</label>
                         <input className="input" type="number" value={v.min_stock_alert} onChange={e => setVariant(i,'min_stock_alert',e.target.value)} required placeholder="5" />
+                      </div>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Loyalty Points</label>
+                        <input className="input" type="number" value={v.loyalty_points} onChange={e => setVariant(i,'loyalty_points',e.target.value)} placeholder="0" />
                       </div>
                     </div>
                     <div className="grid-3" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 10 }}>
@@ -613,7 +641,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                       position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 'var(--radius-sm)',
                       overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#0c0c12'
                     }}>
-                      <img src={imgUrl} alt={`Perfume ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={getMediaUrl(imgUrl)} alt={`Perfume ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <button type="button" onClick={() => handleRemoveImage(idx)} style={{
                         position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: '50%',
                         background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.65rem', fontWeight: 'bold',
@@ -649,12 +677,12 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
               ) : form.is_3d_active ? (
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                   <div style={{ width: 64, height: 64, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--gold)', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <img src={form.three_d_source_image} style={{ width: '100%', height: '100%', objectFit: 'contain', animation: 'spin 10s linear infinite' }} />
+                     <img src={getMediaUrl(form.three_d_source_image)} style={{ width: '100%', height: '100%', objectFit: 'contain', animation: 'spin 10s linear infinite' }} />
                     <span style={{ position: 'absolute', bottom: 2, right: 2, fontSize: '0.45rem', background: 'rgba(0,0,0,0.6)', padding: '1px 3px', borderRadius: 2, color: 'var(--gold)' }}>360°</span>
                   </div>
                   <div>
                     <h4 style={{ fontSize: '0.82rem', color: '#fff', margin: '0 0 2px 0' }}>Interactive 3D Bottle Active</h4>
-                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>Generated successfully using your distinct 3D source image. Standard gallery images remain completely independent!</p>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>Generated successfully using your distinct 3D source image.</p>
                   </div>
                 </div>
               ) : (
@@ -667,13 +695,12 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                     }}>
                       <span style={{ fontSize: '1.2rem', marginBottom: 4 }}>📐</span>
                       <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600 }}>Upload distinct 3D source photo</span>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Separate from standard gallery images (Front-facing bottle photo)</span>
                       <input id="three-d-source-upload" type="file" accept="image/*" onChange={handleThreeDImageUpload} style={{ display: 'none' }} />
                     </label>
                   ) : (
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 6, border: '1px solid rgba(255,255,255,0.03)' }}>
                       <div style={{ width: 50, height: 50, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.3)', background: '#0a0a0f' }}>
-                        <img src={form.three_d_source_image} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                         <img src={getMediaUrl(form.three_d_source_image)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600 }}>Distinct 3D Source Ready</div>
@@ -697,10 +724,6 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                 to { transform: rotate(360deg); }
               }
             `}</style>
-            <div className="flex gap-4" style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 16 }}>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={e => set('is_active',e.target.checked)} /> Active in Catalog</label>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_featured} onChange={e => set('is_featured',e.target.checked)} /> Featured Product</label>
-            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
@@ -723,13 +746,9 @@ function ViewProductModal({ product, onClose }) {
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {product.images?.length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-              <img src={product.images[0]} alt={product.name} style={{ maxHeight: 150, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }} />
+               <img src={getMediaUrl(product.images[0])} alt={product.name} style={{ maxHeight: 150, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }} />
             </div>
           )}
-          <div style={{ background: 'rgba(201,168,76,0.06)', padding: 14, borderRadius: 8, border: '1px solid rgba(201,168,76,0.2)' }}>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>OLFACTORY TARGET</span>
-            <strong>✨ {product.gender || 'Unisex'} • {product.olfactory_family || 'Woody'} Olfactory Family</strong>
-          </div>
           
           <div className="grid-2">
             <div>
@@ -780,6 +799,28 @@ export default function Products({ hideHeader }) {
     .finally(() => setLoading(false))
   }
 
+  const handleToggleActive = async (product) => {
+    const newStatus = !product.is_active
+    try {
+      await api.patch(`/products/${product.id}`, { is_active: newStatus })
+      toast.success(newStatus ? 'Product activated' : 'Product deactivated')
+      load()
+    } catch (err) {
+      toast.error('Failed to update product status')
+    }
+  }
+
+  const handleToggleFeatured = async (product) => {
+    const newStatus = !product.is_featured
+    try {
+      await api.patch(`/products/${product.id}`, { is_featured: newStatus })
+      toast.success(newStatus ? 'Product marked as featured' : 'Product marked as standard')
+      load()
+    } catch (err) {
+      toast.error('Failed to update product featured status')
+    }
+  }
+
   useEffect(() => { load() }, [search])
 
   return (
@@ -798,22 +839,22 @@ export default function Products({ hideHeader }) {
       {/* Dynamic KPI Cards */}
       <div className="grid-4" style={{ marginBottom: 20 }}>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Products</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Total Products <InfoButton text="Combined volume of all distinct parent models stored in the database." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{products.length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>All registered perfume items</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Active in Catalog</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Active in Catalog <InfoButton text="Count of entries currently verified and reachable via live client store." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 4 }}>{products.filter(p => p.is_active).length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Live and orderable online</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Featured Creations</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Featured Creations <InfoButton text="High-value curation items prominently flagged on storefront homepage grids." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{products.filter(p => p.is_featured).length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Highlighted luxury items</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Brands</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Total Brands <InfoButton text="The cumulative count of unique registered perfume manufacturer houses." /></span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{brands.length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Distinct perfume houses</p>
         </div>
@@ -855,7 +896,24 @@ export default function Products({ hideHeader }) {
                     </div>
                   ))}
                 </td>
-                <td><span className={`badge ${p.is_active ? 'badge-success' : 'badge-neutral'}`}>{p.is_active ? 'Active' : 'Inactive'}</span></td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+                    <button 
+                      onClick={() => handleToggleActive(p)}
+                      className={`badge ${p.is_active ? 'badge-success' : 'badge-neutral'}`}
+                      style={{ border: 'none', cursor: 'pointer', outline: 'none' }}
+                    >
+                      {p.is_active ? 'Active' : 'Inactive'}
+                    </button>
+                    <button 
+                      onClick={() => handleToggleFeatured(p)}
+                      className={`badge ${p.is_featured ? 'badge-gold' : 'badge-neutral'}`}
+                      style={{ border: 'none', cursor: 'pointer', outline: 'none', display: 'flex', alignItems: 'center', gap: 2 }}
+                    >
+                      ★ {p.is_featured ? 'Featured' : 'Standard'}
+                    </button>
+                  </div>
+                </td>
                 <td>
                   <div className="flex gap-2">
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setViewModal(p)} title="View"><Eye size={13} style={{ color: 'var(--text-muted)' }} /></button>

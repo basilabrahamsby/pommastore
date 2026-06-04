@@ -44,6 +44,9 @@ class SupplierOut(BaseModel):
     gst_number: str | None
     is_active: bool
     created_at: datetime
+    outstanding: float = 0.0
+    total_invoiced: float = 0.0
+    ledger: list = []
 
     model_config = {"from_attributes": True}
 
@@ -84,6 +87,8 @@ class StockSummary(BaseModel):
     variant_id: UUID
     sku: str
     product_name: str
+    brand_name: str = ""
+    category_name: str = ""
     current_stock: int
     min_stock_alert: int
     is_low_stock: bool
@@ -98,3 +103,16 @@ class StockAdjustSchema(BaseModel):
     reason: str
     warehouse_location: str | None = None
     batch_id: str | None = None
+
+
+class MovementOut(BaseModel):
+    id: UUID
+    batch_id: UUID
+    sku: str = ""
+    product_name: str = ""
+    type: str
+    quantity: int
+    reason: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

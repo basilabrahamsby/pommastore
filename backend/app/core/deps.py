@@ -5,8 +5,10 @@ from sqlalchemy import select
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.models.user import User, UserRole
+from app.models.customer import Customer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_customer = OAuth2PasswordBearer(tokenUrl="/api/v1/storefront/auth/login")
 
 
 async def get_current_user(
@@ -22,6 +24,21 @@ async def get_current_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive or unknown user")
     return user
+
+
+async def get_current_customer(
+    token: str = Depends(oauth2_scheme_customer),
+    db: AsyncSession = Depends(get_db),
+) -> Customer:
+    payload = decode_access_token(token)
+    customer_id = payload.get("sub")
+    if not customer_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    result = await db.execute(select(Customer).where(Customer.id == customer_id))
+    customer = result.scalar_one_or_none()
+    if not customer or not customer.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive or unknown customer")
+    return customer
 
 
 async def require_admin(current_user: User = Depends(get_current_user)) -> User:

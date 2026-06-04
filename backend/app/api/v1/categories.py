@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_manager
-from app.models.product import Category
+from app.models.product import Category, Product, ProductVariant
 from app.models.user import User
 from app.schemas.brand import CategoryCreate, CategoryUpdate, CategoryOut
 
@@ -47,7 +47,26 @@ async def update_category(
     cat = result.scalar_one_or_none()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
-    for field, value in body.model_dump(exclude_none=True).items():
+    
+    data = body.model_dump(exclude_none=True)
+
+    # Check if is_active is being changed to False
+    if data.get("is_active") is False and cat.is_active is True:
+        # Cascade deactivation to products
+        await db.execute(
+            update(Product)
+            .where(Product.category_id == cat.id)
+            .values(is_active=False)
+        )
+        # Cascade deactivation to variants of those products
+        product_ids_subquery = select(Product.id).where(Product.category_id == cat.id)
+        await db.execute(
+            update(ProductVariant)
+            .where(ProductVariant.product_id.in_(product_ids_subquery))
+            .values(is_active=False)
+        )
+
+    for field, value in data.items():
         setattr(cat, field, value)
     await db.commit()
     await db.refresh(cat)

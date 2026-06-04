@@ -29,6 +29,7 @@ class VariantCreate(BaseModel):
     cost_price: float | None = None
     weight_grams: int | None = None
     min_stock_alert: int = 5
+    loyalty_points: int = 0
     is_active: bool = True
 
 
@@ -42,6 +43,7 @@ class VariantUpdate(BaseModel):
     cost_price: float | None = None
     weight_grams: int | None = None
     min_stock_alert: int | None = None
+    loyalty_points: int | None = None
     is_active: bool | None = None
 
 
@@ -57,6 +59,7 @@ class VariantOut(BaseModel):
     cost_price: float | None
     weight_grams: int | None
     min_stock_alert: int
+    loyalty_points: int
     is_active: bool
     current_stock: int = 0
     created_at: datetime
@@ -81,7 +84,9 @@ class ProductCreate(BaseModel):
     meta_description: str | None = None
     is_active: bool = True
     is_featured: bool = False
+    shipping_zones_excluded: List[str] = []
     variants: List[VariantCreate] = []
+    images: List[str] = []
 
     @field_validator("slug", mode="before")
     @classmethod
@@ -105,9 +110,11 @@ class ProductUpdate(BaseModel):
     short_description: str | None = None
     full_description: str | None = None
     meta_title: str | None = None
+    images: List[str] | None = None
     meta_description: str | None = None
     is_active: bool | None = None
     is_featured: bool | None = None
+    shipping_zones_excluded: List[str] | None = None
 
 
 class ProductOut(BaseModel):
@@ -125,10 +132,43 @@ class ProductOut(BaseModel):
     occasion_tags: list
     season_tags: list
     short_description: str | None
+    full_description: str | None = None
     is_active: bool
     is_featured: bool
+    shipping_zones_excluded: list = []
     variants: List[VariantOut] = []
+    images: List[str] = []
     created_at: datetime
     updated_at: datetime
 
+    @field_validator("images", mode="before")
+    @classmethod
+    def validate_images(cls, v):
+        if v is None:
+            return []
+        # If it's a list of ProductImage objects (from SQLAlchemy), extract URLs
+        if isinstance(v, list) and len(v) > 0 and not isinstance(v[0], str):
+            return [getattr(img, "url", str(img)) for img in v]
+        return v
+
     model_config = {"from_attributes": True}
+
+    @field_validator("scent_notes", mode="before")
+    @classmethod
+    def validate_scent_notes(cls, v):
+        if v is None:
+            return {"top": [], "heart": [], "base": []}
+        return v
+
+    @field_validator("occasion_tags", "season_tags", "shipping_zones_excluded", mode="before")
+    @classmethod
+    def validate_list_fields(cls, v):
+        if v is None:
+            return []
+        return v
+
+
+class ProductDetailOut(ProductOut):
+    full_description: str | None = None
+    meta_title: str | None = None
+    meta_description: str | None = None
