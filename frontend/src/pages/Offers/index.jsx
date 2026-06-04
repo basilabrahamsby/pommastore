@@ -252,7 +252,7 @@ export default function Offers() {
       const res = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      const url = `http://localhost:8000${res.data.url}` // Append backend host
+      const url = `${API_BASE}${res.data.url}` // Append backend host
       setForm(prev => ({ ...prev, images: [url] }))
       toast.success('Banner uploaded successfully')
     } catch (err) {
@@ -270,7 +270,7 @@ export default function Offers() {
       const res = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      const url = `http://localhost:8000${res.data.url}`
+      const url = `${API_BASE}${res.data.url}`
       setLoyaltyForm(prev => ({ ...prev, image_url: url }))
       toast.success('Reward image uploaded successfully!', { id: uploadToast })
     } catch (err) {

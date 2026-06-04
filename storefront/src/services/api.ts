@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: typeof window === 'undefined' ? 'http://api:8000/api/v1/storefront' : 'http://localhost:8000/api/v1/storefront',
+  baseURL: typeof window === 'undefined'
+    ? 'http://api:8000/api/v1/storefront'
+    : (window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1/storefront' : '/api/v1/storefront'),
 });
 
 import { useAuthStore } from '@/store/authStore';

@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://localhost:8000';
+const BACKEND_URL = typeof window === 'undefined' ? 'http://api:8000' : (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 
 export const getMediaUrl = (path: string | null | undefined): string => {
   if (!path) return '/placeholder-perfume.png';
