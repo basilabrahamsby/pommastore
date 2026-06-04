@@ -47,22 +47,14 @@ services:
     container_name: kozmocart_admin
     ports:
       - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - api
 
   storefront:
     build: ./storefront
     container_name: kozmocart_storefront
-    command: npm run dev
     ports:
       - "3000:3000"
-    volumes:
-      - ./storefront:/app
-      - /app/node_modules
-      # - /app/.next
     depends_on:
       - api
 
