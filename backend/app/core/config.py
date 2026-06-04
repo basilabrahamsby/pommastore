@@ -19,7 +19,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
 
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://teqmates.com",
+        "http://teqmates.com",
+        "https://www.teqmates.com",
+        "http://www.teqmates.com",
+    ]
 
     FIRST_SUPERADMIN_EMAIL: str = "admin@kozmocart.in"
     FIRST_SUPERADMIN_PASSWORD: str = "Admin@2026!"

@@ -7,6 +7,9 @@ import {
 import toast from 'react-hot-toast'
 import api from '../../services/api'
 
+// In production the API is co-hosted on the same domain via Nginx (/api → :8000, /static_uploads → :8000)
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
 const fmt = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`
 
 function OfferCard({ o, onDelete, onEdit, isPercentage, isFlat, isBogo, onPreview }) {

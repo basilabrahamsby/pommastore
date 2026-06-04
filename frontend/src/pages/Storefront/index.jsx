@@ -6,7 +6,7 @@ import {
 import toast from 'react-hot-toast'
 import api from '../../services/api'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export default function StorefrontCMS() {
   const [loading, setLoading] = useState(true)
