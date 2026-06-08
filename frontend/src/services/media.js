@@ -1,4 +1,4 @@
-const BACKEND_URL = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
+const BACKEND_URL = import.meta.env.VITE_STATIC_BASE_URL ?? (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 
 export const getMediaUrl = (path) => {
   if (!path) return '';
