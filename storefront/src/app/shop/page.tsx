@@ -12,6 +12,7 @@ function ShopContent() {
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   const brand = searchParams.get('brand');
   const genderQuery = searchParams.get('gender');
@@ -393,7 +394,10 @@ function ShopContent() {
           </div>
 
           {/* Mobile Fast Filters Panel */}
-          <button className="lg:hidden w-full flex items-center justify-center space-x-2 border border-neutral-900 py-3.5 mb-8 text-[11px] font-bold tracking-widest uppercase hover:bg-neutral-950 hover:text-white transition-all font-sans rounded">
+          <button 
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="lg:hidden w-full flex items-center justify-center space-x-2 border border-neutral-900 py-3.5 mb-8 text-[11px] font-bold tracking-widest uppercase hover:bg-neutral-950 hover:text-white transition-all font-sans rounded"
+          >
             <SlidersHorizontal size={16} />
             <span>Interactive Filter Engine</span>
           </button>
@@ -429,6 +433,85 @@ function ShopContent() {
               <div className="text-[10px] font-black tracking-widest text-gray-300 uppercase px-4">End of Curation</div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Mobile Filter Drawer Overlay */}
+      <div className={`fixed inset-0 z-[100] bg-black/60 transition-opacity duration-300 ${isMobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMobileFiltersOpen(false)}>
+        <div 
+          className={`fixed inset-y-0 right-0 w-[320px] max-w-full bg-white text-black shadow-2xl transition-transform duration-300 transform flex flex-col ${isMobileFiltersOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center p-6 border-b border-gray-100 flex-shrink-0">
+             <h2 className="text-sm font-nelphim font-black tracking-[0.25em] uppercase text-black">Filters</h2>
+             <button onClick={() => setIsMobileFiltersOpen(false)} className="p-1 text-black hover:text-accent"><X size={20} /></button>
+          </div>
+          
+          <div className="flex-grow overflow-y-auto p-6 space-y-10">
+            {/* Olfactory Search Input */}
+            <div>
+              <h3 className="text-[11px] font-serif font-black tracking-widest text-black uppercase mb-4">Discovery Search</h3>
+              <input 
+                 type="text" 
+                 placeholder="Search note or brand..."
+                 value={searchVal}
+                 onChange={(e) => setSearchVal(e.target.value)}
+                 className="w-full bg-neutral-50 border-b border-neutral-200 py-3 text-[10px] font-bold tracking-widest uppercase focus:border-accent transition-all outline-none font-sans text-black"
+              />
+            </div>
+
+            {filterSections.map((section) => (
+              <div key={section.title}>
+                <h3 className="text-[11px] font-serif font-black tracking-widest text-black uppercase mb-5 flex justify-between items-center">
+                  {section.title}
+                </h3>
+                <div className="space-y-3">
+                  {section.options.map((opt) => {
+                    const isChecked = selectedFilters[section.title].includes(opt);
+                    return (
+                      <button 
+                         type="button"
+                         key={opt} 
+                         onClick={() => toggleFilter(section.title, opt)}
+                         className="flex items-center space-x-3 group cursor-pointer select-none w-full text-left focus:outline-none"
+                      >
+                         <div className={`w-4 h-4 border transition-colors flex items-center justify-center flex-shrink-0 ${
+                           isChecked ? 'border-accent bg-accent' : 'border-neutral-200'
+                         }`}>
+                           {isChecked && <div className="w-1.5 h-1.5 bg-white" />}
+                         </div>
+                         <span className={`text-[11px] font-bold transition-colors uppercase tracking-wider font-sans ${
+                           isChecked ? 'text-accent font-bold' : 'text-neutral-500'
+                         }`}>
+                           {opt}
+                         </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-6 border-t border-gray-100 bg-neutral-50 flex gap-4 flex-shrink-0">
+             {hasActiveFilters && (
+               <button 
+                 onClick={() => {
+                   clearFilters();
+                   setIsMobileFiltersOpen(false);
+                 }}
+                 className="flex-1 border border-neutral-300 py-3.5 text-[10px] font-bold tracking-widest uppercase hover:bg-neutral-100 transition-colors font-sans rounded"
+               >
+                 Clear
+               </button>
+             )}
+             <button 
+               onClick={() => setIsMobileFiltersOpen(false)}
+               className="flex-grow bg-black text-white py-3.5 text-[10px] font-black tracking-widest uppercase hover:bg-neutral-900 transition-colors font-sans rounded"
+             >
+               View Results ({filteredProducts.length})
+             </button>
+          </div>
         </div>
       </div>
     </div>

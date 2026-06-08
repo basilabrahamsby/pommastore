@@ -152,21 +152,21 @@ export default function Home() {
 
                      <div className="absolute inset-0 flex items-center">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
-                           <span className={`text-[10px] md:text-xs font-bold tracking-[0.3em] text-accent uppercase mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <span className={`text-[9px] md:text-xs font-bold tracking-[0.3em] text-accent uppercase mb-2 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-sans`}>
                               {slideSubtitle}
                            </span>
-                           <h1 className={`text-5xl md:text-7xl lg:text-8xl font-serif font-normal text-white leading-none tracking-wide mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <h1 className={`text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-normal text-white leading-tight md:leading-none tracking-wide mb-4 md:mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideTitle}
                            </h1>
-                           <p className={`text-neutral-200 font-medium text-sm md:text-lg max-w-xl mb-10 tracking-wide transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <p className={`text-neutral-200 font-medium text-xs md:text-lg max-w-sm md:max-w-xl mb-6 md:mb-10 tracking-wide transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideDesc}
                            </p>
                            <Link 
                               href={slideLink} 
-                              className={`bg-white hover:bg-accent text-black hover:text-white px-10 py-4 text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-sans rounded-sm shadow-lg`}
+                              className={`bg-white hover:bg-accent text-black hover:text-white px-6 py-3 md:px-10 md:py-4 text-[9px] md:text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-sans rounded-sm shadow-lg`}
                            >
                               {slideCta}
                            </Link>
@@ -191,14 +191,14 @@ export default function Home() {
 
          {/* Trust Badges - always visible */}
          <section className="bg-neutral-50 py-5 border-b border-neutral-100">
-            <div className="max-w-[1400px] mx-auto px-4 flex flex-wrap justify-center md:justify-between gap-4">
+            <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-2 md:flex md:flex-wrap md:justify-between gap-x-4 gap-y-5 justify-items-center">
                {(cmsLayout?.trust_badges?.length > 0 ? cmsLayout.trust_badges : [
                  { title: 'Free Shipping', sub: 'On orders over ₹999/-', icon: '🚚' },
                  { title: '100% Authentic', sub: 'Genuine & original products only', icon: '✅' },
                  { title: 'Easy Returns', sub: '7-day hassle-free return policy', icon: '🔄' },
                  { title: 'Secure Payments', sub: 'UPI, Cards, Razorpay accepted', icon: '🔒' },
                ]).map((item: any, idx: number) => (
-                  <div key={idx} className="flex items-center space-x-3 min-w-[190px]">
+                  <div key={idx} className="flex items-center space-x-3 min-w-[140px] sm:min-w-[190px]">
                      <div className="text-xl flex-shrink-0">{item.icon || '★'}</div>
                      <div>
                         <p className="text-[10px] font-black tracking-widest uppercase text-black">{item.title}</p>
@@ -248,6 +248,8 @@ export default function Home() {
                                     <img 
                                        src={image} 
                                        alt={name} 
+                                       loading="lazy"
+                                       decoding="async"
                                        className="w-full h-full object-cover group-hover/cat:scale-110 transition-transform duration-[1.5s]" 
                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
                                     />
@@ -315,11 +317,11 @@ export default function Home() {
                   )}
                </div>
             </div>
-         </section>
+          </section>
 
           {/* Cinematic Hero Slider for Flash Offers */}
           {homepageOffers.length > 0 && (
-             <section className="relative h-[85vh] min-h-[700px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
+             <section className="relative h-[1050px] sm:h-[850px] lg:h-[85vh] min-h-[600px] lg:min-h-[700px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
                 {/* Background Slider Engine */}
                 <div className="absolute inset-0">
                    {homepageOffers.map((promo: any, idx: number) => (
@@ -336,22 +338,22 @@ export default function Home() {
                         </Link>
                         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent pointer-events-none" />
                         
-                        <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-12">
+                        <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-12">
                            {/* Text Content */}
-                           <div className="lg:w-1/2 text-white pt-20 lg:pt-0 z-10">
-                              <div className="flex items-center gap-4 mb-8">
+                           <div className="lg:w-1/2 text-white pt-16 sm:pt-20 lg:pt-0 z-10">
+                              <div className="flex items-center gap-4 mb-4 sm:mb-8">
                                  <span className="h-[1.5px] w-12 bg-accent" />
                                  <span className="text-[10px] font-bold tracking-[0.3em] text-accent uppercase font-sans">{promo.discount_type}</span>
                               </div>
-                              <h2 className="text-6xl md:text-8xl font-serif font-normal mb-8 leading-[1] tracking-wide uppercase">
+                              <h2 className="text-3xl sm:text-5xl md:text-8xl font-serif font-normal mb-4 sm:mb-8 leading-tight md:leading-[1] tracking-wide uppercase">
                                  {promo.title}
                               </h2>
-                              <p className="text-sm md:text-lg text-neutral-300 max-w-md mb-8 leading-relaxed font-light tracking-wide opacity-80">
+                              <p className="text-xs sm:text-sm md:text-lg text-neutral-300 max-w-md mb-4 sm:mb-8 leading-relaxed font-light tracking-wide opacity-80">
                                  {promo.subtitle || 'Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.'}
                               </p>
 
                               {/* Dynamic Offer Rules / Details Block */}
-                              <div className="mb-10 p-5 bg-white/5 border border-white/10 rounded-sm max-w-md backdrop-blur-md">
+                              <div className="mb-4 sm:mb-10 p-4 sm:p-5 bg-white/5 border border-white/10 rounded-sm max-w-md backdrop-blur-md">
                                  <div className="text-[10px] font-black tracking-widest text-yellow-500 uppercase mb-3">Offer Rules & Details</div>
                                  <div className="flex flex-col gap-2.5 text-xs">
                                     {promo.discount_type?.toLowerCase().includes('bogo') ? (
@@ -395,16 +397,16 @@ export default function Home() {
                                  </div>
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-10 font-sans">
+                              <div className="flex flex-wrap items-center gap-4 sm:gap-10 font-sans">
                                  <Link 
                                     href="/offers"
-                                    className="group flex items-center gap-4 bg-white hover:bg-accent text-black hover:text-white px-12 py-5 text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-500 shadow-2xl"
+                                    className="group flex items-center gap-3 bg-white hover:bg-accent text-black hover:text-white px-6 py-3 sm:px-12 sm:py-5 text-[9px] sm:text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-500 shadow-2xl"
                                  >
                                     Explore Curation
-                                    <ArrowUpRight size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                    <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                  </Link>
-                                 <div className="text-[11px] font-black tracking-[0.4em] text-neutral-400">
-                                    PROMO: <span className="text-white border-b border-white/20 pb-1 ml-3 font-mono">{promo.code}</span>
+                                 <div className="text-[9px] sm:text-[11px] font-black tracking-[0.4em] text-neutral-400">
+                                    PROMO: <span className="text-white border-b border-white/20 pb-1 ml-2 sm:ml-3 font-mono">{promo.code}</span>
                                  </div>
                               </div>
                            </div>
@@ -458,37 +460,36 @@ export default function Home() {
                 </div>
 
                {/* Navigation Controls & Counter */}
-               <div className="absolute bottom-12 left-6 lg:left-12 flex items-center gap-12 z-20 font-sans">
-                  <div className="flex items-center gap-4">
+               <div className="absolute bottom-6 sm:bottom-12 left-6 lg:left-12 flex items-center gap-6 sm:gap-12 z-20 font-sans">
+                  <div className="flex items-center gap-3 sm:gap-4">
                      {homepageOffers.map((_: any, idx: number) => (
                         <button 
                            key={idx}
                            onClick={() => setCurrentPromoIdx(idx)}
-                           className={`h-0.5 transition-all duration-1000 ${idx === currentPromoIdx ? 'w-20 bg-accent' : 'w-8 bg-white/20'}`}
+                           className={`h-0.5 transition-all duration-1000 ${idx === currentPromoIdx ? 'w-12 sm:w-20 bg-accent' : 'w-6 sm:w-8 bg-white/20'}`}
                         />
                      ))}
                   </div>
-                  <span className="text-[12px] font-black tracking-[0.5em] text-white/60">
+                  <span className="text-[10px] sm:text-[12px] font-black tracking-[0.5em] text-white/60">
                      <span className="text-white">0{currentPromoIdx + 1}</span> / 0{homepageOffers.length}
                   </span>
                </div>
 
-               <div className="absolute bottom-12 right-6 lg:right-12 flex gap-4 z-20">
+               <div className="absolute bottom-6 sm:bottom-12 right-6 lg:right-12 flex gap-2 sm:gap-4 z-20">
                   <button 
                      onClick={() => setCurrentPromoIdx(p => (p === 0 ? homepageOffers.length - 1 : p - 1))}
-                     className="w-16 h-16 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
+                     className="w-10 h-10 sm:w-16 sm:h-16 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
                   >
-                     <ChevronLeft size={28} strokeWidth={1} />
+                     <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={1} />
                   </button>
                   <button 
                      onClick={() => setCurrentPromoIdx(p => (p === homepageOffers.length - 1 ? 0 : p + 1))}
-                     className="w-16 h-16 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
+                     className="w-10 h-10 sm:w-16 sm:h-16 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
                   >
-                     <ChevronRight size={28} strokeWidth={1} />
+                     <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={1} />
                   </button>
                </div>
             </section>
-
          )}
 
          {/* New Arrivals Grid */}
@@ -545,6 +546,8 @@ export default function Home() {
                                  <img 
                                     src={getMediaUrl(brand.brand_banner || brand.logo_url)} 
                                     alt={brand.name} 
+                                    loading="lazy"
+                                    decoding="async"
                                     className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
                                        idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
                                     }`} 
@@ -582,6 +585,8 @@ export default function Home() {
                            <img 
                               src={getMediaUrl(brand.brand_banner || brand.logo_url)} 
                               alt={brand.name} 
+                              loading="lazy"
+                              decoding="async"
                               className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
                                  idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
                               }`} 
@@ -755,7 +760,7 @@ export default function Home() {
          <section className="relative w-full bg-[#fcfcfc] py-24 md:py-32 overflow-hidden border-t border-neutral-100">
             <div className="max-w-[1400px] mx-auto px-8 text-center mb-20 relative z-20">
                <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4 block">The Elite List</span>
-               <h2 className="text-3xl md:text-4xl font-nelphim font-black text-black leading-none uppercase tracking-wider">House Favorites</h2>
+               <h2 className="text-3xl md:text-4xl font-nelphim font-black text-black leading-normal uppercase tracking-wider">House Favorites</h2>
                <div className="w-12 h-[2px] bg-accent mx-auto mt-4" />
             </div>
 
@@ -765,24 +770,20 @@ export default function Home() {
                </h2>
             </div>
 
-            <div className="max-w-[1700px] mx-auto w-full h-full px-6 md:px-12 grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-8 relative z-10 pt-12 items-end">
+            <div className="max-w-[1700px] mx-auto w-full h-full flex md:grid md:grid-cols-5 gap-6 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide px-6 md:px-12 relative z-10 pt-12 items-end">
                {cmsLayout.house_favorites.map((item: any, idx: number) => (
                   <div
                      key={idx}
-                     className={`
-                   group relative flex flex-col justify-end overflow-hidden
-                   ${idx > 1 ? 'hidden md:flex' : 'flex'} 
-                   h-[55vh] md:h-[75vh] rounded-t-full shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-1000 hover:-translate-y-6 border border-neutral-100
-                 `}
+                     className="group relative flex flex-col justify-end overflow-hidden flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-auto h-[55vh] md:h-[75vh] rounded-t-full shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-1000 hover:-translate-y-6 border border-neutral-100"
                   >
                      <img
                         src={item.img}
                         alt={item.name}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3s] ease-out"
                      />
-                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
+                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
 
-                     <div className="relative z-10 bg-black py-8 text-center flex justify-center items-center min-h-[100px]">
+                     <div className="relative z-10 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-6 text-center flex justify-center items-center min-h-[80px] border-t border-white/5 backdrop-blur-[2px]">
                         <span className="text-white font-black text-[12px] tracking-[0.2em] uppercase group-hover:tracking-[0.4em] transition-all duration-700">
                            {item.name}
                         </span>

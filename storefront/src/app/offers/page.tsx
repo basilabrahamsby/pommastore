@@ -306,7 +306,7 @@ export default function OffersPage() {
             <span>Elite Exclusives</span>
             <Sparkles size={12} className="fill-current" />
           </div>
-          <h1 className="text-5xl md:text-8xl font-serif italic font-black text-white tracking-tight mb-6 leading-none">
+          <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif italic font-black text-white tracking-tight mb-6 leading-none">
             The Vault
           </h1>
           <p className="text-neutral-400 text-xs md:text-sm font-medium tracking-[0.2em] uppercase max-w-xl mx-auto leading-relaxed">

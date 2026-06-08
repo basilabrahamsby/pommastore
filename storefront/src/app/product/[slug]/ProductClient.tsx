@@ -369,7 +369,7 @@ export default function ProductClient({
             </div>
 
             {/* Product Title */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-black italic text-neutral-900 leading-tight mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-black italic text-neutral-900 leading-tight mb-4 uppercase">
               {product.name}
             </h1>
 
@@ -576,7 +576,7 @@ export default function ProductClient({
             </div>
 
             {/* TRUST BADGES SECTION */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-neutral-100 pt-8 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-neutral-100 pt-8 mt-2">
               <div className="flex items-center space-x-3">
                 <ShieldCheck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>

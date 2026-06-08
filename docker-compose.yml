@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: kozmocart
       POSTGRES_PASSWORD: kozmocart_dev_2026
       POSTGRES_DB: kozmocart_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,8 +17,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: kozmocart_redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -33,7 +29,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://kozmocart:kozmocart_dev_2026@postgres:5432/kozmocart_db
       REDIS_URL: redis://redis:6379/0
     ports:
-      - "8000:8000"
+      - "8020:8000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -45,6 +41,9 @@ services:
   admin:
     build: ./frontend
     container_name: kozmocart_admin
+    environment:
+      VITE_API_BASE_URL: /kozmocart/api/v1
+      VITE_STATIC_BASE_URL: /kozmocart
     ports:
       - "5173:5173"
     depends_on:

@@ -45,11 +45,11 @@ export default function Cart() {
         <div className="w-full lg:w-2/3">
           <div className="border-t border-gray-100">
             {items.map((item) => (
-              <div key={item.id} className="flex py-8 border-b border-gray-100 items-center">
-                <div className="h-32 w-24 bg-gray-50 flex-shrink-0 flex items-center justify-center p-4">
+              <div key={item.id} className="flex flex-col sm:flex-row py-6 sm:py-8 border-b border-gray-100 gap-4 sm:gap-8 items-start sm:items-center">
+                <div className="h-28 w-20 sm:h-32 sm:w-24 bg-gray-50 flex-shrink-0 flex items-center justify-center p-3 sm:p-4 self-center sm:self-auto">
                   <img src={item.image} alt={item.name} className="max-h-full mix-blend-multiply" />
                 </div>
-                <div className="ml-8 flex-grow">
+                <div className="flex-grow w-full">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{item.name}</h3>
@@ -59,7 +59,7 @@ export default function Cart() {
                       <Trash2 size={16} />
                     </button>
                   </div>
-                  <div className="flex justify-between items-center mt-6">
+                  <div className="flex justify-between items-center mt-4 sm:mt-6">
                     <div className="flex items-center border border-gray-200">
                       <button 
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}

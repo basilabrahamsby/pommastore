@@ -94,10 +94,10 @@ const Navbar = () => {
         `}
       >
         {/* Main Header Area: Left-aligned Logo, Nav Links, Central-Right Search Bar, Right Icons */}
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 h-20 flex items-center justify-between gap-4">
           
           {/* Logo & Desktop Nav Links Group */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2 sm:gap-8">
             {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center">
                <button onClick={() => setIsMobileMenuOpen(true)} className="p-2"><Menu size={24} /></button>
@@ -106,7 +106,7 @@ const Navbar = () => {
             {/* Left Logo Area */}
             <div className="flex-shrink-0 flex items-center">
                <Link href="/" className="flex items-center">
-                 <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-8 md:h-9 object-contain" />
+                 <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-6 sm:h-8 md:h-9 object-contain" />
                </Link>
             </div>
 
@@ -218,7 +218,7 @@ const Navbar = () => {
           </form>
 
           {/* Right Desktop Utilities */}
-          <div className="flex items-center space-x-5 md:space-x-6">
+          <div className="flex items-center space-x-2.5 sm:space-x-5 md:space-x-6">
             <button onClick={() => setIsSearchOpen(true)} className="md:hidden hover:text-accent transition-colors">
               <Search size={20} strokeWidth={1.5} />
             </button>
@@ -254,14 +254,15 @@ const Navbar = () => {
           `}
         >
           {/* Announcement Bar */}
-          <div className={`text-[9px] h-8 flex items-center justify-center font-black tracking-[0.25em] uppercase gap-3 ${isHome ? 'bg-black/20 backdrop-blur-sm text-white' : 'bg-neutral-950 text-white'}`}>
-            <span className="w-8 h-[1px] bg-current opacity-40 hidden sm:block" />
-            🚚 FREE SHIPPING ON ORDERS OVER ₹{freeShippingLimit.toLocaleString()}/- &nbsp;|&nbsp; USE CODE: <span className="text-accent font-mono ml-1">KOZMO999</span>
-            <span className="w-8 h-[1px] bg-current opacity-40 hidden sm:block" />
+          <div className={`text-[8px] sm:text-[9px] h-8 flex items-center justify-center font-black tracking-[0.2em] sm:tracking-[0.25em] uppercase gap-2 sm:gap-3 px-4 ${isHome ? 'bg-black/20 backdrop-blur-sm text-white' : 'bg-neutral-950 text-white'}`}>
+            <span className="w-8 h-[1px] bg-current opacity-40 hidden md:block" />
+            <span className="truncate sm:hidden">🚚 Free Shipping over ₹{freeShippingLimit} | Code: <span className="text-accent font-mono">KOZMO999</span></span>
+            <span className="hidden sm:inline">🚚 FREE SHIPPING ON ORDERS OVER ₹{freeShippingLimit.toLocaleString()}/- &nbsp;|&nbsp; USE CODE: <span className="text-accent font-mono ml-1">KOZMO999</span></span>
+            <span className="w-8 h-[1px] bg-current opacity-40 hidden md:block" />
           </div>
 
           {/* Top Utilities Bar */}
-          <div className={`max-w-[1400px] mx-auto px-6 lg:px-12 flex justify-between items-center h-10 w-full text-[9px] font-black tracking-widest uppercase ${isHome ? 'border-t border-white/10' : 'border-t border-neutral-100'}`}>
+          <div className={`max-w-[1400px] mx-auto px-6 lg:px-12 hidden md:flex justify-between items-center h-10 w-full text-[9px] font-black tracking-widest uppercase ${isHome ? 'border-t border-white/10' : 'border-t border-neutral-100'}`}>
             <div className="flex space-x-6">
                <Link href="/track-order" className="hover:opacity-70 transition-opacity">Track Your Order</Link>
                <Link href="/rewards" className="hover:opacity-70 transition-opacity">Rewards Program</Link>
@@ -286,11 +287,22 @@ const Navbar = () => {
           </div>
           <div className="flex-grow flex flex-col items-center justify-center max-w-4xl mx-auto w-full px-6 pb-32">
             <h2 className="text-[10px] font-black tracking-[0.4em] uppercase mb-8 text-neutral-400">Find your next signature scent</h2>
-            <form className="w-full flex border-b-2 border-black">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+                  setIsSearchOpen(false);
+                }
+              }}
+              className="w-full flex border-b-2 border-black"
+            >
               <input 
                 type="text" 
                 autoFocus
                 placeholder="Search fragrance or brand..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-grow py-6 text-3xl md:text-5xl font-serif bg-transparent outline-none tracking-wide placeholder:text-neutral-200"
               />
               <button type="submit" className="p-4 hover:scale-105 transition-transform"><Search size={36} /></button>
@@ -314,8 +326,11 @@ const Navbar = () => {
              <Link href="/shop?gender=Men" onClick={() => setIsMobileMenuOpen(false)}>Men</Link>
              <Link href="/shop?gender=Women" onClick={() => setIsMobileMenuOpen(false)}>Women</Link>
              <Link href="/brands" onClick={() => setIsMobileMenuOpen(false)}>Brands</Link>
-             <Link href="/offers" className="text-red-600" onClick={() => setIsMobileMenuOpen(false)}>Sale</Link>
+             <Link href="/offers" className="text-accent" onClick={() => setIsMobileMenuOpen(false)}>Sale</Link>
              <Link href="/shop?new=true" onClick={() => setIsMobileMenuOpen(false)}>New Arrivals</Link>
+             <div className="h-[1px] bg-neutral-100 my-2" />
+             <Link href="/track-order" className="text-neutral-500 text-[10px]" onClick={() => setIsMobileMenuOpen(false)}>Track Your Order</Link>
+             <Link href="/rewards" className="text-neutral-500 text-[10px]" onClick={() => setIsMobileMenuOpen(false)}>Rewards Program</Link>
           </nav>
         </div>
       </div>
