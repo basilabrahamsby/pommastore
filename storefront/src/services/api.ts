@@ -3,7 +3,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: typeof window === 'undefined'
     ? 'http://api:8000/api/v1/storefront'
-    : (window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1/storefront' : '/api/v1/storefront'),
+    : (process.env.NEXT_PUBLIC_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1/storefront' : '/kozmocart/api/v1/storefront')),
 });
 
 import { useAuthStore } from '@/store/authStore';
@@ -24,7 +24,7 @@ if (typeof window !== 'undefined') {
       if (error.response?.status === 401) {
         useAuthStore.getState().logout();
         if (typeof window !== 'undefined') {
-          window.location.href = '/login?expired=true';
+          window.location.href = '/kozmocart/login?expired=true';
         }
       }
       return Promise.reject(error);
