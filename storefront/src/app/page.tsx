@@ -537,35 +537,85 @@ export default function Home() {
                   <div className="flex animate-scroll hover:[animation-play-state:paused] w-max gap-8 px-8 items-center">
                      {[...Array(2)].map((_, setIdx) => (
                         <React.Fragment key={setIdx}>
-                           {brands.map((brand: any, idx: number) => (
-                              <Link 
-                                 key={`${setIdx}-${brand.id || idx}`} 
-                                 href={`/shop?brand=${brand.id}`}
-                                 className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700"
-                              >
-                                 <img 
-                                    src={getMediaUrl(brand.brand_banner || brand.logo_url)} 
-                                    alt={brand.name} 
-                                    loading="lazy"
-                                    decoding="async"
-                                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
-                                       idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
-                                    }`} 
-                                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
-                                 />
-                                 <div className="brand-card-shine" />
-                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
-                                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
-                                 <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                                    <span className="block text-[11px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
-                                    <div className="mt-3 flex items-center gap-2 opacity-0 group-hover/brand:opacity-100 transition-opacity duration-700">
-                                       <span className="h-[1px] w-6 bg-yellow-500/70" />
-                                       <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-sans">Shop Now</span>
+                           {brands.map((brand: any, idx: number) => {
+                              const hasBanner = !!brand.brand_banner;
+                              return hasBanner ? (
+                                 <Link 
+                                    key={`${setIdx}-${brand.id || idx}`} 
+                                    href={`/shop?brand=${brand.id}`}
+                                    className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700"
+                                 >
+                                    <img 
+                                       src={getMediaUrl(brand.brand_banner)} 
+                                       alt={brand.name} 
+                                       loading="lazy"
+                                       decoding="async"
+                                       className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
+                                          idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
+                                       }`} 
+                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                    />
+                                    {brand.logo_url && (
+                                       <div className="absolute inset-0 flex items-center justify-center p-6 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
+                                          <img 
+                                             src={getMediaUrl(brand.logo_url)} 
+                                             alt={`${brand.name} logo`} 
+                                             className="max-w-[80%] max-h-[40%] object-contain filter invert brightness-0" 
+                                          />
+                                       </div>
+                                    )}
+                                    <div className="brand-card-shine" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
+                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                                       <span className="block text-[11px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
+                                       <div className="mt-3 flex items-center gap-2 opacity-0 group-hover/brand:opacity-100 transition-opacity duration-700">
+                                          <span className="h-[1px] w-6 bg-yellow-500/70" />
+                                          <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-sans">Shop Now</span>
+                                       </div>
                                     </div>
-                                 </div>
-                                 <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
-                              </Link>
-                           ))}
+                                    <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
+                                 </Link>
+                              ) : (
+                                 <Link 
+                                    key={`${setIdx}-${brand.id || idx}`} 
+                                    href={`/shop?brand=${brand.id}`}
+                                    className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-neutral-100 border border-neutral-800/10 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700 flex flex-col justify-between p-5"
+                                 >
+                                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
+                                    <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
+                                    
+                                    <div className="flex-grow flex items-center justify-center p-2 relative z-10 w-full h-[70%]">
+                                       {brand.logo_url ? (
+                                          <img 
+                                             src={getMediaUrl(brand.logo_url)} 
+                                             alt={brand.name} 
+                                             loading="lazy"
+                                             decoding="async"
+                                             className="max-w-[90%] max-h-[85%] object-contain group-hover/brand:scale-105 transition-transform duration-500 mix-blend-multiply"
+                                             onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                          />
+                                        ) : (
+                                          <div className="w-16 h-16 rounded-full border border-neutral-200 flex items-center justify-center group-hover/brand:bg-black group-hover:text-white transition-colors duration-500">
+                                             <span className="font-serif italic font-black text-2xl uppercase tracking-tight text-neutral-800 group-hover:text-white">
+                                                {brand.name.substring(0, 2)}
+                                             </span>
+                                          </div>
+                                       )}
+                                    </div>
+                                    
+                                    <div className="relative z-10 border-t border-neutral-100 pt-4 flex flex-col items-start w-full">
+                                       <span className="block text-[11px] font-black tracking-[0.2em] text-neutral-900 uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
+                                       <div className="mt-2.5 flex items-center gap-1.5 opacity-0 group-hover/brand:opacity-100 transition-all duration-500 transform translate-y-1 group-hover/brand:translate-y-0">
+                                          <span className="h-[1px] w-4 bg-accent" />
+                                          <span className="text-[8px] font-black tracking-widest text-accent uppercase font-sans">Shop Now</span>
+                                       </div>
+                                    </div>
+                                    <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
+                                    <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/40 transition-all duration-700 pointer-events-none z-20" />
+                                 </Link>
+                              );
+                           })}
                         </React.Fragment>
                      ))}
                   </div>
@@ -576,35 +626,85 @@ export default function Home() {
                /* Grid mode — few brands, show once centered */
                <div className="max-w-[1400px] mx-auto px-8">
                   <div className="flex flex-wrap justify-center gap-8">
-                     {brands.map((brand: any, idx: number) => (
-                        <Link 
-                           key={brand.id || idx} 
-                           href={`/shop?brand=${brand.id}`}
-                           className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700"
-                        >
-                           <img 
-                              src={getMediaUrl(brand.brand_banner || brand.logo_url)} 
-                              alt={brand.name} 
-                              loading="lazy"
-                              decoding="async"
-                              className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
-                                 idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
-                              }`} 
-                              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
-                           />
-                           <div className="brand-card-shine" />
-                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
-                           <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
-                           <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                              <span className="block text-[11px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
-                              <div className="mt-3 flex items-center gap-2 opacity-0 group-hover/brand:opacity-100 transition-opacity duration-700">
-                                 <span className="h-[1px] w-6 bg-yellow-500/70" />
-                                 <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-sans">Shop Now</span>
+                     {brands.map((brand: any, idx: number) => {
+                        const hasBanner = !!brand.brand_banner;
+                        return hasBanner ? (
+                           <Link 
+                              key={brand.id || idx} 
+                              href={`/shop?brand=${brand.id}`}
+                              className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700"
+                           >
+                              <img 
+                                 src={getMediaUrl(brand.brand_banner)} 
+                                 alt={brand.name} 
+                                 loading="lazy"
+                                 decoding="async"
+                                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
+                                    idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
+                                 }`} 
+                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                              />
+                              {brand.logo_url && (
+                                 <div className="absolute inset-0 flex items-center justify-center p-6 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
+                                    <img 
+                                       src={getMediaUrl(brand.logo_url)} 
+                                       alt={`${brand.name} logo`} 
+                                       className="max-w-[80%] max-h-[40%] object-contain filter invert brightness-0" 
+                                    />
+                                 </div>
+                              )}
+                              <div className="brand-card-shine" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
+                              <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
+                              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                                 <span className="block text-[11px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
+                                 <div className="mt-3 flex items-center gap-2 opacity-0 group-hover/brand:opacity-100 transition-opacity duration-700">
+                                    <span className="h-[1px] w-6 bg-yellow-500/70" />
+                                    <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-sans">Shop Now</span>
+                                 </div>
                               </div>
-                           </div>
-                           <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
-                        </Link>
-                     ))}
+                              <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
+                           </Link>
+                        ) : (
+                           <Link 
+                              key={brand.id || idx} 
+                              href={`/shop?brand=${brand.id}`}
+                              className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-neutral-100 border border-neutral-800/10 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700 flex flex-col justify-between p-5"
+                           >
+                              <div className="absolute -top-10 -right-10 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
+                              <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
+                              
+                              <div className="flex-grow flex items-center justify-center p-2 relative z-10 w-full h-[70%]">
+                                 {brand.logo_url ? (
+                                    <img 
+                                       src={getMediaUrl(brand.logo_url)} 
+                                       alt={brand.name} 
+                                       loading="lazy"
+                                       decoding="async"
+                                       className="max-w-[90%] max-h-[85%] object-contain group-hover/brand:scale-105 transition-transform duration-500 mix-blend-multiply"
+                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                    />
+                                 ) : (
+                                    <div className="w-16 h-16 rounded-full border border-neutral-200 flex items-center justify-center group-hover/brand:bg-black group-hover:text-white transition-colors duration-500">
+                                       <span className="font-serif italic font-black text-2xl uppercase tracking-tight text-neutral-800 group-hover:text-white">
+                                          {brand.name.substring(0, 2)}
+                                       </span>
+                                    </div>
+                                 )}
+                              </div>
+                              
+                              <div className="relative z-10 border-t border-neutral-100 pt-4 flex flex-col items-start w-full">
+                                 <span className="block text-[11px] font-black tracking-[0.2em] text-neutral-900 uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
+                                 <div className="mt-2.5 flex items-center gap-1.5 opacity-0 group-hover/brand:opacity-100 transition-all duration-500 transform translate-y-1 group-hover/brand:translate-y-0">
+                                    <span className="h-[1px] w-4 bg-accent" />
+                                    <span className="text-[8px] font-black tracking-widest text-accent uppercase font-sans">Shop Now</span>
+                                 </div>
+                              </div>
+                              <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
+                              <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/40 transition-all duration-700 pointer-events-none z-20" />
+                           </Link>
+                        );
+                     })}
                   </div>
                </div>
               )}

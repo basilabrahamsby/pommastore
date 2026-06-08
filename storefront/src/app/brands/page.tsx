@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/services/api';
 import { ChevronRight, Search } from 'lucide-react';
+import { getMediaUrl } from '@/services/media';
 
 interface Brand {
   id: string;
@@ -129,11 +130,20 @@ export default function BrandsPage() {
                       href={`/shop?brand=${brand.id}`}
                       className="group relative bg-white border border-neutral-100 p-8 flex flex-col items-center text-center hover:border-black hover:shadow-2xl hover:-translate-y-1 transition-all duration-500"
                     >
-                      {/* Dynamic Luxury Placeholder/Monogram */}
-                      <div className="w-16 h-16 rounded-full border border-neutral-100 flex items-center justify-center mb-6 group-hover:bg-black group-hover:text-white transition-colors duration-500">
-                         <span className="font-serif italic font-black text-2xl uppercase tracking-tight">
-                           {brand.name.substring(0, 2)}
-                         </span>
+                      {/* Brand Logo or Dynamic Luxury Monogram */}
+                      <div className="w-20 h-20 rounded-full border border-neutral-100 bg-neutral-50/50 flex items-center justify-center mb-6 group-hover:bg-neutral-50 group-hover:border-neutral-200 transition-all duration-500 overflow-hidden p-3 relative z-10">
+                         {brand.logo_url ? (
+                            <img 
+                               src={getMediaUrl(brand.logo_url)} 
+                               alt={brand.name} 
+                               className="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                               onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                            />
+                         ) : (
+                            <span className="font-serif italic font-black text-2xl uppercase tracking-tight text-neutral-800">
+                              {brand.name.substring(0, 2)}
+                            </span>
+                         )}
                       </div>
                       
                       <h3 className="text-sm md:text-base font-black tracking-[0.15em] text-neutral-900 uppercase group-hover:tracking-[0.25em] transition-all duration-500 leading-tight mb-2">
