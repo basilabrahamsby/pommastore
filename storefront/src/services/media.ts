@@ -1,10 +1,12 @@
 const isServer = typeof window === 'undefined';
+const isProduction = process.env.NODE_ENV === 'production';
 const isLocalhost = !isServer && window.location.hostname === 'localhost';
 
 // In production, static uploads are served under /kozmocart/static_uploads/ via Nginx
-const BACKEND_URL = isServer
-  ? ''
-  : isLocalhost
+// Matching BACKEND_URL on server (SSR) and client prevents hydration mismatches
+const BACKEND_URL = isProduction
+  ? '/kozmocart'
+  : (isLocalhost || isServer)
     ? 'http://localhost:8000'
     : '/kozmocart';
 
@@ -29,3 +31,4 @@ export const getMediaUrl = (path: string | null | undefined): string => {
 
   return `${BACKEND_URL}${cleanPath}`;
 };
+
