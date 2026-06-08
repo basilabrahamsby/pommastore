@@ -221,9 +221,7 @@ export default function Home() {
             </div>
 
             <div className="relative w-full overflow-hidden">
-               <div className={`flex gap-6 md:gap-10 overflow-x-auto py-2 px-6 md:px-12 scrollbar-hide select-none w-full ${
-                  categories.length < 6 ? 'justify-start md:justify-center' : 'justify-start'
-               }`}>
+               <div className="flex gap-6 md:gap-10 overflow-x-auto py-2 px-6 md:px-12 scrollbar-hide select-none w-full justify-start md:justify-center">
                   {categories.map((cat: any, idx: number) => {
                      const name = cat.name;
                      const image = getMediaUrl(cat.image_url || cat.banner_url);
@@ -532,9 +530,7 @@ export default function Home() {
              </div>
 
              <div className="relative w-full overflow-hidden">
-                <div className={`flex gap-6 md:gap-8 overflow-x-auto py-6 px-8 scrollbar-hide select-none w-full ${
-                   brands.length < 6 ? 'justify-start md:justify-center' : 'justify-start'
-                }`}>
+                <div className="flex gap-6 md:gap-8 overflow-x-auto py-6 px-8 scrollbar-hide select-none w-full justify-start md:justify-center">
                    {brands.map((brand: any, idx: number) => {
                       const hasBanner = !!brand.brand_banner;
                       return hasBanner ? (
