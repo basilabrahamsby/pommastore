@@ -36,3 +36,19 @@ Thumbs.db
 
 # Docker
 *.log
+
+# Local/scratch folders & db helpers
+backup/
+scratch/
+backend/clear_data.py
+check_db_databases.py
+check_suppliers.py
+check_tags.py
+inspect_placeholders.py
+list_api_categories.py
+list_categories_brands.py
+read_logs.py
+scratch.py
+scratch_db.py
+api_logs.txt
+git_diff_output.txt

@@ -6,6 +6,8 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../services/api'
+import { getMediaUrl } from '../../services/media'
+
 
 // In production the API is co-hosted on the same domain via Nginx (/api → :8000, /static_uploads → :8000)
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -20,7 +22,7 @@ function OfferCard({ o, onDelete, onEdit, isPercentage, isFlat, isBogo, onPrevie
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s' }} className="hover-lift">
       <div style={{ position: 'relative', height: 160, width: '100%' }}>
-        <img src={images[activeIdx]} alt={o.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={getMediaUrl(images[activeIdx])} alt={o.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} />
         
         <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', zIndex: 2 }}>
@@ -660,7 +662,7 @@ export default function Offers() {
                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                          {reward.image_url ? (
                            <img 
-                             src={reward.image_url} 
+                             src={getMediaUrl(reward.image_url)} 
                              alt={reward.name} 
                              style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} 
                            />
@@ -939,7 +941,7 @@ export default function Offers() {
                 </div>
                 {form.images[0] && (
                   <div style={{ marginTop: 12, height: 120, width: '100%', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                    <img src={form.images[0]} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={getMediaUrl(form.images[0])} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 )}
               </div>
@@ -1053,7 +1055,7 @@ export default function Offers() {
                 </div>
                 {loyaltyForm.image_url && (
                   <div style={{ marginTop: 12, height: 120, width: '100%', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                    <img src={loyaltyForm.image_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={getMediaUrl(loyaltyForm.image_url)} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 )}
               </div>

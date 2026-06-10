@@ -785,7 +785,7 @@ export default function Home() {
                      className="group relative flex flex-col justify-end overflow-hidden flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-auto h-[55vh] md:h-[75vh] rounded-t-full shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-1000 hover:-translate-y-6 border border-neutral-100"
                   >
                      <img
-                        src={item.img}
+                        src={getMediaUrl(item.img)}
                         alt={item.name}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3s] ease-out"
                      />

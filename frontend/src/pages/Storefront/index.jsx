@@ -5,6 +5,8 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../services/api'
+import { getMediaUrl } from '../../services/media'
+
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -177,7 +179,7 @@ export default function StorefrontCMS() {
                          <div style={{ height: 180, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', group: 'hover' }}>
                             {slide.image ? (
                                <>
-                                  <img src={slide.image} style={{ width: '100%', height: '100%', objectCover: 'cover' }} />
+                                  <img src={getMediaUrl(slide.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
                                      <label style={{ cursor: 'pointer', padding: '8px 16px', background: '#fff', color: '#000', fontSize: '0.8rem', fontWeight: 700, borderRadius: 4 }}>
                                         Change Image
@@ -238,7 +240,7 @@ export default function StorefrontCMS() {
               <div style={{ height: 250, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden' }}>
                  {splitBanners.men ? (
                     <>
-                       <img src={splitBanners.men} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                       <img src={getMediaUrl(splitBanners.men)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                        <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <Upload size={12} /> Override Image
                           <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men: url })))} />
@@ -264,7 +266,7 @@ export default function StorefrontCMS() {
               <div style={{ height: 250, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden' }}>
                  {splitBanners.women ? (
                     <>
-                       <img src={splitBanners.women} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                       <img src={getMediaUrl(splitBanners.women)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                        <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <Upload size={12} /> Override Image
                           <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women: url })))} />
@@ -294,7 +296,7 @@ export default function StorefrontCMS() {
                     <div style={{ height: 140, borderRadius: '70px 70px 0 0', border: '1px solid var(--border)', overflow: 'hidden', position: 'relative', background: 'rgba(255,255,255,0.05)', marginBottom: 10 }}>
                        {item.img ? (
                           <>
-                             <img src={item.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                             <img src={getMediaUrl(item.img)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                              <label style={{ position: 'absolute', inset: 0, opacity: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s', cursor: 'pointer' }} className="hover-overlay">
                                 <Upload size={16} style={{ color: '#fff' }} />
                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => {
