@@ -127,7 +127,7 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-         <section className="relative w-full h-[70vh] md:h-[90vh] bg-black overflow-hidden">
+         <section className="relative w-full h-[60vh] sm:h-[75vh] md:h-[90vh] bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
@@ -146,7 +146,7 @@ export default function Home() {
                      <img
                         src={slideImage}
                         alt={slideTitle}
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center"
                      />
                      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
@@ -331,7 +331,7 @@ export default function Home() {
                            <img
                               src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
                               alt={promo.title}
-                              className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-[1.02] transition-transform duration-[3s]"
+                              className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center opacity-50 group-hover:scale-[1.02] transition-transform duration-[3s]"
                            />
                         </Link>
                         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent pointer-events-none" />
