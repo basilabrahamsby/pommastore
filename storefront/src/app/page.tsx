@@ -148,9 +148,9 @@ export default function Home() {
                         alt={slideTitle}
                         className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center"
                      />
-                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
-                     <div className="absolute inset-0 flex items-center">
+                     <div className="absolute inset-0 flex items-end pb-20 sm:pb-28 md:pb-32">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
                            <span className={`text-[9px] md:text-xs font-bold tracking-[0.3em] text-accent uppercase mb-1.5 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-sans`}>
