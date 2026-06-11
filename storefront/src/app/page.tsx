@@ -127,7 +127,7 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-         <section className="relative w-full aspect-[4/3] sm:aspect-video md:aspect-auto md:h-[90vh] bg-black overflow-hidden">
+         <section className="relative w-full aspect-video bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
@@ -150,7 +150,7 @@ export default function Home() {
                      />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
-                     <div className="absolute inset-0 flex items-end pb-20 sm:pb-28 md:pb-32">
+                     <div className="absolute inset-0 flex items-end pb-6 sm:pb-12 md:pb-20 lg:pb-28">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
                            <span className={`text-[9px] md:text-xs font-bold tracking-[0.3em] text-accent uppercase mb-1.5 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-sans`}>
