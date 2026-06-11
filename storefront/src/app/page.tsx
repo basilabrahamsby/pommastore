@@ -146,7 +146,7 @@ export default function Home() {
                      <img
                         src={slideImage}
                         alt={slideTitle}
-                        className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center"
+                        className="absolute inset-0 w-full h-full object-contain md:object-cover object-center"
                      />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
