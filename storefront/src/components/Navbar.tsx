@@ -285,7 +285,7 @@ const Navbar = () => {
               <X size={30} />
             </button>
           </div>
-          <div className="flex-grow flex flex-col items-center justify-center max-w-4xl mx-auto w-full px-6 pb-32">
+          <div className={`flex-grow flex flex-col items-center ${hasSuggestions ? 'justify-start pt-12 md:pt-20' : 'justify-center'} max-w-4xl mx-auto w-full px-6 pb-32 transition-all duration-300`}>
             <h2 className="text-[10px] font-black tracking-[0.4em] uppercase mb-8 text-neutral-400">Find your next signature scent</h2>
             <form 
               onSubmit={(e) => {
@@ -307,6 +307,73 @@ const Navbar = () => {
               />
               <button type="submit" className="p-4 hover:scale-105 transition-transform"><Search size={36} /></button>
             </form>
+
+            {/* Live Suggestions Panel for Mobile */}
+            {hasSuggestions && (
+              <div className="w-full mt-8 text-left max-h-[50vh] overflow-y-auto pr-2 scrollbar-thin">
+                {/* Suggested Brands */}
+                {filteredBrands.length > 0 && (
+                  <div className="mb-6">
+                    <div className="text-[10px] font-black tracking-widest text-neutral-400 uppercase mb-3">Suggested Brands</div>
+                    <div className="flex flex-wrap gap-2.5">
+                      {filteredBrands.map((b: any) => (
+                        <Link
+                          key={b.id}
+                          href={`/shop?brand=${b.id}`}
+                          onClick={() => {
+                            setSearchQuery('');
+                            setIsSearchOpen(false);
+                          }}
+                          className="bg-neutral-50 hover:bg-accent/15 border border-neutral-200/60 rounded px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                        >
+                          {b.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Suggested Products */}
+                {filteredProducts.length > 0 && (
+                  <div>
+                    <div className="text-[10px] font-black tracking-widest text-neutral-400 uppercase mb-3">Suggested Products</div>
+                    <div className="flex flex-col gap-3">
+                      {filteredProducts.map((p: any) => {
+                        const price = p.variants?.[0]?.selling_price;
+                        const img = p.images?.[0] ? getMediaUrl(p.images[0]) : '/kozmocart/placeholder-perfume.png';
+                        return (
+                          <Link
+                            key={p.id}
+                            href={`/product/${p.slug}`}
+                            onClick={() => {
+                              setSearchQuery('');
+                              setIsSearchOpen(false);
+                            }}
+                            className="flex items-center p-2.5 hover:bg-neutral-50/50 border border-neutral-100 rounded-lg transition-colors gap-4"
+                          >
+                            <img 
+                              src={img} 
+                              alt={p.name} 
+                              className="w-12 h-12 object-contain rounded bg-neutral-50 border border-neutral-150 p-1 flex-shrink-0"
+                              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[8px] font-extrabold uppercase tracking-widest text-neutral-400 mb-0.5">{p.brand_name}</div>
+                              <div className="text-sm font-bold text-neutral-800 truncate uppercase tracking-wide">{p.name}</div>
+                            </div>
+                            {price && (
+                              <div className="text-sm font-black text-black font-mono">
+                                ₹{price.toLocaleString('en-IN')}
+                              </div>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
