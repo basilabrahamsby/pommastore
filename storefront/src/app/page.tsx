@@ -516,7 +516,8 @@ export default function Home() {
             </div>
          </section>
 
-          {/* Elite Brand Houses (Mo          {brands.length > 0 && (
+          {/* Elite Brand Houses */}
+          {brands.length > 0 && (
           <section className="py-10 bg-[#0a0a0f] relative overflow-hidden">
              <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
                 <div>
