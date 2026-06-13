@@ -369,21 +369,21 @@ export default function ProductClient({
             </div>
 
             {/* Product Title */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-black italic text-neutral-900 leading-tight mb-4 uppercase">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-semibold tracking-wide text-neutral-900 leading-tight mb-4 uppercase">
               {product.name}
             </h1>
 
             {/* Price Box */}
-            <div className="flex items-end space-x-4 mb-6 border-b border-neutral-100 pb-6">
-              <span className="text-3xl font-black text-black">
+            <div className="flex items-end space-x-4 mb-8">
+              <span className="text-3xl font-bold text-black">
                 ₹{selectedVariant?.selling_price?.toLocaleString('en-IN')}/-
               </span>
               {selectedVariant?.compare_at_price > selectedVariant?.selling_price && (
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg text-neutral-400 line-through font-bold">
+                  <span className="text-lg text-neutral-400 line-through font-semibold">
                     ₹{selectedVariant.compare_at_price.toLocaleString('en-IN')}
                   </span>
-                  <span className="bg-red-100 text-red-600 text-[9px] font-black tracking-wider px-2 py-0.5 uppercase rounded">
+                  <span className="bg-red-100 text-red-600 text-[9px] font-semibold tracking-wider px-2 py-0.5 uppercase rounded">
                     {Math.round(((selectedVariant.compare_at_price - selectedVariant.selling_price) / selectedVariant.compare_at_price) * 100)}% OFF
                   </span>
                 </div>
@@ -499,15 +499,15 @@ export default function ProductClient({
             {/* SELECT SIZE */}
             <div className="mb-10">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-[10px] font-black tracking-[0.25em] text-neutral-900 uppercase">Select Size</h3>
-                <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">In Stock</span>
+                <h3 className="text-[10px] font-semibold tracking-[0.25em] text-neutral-900 uppercase">Select Size</h3>
+                <span className="text-[9px] font-medium text-neutral-400 uppercase tracking-widest">In Stock</span>
               </div>
               <div className="flex flex-wrap gap-3">
                 {product.variants && product.variants.map((v: any) => (
                   <button
                     key={v.id}
                     onClick={() => setSelectedVariant(v)}
-                    className={`px-6 py-3 border text-xs font-black tracking-widest uppercase transition-all duration-300 rounded ${
+                    className={`px-6 py-3 border text-xs font-semibold tracking-widest uppercase transition-all duration-300 rounded ${
                       selectedVariant?.id === v.id
                         ? 'border-black bg-black text-white shadow-md'
                         : 'border-neutral-200 text-neutral-600 hover:border-black bg-neutral-50/50'
@@ -529,7 +529,7 @@ export default function ProductClient({
                   >
                     -
                   </button>
-                  <div className="flex-1 flex items-center justify-center text-[10px] font-black tracking-[0.25em] bg-neutral-50/50 text-black uppercase">
+                  <div className="flex-1 flex items-center justify-center text-[10px] font-semibold tracking-[0.25em] bg-neutral-50/50 text-black uppercase">
                     {cartItem.quantity} In Shopping Bag
                   </div>
                   <button
@@ -542,7 +542,7 @@ export default function ProductClient({
               ) : (
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-black text-white text-[10px] font-black tracking-[0.25em] hover:bg-neutral-900 transition-colors flex items-center justify-center space-x-3 h-full rounded shadow-sm hover:shadow-md duration-300"
+                  className="flex-1 bg-black text-white text-[10px] font-semibold tracking-[0.25em] hover:bg-neutral-900 transition-colors flex items-center justify-center space-x-3 h-full rounded shadow-sm hover:shadow-md duration-300"
                 >
                   <ShoppingBag size={16} />
                   <span>ADD TO SHOPPING BAG</span>
@@ -580,22 +580,22 @@ export default function ProductClient({
               <div className="flex items-center space-x-3">
                 <ShieldCheck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-900 font-black tracking-widest uppercase">100% Genuine</p>
-                  <p className="text-[8px] text-neutral-400 font-bold tracking-wider uppercase mt-0.5">Brand Direct</p>
+                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">100% Genuine</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">Brand Direct</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Truck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-900 font-black tracking-widest uppercase">Free Shipping</p>
-                  <p className="text-[8px] text-neutral-400 font-bold tracking-wider uppercase mt-0.5">Orders &gt; ₹{cmsLayout?.free_shipping_limit || '999'}</p>
+                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">Free Shipping</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">Orders &gt; ₹{cmsLayout?.free_shipping_limit || '999'}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <RefreshCw size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-900 font-black tracking-widest uppercase">Easy Returns</p>
-                  <p className="text-[8px] text-neutral-400 font-bold tracking-wider uppercase mt-0.5">7-Day Return Policy</p>
+                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">Easy Returns</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">7-Day Return Policy</p>
                 </div>
               </div>
             </div>
@@ -605,40 +605,32 @@ export default function ProductClient({
 
         {/* Sensory Profile & Specifications Grid */}
         <section className="mb-24 bg-neutral-50/50 border border-neutral-100 p-8 rounded-lg shadow-2xs">
-          <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Specifications</span>
+          <span className="text-[9px] font-semibold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Specifications</span>
           <h2 className="text-2xl font-serif italic text-black mb-8">Sensory Profile & Features</h2>
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
               <div className="flex items-center space-x-3 mb-3 text-neutral-400">
                 <Droplet size={18} />
-                <span className="text-[9px] font-black tracking-widest uppercase">Olfactory Family</span>
+                <span className="text-[9px] font-semibold tracking-widest uppercase">Olfactory Family</span>
               </div>
-              <p className="text-sm font-bold text-neutral-800 uppercase tracking-wider">{olfactoryFamily}</p>
-            </div>
-            
-            <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
-              <div className="flex items-center space-x-3 mb-3 text-neutral-400">
-                <Hourglass size={18} />
-                <span className="text-[9px] font-black tracking-widest uppercase">Active Longevity</span>
-              </div>
-              <p className="text-sm font-bold text-neutral-800 uppercase tracking-wider">{longevityText}</p>
+              <p className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">{olfactoryFamily}</p>
             </div>
             
             <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
               <div className="flex items-center space-x-3 mb-3 text-neutral-400">
                 <Wind size={18} />
-                <span className="text-[9px] font-black tracking-widest uppercase">Sillage Projection</span>
+                <span className="text-[9px] font-semibold tracking-widest uppercase">Sillage Projection</span>
               </div>
-              <p className="text-sm font-bold text-neutral-800 uppercase tracking-wider">{sillageText}</p>
+              <p className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">{sillageText}</p>
             </div>
             
             <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
               <div className="flex items-center space-x-3 mb-3 text-neutral-400">
                 <User size={18} />
-                <span className="text-[9px] font-black tracking-widest uppercase">Fragrance Gender</span>
+                <span className="text-[9px] font-semibold tracking-widest uppercase">Fragrance Gender</span>
               </div>
-              <p className="text-sm font-bold text-neutral-800 uppercase tracking-wider">{targetGender}</p>
+              <p className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">{targetGender}</p>
             </div>
           </div>
         </section>

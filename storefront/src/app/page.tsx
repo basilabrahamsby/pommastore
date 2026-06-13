@@ -213,8 +213,8 @@ export default function Home() {
          {categories.length > 0 && (
          <section className="pt-12 pb-6 bg-white border-b border-neutral-50 overflow-hidden">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-4">
-               <span className="text-[9px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-2 block">Discover More</span>
-               <h2 className="text-2xl md:text-3xl font-nelphim font-bold text-black leading-none inline-block uppercase tracking-wide">
+               <span className="text-[9px] font-medium tracking-[0.25em] text-neutral-400 uppercase mb-2 block">Discover More</span>
+               <h2 className="text-2xl md:text-3xl font-nelphim font-medium text-black leading-none inline-block uppercase tracking-wide">
                   Signature Categories
                </h2>
                <div className="w-12 h-[2.5px] bg-accent mx-auto mt-2.5" />
@@ -261,7 +261,7 @@ export default function Home() {
                            </div>
                            
                            {/* Text label */}
-                           <span className="text-[9px] md:text-[10px] font-bold tracking-wider text-neutral-700 uppercase transition-all group-hover/cat:text-accent font-sans whitespace-nowrap">
+                           <span className="text-[9px] md:text-[10px] font-medium tracking-wider text-neutral-700 uppercase transition-all group-hover/cat:text-accent font-sans whitespace-nowrap">
                               {name}
                            </span>
                         </button>
