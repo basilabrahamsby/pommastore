@@ -521,10 +521,10 @@ export default function Home() {
           <section className="py-10 bg-[#0a0a0f] relative overflow-hidden">
              <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
                 <div>
-                   <span className="text-[9px] font-bold tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
+                   <span className="text-[9px] font-medium tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
                    <h2 className="text-2xl md:text-3xl font-serif font-normal text-white leading-none uppercase tracking-wide">Elite Perfumery</h2>
                 </div>
-                <Link href="/brands" className="text-white text-[11px] font-bold tracking-[0.2em] uppercase border-b border-white/20 pb-2 hover:border-accent hover:text-accent transition-all duration-700">
+                <Link href="/brands" className="text-white text-[11px] font-medium tracking-[0.2em] uppercase border-b border-white/20 pb-2 hover:border-accent hover:text-accent transition-all duration-700">
                    Explore All Houses
                 </Link>
              </div>
@@ -562,7 +562,7 @@ export default function Home() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10 group-hover/brand:via-black/25 transition-all duration-700" />
                             <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
                             <div className="absolute bottom-0 left-0 right-0 p-3 z-10 text-center">
-                               <span className="block text-[9px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
+                               <span className="block text-[9px] font-medium tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
                             </div>
                             <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
                          </Link>
@@ -591,7 +591,7 @@ export default function Home() {
                                )}
                             </div>
                             
-                            <span className="block text-[9px] font-black tracking-[0.2em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
+                            <span className="block text-[9px] font-medium tracking-[0.2em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
                             <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-center z-20" />
                             <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
                          </Link>
