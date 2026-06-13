@@ -222,14 +222,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Link href={`/product/${product.slug}`} className="flex-grow block">
         <div className="relative aspect-square w-full bg-neutral-50/50 overflow-hidden">
           {product.images && product.images.length > 0 ? (
-            <img
-              src={getMediaUrl(product.images[currentImageIndex])}
-              alt={product.name}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-contain mix-blend-multiply transition-all duration-500 p-6 group-hover:scale-105 opacity-100 scale-100 z-0"
-              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
-            />
+            product.images.map((img, idx) => (
+              <img
+                key={idx}
+                src={getMediaUrl(img)}
+                alt={`${product.name} ${idx + 1}`}
+                loading="lazy"
+                decoding="async"
+                className={`absolute inset-0 h-full w-full object-contain mix-blend-multiply transition-all duration-[1200ms] ease-in-out p-6 group-hover:scale-105 z-0 ${
+                  idx === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+                }`}
+                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+              />
+            ))
           ) : (
             <img
               src="/kozmocart/placeholder-perfume.png"

@@ -1,38 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Tenor_Sans, Cormorant_Garamond, Spectral } from "next/font/google";
+import { Poppins, Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const tenorSans = Tenor_Sans({
-  variable: "--font-tenor-sans",
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
+const poppins = Poppins({
+  variable: "--font-poppins-next",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
 });
 
-const spectral = Spectral({
-  variable: "--font-spectral",
+const playfair = Playfair_Display({
+  variable: "--font-playfair-next",
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700", "800"],
-  style: ["normal", "italic"],
+  weight: ["400", "700", "900"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat-next",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 // Dynamic Metadata Generator replacing static configuration
@@ -78,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${tenorSans.variable} ${cormorant.variable} ${spectral.variable} antialiased`}
+      className={`${poppins.variable} ${playfair.variable} ${montserrat.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col">
         <SmoothScroll />

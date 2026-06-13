@@ -1,15 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Spectral:ital,wght@0,200..800;1,200..800&family=Tenor+Sans&display=swap');
-
 @import "tailwindcss";
 
 @theme {
   --animate-marquee: marquee 30s linear infinite;
   --animate-fadeIn: fadeIn 0.8s ease-out forwards;
-  --font-serif: 'Cormorant Garamond', serif;
-  --font-sans: 'Spectral', serif;
-  --font-nelphim: 'Tenor Sans', sans-serif;
-  --font-cormorant: 'Cormorant Garamond', serif;
-  --font-spectral: 'Spectral', serif;
+  --font-serif: var(--font-playfair-next), serif;
+  --font-sans: var(--font-poppins-next), sans-serif;
+  --font-nelphim: var(--font-poppins-next), sans-serif;
+  --font-cormorant: var(--font-playfair-next), serif;
+  --font-spectral: var(--font-poppins-next), sans-serif;
+  --font-montserrat: var(--font-montserrat-next), sans-serif;
   
   --color-accent: #d2168d;
   --color-rating: #ffa41c;

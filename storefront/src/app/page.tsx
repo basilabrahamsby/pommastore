@@ -78,7 +78,7 @@ export default function Home() {
       const fetchHomeData = async () => {
          try {
             const [resNew, resFeatured, resCats, resOffers, resLayout, resRewards, resBrands] = await Promise.all([
-               api.get('/products?limit=10'),
+               api.get('/products?limit=200'),
                api.get('/products?is_featured=true&limit=10'),
                api.get('/categories'),
                api.get('/offers'),
@@ -153,20 +153,20 @@ export default function Home() {
                      <div className="absolute inset-0 flex items-end pb-6 sm:pb-10 md:pb-16 lg:pb-20">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
                            <span className={`text-[9px] md:text-xs font-bold tracking-[0.3em] text-accent uppercase mb-1.5 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-                              } font-sans`}>
+                              } font-montserrat`}>
                               {slideSubtitle}
                            </span>
-                           <h1 className={`text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-normal text-white leading-tight md:leading-none tracking-wide mb-3 md:mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <h1 className={`text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-montserrat font-bold text-white leading-tight md:leading-none tracking-wide mb-3 md:mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideTitle}
                            </h1>
-                           <p className={`hidden sm:block text-neutral-200 font-medium text-xs md:text-lg max-w-sm md:max-w-xl mb-6 md:mb-10 tracking-wide transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <p className={`hidden sm:block text-neutral-200 font-medium font-montserrat text-xs md:text-lg max-w-sm md:max-w-xl mb-6 md:mb-10 tracking-wide transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideDesc}
                            </p>
                            <Link 
                               href={slideLink} 
-                              className={`bg-white hover:bg-accent text-black hover:text-white px-6 py-3 md:px-10 md:py-4 text-[9px] md:text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-sans rounded-sm shadow-lg`}
+                              className={`bg-transparent border border-white hover:bg-white text-white hover:text-black px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-bold tracking-[0.2em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat rounded-full`}
                            >
                               {slideCta}
                            </Link>
@@ -508,7 +508,7 @@ export default function Home() {
                   {loading ? (
                      [...Array(5)].map((_, i) => <div key={i} className="aspect-[3/4] bg-neutral-50 animate-pulse border border-neutral-100" />)
                   ) : (
-                     newArrivals.slice(0, 10).map((product: any) => (
+                     newArrivals.map((product: any) => (
                         <ProductCard key={product.id} product={product} />
                      ))
                   )}
