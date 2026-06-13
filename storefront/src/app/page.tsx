@@ -152,21 +152,21 @@ export default function Home() {
 
                      <div className="absolute inset-0 flex items-end pb-6 sm:pb-10 md:pb-16 lg:pb-20">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
-                           <span className={`text-[9px] md:text-xs font-bold tracking-[0.3em] text-accent uppercase mb-1.5 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <span className={`text-[9px] md:text-xs font-semibold tracking-[0.3em] text-accent uppercase mb-1.5 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-montserrat`}>
                               {slideSubtitle}
                            </span>
-                           <h1 className={`text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-montserrat font-bold text-white leading-tight md:leading-none tracking-wide mb-3 md:mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <h1 className={`text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-normal text-[#d4af37] leading-tight md:leading-none tracking-wide mb-3 md:mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideTitle}
                            </h1>
-                           <p className={`hidden sm:block text-neutral-200 font-medium font-montserrat text-xs md:text-lg max-w-sm md:max-w-xl mb-6 md:mb-10 tracking-wide transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <p className={`hidden sm:block text-neutral-100 font-light font-montserrat text-xs md:text-lg uppercase tracking-[0.4em] max-w-sm md:max-w-xl mb-6 md:mb-10 transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideDesc}
                            </p>
                            <Link 
                               href={slideLink} 
-                              className={`bg-transparent border border-white hover:bg-white text-white hover:text-black px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-bold tracking-[0.2em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat rounded-full`}
+                              className={`bg-transparent border border-white/80 hover:bg-white text-white hover:text-black px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat rounded-full`}
                            >
                               {slideCta}
                            </Link>
