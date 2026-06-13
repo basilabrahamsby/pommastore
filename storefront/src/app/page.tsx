@@ -516,10 +516,9 @@ export default function Home() {
             </div>
          </section>
 
-          {/* Elite Brand Houses (Moved below New Arrivals) */}
-          {brands.length > 0 && (
-          <section className="py-16 bg-[#0a0a0f] relative overflow-hidden">
-             <div className="max-w-[1400px] mx-auto px-8 mb-10 flex justify-between items-end font-sans">
+          {/* Elite Brand Houses (Mo          {brands.length > 0 && (
+          <section className="py-10 bg-[#0a0a0f] relative overflow-hidden">
+             <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
                 <div>
                    <span className="text-[9px] font-bold tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
                    <h2 className="text-2xl md:text-3xl font-serif font-normal text-white leading-none uppercase tracking-wide">Elite Perfumery</h2>
@@ -530,14 +529,14 @@ export default function Home() {
              </div>
 
              <div className="relative w-full overflow-hidden">
-                <div className="flex gap-6 md:gap-8 overflow-x-auto py-6 px-8 scrollbar-hide select-none w-full justify-start md:justify-center">
+                <div className="flex gap-6 md:gap-8 overflow-x-auto py-3 px-8 scrollbar-hide select-none w-full justify-start md:justify-center">
                    {brands.map((brand: any, idx: number) => {
                       const hasBanner = !!brand.brand_banner;
                       return hasBanner ? (
                          <Link 
                             key={brand.id || idx} 
                             href={`/shop?brand=${brand.id}`}
-                            className="group/brand relative w-[180px] h-[250px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700"
+                            className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 rounded-sm"
                          >
                             <img 
                                src={getMediaUrl(brand.brand_banner)} 
@@ -550,23 +549,19 @@ export default function Home() {
                                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
                             />
                             {brand.logo_url && (
-                               <div className="absolute inset-0 flex items-center justify-center p-6 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
+                               <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
                                   <img 
                                      src={getMediaUrl(brand.logo_url)} 
                                      alt={`${brand.name} logo`} 
-                                     className="max-w-[80%] max-h-[40%] object-contain filter invert brightness-0" 
+                                     className="max-w-[75%] max-h-[35%] object-contain filter invert brightness-0" 
                                   />
                                </div>
                             )}
                             <div className="brand-card-shine" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 group-hover/brand:via-black/20 transition-all duration-700" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10 group-hover/brand:via-black/25 transition-all duration-700" />
                             <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
-                            <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                               <span className="block text-[11px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
-                               <div className="mt-3 flex items-center gap-2 opacity-0 group-hover/brand:opacity-100 transition-opacity duration-700">
-                                  <span className="h-[1px] w-6 bg-yellow-500/70" />
-                                  <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-sans">Shop Now</span>
-                               </div>
+                            <div className="absolute bottom-0 left-0 right-0 p-3 z-10 text-center">
+                               <span className="block text-[9px] font-bold tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
                             </div>
                             <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
                          </Link>
@@ -574,38 +569,29 @@ export default function Home() {
                          <Link 
                             key={brand.id || idx} 
                             href={`/shop?brand=${brand.id}`}
-                            className="group/brand relative w-[180px] h-[260px] flex-shrink-0 overflow-hidden bg-gradient-to-b from-[#141419] to-[#09090d] border border-white/[0.06] shadow-xl hover:-translate-y-3 hover:shadow-2xl transition-all duration-700 flex flex-col justify-between p-5"
+                            className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-gradient-to-b from-[#141419] to-[#09090d] border border-white/[0.06] shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 flex flex-col items-center justify-center p-3 rounded-sm"
                          >
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_65%)] opacity-0 group-hover/brand:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                             
-                            {/* Frosted Label Plate (Perfume-box style) */}
-                            <div className="flex-grow flex items-center justify-center relative z-10 w-full h-[65%]">
-                               <div className="w-[120px] h-[120px] bg-white flex items-center justify-center p-3 rounded-xs shadow-[0_8px_20px_-4px_rgba(0,0,0,0.4)] border border-white/10 group-hover/brand:border-accent/40 group-hover/brand:shadow-accent/10 transition-all duration-700">
-                                  {brand.logo_url ? (
-                                     <img 
-                                        src={getMediaUrl(brand.logo_url)} 
-                                        alt={brand.name} 
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="max-w-full max-h-full object-contain mix-blend-multiply group-hover/brand:scale-105 transition-transform duration-500"
-                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
-                                     />
-                                  ) : (
-                                     <span className="font-serif italic font-black text-2xl uppercase tracking-tight text-neutral-800">
-                                        {brand.name.substring(0, 2)}
-                                     </span>
-                                  )}
-                               </div>
+                            <div className="w-[76px] h-[76px] bg-white flex items-center justify-center p-2 rounded-xs shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] border border-white/10 group-hover/brand:border-accent/30 transition-all duration-700 mb-2">
+                               {brand.logo_url ? (
+                                  <img 
+                                     src={getMediaUrl(brand.logo_url)} 
+                                     alt={brand.name} 
+                                     loading="lazy"
+                                     decoding="async"
+                                     className="max-w-full max-h-full object-contain mix-blend-multiply group-hover/brand:scale-105 transition-transform duration-500"
+                                     onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                  />
+                               ) : (
+                                  <span className="font-serif italic font-black text-lg uppercase tracking-tight text-neutral-800">
+                                     {brand.name.substring(0, 2)}
+                                  </span>
+                               )}
                             </div>
                             
-                            <div className="relative z-10 border-t border-white/[0.05] pt-3.5 flex flex-col items-center w-full text-center">
-                               <span className="block text-[10px] font-black tracking-[0.25em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
-                               <div className="mt-2 flex items-center gap-1.5 opacity-0 group-hover/brand:opacity-100 transition-all duration-500 transform translate-y-1 group-hover/brand:translate-y-0">
-                                  <span className="h-[1px] w-4 bg-accent" />
-                                  <span className="text-[8px] font-black tracking-widest text-accent uppercase font-sans">Shop Now</span>
-                               </div>
-                            </div>
-                            <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-center z-20" />
+                            <span className="block text-[9px] font-black tracking-[0.2em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
+                            <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-center z-20" />
                             <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
                          </Link>
                       );
@@ -613,8 +599,8 @@ export default function Home() {
                 </div>
                 
                 {/* Left/Right fading edge masks for scroll indicators */}
-                <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#0a0a0f] to-transparent pointer-events-none z-10" />
-                <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0a0a0f] to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#0a0a0f] to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#0a0a0f] to-transparent pointer-events-none z-10" />
              </div>
           </section>
           )}
