@@ -82,16 +82,12 @@ export default function StoryViewer({
       setCatProducts(matched.slice(0, 2));
       setLoadingProducts(false);
     } else {
-      // Fallback: fetch dynamically from API
+      // Fallback: fetch dynamically from API using category filter
       const fetchProducts = async () => {
         setLoadingProducts(true);
         try {
-          const res = await api.get('/products?limit=100');
-          const filtered = res.data.filter((p: any) => 
-            p.category_name?.toLowerCase() === activeCategory.name?.toLowerCase() ||
-            p.category_id === activeCategory.id
-          );
-          setCatProducts(filtered.slice(0, 2));
+          const res = await api.get(`/products?category_id=${activeCategory.id}&limit=10`);
+          setCatProducts(res.data.slice(0, 2));
         } catch (err) {
           console.error('Failed to fetch story products', err);
         } finally {
@@ -108,7 +104,7 @@ export default function StoryViewer({
 
   // Main story progress timer hook
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || loadingProducts) return;
 
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -121,7 +117,7 @@ export default function StoryViewer({
     }, timerInterval);
 
     return () => clearInterval(interval);
-  }, [isPaused, currentCatIdx, currentSlideIdx]);
+  }, [isPaused, loadingProducts, currentCatIdx, currentSlideIdx]);
 
   // Keyboard navigation listener (Escape, Left Arrow, Right Arrow)
   useEffect(() => {
@@ -317,7 +313,7 @@ export default function StoryViewer({
               </div>
 
               {loadingProducts ? (
-                <div className="flex flex-col items-center justify-center gap-4 text-white z-20">
+                <div className="flex flex-col items-center justify-center gap-4 text-white z-30">
                   <RefreshCw size={24} className="animate-spin text-accent" />
                   <span className="text-[10px] font-semibold tracking-widest uppercase text-neutral-400">Loading Featured scent...</span>
                 </div>
@@ -444,7 +440,7 @@ export default function StoryViewer({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center text-white z-20">
+                <div className="flex flex-col items-center justify-center text-white z-30 pointer-events-auto">
                   <p className="text-neutral-400 text-xs italic font-serif mb-4">No featured products available.</p>
                   <Link 
                     href={`/shop?category=${activeCategory.slug || activeCategory.id}`}
