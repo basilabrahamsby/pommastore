@@ -291,12 +291,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         <div className="p-4 flex flex-col">
-          <p className="text-[10px] tracking-[0.1em] text-black font-nelphim font-black uppercase mb-1">
-            {product.brand_name}
-          </p>
-          <h3 className="text-[11px] font-medium text-neutral-600 uppercase tracking-wide line-clamp-1 h-4 mb-2 leading-tight w-full overflow-hidden text-ellipsis font-sans">
+          <h3 className="text-[11px] font-medium text-neutral-600 uppercase tracking-wide line-clamp-1 h-4 mb-1 leading-tight w-full overflow-hidden text-ellipsis font-sans">
             {product.name}
           </h3>
+          <p className="text-[10px] tracking-[0.1em] text-black font-nelphim font-black uppercase mb-2">
+            {product.brand_name}
+          </p>
 
           <div className="flex items-center space-x-1.5 mt-1 font-sans">
             <span className="text-[13px] font-bold text-black">
