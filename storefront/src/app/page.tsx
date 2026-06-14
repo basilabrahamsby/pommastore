@@ -127,7 +127,7 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-         <section className="relative w-full aspect-video md:aspect-[21/9] bg-black overflow-hidden">
+         <section className="relative w-full h-[240px] sm:h-[350px] md:h-[420px] lg:h-[480px] bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
@@ -150,23 +150,23 @@ export default function Home() {
                      />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
-                     <div className="absolute inset-0 flex items-end pb-6 sm:pb-10 md:pb-16 lg:pb-20">
+                     <div className="absolute inset-0 flex items-end pb-4 sm:pb-8 md:pb-12">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
-                           <span className={`text-[9px] md:text-xs font-semibold tracking-[0.3em] text-accent uppercase mb-1.5 md:mb-4 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <span className={`text-[9px] md:text-xs font-semibold tracking-[0.3em] text-accent uppercase mb-1 md:mb-3 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-montserrat`}>
                               {slideSubtitle}
                            </span>
-                           <h1 className={`text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-normal text-[#d4af37] leading-tight md:leading-none tracking-wide mb-3 md:mb-6 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <h1 className={`text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-normal text-[#d4af37] leading-tight md:leading-none tracking-wide mb-2 md:mb-4 uppercase transition-all duration-1000 delay-500 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideTitle}
                            </h1>
-                           <p className={`hidden sm:block text-neutral-100 font-light font-montserrat text-xs md:text-lg uppercase tracking-[0.4em] max-w-sm md:max-w-xl mb-6 md:mb-10 transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                           <p className={`hidden sm:block text-neutral-100 font-light font-montserrat text-[10px] md:text-xs lg:text-sm uppercase tracking-[0.4em] max-w-sm md:max-w-xl mb-4 md:mb-6 transition-all duration-1000 delay-700 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               }`}>
                               {slideDesc}
                            </p>
                            <Link 
                               href={slideLink} 
-                              className={`bg-transparent border border-white/80 hover:bg-white text-white hover:text-black px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat rounded-full`}
+                              className={`bg-transparent border border-white/80 hover:bg-white text-white hover:text-black px-5 py-2.5 md:px-6 md:py-2.5 text-[10px] md:text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat rounded-full`}
                            >
                               {slideCta}
                            </Link>
@@ -176,7 +176,7 @@ export default function Home() {
                );
             })}
 
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3">
                {heroSlidesToUse.map((_: any, idx: number) => (
                   <button
                      key={idx}
@@ -518,8 +518,8 @@ export default function Home() {
 
           {/* Elite Brand Houses */}
           {brands.length > 0 && (
-          <section className="py-16 bg-[#0a0a0f] relative overflow-hidden">
-             <div className="max-w-[1400px] mx-auto px-8 mb-8 flex justify-between items-end font-sans">
+          <section className="py-10 md:py-12 bg-[#0a0a0f] relative overflow-hidden">
+             <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
                 <div>
                    <span className="text-[9px] font-medium tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
                    <h2 className="text-2xl md:text-3xl font-serif font-normal text-white leading-none uppercase tracking-wide">Elite Perfumery</h2>
@@ -532,7 +532,7 @@ export default function Home() {
              {brands.length <= 2 ? (
                  /* Premium Luxury Spotlight circles for 1-2 Brands */
                  <div className="max-w-[1400px] mx-auto px-8">
-                    <div className="flex flex-col md:flex-row gap-8 items-stretch w-full justify-center">
+                    <div className="flex flex-col md:flex-row gap-6 items-stretch w-full justify-center">
                        {brands.map((brand: any, idx: number) => {
                           const DEFAULT_BANNERS = [
                              "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800",
@@ -549,13 +549,13 @@ export default function Home() {
                              <Link
                                 key={brand.id || idx}
                                 href={`/shop?brand=${brand.id}`}
-                                className="group relative flex-1 bg-gradient-to-b from-[#111116] to-[#07070a] rounded-lg border border-white/[0.04] hover:border-accent/40 p-8 sm:p-10 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-2 shadow-2xl overflow-hidden"
+                                className="group relative flex-1 bg-gradient-to-b from-[#111116] to-[#07070a] rounded-lg border border-white/[0.04] hover:border-accent/40 p-6 sm:p-8 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-1.5 shadow-2xl overflow-hidden"
                              >
                                 {/* Subtle spotlight gradient on hover */}
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.06)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
                                 {/* Circular image showcase container */}
-                                <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-accent/20 p-1 group-hover:border-accent transition-all duration-700 mb-6 mx-auto">
+                                <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-accent/20 p-1 group-hover:border-accent transition-all duration-700 mb-4 mx-auto">
                                    <img
                                       src={image}
                                       alt={brand.name}
@@ -566,7 +566,7 @@ export default function Home() {
 
                                 {/* Logo Badge with mix-blend-multiply */}
                                 {brand.logo_url && (
-                                   <div className="w-16 h-16 bg-white flex items-center justify-center p-2.5 rounded-full shadow-md border border-white/10 mb-5 group-hover:border-accent/40 transition-all duration-700 mx-auto">
+                                   <div className="w-12 h-12 bg-white flex items-center justify-center p-2 rounded-full shadow-md border border-white/10 mb-3 group-hover:border-accent/40 transition-all duration-700 mx-auto">
                                       <img
                                          src={getMediaUrl(brand.logo_url)}
                                          alt={`${brand.name} logo`}
@@ -575,15 +575,15 @@ export default function Home() {
                                    </div>
                                 )}
 
-                                <span className="text-[9px] font-bold tracking-[0.25em] text-accent uppercase mb-3 block font-sans">
+                                <span className="text-[9px] font-bold tracking-[0.25em] text-accent uppercase mb-2 block font-sans">
                                    Signature House
                                 </span>
 
-                                <h3 className="text-xl sm:text-2xl font-serif font-normal text-white uppercase tracking-wider mb-3 leading-none group-hover:text-accent transition-colors">
+                                <h3 className="text-xl sm:text-2xl font-serif font-normal text-white uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
                                    {brand.name}
                                 </h3>
 
-                                <p className="text-[11px] text-neutral-400 leading-relaxed font-light max-w-sm mb-6 tracking-wide line-clamp-3">
+                                <p className="text-[11px] text-neutral-400 leading-relaxed font-light max-w-sm mb-4 tracking-wide line-clamp-2">
                                    {desc}
                                 </p>
 
@@ -675,12 +675,12 @@ export default function Home() {
 
           {/* Combined Gender and Privilege Collection Editorial Section */}
           {loyaltyRewards.length > 0 ? (
-             <section className="bg-white py-16 md:py-24">
+             <section className="bg-white py-12 md:py-16">
                <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                      
                      {/* Column 1: For Him */}
-                     <div className="relative aspect-[3/4] group overflow-hidden bg-neutral-900 rounded shadow-xl">
+                     <div className="relative h-[340px] sm:h-[380px] md:h-[420px] group overflow-hidden bg-neutral-900 rounded shadow-xl">
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.men)} 
                            alt="Shop Men" 
@@ -700,7 +700,7 @@ export default function Home() {
                      </div>
 
                      {/* Column 2: The Privilege Collection */}
-                     <div className="bg-neutral-50 border border-neutral-100/80 rounded shadow-sm p-8 flex flex-col justify-between items-center text-center aspect-[3/4]">
+                     <div className="bg-neutral-50 border border-neutral-100/80 rounded shadow-sm p-6 sm:p-8 flex flex-col justify-between items-center text-center h-[340px] sm:h-[380px] md:h-[420px]">
                         <div className="w-full">
                            <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Kozmo Rewards</span>
                            <h3 className="text-xl md:text-2xl font-nelphim font-black text-neutral-900 uppercase tracking-wider mb-2">The Privilege Collection.</h3>
@@ -713,7 +713,7 @@ export default function Home() {
                               <Link 
                                  key={reward.id || i} 
                                  href={`/rewards#${reward.id}`}
-                                 className="group relative w-full h-[180px] sm:h-[200px] overflow-hidden bg-neutral-900 shadow-md hover:-translate-y-2 transition-all duration-700 block text-left rounded-sm"
+                                 className="group relative w-full h-[150px] sm:h-[175px] md:h-[195px] overflow-hidden bg-neutral-900 shadow-md hover:-translate-y-2 transition-all duration-700 block text-left rounded-sm"
                               >
                                  <img
                                     src={getMediaUrl(reward.image_url)}
@@ -748,7 +748,7 @@ export default function Home() {
                      </div>
 
                      {/* Column 3: For Her */}
-                     <div className="relative aspect-[3/4] group overflow-hidden bg-neutral-900 rounded shadow-xl">
+                     <div className="relative h-[340px] sm:h-[380px] md:h-[420px] group overflow-hidden bg-neutral-900 rounded shadow-xl">
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.women)} 
                            alt="Shop Women" 
