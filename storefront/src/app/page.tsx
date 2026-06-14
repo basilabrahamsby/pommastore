@@ -319,7 +319,7 @@ export default function Home() {
 
           {/* Cinematic Hero Slider for Flash Offers */}
           {homepageOffers.length > 0 && (
-             <section className="relative h-[1050px] sm:h-[850px] lg:h-[85vh] min-h-[600px] lg:min-h-[700px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
+             <section className="relative h-[680px] sm:h-[580px] lg:h-[480px] xl:h-[520px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
                 {/* Background Slider Engine */}
                 <div className="absolute inset-0">
                    {homepageOffers.map((promo: any, idx: number) => (
@@ -338,21 +338,21 @@ export default function Home() {
                         
                         <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-12">
                            {/* Text Content */}
-                           <div className="lg:w-1/2 text-white pt-16 sm:pt-20 lg:pt-0 z-10">
-                              <div className="flex items-center gap-4 mb-4 sm:mb-8">
+                           <div className="lg:w-1/2 text-white pt-12 sm:pt-16 lg:pt-0 z-10">
+                              <div className="flex items-center gap-4 mb-3 sm:mb-5">
                                  <span className="h-[1.5px] w-12 bg-accent" />
                                  <span className="text-[10px] font-bold tracking-[0.3em] text-accent uppercase font-sans">{promo.discount_type}</span>
                               </div>
-                              <h2 className="text-3xl sm:text-5xl md:text-8xl font-serif font-normal mb-4 sm:mb-8 leading-tight md:leading-[1] tracking-wide uppercase">
+                              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-normal mb-3 sm:mb-4 leading-none tracking-wide uppercase">
                                  {promo.title}
                               </h2>
-                              <p className="text-xs sm:text-sm md:text-lg text-neutral-300 max-w-md mb-4 sm:mb-8 leading-relaxed font-light tracking-wide opacity-80">
+                              <p className="text-xs sm:text-[13px] md:text-sm text-neutral-300 max-w-md mb-3 sm:mb-4 leading-relaxed font-light tracking-wide opacity-80 line-clamp-2">
                                  {promo.subtitle || 'Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.'}
                               </p>
 
                               {/* Dynamic Offer Rules / Details Block */}
-                              <div className="mb-4 sm:mb-10 p-4 sm:p-5 bg-white/5 border border-white/10 rounded-sm max-w-md backdrop-blur-md">
-                                 <div className="text-[10px] font-black tracking-widest text-yellow-500 uppercase mb-3">Offer Rules & Details</div>
+                              <div className="mb-3 sm:mb-5 p-3 sm:p-4 bg-white/5 border border-white/10 rounded-sm max-w-md backdrop-blur-md">
+                                 <div className="text-[10px] font-black tracking-widest text-yellow-500 uppercase mb-2">Offer Rules & Details</div>
                                  <div className="flex flex-col gap-2.5 text-xs">
                                     {promo.discount_type?.toLowerCase().includes('bogo') ? (
                                        <>
@@ -395,10 +395,10 @@ export default function Home() {
                                  </div>
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-4 sm:gap-10 font-sans">
+                              <div className="flex flex-wrap items-center gap-4 sm:gap-8 font-sans">
                                  <Link 
                                     href="/offers"
-                                    className="group flex items-center gap-3 bg-white hover:bg-accent text-black hover:text-white px-6 py-3 sm:px-12 sm:py-5 text-[9px] sm:text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-500 shadow-2xl"
+                                    className="group flex items-center gap-3 bg-white hover:bg-accent text-black hover:text-white px-5 py-2.5 sm:px-8 sm:py-3.5 text-[9px] sm:text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-500 shadow-2xl"
                                  >
                                     Explore Curation
                                     <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
@@ -458,7 +458,7 @@ export default function Home() {
                 </div>
 
                {/* Navigation Controls & Counter */}
-               <div className="absolute bottom-6 sm:bottom-12 left-6 lg:left-12 flex items-center gap-6 sm:gap-12 z-20 font-sans">
+               <div className="absolute bottom-6 left-6 lg:left-12 flex items-center gap-6 sm:gap-12 z-20 font-sans">
                   <div className="flex items-center gap-3 sm:gap-4">
                      {homepageOffers.map((_: any, idx: number) => (
                         <button 
@@ -473,16 +473,16 @@ export default function Home() {
                   </span>
                </div>
 
-               <div className="absolute bottom-6 sm:bottom-12 right-6 lg:right-12 flex gap-2 sm:gap-4 z-20">
+               <div className="absolute bottom-6 right-6 lg:right-12 flex gap-2 sm:gap-4 z-20">
                   <button 
                      onClick={() => setCurrentPromoIdx(p => (p === 0 ? homepageOffers.length - 1 : p - 1))}
-                     className="w-10 h-10 sm:w-16 sm:h-16 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
+                     className="w-10 h-10 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
                   >
                      <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={1} />
                   </button>
                   <button 
                      onClick={() => setCurrentPromoIdx(p => (p === homepageOffers.length - 1 ? 0 : p + 1))}
-                     className="w-10 h-10 sm:w-16 sm:h-16 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
+                     className="w-10 h-10 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
                   >
                      <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={1} />
                   </button>
