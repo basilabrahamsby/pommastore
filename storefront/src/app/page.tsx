@@ -800,18 +800,18 @@ export default function Home() {
          )}
 
          {/* Mid Quote Banner */}
-         <section className="bg-black text-white py-32 relative overflow-hidden flex items-center justify-center text-center">
+         <section className="bg-black text-white py-16 md:py-20 relative overflow-hidden flex items-center justify-center text-center">
             <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none overflow-hidden">
                <img src="/kozmocart/logo.png" alt="Kozmocart Logo Watermark" className="w-[60vw] max-w-[700px] object-contain" />
             </div>
             <div className="relative z-10 max-w-3xl px-8">
-               <h3 className="text-xs font-bold tracking-[0.3em] text-accent uppercase mb-8 font-sans">
+               <h3 className="text-xs font-bold tracking-[0.3em] text-accent uppercase mb-4 font-sans">
                   {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
                </h3>
-               <blockquote className="text-3xl md:text-5xl font-serif italic tracking-wide mb-10 text-white/90 leading-tight">
+               <blockquote className="text-2xl md:text-4xl font-serif italic tracking-wide mb-6 text-white/90 leading-tight">
                   &ldquo;{cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It's a reference mark."}&rdquo;
                </blockquote>
-               <div className="w-16 h-1 bg-white mx-auto mb-6" />
+               <div className="w-16 h-[2px] bg-white mx-auto mb-4" />
                <p className="text-[12px] font-black tracking-[0.3em] uppercase text-neutral-500">Authentic Fragrances Only</p>
             </div>
          </section>
@@ -819,11 +819,11 @@ export default function Home() {
 
          {/* House Favorites Arches - only shown if configured in Storefront CMS */}
          {cmsLayout?.house_favorites?.length > 0 && (
-         <section className="relative w-full bg-[#fcfcfc] py-24 md:py-32 overflow-hidden border-t border-neutral-100">
-            <div className="max-w-[1400px] mx-auto px-8 text-center mb-20 relative z-20">
-               <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4 block">The Elite List</span>
+         <section className="relative w-full bg-[#fcfcfc] py-12 md:py-16 overflow-hidden border-t border-neutral-100">
+            <div className="max-w-[1400px] mx-auto px-8 text-center mb-8 md:mb-10 relative z-20">
+               <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">The Elite List</span>
                <h2 className="text-3xl md:text-4xl font-nelphim font-black text-black leading-normal uppercase tracking-wider">House Favorites</h2>
-               <div className="w-12 h-[2px] bg-accent mx-auto mt-4" />
+               <div className="w-12 h-[2px] bg-accent mx-auto mt-3" />
             </div>
 
             <div className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-full text-center pointer-events-none">
@@ -832,7 +832,7 @@ export default function Home() {
                </h2>
             </div>
 
-            <div className="max-w-[1700px] mx-auto w-full h-full flex md:grid md:grid-cols-5 gap-6 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide px-6 md:px-12 relative z-10 pt-12 items-end">
+            <div className="max-w-[1700px] mx-auto w-full h-full flex md:grid md:grid-cols-5 gap-6 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide px-6 md:px-12 relative z-10 pt-0 items-end">
                {cmsLayout.house_favorites.map((item: any, idx: number) => (
                   <div
                      key={idx}
