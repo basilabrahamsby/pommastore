@@ -518,8 +518,8 @@ export default function Home() {
 
           {/* Elite Brand Houses */}
           {brands.length > 0 && (
-          <section className="py-10 bg-[#0a0a0f] relative overflow-hidden">
-             <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
+          <section className="py-16 bg-[#0a0a0f] relative overflow-hidden">
+             <div className="max-w-[1400px] mx-auto px-8 mb-8 flex justify-between items-end font-sans">
                 <div>
                    <span className="text-[9px] font-medium tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
                    <h2 className="text-2xl md:text-3xl font-serif font-normal text-white leading-none uppercase tracking-wide">Elite Perfumery</h2>
@@ -529,139 +529,239 @@ export default function Home() {
                 </Link>
              </div>
 
-             <div className="relative w-full overflow-hidden">
-                <div className="flex gap-6 md:gap-8 overflow-x-auto py-3 px-8 scrollbar-hide select-none w-full justify-start md:justify-center">
-                   {brands.map((brand: any, idx: number) => {
-                      const hasBanner = !!brand.brand_banner;
-                      return hasBanner ? (
-                         <Link 
-                            key={brand.id || idx} 
-                            href={`/shop?brand=${brand.id}`}
-                            className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 rounded-sm"
-                         >
-                            <img 
-                               src={getMediaUrl(brand.brand_banner)} 
-                               alt={brand.name} 
-                               loading="lazy"
-                               decoding="async"
-                               className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
-                                  idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
-                               }`} 
-                               onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
-                            />
-                            {brand.logo_url && (
-                               <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
-                                  <img 
-                                     src={getMediaUrl(brand.logo_url)} 
-                                     alt={`${brand.name} logo`} 
-                                     className="max-w-[75%] max-h-[35%] object-contain filter invert brightness-0" 
-                                  />
-                               </div>
-                            )}
-                            <div className="brand-card-shine" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10 group-hover/brand:via-black/25 transition-all duration-700" />
-                            <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
-                            <div className="absolute bottom-0 left-0 right-0 p-3 z-10 text-center">
-                               <span className="block text-[9px] font-medium tracking-[0.2em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
-                            </div>
-                            <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
-                         </Link>
-                      ) : (
-                         <Link 
-                            key={brand.id || idx} 
-                            href={`/shop?brand=${brand.id}`}
-                            className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-gradient-to-b from-[#141419] to-[#09090d] border border-white/[0.06] shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 flex flex-col items-center justify-center p-3 rounded-sm"
-                         >
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_65%)] opacity-0 group-hover/brand:opacity-100 transition-opacity duration-1000 pointer-events-none" />
-                            
-                            <div className="w-[76px] h-[76px] bg-white flex items-center justify-center p-2 rounded-xs shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] border border-white/10 group-hover/brand:border-accent/30 transition-all duration-700 mb-2">
-                               {brand.logo_url ? (
-                                  <img 
-                                     src={getMediaUrl(brand.logo_url)} 
-                                     alt={brand.name} 
-                                     loading="lazy"
-                                     decoding="async"
-                                     className="max-w-full max-h-full object-contain mix-blend-multiply group-hover/brand:scale-105 transition-transform duration-500"
-                                     onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
-                                  />
-                               ) : (
-                                  <span className="font-serif italic font-black text-lg uppercase tracking-tight text-neutral-800">
-                                     {brand.name.substring(0, 2)}
-                                  </span>
+             {brands.length <= 2 ? (
+                 /* Premium Luxury Spotlight circles for 1-2 Brands */
+                 <div className="max-w-[1400px] mx-auto px-8">
+                    <div className="flex flex-col md:flex-row gap-8 items-stretch w-full justify-center">
+                       {brands.map((brand: any, idx: number) => {
+                          const DEFAULT_BANNERS = [
+                             "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800",
+                             "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800"
+                          ];
+                          const image = brand.brand_banner 
+                             ? getMediaUrl(brand.brand_banner) 
+                             : (brand.banner_url 
+                                ? getMediaUrl(brand.banner_url) 
+                                : DEFAULT_BANNERS[idx % DEFAULT_BANNERS.length]);
+                          const desc = brand.description || `Discover the signature collections and exclusive raw extractions crafted by the luxury house of ${brand.name}.`;
+                          
+                          return (
+                             <Link
+                                key={brand.id || idx}
+                                href={`/shop?brand=${brand.id}`}
+                                className="group relative flex-1 bg-gradient-to-b from-[#111116] to-[#07070a] rounded-lg border border-white/[0.04] hover:border-accent/40 p-8 sm:p-10 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-2 shadow-2xl overflow-hidden"
+                             >
+                                {/* Subtle spotlight gradient on hover */}
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.06)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+
+                                {/* Circular image showcase container */}
+                                <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-accent/20 p-1 group-hover:border-accent transition-all duration-700 mb-6 mx-auto">
+                                   <img
+                                      src={image}
+                                      alt={brand.name}
+                                      className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-[2.5s] ease-out"
+                                      onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                   />
+                                </div>
+
+                                {/* Logo Badge with mix-blend-multiply */}
+                                {brand.logo_url && (
+                                   <div className="w-16 h-16 bg-white flex items-center justify-center p-2.5 rounded-full shadow-md border border-white/10 mb-5 group-hover:border-accent/40 transition-all duration-700 mx-auto">
+                                      <img
+                                         src={getMediaUrl(brand.logo_url)}
+                                         alt={`${brand.name} logo`}
+                                         className="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                                      />
+                                   </div>
+                                )}
+
+                                <span className="text-[9px] font-bold tracking-[0.25em] text-accent uppercase mb-3 block font-sans">
+                                   Signature House
+                                </span>
+
+                                <h3 className="text-xl sm:text-2xl font-serif font-normal text-white uppercase tracking-wider mb-3 leading-none group-hover:text-accent transition-colors">
+                                   {brand.name}
+                                </h3>
+
+                                <p className="text-[11px] text-neutral-400 leading-relaxed font-light max-w-sm mb-6 tracking-wide line-clamp-3">
+                                   {desc}
+                                </p>
+
+                                <div className="bg-transparent border border-white/20 group-hover:border-accent group-hover:bg-accent text-white py-2 px-5 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-full flex items-center gap-2 mt-auto">
+                                   <span>Explore House</span>
+                                   <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
+                             </Link>
+                          );
+                       })}
+                    </div>
+                 </div>
+              ) : (
+                /* Horizontal Grid Layout for 3+ Brands */
+                <div className="relative w-full overflow-hidden">
+                   <div className="flex gap-6 md:gap-8 overflow-x-auto py-3 px-8 scrollbar-hide select-none w-full justify-start md:justify-center">
+                      {brands.map((brand: any, idx: number) => {
+                         const hasBanner = !!brand.brand_banner;
+                         return hasBanner ? (
+                            <Link 
+                               key={brand.id || idx} 
+                               href={`/shop?brand=${brand.id}`}
+                               className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 rounded-sm"
+                            >
+                               <img 
+                                  src={getMediaUrl(brand.brand_banner)} 
+                                  alt={brand.name} 
+                                  loading="lazy"
+                                  decoding="async"
+                                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
+                                     idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
+                                  }`} 
+                                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                               />
+                               {brand.logo_url && (
+                                  <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
+                                     <img 
+                                        src={getMediaUrl(brand.logo_url)} 
+                                        alt={`${brand.name} logo`} 
+                                        className="max-w-[75%] max-h-[35%] object-contain filter invert brightness-0" 
+                                     />
+                                  </div>
                                )}
-                            </div>
-                            
-                            <span className="block text-[9px] font-medium tracking-[0.2em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
-                            <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-center z-20" />
-                            <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
-                         </Link>
-                      );
-                   })}
+                               <div className="brand-card-shine" />
+                               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10 group-hover/brand:via-black/25 transition-all duration-700" />
+                               <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-left z-20" />
+                               <div className="absolute bottom-0 left-0 right-0 p-3 z-10 text-center">
+                                  <span className="block text-[9px] font-medium tracking-[0.25em] text-white uppercase group-hover/brand:text-accent transition-all duration-700 leading-none">{brand.name}</span>
+                               </div>
+                               <div className="absolute inset-0 border border-white/0 group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
+                            </Link>
+                         ) : (
+                            <Link 
+                               key={brand.id || idx} 
+                               href={`/shop?brand=${brand.id}`}
+                               className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-gradient-to-b from-[#141419] to-[#09090d] border border-white/[0.06] shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 flex flex-col items-center justify-center p-3 rounded-sm"
+                            >
+                               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_65%)] opacity-0 group-hover/brand:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                               
+                               <div className="w-[76px] h-[76px] bg-white flex items-center justify-center p-2 rounded-xs shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] border border-white/10 group-hover/brand:border-accent/30 transition-all duration-700 mb-2">
+                                  {brand.logo_url ? (
+                                     <img 
+                                        src={getMediaUrl(brand.logo_url)} 
+                                        alt={brand.name} 
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="max-w-full max-h-full object-contain mix-blend-multiply group-hover/brand:scale-105 transition-transform duration-500"
+                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                     />
+                                  ) : (
+                                     <span className="font-serif italic font-black text-lg uppercase tracking-tight text-neutral-800">
+                                        {brand.name.substring(0, 2)}
+                                     </span>
+                                  )}
+                               </div>
+                               
+                               <span className="block text-[9px] font-medium tracking-[0.2em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
+                               <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-center z-20" />
+                               <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
+                            </Link>
+                         );
+                      })}
+                   </div>
                 </div>
-                
-                {/* Left/Right fading edge masks for scroll indicators */}
-                <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#0a0a0f] to-transparent pointer-events-none z-10" />
-                <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#0a0a0f] to-transparent pointer-events-none z-10" />
-             </div>
+             )}
           </section>
           )}
 
 
          {/* Loyalty & Privileges Showcase (Infinite Animated Marquee) */}
          {loyaltyRewards.length > 0 && (
-         <section className="py-28 bg-white relative overflow-hidden">
-             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-20">
-                <span className="text-[11px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-6 block">Kozmo Rewards</span>
-                <h2 className="text-4xl md:text-5xl font-nelphim font-black text-neutral-900 mb-6 uppercase tracking-wider">The Privilege Collection.</h2>
-                <div className="w-12 h-[2px] bg-accent mx-auto" />
+          <section className="py-16 md:py-20 bg-white relative overflow-hidden">
+              <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-12">
+                 <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4 block">Kozmo Rewards</span>
+                 <h2 className="text-3xl md:text-4xl font-nelphim font-black text-neutral-900 mb-4 uppercase tracking-wider">The Privilege Collection.</h2>
+                 <div className="w-12 h-[2px] bg-accent mx-auto" />
+              </div>
+
+             <div className="relative w-full overflow-hidden">
+                {loyaltyRewards.length < 5 ? (
+                   /* Static Centered Layout for < 5 Rewards */
+                   <div className="flex flex-wrap justify-center gap-6 px-6 max-w-[1400px] mx-auto">
+                      {loyaltyRewards.map((reward: any, i: number) => (
+                         <Link 
+                            key={reward.id || i} 
+                            href={`/rewards#${reward.id}`}
+                            className="group relative w-[280px] aspect-[3/4] overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 transition-all duration-[1.2s] block text-left rounded-sm"
+                         >
+                            <img
+                               src={getMediaUrl(reward.image_url)}
+                               alt={reward.name}
+                               className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-[2s] ease-out"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                            <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                               <div className="mb-4">
+                                  <span className="text-[9px] font-black tracking-[0.4em] text-yellow-500 uppercase block mb-3">{reward.reward_type}</span>
+                                  <h3 className="text-xl font-serif italic text-white mb-3 tracking-tight">{reward.name}</h3>
+                                  <p className="text-[11px] text-neutral-300 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity duration-[1.2s] line-clamp-3">
+                                     {reward.description}
+                                  </p>
+                               </div>
+                               <div className="flex items-center space-x-3 text-[10px] font-black tracking-[0.3em] text-white mt-4 border-t border-white/10 pt-4 transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-[1s]">
+                                  <span>{reward.point_cost ? `${reward.point_cost} POINTS` : 'EXPLORE PROGRAM'}</span>
+                                  <ArrowRight size={12} className="group-hover:translate-x-2 transition-transform duration-700" />
+                               </div>
+                            </div>
+                         </Link>
+                      ))}
+                   </div>
+                ) : (
+                   /* Marquee Container for >= 5 Rewards */
+                   <div className="flex animate-scroll hover:[animation-play-state:paused] w-max gap-8 px-4">
+                      {[...Array(2)].map((_, setIdx) => (
+                        <React.Fragment key={setIdx}>
+                           {loyaltyRewards.map((reward: any, i: number) => (
+                              <Link 
+                                 key={`${setIdx}-${i}`} 
+                                 href={`/rewards#${reward.id}`}
+                                 className="group relative w-[290px] aspect-[3/4] overflow-hidden bg-neutral-900 shadow-2xl hover:-translate-y-4 transition-all duration-1000 flex-shrink-0 block text-left"
+                              >
+                                 <img
+                                    src={getMediaUrl(reward.image_url)}
+                                    alt={reward.name}
+                                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-110 transition-all duration-[2.5s] ease-out"
+                                 />
+                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                                    <div className="mb-4">
+                                       <span className="text-[9px] font-black tracking-[0.4em] text-yellow-500 uppercase block mb-3">{reward.reward_type}</span>
+                                       <h3 className="text-xl font-serif italic text-white mb-3 tracking-tight">{reward.name}</h3>
+                                       <p className="text-[11px] text-neutral-300 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity duration-1000 line-clamp-3">
+                                          {reward.description}
+                                       </p>
+                                    </div>
+                                    <div className="flex items-center space-x-3 text-[10px] font-black tracking-[0.3em] text-white mt-4 border-t border-white/10 pt-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-1000">
+                                       <span>{reward.point_cost ? `${reward.point_cost} POINTS` : 'EXPLORE PROGRAM'}</span>
+                                       <ArrowRight size={12} className="group-hover:translate-x-3 transition-transform duration-700" />
+                                    </div>
+                                 </div>
+                              </Link>
+                           ))}
+                        </React.Fragment>
+                      ))}
+                   </div>
+                )}
              </div>
 
-            <div className="relative w-full overflow-hidden">
-               {/* Marquee Container */}
-               <div className="flex animate-scroll hover:[animation-play-state:paused] w-max gap-8 px-4">
-                  {[...Array(2)].map((_, setIdx) => (
-                    <React.Fragment key={setIdx}>
-                       {loyaltyRewards.map((reward: any, i: number) => (
-                          <Link 
-                             key={`${setIdx}-${i}`} 
-                             href={`/rewards#${reward.id}`}
-                             className="group relative w-[350px] aspect-[3/4] overflow-hidden bg-neutral-900 shadow-2xl hover:-translate-y-4 transition-all duration-1000 flex-shrink-0 block text-left"
-                          >
-                             <img
-                                src={getMediaUrl(reward.image_url)}
-                                alt={reward.name}
-                                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-110 transition-all duration-[2.5s] ease-out"
-                             />
-                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-                             <div className="absolute inset-0 p-10 flex flex-col justify-end">
-                                <div className="mb-6">
-                                   <span className="text-[10px] font-black tracking-[0.4em] text-yellow-500 uppercase block mb-4">{reward.reward_type}</span>
-                                   <h3 className="text-2xl font-serif italic text-white mb-5 tracking-tight">{reward.name}</h3>
-                                   <p className="text-[12px] text-neutral-300 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity duration-1000">
-                                      {reward.description}
-                                   </p>
-                                </div>
-                                <div className="flex items-center space-x-3 text-[11px] font-black tracking-[0.3em] text-white mt-6 border-t border-white/10 pt-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-1000">
-                                   <span>{reward.point_cost ? `${reward.point_cost} POINTS` : 'EXPLORE PROGRAM'}</span>
-                                   <ArrowRight size={14} className="group-hover:translate-x-3 transition-transform duration-700" />
-                                </div>
-                             </div>
-                          </Link>
-                       ))}
-                    </React.Fragment>
-                  ))}
-               </div>
-            </div>
-
-            <div className="mt-20 text-center">
-               <Link
-                  href="/rewards"
-                  className="inline-block border border-neutral-950 px-16 py-6 text-[11px] font-black tracking-[0.4em] uppercase hover:bg-neutral-950 hover:text-white transition-all duration-700 shadow-xl"
-               >
-                  View Full Gallery
-               </Link>
-            </div>
+             <div className="mt-12 text-center">
+                <Link
+                   href="/rewards"
+                   className="inline-block border border-neutral-950 px-10 py-4 text-[10px] font-black tracking-[0.4em] uppercase hover:bg-neutral-950 hover:text-white transition-all duration-700 shadow-xl"
+                >
+                   View Full Gallery
+                </Link>
+             </div>
 
             <style jsx global>{`
                @keyframes scroll {
