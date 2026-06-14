@@ -294,7 +294,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <p className="text-[10px] tracking-[0.1em] text-black font-nelphim font-black uppercase mb-1">
             {product.brand_name}
           </p>
-          <h3 className="text-[11px] font-medium text-neutral-600 uppercase tracking-wide line-clamp-1 h-4 mb-2 leading-tight w-full overflow-hidden text-ellipsis font-serif">
+          <h3 className="text-[11px] font-medium text-neutral-600 uppercase tracking-wide line-clamp-1 h-4 mb-2 leading-tight w-full overflow-hidden text-ellipsis font-sans">
             {product.name}
           </h3>
 
