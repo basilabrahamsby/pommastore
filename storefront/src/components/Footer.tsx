@@ -159,7 +159,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-[11px] font-serif font-black tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Customer Service</h3>
+            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Customer Service</h3>
             <ul className="space-y-3.5">
               {[
                 { label: 'Track Your Order', href: '/track-order' },
@@ -170,7 +170,7 @@ const Footer = () => {
                 { label: 'Rewards Program', href: '/rewards' },
               ].map((item) => (
                 <li key={item.label}>
-                  <Link href={item.href} className="flex items-center gap-2 text-neutral-400 text-[12px] font-medium tracking-wide hover:text-white transition-colors group">
+                  <Link href={item.href} className="flex items-center gap-2 text-neutral-400 text-[12px] font-medium font-sans tracking-wide hover:text-white transition-colors group">
                     <ChevronRight size={10} className="text-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-0.5 flex-shrink-0" />
                     {item.label}
                   </Link>
@@ -181,11 +181,11 @@ const Footer = () => {
 
           {/* Shop Categories */}
           <div>
-            <h3 className="text-[11px] font-serif font-black tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Shop</h3>
+            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Shop</h3>
             <ul className="space-y-3.5">
               {categories.slice(0, 6).map((cat) => (
                 <li key={cat.id}>
-                  <Link href={`/shop?category=${cat.slug || cat.id}`} className="flex items-center gap-2 text-neutral-400 text-[12px] font-medium tracking-wide hover:text-white transition-colors group">
+                  <Link href={`/shop?category=${cat.slug || cat.id}`} className="flex items-center gap-2 text-neutral-400 text-[12px] font-medium font-sans tracking-wide hover:text-white transition-colors group">
                     <ChevronRight size={10} className="text-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-0.5 flex-shrink-0" />
                     {cat.name}
                   </Link>
@@ -208,7 +208,7 @@ const Footer = () => {
 
           {/* Contact Column */}
           <div>
-            <h3 className="text-[11px] font-serif font-black tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Contact Us</h3>
+            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Contact Us</h3>
             <ul className="space-y-5">
               <li className="flex items-start gap-3">
                 <Phone size={15} className="text-accent mt-0.5 flex-shrink-0" />

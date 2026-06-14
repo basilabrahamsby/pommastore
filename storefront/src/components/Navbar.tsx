@@ -111,7 +111,7 @@ const Navbar = () => {
             </div>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center space-x-6 text-[10px] font-bold tracking-[0.2em] uppercase font-serif">
+            <nav className="hidden md:flex items-center space-x-6 text-[10px] font-bold tracking-[0.2em] uppercase font-sans">
                <Link href="/" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Home</Link>
                <Link href="/shop?gender=Men" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Men</Link>
                <Link href="/shop?gender=Women" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Women</Link>
