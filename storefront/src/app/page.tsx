@@ -673,164 +673,131 @@ export default function Home() {
           )}
 
 
-         {/* Loyalty & Privileges Showcase (Infinite Animated Marquee) */}
-         {loyaltyRewards.length > 0 && (
-          <section className="py-16 md:py-20 bg-white relative overflow-hidden">
-              <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-12">
-                 <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4 block">Kozmo Rewards</span>
-                 <h2 className="text-3xl md:text-4xl font-nelphim font-black text-neutral-900 mb-4 uppercase tracking-wider">The Privilege Collection.</h2>
-                 <div className="w-12 h-[2px] bg-accent mx-auto" />
-              </div>
+          {/* Combined Gender and Privilege Collection Editorial Section */}
+          {loyaltyRewards.length > 0 ? (
+             <section className="bg-white py-16 md:py-24">
+               <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                     
+                     {/* Column 1: For Him */}
+                     <div className="relative aspect-[3/4] group overflow-hidden bg-neutral-900 rounded shadow-xl">
+                        <img 
+                           src={getMediaUrl(cmsLayout?.split_banners?.men)} 
+                           alt="Shop Men" 
+                           className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
+                        />
+                        <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-1000" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center pb-12">
+                           <h3 className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-300 mb-2 font-sans">Refined & Bold</h3>
+                           <h2 className="text-3xl md:text-4xl font-serif font-normal tracking-wider mb-6 uppercase text-white">For Him</h2>
+                           <Link 
+                              href="/shop?gender=Men" 
+                              className="bg-transparent border border-white hover:bg-white text-white hover:text-black text-[10px] font-bold tracking-[0.2em] uppercase px-8 py-3.5 transition-all duration-700 rounded-full font-sans"
+                           >
+                              Shop Men
+                           </Link>
+                        </div>
+                     </div>
 
-             <div className="relative w-full overflow-hidden">
-                {loyaltyRewards.length < 5 ? (
-                   /* Static Centered Layout for < 5 Rewards */
-                   <div className="flex flex-wrap justify-center gap-6 px-6 max-w-[1400px] mx-auto">
-                      {loyaltyRewards.map((reward: any, i: number) => (
-                         <Link 
-                            key={reward.id || i} 
-                            href={`/rewards#${reward.id}`}
-                            className="group relative w-[280px] aspect-[3/4] overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-3 transition-all duration-[1.2s] block text-left rounded-sm"
-                         >
-                            <img
-                               src={getMediaUrl(reward.image_url)}
-                               alt={reward.name}
-                               className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-[2s] ease-out"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                     {/* Column 2: The Privilege Collection */}
+                     <div className="bg-neutral-50 border border-neutral-100/80 rounded shadow-sm p-8 flex flex-col justify-between items-center text-center aspect-[3/4]">
+                        <div className="w-full">
+                           <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Kozmo Rewards</span>
+                           <h3 className="text-xl md:text-2xl font-nelphim font-black text-neutral-900 uppercase tracking-wider mb-2">The Privilege Collection.</h3>
+                           <div className="w-8 h-[1.5px] bg-accent mx-auto mb-6" />
+                        </div>
 
-                            <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                               <div className="mb-4">
-                                  <span className="text-[9px] font-black tracking-[0.4em] text-yellow-500 uppercase block mb-3">{reward.reward_type}</span>
-                                  <h3 className="text-xl font-serif italic text-white mb-3 tracking-tight">{reward.name}</h3>
-                                  <p className="text-[11px] text-neutral-300 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity duration-[1.2s] line-clamp-3">
-                                     {reward.description}
-                                  </p>
-                               </div>
-                               <div className="flex items-center space-x-3 text-[10px] font-black tracking-[0.3em] text-white mt-4 border-t border-white/10 pt-4 transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-[1s]">
-                                  <span>{reward.point_cost ? `${reward.point_cost} POINTS` : 'EXPLORE PROGRAM'}</span>
-                                  <ArrowRight size={12} className="group-hover:translate-x-2 transition-transform duration-700" />
-                               </div>
-                            </div>
-                         </Link>
-                      ))}
-                   </div>
-                ) : (
-                   /* Marquee Container for >= 5 Rewards */
-                   <div className="flex animate-scroll hover:[animation-play-state:paused] w-max gap-8 px-4">
-                      {[...Array(2)].map((_, setIdx) => (
-                        <React.Fragment key={setIdx}>
-                           {loyaltyRewards.map((reward: any, i: number) => (
+                        {/* Central Reward card */}
+                        <div className="w-full max-w-[270px] flex-grow flex items-center justify-center">
+                           {loyaltyRewards.slice(0, 1).map((reward: any, i: number) => (
                               <Link 
-                                 key={`${setIdx}-${i}`} 
+                                 key={reward.id || i} 
                                  href={`/rewards#${reward.id}`}
-                                 className="group relative w-[290px] aspect-[3/4] overflow-hidden bg-neutral-900 shadow-2xl hover:-translate-y-4 transition-all duration-1000 flex-shrink-0 block text-left"
+                                 className="group relative w-full h-[180px] sm:h-[200px] overflow-hidden bg-neutral-900 shadow-md hover:-translate-y-2 transition-all duration-700 block text-left rounded-sm"
                               >
                                  <img
                                     src={getMediaUrl(reward.image_url)}
                                     alt={reward.name}
-                                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-110 transition-all duration-[2.5s] ease-out"
+                                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-[2.5s] ease-out"
                                  />
                                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-                                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                                    <div className="mb-4">
-                                       <span className="text-[9px] font-black tracking-[0.4em] text-yellow-500 uppercase block mb-3">{reward.reward_type}</span>
-                                       <h3 className="text-xl font-serif italic text-white mb-3 tracking-tight">{reward.name}</h3>
-                                       <p className="text-[11px] text-neutral-300 leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity duration-1000 line-clamp-3">
+                                 <div className="absolute inset-0 p-5 flex flex-col justify-end">
+                                    <div>
+                                       <span className="text-[8px] font-black tracking-[0.3em] text-yellow-500 uppercase block mb-1">{reward.reward_type}</span>
+                                       <h3 className="text-sm font-serif italic text-white mb-2 tracking-tight line-clamp-1">{reward.name}</h3>
+                                       <p className="text-[10px] text-neutral-300 leading-relaxed font-light opacity-80 group-hover:opacity-100 transition-opacity duration-700 line-clamp-2">
                                           {reward.description}
                                        </p>
                                     </div>
-                                    <div className="flex items-center space-x-3 text-[10px] font-black tracking-[0.3em] text-white mt-4 border-t border-white/10 pt-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-1000">
-                                       <span>{reward.point_cost ? `${reward.point_cost} POINTS` : 'EXPLORE PROGRAM'}</span>
-                                       <ArrowRight size={12} className="group-hover:translate-x-3 transition-transform duration-700" />
+                                    <div className="flex items-center space-x-2 text-[9px] font-black tracking-[0.2em] text-white mt-3 border-t border-white/10 pt-3 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                                       <span>{reward.point_cost ? `${reward.point_cost} POINTS` : 'EXPLORE'}</span>
+                                       <ArrowRight size={10} className="group-hover:translate-x-1.5 transition-transform duration-500" />
                                     </div>
                                  </div>
                               </Link>
                            ))}
-                        </React.Fragment>
-                      ))}
-                   </div>
-                )}
-             </div>
+                        </div>
 
-             <div className="mt-12 text-center">
-                <Link
-                   href="/rewards"
-                   className="inline-block border border-neutral-950 px-10 py-4 text-[10px] font-black tracking-[0.4em] uppercase hover:bg-neutral-950 hover:text-white transition-all duration-700 shadow-xl"
-                >
-                   View Full Gallery
-                </Link>
-             </div>
+                        <Link
+                           href="/rewards"
+                           className="text-[9px] font-black tracking-[0.3em] uppercase border-b border-neutral-950/20 hover:border-neutral-950 pb-1 hover:text-accent transition-all duration-500 mt-6"
+                        >
+                           View Full Gallery
+                        </Link>
+                     </div>
 
-            <style jsx global>{`
-               @keyframes scroll {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(calc(-50% - 16px)); }
-               }
-               .animate-scroll {
-                  animation: scroll 80s linear infinite;
-               }
-               @keyframes kenburns {
-                  0% { transform: scale(1) translate(0, 0); }
-                  50% { transform: scale(1.08) translate(-1%, -1%); }
-                  100% { transform: scale(1) translate(0, 0); }
-               }
-               .animate-kenburns-1 {
-                  animation: kenburns 30s ease-in-out infinite;
-               }
-               .animate-kenburns-2 {
-                  animation: kenburns 40s ease-in-out infinite;
-               }
-               .animate-kenburns-3 {
-                  animation: kenburns 50s ease-in-out infinite;
-               }
-               .brand-card-shine {
-                  position: absolute;
-                  inset: 0;
-                  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-                  transform: translateX(-100%);
-                  transition: none;
-                  pointer-events: none;
-                  z-index: 20;
-               }
-               .group\/brand:hover .brand-card-shine {
-                  animation: shine-sweep 1s cubic-bezier(0.4, 0, 0.2, 1);
-               }
-               @keyframes shine-sweep {
-                  0% { transform: translateX(-100%); }
-                  100% { transform: translateX(100%); }
-               }
-            `}</style>
-         </section>
+                     {/* Column 3: For Her */}
+                     <div className="relative aspect-[3/4] group overflow-hidden bg-neutral-900 rounded shadow-xl">
+                        <img 
+                           src={getMediaUrl(cmsLayout?.split_banners?.women)} 
+                           alt="Shop Women" 
+                           className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
+                        />
+                        <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-1000" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center pb-12">
+                           <h3 className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-300 mb-2 font-sans">Elegant & Sweet</h3>
+                           <h2 className="text-3xl md:text-4xl font-serif font-normal tracking-wider mb-6 uppercase text-white">For Her</h2>
+                           <Link 
+                              href="/shop?gender=Women" 
+                              className="bg-transparent border border-white hover:bg-white text-white hover:text-black text-[10px] font-bold tracking-[0.2em] uppercase px-8 py-3.5 transition-all duration-700 rounded-full font-sans"
+                           >
+                              Shop Women
+                           </Link>
+                        </div>
+                     </div>
+
+                  </div>
+               </div>
+            </section>
+         ) : (
+            /* Fallback Split Banner Promos when no loyalty rewards are available */
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-1 py-1 bg-white">
+               <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.men)} alt="Shop Men" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
+                     <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Refined & Bold</h3>
+                     <h2 className="text-4xl md:text-5xl font-serif font-normal tracking-wide mb-6 uppercase">For Him</h2>
+                     <Link href="/shop?gender=Men" className="bg-white hover:bg-accent text-black hover:text-white text-[11px] font-bold tracking-[0.25em] uppercase px-12 py-4 transition-all duration-700 shadow-2xl font-sans">
+                        Shop Men
+                     </Link>
+                  </div>
+               </div>
+
+               <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.women)} alt="Shop Women" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
+                     <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Elegant & Sweet</h3>
+                     <h2 className="text-4xl md:text-5xl font-serif font-normal tracking-wide mb-6 uppercase">For Her</h2>
+                     <Link href="/shop?gender=Women" className="bg-white hover:bg-accent text-black hover:text-white text-[11px] font-bold tracking-[0.25em] uppercase px-12 py-4 transition-all duration-700 shadow-2xl font-sans">
+                        Shop Women
+                     </Link>
+                  </div>
+               </div>
+            </section>
          )}
-
-         {/* Split Banner Promos */}
-         <section className="grid grid-cols-1 md:grid-cols-2 gap-1 py-1 bg-white">
-            <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
-               <img src={getMediaUrl(cmsLayout?.split_banners?.men)} alt="Shop Men" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
-               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
-               <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
-                  <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Refined & Bold</h3>
-                  <h2 className="text-4xl md:text-5xl font-serif font-normal tracking-wide mb-6 uppercase">For Him</h2>
-                  <Link href="/shop?gender=Men" className="bg-white hover:bg-accent text-black hover:text-white text-[11px] font-bold tracking-[0.25em] uppercase px-12 py-4 transition-all duration-700 shadow-2xl font-sans">
-                     Shop Men
-                  </Link>
-               </div>
-            </div>
-
-            <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
-               <img src={getMediaUrl(cmsLayout?.split_banners?.women)} alt="Shop Women" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
-               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
-               <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
-                  <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Elegant & Sweet</h3>
-                  <h2 className="text-4xl md:text-5xl font-serif font-normal tracking-wide mb-6 uppercase">For Her</h2>
-                  <Link href="/shop?gender=Women" className="bg-white hover:bg-accent text-black hover:text-white text-[11px] font-bold tracking-[0.25em] uppercase px-12 py-4 transition-all duration-700 shadow-2xl font-sans">
-                     Shop Women
-                  </Link>
-               </div>
-            </div>
-         </section>
 
          {/* Mid Quote Banner */}
          <section className="bg-black text-white py-32 relative overflow-hidden flex items-center justify-center text-center">
