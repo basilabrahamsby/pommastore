@@ -129,26 +129,39 @@ export default function Home() {
       return `/shop?product_id=${productId}`;
    };
 
-   const gridAds1 = cmsLayout?.grid_ads_1 || {
-      left_image: '/model-banner-1.png',
-      left_title: 'Exclusive Fragrance',
-      left_subtitle: 'Exquisite Collection',
-      left_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
-      left_product_id: '',
-      right_image: '/model-banner-2.png',
-      right_title: 'Premium Fragrances',
-      right_subtitle: 'Prestige Selection',
-      right_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
-      right_product_id: ''
-   };
+    const gridAds1 = {
+       left_image: cmsLayout?.grid_ads_1?.left_image || '/model-banner-1.png',
+       left_title: cmsLayout?.grid_ads_1?.left_title || 'Exclusive Fragrance',
+       left_subtitle: cmsLayout?.grid_ads_1?.left_subtitle || 'Exquisite Collection',
+       left_desc: cmsLayout?.grid_ads_1?.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_product_id: cmsLayout?.grid_ads_1?.left_product_id || '',
+       right_image: cmsLayout?.grid_ads_1?.right_image || '/model-banner-2.png',
+       right_title: cmsLayout?.grid_ads_1?.right_title || 'Premium Fragrances',
+       right_subtitle: cmsLayout?.grid_ads_1?.right_subtitle || 'Prestige Selection',
+       right_desc: cmsLayout?.grid_ads_1?.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_product_id: cmsLayout?.grid_ads_1?.right_product_id || ''
+    };
 
-   const gridAds2 = cmsLayout?.grid_ads_2 || {
-      image: '/model-banner-3.png',
-      title: 'Top Curated Fragrances',
-      subtitle: 'Prestige Selection',
-      desc: 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
-      product_id: ''
-   };
+    const gridAds2 = {
+       image: cmsLayout?.grid_ads_2?.image || '/model-banner-3.png',
+       title: cmsLayout?.grid_ads_2?.title || 'Top Curated Fragrances',
+       subtitle: cmsLayout?.grid_ads_2?.subtitle || 'Prestige Selection',
+       desc: cmsLayout?.grid_ads_2?.desc || 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+       product_id: cmsLayout?.grid_ads_2?.product_id || ''
+    };
+
+    const gridAds3 = {
+       left_image: cmsLayout?.grid_ads_3?.left_image || '/model-banner-1.png',
+       left_title: cmsLayout?.grid_ads_3?.left_title || 'Top Curated Fragrances',
+       left_subtitle: cmsLayout?.grid_ads_3?.left_subtitle || 'Exquisite Collection',
+       left_desc: cmsLayout?.grid_ads_3?.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_product_id: cmsLayout?.grid_ads_3?.left_product_id || '',
+       right_image: cmsLayout?.grid_ads_3?.right_image || '/model-banner-3.png',
+       right_title: cmsLayout?.grid_ads_3?.right_title || 'Top Curated Fragrances',
+       right_subtitle: cmsLayout?.grid_ads_3?.right_subtitle || 'Prestige Selection',
+       right_desc: cmsLayout?.grid_ads_3?.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_product_id: cmsLayout?.grid_ads_3?.right_product_id || ''
+    };
 
    return (
       <div className="flex flex-col w-full bg-white">
@@ -652,6 +665,67 @@ export default function Home() {
                      )}
                   </div>
                )}
+            </div>
+         </section>
+
+         {/* Dynamic Block 3: Brand Spotlight Ad Banners (Above Brands) */}
+         <section className="pb-16 bg-white">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
+                  {/* Left Ad Banner */}
+                  <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                     {/* Left half: Image */}
+                     <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                        <img 
+                           src={getMediaUrl(gridAds3.left_image)} 
+                           alt={gridAds3.left_title} 
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                        />
+                     </div>
+                     {/* Right half: Text Content */}
+                     <div className="w-[55%] bg-[#8c5a2b] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds3.left_subtitle}</span>
+                        <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds3.left_title}</h3>
+                        <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                           {gridAds3.left_desc}
+                        </p>
+                        <Link 
+                           href={getProductRedirectUrl(gridAds3.left_product_id)} 
+                           className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                        >
+                           Buy Now
+                        </Link>
+                     </div>
+                  </div>
+
+                  {/* Right Ad Banner */}
+                  <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                     {/* Left half: Image */}
+                     <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                        <img 
+                           src={getMediaUrl(gridAds3.right_image)} 
+                           alt={gridAds3.right_title} 
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                        />
+                     </div>
+                     {/* Right half: Text Content */}
+                     <div className="w-[55%] bg-[#1b3b22] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds3.right_subtitle}</span>
+                        <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds3.right_title}</h3>
+                        <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                           {gridAds3.right_desc}
+                        </p>
+                        <Link 
+                           href={getProductRedirectUrl(gridAds3.right_product_id)} 
+                           className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                        >
+                           Buy Now
+                        </Link>
+                     </div>
+                  </div>
+               </div>
             </div>
          </section>
 
