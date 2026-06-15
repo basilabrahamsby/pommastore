@@ -49,10 +49,40 @@ export default function StorefrontCMS() {
     { title: 'FREE SHIPPING', sub: 'On orders above ₹999' }
   ])
   const [freeShippingLimit, setFreeShippingLimit] = useState(999)
+  const [products, setProducts] = useState([])
+  const [gridAds1, setGridAds1] = useState({
+    left_image: '',
+    left_title: '',
+    left_subtitle: '',
+    left_desc: '',
+    left_product_id: '',
+    right_image: '',
+    right_title: '',
+    right_subtitle: '',
+    right_desc: '',
+    right_product_id: ''
+  })
+  const [gridAds2, setGridAds2] = useState({
+    image: '',
+    title: '',
+    subtitle: '',
+    desc: '',
+    product_id: ''
+  })
 
   useEffect(() => {
     fetchLayout()
+    fetchProducts()
   }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get('/products?limit=200')
+      setProducts(res.data)
+    } catch (err) {
+      console.warn("Failed to load products for ad link selector")
+    }
+  }
 
   const fetchLayout = async () => {
     try {
@@ -66,6 +96,8 @@ export default function StorefrontCMS() {
         if (layout.footer_settings) setFooterSettings(prev => ({ ...prev, ...layout.footer_settings }))
         if (layout.trust_badges) setTrustBadges(layout.trust_badges)
         if (layout.free_shipping_limit !== undefined) setFreeShippingLimit(layout.free_shipping_limit)
+        if (layout.grid_ads_1) setGridAds1(prev => ({ ...prev, ...layout.grid_ads_1 }))
+        if (layout.grid_ads_2) setGridAds2(prev => ({ ...prev, ...layout.grid_ads_2 }))
       }
     } catch (err) {
       console.warn("Settings defaults fallback engaged.")
@@ -121,7 +153,9 @@ export default function StorefrontCMS() {
           house_favorites: houseFavorites,
           footer_settings: footerSettings,
           trust_badges: trustBadges,
-          free_shipping_limit: freeShippingLimit
+          free_shipping_limit: freeShippingLimit,
+          grid_ads_1: gridAds1,
+          grid_ads_2: gridAds2
         }
       }
       await api.patch('/settings', payload)
@@ -368,7 +402,178 @@ export default function StorefrontCMS() {
            </div>
         </div>
 
-        {/* SECTION 5: TRUST BADGES & SHIPPING POLICY */}
+         {/* SECTION 5: GRID AD BANNERS */}
+         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+               <LayoutTemplate size={20} style={{ color: 'var(--gold)' }} />
+               <h3 style={{ color: '#fff', fontWeight: 700, margin: 0 }}>Grid Ad Banners (Homepage Inserts)</h3>
+            </div>
+
+            {/* BLOCK 1: Side-by-Side Ad Banners */}
+            <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 24, marginBottom: 24 }}>
+               <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: 16 }}>Block 1: Split Ad Banners (Two Columns)</h4>
+               
+               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                  {/* Left Ad Banner */}
+                  <div style={{ background: 'rgba(0,0,0,0.15)', padding: 18, borderRadius: 12, border: '1px solid var(--border)' }}>
+                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Left Banner Card</span>
+                     
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           {gridAds1.left_image ? (
+                              <>
+                                 <img src={getMediaUrl(gridAds1.left_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                    <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                       Change Image
+                                       <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setGridAds1(prev => ({ ...prev, left_image: url })))} />
+                                    </label>
+                                 </div>
+                              </>
+                           ) : (
+                              <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                 <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
+                                 <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
+                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setGridAds1(prev => ({ ...prev, left_image: url })))} />
+                              </label>
+                           )}
+                        </div>
+
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Subtitle (Accent)</label>
+                           <input className="input input-sm" placeholder="Exquisite Collection" value={gridAds1.left_subtitle || ''} onChange={e => setGridAds1(prev => ({ ...prev, left_subtitle: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Display Headline</label>
+                           <input className="input input-sm" placeholder="Exclusive Fragrance" value={gridAds1.left_title || ''} onChange={e => setGridAds1(prev => ({ ...prev, left_title: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Description</label>
+                           <input className="input input-sm" placeholder="Short description copy..." value={gridAds1.left_desc || ''} onChange={e => setGridAds1(prev => ({ ...prev, left_desc: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Linked Product Target</label>
+                           <select className="input input-sm" value={gridAds1.left_product_id || ''} onChange={e => setGridAds1(prev => ({ ...prev, left_product_id: e.target.value }))}>
+                              <option value="">None / External Link</option>
+                              {products.map(p => (
+                                 <option key={p.id} value={p.id}>{p.name} ({p.brand_name || 'Exquisite House'})</option>
+                              ))}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Right Ad Banner */}
+                  <div style={{ background: 'rgba(0,0,0,0.15)', padding: 18, borderRadius: 12, border: '1px solid var(--border)' }}>
+                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Right Banner Card</span>
+                     
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           {gridAds1.right_image ? (
+                              <>
+                                 <img src={getMediaUrl(gridAds1.right_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                    <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                       Change Image
+                                       <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setGridAds1(prev => ({ ...prev, right_image: url })))} />
+                                    </label>
+                                 </div>
+                              </>
+                           ) : (
+                              <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                 <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
+                                 <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
+                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setGridAds1(prev => ({ ...prev, right_image: url })))} />
+                              </label>
+                           )}
+                        </div>
+
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Subtitle (Accent)</label>
+                           <input className="input input-sm" placeholder="Prestige Selection" value={gridAds1.right_subtitle || ''} onChange={e => setGridAds1(prev => ({ ...prev, right_subtitle: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Display Headline</label>
+                           <input className="input input-sm" placeholder="Premium Fragrances" value={gridAds1.right_title || ''} onChange={e => setGridAds1(prev => ({ ...prev, right_title: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Description</label>
+                           <input className="input input-sm" placeholder="Short description copy..." value={gridAds1.right_desc || ''} onChange={e => setGridAds1(prev => ({ ...prev, right_desc: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Linked Product Target</label>
+                           <select className="input input-sm" value={gridAds1.right_product_id || ''} onChange={e => setGridAds1(prev => ({ ...prev, right_product_id: e.target.value }))}>
+                              <option value="">None / External Link</option>
+                              {products.map(p => (
+                                 <option key={p.id} value={p.id}>{p.name} ({p.brand_name || 'Exquisite House'})</option>
+                              ))}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* BLOCK 2: Full-Width Ad Banner */}
+            <div>
+               <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: 16 }}>Block 2: Widescreen Ad Banner (Full Width)</h4>
+               
+               <div style={{ background: 'rgba(0,0,0,0.15)', padding: 18, borderRadius: 12, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                     {/* Left: Fields */}
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Subtitle (Accent)</label>
+                           <input className="input input-sm" placeholder="Prestige Selection" value={gridAds2.subtitle || ''} onChange={e => setGridAds2(prev => ({ ...prev, subtitle: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Display Headline</label>
+                           <input className="input input-sm" placeholder="Top Curated Fragrances" value={gridAds2.title || ''} onChange={e => setGridAds2(prev => ({ ...prev, title: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Description Copy</label>
+                           <textarea className="textarea" rows={3} placeholder="Detailed explanation copy..." value={gridAds2.desc || ''} onChange={e => setGridAds2(prev => ({ ...prev, desc: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                           <label className="form-label">Linked Product Target</label>
+                           <select className="input input-sm" value={gridAds2.product_id || ''} onChange={e => setGridAds2(prev => ({ ...prev, product_id: e.target.value }))}>
+                              <option value="">None / External Link</option>
+                              {products.map(p => (
+                                 <option key={p.id} value={p.id}>{p.name} ({p.brand_name || 'Exquisite House'})</option>
+                              ))}
+                           </select>
+                        </div>
+                     </div>
+
+                     {/* Right: Widescreen Image */}
+                     <div>
+                        <label className="form-label">Banner Image Backdrop (Recommended 1200x500)</label>
+                        <div style={{ height: 210, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           {gridAds2.image ? (
+                              <>
+                                 <img src={getMediaUrl(gridAds2.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                    <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                       Change Image
+                                       <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setGridAds2(prev => ({ ...prev, image: url })))} />
+                                    </label>
+                                 </div>
+                              </>
+                           ) : (
+                              <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                 <ImageIcon size={30} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
+                                 <div style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>Upload Image</div>
+                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setGridAds2(prev => ({ ...prev, image: url })))} />
+                              </label>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* SECTION 6: TRUST BADGES & SHIPPING POLICY */}
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
               <ShieldCheck size={20} style={{ color: 'var(--gold)' }} />

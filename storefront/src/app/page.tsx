@@ -122,6 +122,34 @@ export default function Home() {
       );
    }
 
+   const getProductRedirectUrl = (productId: string | null | undefined): string => {
+      if (!productId) return '/shop';
+      const match: any = newArrivals.find((p: any) => p.id === productId);
+      if (match) return `/product/${match.slug}`;
+      return `/shop?product_id=${productId}`;
+   };
+
+   const gridAds1 = cmsLayout?.grid_ads_1 || {
+      left_image: '/model-banner-1.png',
+      left_title: 'Exclusive Fragrance',
+      left_subtitle: 'Exquisite Collection',
+      left_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+      left_product_id: '',
+      right_image: '/model-banner-2.png',
+      right_title: 'Premium Fragrances',
+      right_subtitle: 'Prestige Selection',
+      right_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+      right_product_id: ''
+   };
+
+   const gridAds2 = cmsLayout?.grid_ads_2 || {
+      image: '/model-banner-3.png',
+      title: 'Top Curated Fragrances',
+      subtitle: 'Prestige Selection',
+      desc: 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+      product_id: ''
+   };
+
    return (
       <div className="flex flex-col w-full bg-white">
 
@@ -504,15 +532,126 @@ export default function Home() {
                   </Link>
                </div>
 
-               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                  {loading ? (
-                     [...Array(5)].map((_, i) => <div key={i} className="aspect-[3/4] bg-neutral-50 animate-pulse border border-neutral-100" />)
-                  ) : (
-                     newArrivals.map((product: any) => (
-                        <ProductCard key={product.id} product={product} />
-                     ))
-                  )}
-               </div>
+               {loading ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                     {[...Array(5)].map((_, i) => <div key={i} className="aspect-[3/4] bg-neutral-50 animate-pulse border border-neutral-100" />)}
+                  </div>
+               ) : (
+                  <div className="flex flex-col">
+                     {/* First 2 rows (Products 1-10) */}
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-16">
+                        {newArrivals.slice(0, 10).map((product: any) => (
+                           <ProductCard key={product.id} product={product} />
+                        ))}
+                     </div>
+
+                     {/* Dynamic Block 1: Side-by-Side Ad Banners */}
+                     {newArrivals.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 font-sans">
+                           {/* Left Ad Banner */}
+                           <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                              {/* Left half: Image */}
+                              <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                                 <img 
+                                    src={getMediaUrl(gridAds1.left_image)} 
+                                    alt={gridAds1.left_title} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                 />
+                              </div>
+                              {/* Right half: Text Content */}
+                              <div className="w-[55%] bg-[#a5682a] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                                 <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds1.left_subtitle}</span>
+                                 <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds1.left_title}</h3>
+                                 <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                                    {gridAds1.left_desc}
+                                 </p>
+                                 <Link 
+                                    href={getProductRedirectUrl(gridAds1.left_product_id)} 
+                                    className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                                 >
+                                    Buy Now
+                                 </Link>
+                              </div>
+                           </div>
+
+                           {/* Right Ad Banner */}
+                           <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                              {/* Left half: Image */}
+                              <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                                 <img 
+                                    src={getMediaUrl(gridAds1.right_image)} 
+                                    alt={gridAds1.right_title} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                 />
+                              </div>
+                              {/* Right half: Text Content */}
+                              <div className="w-[55%] bg-[#5c4033] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                                 <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds1.right_subtitle}</span>
+                                 <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds1.right_title}</h3>
+                                 <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                                    {gridAds1.right_desc}
+                                 </p>
+                                 <Link 
+                                    href={getProductRedirectUrl(gridAds1.right_product_id)} 
+                                    className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                                 >
+                                    Buy Now
+                                 </Link>
+                              </div>
+                           </div>
+                        </div>
+                     )}
+
+                     {/* Second 2 rows (Products 11-20) */}
+                     {newArrivals.length > 10 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-16">
+                           {newArrivals.slice(10, 20).map((product: any) => (
+                              <ProductCard key={product.id} product={product} />
+                           ))}
+                        </div>
+                     )}
+
+                     {/* Dynamic Block 2: Full-Width Ad Banner */}
+                     {newArrivals.length > 10 && (
+                        <div className="w-full relative min-h-[260px] md:h-[320px] bg-neutral-900 overflow-hidden group rounded-sm flex flex-col md:flex-row mb-16 border border-neutral-800">
+                           {/* Left: Text Content */}
+                           <div className="w-full md:w-[60%] bg-[#8b5a2b] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
+                              <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-white/75 uppercase mb-2 block font-sans">{gridAds2.subtitle}</span>
+                              <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide uppercase leading-none mb-3">{gridAds2.title}</h2>
+                              <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed font-light mb-5 sm:mb-6 tracking-wide max-w-xl line-clamp-3">
+                                 {gridAds2.desc}
+                              </p>
+                              <Link 
+                                 href={getProductRedirectUrl(gridAds2.product_id)} 
+                                 className="bg-black hover:bg-neutral-900 text-white text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase py-2.5 px-6 sm:py-3.5 sm:px-8 text-center max-w-[150px] sm:max-w-[180px] transition-all duration-300 rounded-sm font-sans"
+                              >
+                                 Buy Now
+                              </Link>
+                           </div>
+                           {/* Right: Large Image */}
+                           <div className="w-full md:w-[40%] h-[180px] sm:h-[220px] md:h-full relative overflow-hidden bg-neutral-950">
+                              <img 
+                                 src={getMediaUrl(gridAds2.image)} 
+                                 alt={gridAds2.title} 
+                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
+                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                              />
+                           </div>
+                        </div>
+                     )}
+
+                     {/* Remaining products (Products 21+) */}
+                     {newArrivals.length > 20 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                           {newArrivals.slice(20).map((product: any) => (
+                              <ProductCard key={product.id} product={product} />
+                           ))}
+                        </div>
+                     )}
+                  </div>
+               )}
             </div>
          </section>
 
