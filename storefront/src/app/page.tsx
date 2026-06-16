@@ -454,49 +454,49 @@ export default function Home() {
                            <img
                               src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
                               alt={promo.title}
-                              className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center opacity-50 group-hover:scale-[1.02] transition-transform duration-[3s]"
+                              className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center opacity-85 group-hover:scale-[1.02] transition-transform duration-[3s]"
                            />
                         </Link>
-                        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent pointer-events-none" />
                         
                         <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-12">
                            {/* Text Content */}
                            <div className="lg:w-1/2 text-white pt-12 sm:pt-16 lg:pt-0 z-10">
-                              <div className="flex items-center gap-4 mb-3 sm:mb-5">
-                                 <span className="h-[1.5px] w-12 bg-accent" />
-                                 <span className="text-[10px] font-bold tracking-[0.3em] text-accent uppercase font-sans">{promo.discount_type}</span>
+                              <div className="flex items-center gap-4 mb-2 sm:mb-3">
+                                 <span className="h-[1.5px] w-8 bg-accent" />
+                                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-accent uppercase font-sans">{promo.discount_type}</span>
                               </div>
-                              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-normal mb-3 sm:mb-4 leading-none tracking-wide uppercase">
+                              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif font-normal mb-2 leading-tight tracking-wide uppercase">
                                  {promo.title}
                               </h2>
-                              <p className="text-xs sm:text-[13px] md:text-sm text-neutral-300 max-w-md mb-3 sm:mb-4 leading-relaxed font-light tracking-wide opacity-80 line-clamp-2">
+                              <p className="text-[10px] sm:text-[11px] md:text-xs text-neutral-300 max-w-xs mb-3 leading-relaxed font-light tracking-wide opacity-80 line-clamp-2">
                                  {promo.subtitle || 'Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.'}
                               </p>
 
                               {/* Dynamic Offer Rules / Details Block */}
-                              <div className="mb-3 sm:mb-5 p-3 sm:p-4 bg-white/5 border border-white/10 rounded-sm max-w-md backdrop-blur-md">
-                                 <div className="text-[10px] font-black tracking-widest text-yellow-500 uppercase mb-2">Offer Rules & Details</div>
-                                 <div className="flex flex-col gap-2.5 text-xs">
+                              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white/5 border border-white/10 rounded-sm max-w-xs backdrop-blur-md">
+                                 <div className="text-[8px] sm:text-[9px] font-bold tracking-widest text-yellow-500 uppercase mb-1.5">Offer Rules & Details</div>
+                                 <div className="flex flex-col gap-1.5 text-[10px] sm:text-[11px]">
                                     {promo.discount_type?.toLowerCase().includes('bogo') ? (
                                        <>
                                           <div className="flex items-start">
-                                             <span className="text-neutral-400 font-bold uppercase w-20 flex-shrink-0">Buy:</span>
+                                             <span className="text-neutral-400 font-bold uppercase w-16 flex-shrink-0">Buy:</span>
                                              <span className="text-white font-medium uppercase tracking-wide">{promo.buy_skus?.map((sku: string) => getSkuProductName(sku, promo.products || [])).join(', ')}</span>
                                           </div>
                                           <div className="flex items-start">
-                                             <span className="text-green-400 font-bold uppercase w-20 flex-shrink-0">Get Free:</span>
+                                             <span className="text-green-400 font-bold uppercase w-16 flex-shrink-0">Get Free:</span>
                                              <span className="text-white font-medium uppercase tracking-wide">{promo.get_skus?.map((sku: string) => getSkuProductName(sku, promo.products || [])).join(', ')}</span>
                                           </div>
                                        </>
                                     ) : promo.discount_type?.toLowerCase().includes('percent') || promo.discount_type?.includes('%') ? (
                                        <>
                                           <div className="flex items-start">
-                                             <span className="text-neutral-400 font-bold uppercase w-28 flex-shrink-0">Benefit:</span>
+                                             <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
                                              <span className="text-white font-medium">{promo.discount_percentage}% OFF</span>
                                           </div>
                                           {promo.min_purchase_amount > 0 && (
                                              <div className="flex items-start">
-                                                <span className="text-neutral-400 font-bold uppercase w-28 flex-shrink-0">Min Purchase:</span>
+                                                <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
                                                 <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
                                              </div>
                                           )}
@@ -504,12 +504,12 @@ export default function Home() {
                                     ) : (
                                        <>
                                           <div className="flex items-start">
-                                             <span className="text-neutral-400 font-bold uppercase w-28 flex-shrink-0">Benefit:</span>
+                                             <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
                                              <span className="text-white font-medium">Flat ₹{promo.flat_discount_amount?.toLocaleString()} OFF</span>
                                           </div>
                                           {promo.min_purchase_amount > 0 && (
                                              <div className="flex items-start">
-                                                <span className="text-neutral-400 font-bold uppercase w-28 flex-shrink-0">Min Purchase:</span>
+                                                <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
                                                 <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
                                              </div>
                                           )}
@@ -518,16 +518,16 @@ export default function Home() {
                                  </div>
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-4 sm:gap-8 font-sans">
+                              <div className="flex flex-wrap items-center gap-3 sm:gap-6 font-sans">
                                  <Link 
                                     href="/offers"
-                                    className="group flex items-center gap-3 bg-white hover:bg-accent text-black hover:text-white px-5 py-2.5 sm:px-8 sm:py-3.5 text-[9px] sm:text-[10px] font-bold tracking-[0.25em] uppercase transition-all duration-500 shadow-2xl"
+                                    className="group flex items-center gap-2 bg-white hover:bg-accent text-black hover:text-white px-4 py-2 sm:px-6 sm:py-2.5 text-[8px] sm:text-[9px] font-bold tracking-[0.2em] uppercase transition-all duration-500 shadow-lg"
                                  >
                                     Explore Curation
                                     <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                  </Link>
-                                 <div className="text-[9px] sm:text-[11px] font-black tracking-[0.4em] text-neutral-400">
-                                    PROMO: <span className="text-white border-b border-white/20 pb-1 ml-2 sm:ml-3 font-mono">{promo.code}</span>
+                                 <div className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-neutral-400">
+                                    PROMO: <span className="text-white border-b border-white/20 pb-0.5 ml-1 sm:ml-2 font-mono">{promo.code}</span>
                                  </div>
                               </div>
                            </div>
