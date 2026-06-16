@@ -266,10 +266,17 @@ export default function Home() {
                      className={`absolute inset-0 w-full h-full transition-all duration-[1500ms] ease-in-out transform ${idx === currentSlide ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'
                         }`}
                   >
+                     {/* Desktop/Web display */}
                      <img
                         src={slideImage}
                         alt={slideTitle}
-                        className="absolute inset-0 w-full h-full object-contain md:object-cover object-center"
+                        className="hidden md:block absolute inset-0 w-full h-full object-contain md:object-cover object-center"
+                     />
+                     {/* Mobile display - fall back to Web image if mobile image is blank */}
+                     <img
+                        src={getMediaUrl(slide.image_mobile || slide.banner_url_mobile || slide.banner_url || slide.image)}
+                        alt={slideTitle}
+                        className="block md:hidden absolute inset-0 w-full h-full object-cover object-center"
                      />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
@@ -654,10 +661,18 @@ export default function Home() {
                                  <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
                                     {/* Left half: Image */}
                                     <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                                       {/* Desktop image */}
                                        <img 
                                           src={getMediaUrl(slide.left_image)} 
                                           alt={slide.left_title} 
-                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                          className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                       />
+                                       {/* Mobile image */}
+                                       <img 
+                                          src={getMediaUrl(slide.left_image_mobile || slide.left_image)} 
+                                          alt={slide.left_title} 
+                                          className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
                                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                                        />
                                     </div>
@@ -681,10 +696,18 @@ export default function Home() {
                                  <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
                                     {/* Left half: Image */}
                                     <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                                       {/* Desktop image */}
                                        <img 
                                           src={getMediaUrl(slide.right_image)} 
                                           alt={slide.right_title} 
-                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                          className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                       />
+                                       {/* Mobile image */}
+                                       <img 
+                                          src={getMediaUrl(slide.right_image_mobile || slide.right_image)} 
+                                          alt={slide.right_title} 
+                                          className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
                                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                                        />
                                     </div>
@@ -758,10 +781,18 @@ export default function Home() {
                                  </div>
                                  {/* Right: Large Image */}
                                  <div className="w-full md:w-[40%] h-[180px] sm:h-[220px] md:h-full relative overflow-hidden bg-neutral-950">
+                                    {/* Desktop image */}
                                     <img 
                                        src={getMediaUrl(slide.image)} 
                                        alt={slide.title} 
-                                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
+                                       className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
+                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                    />
+                                    {/* Mobile image */}
+                                    <img 
+                                       src={getMediaUrl(slide.image_mobile || slide.image)} 
+                                       alt={slide.title} 
+                                       className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                                     />
                                  </div>
@@ -813,10 +844,18 @@ export default function Home() {
                         <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
                            {/* Left half: Image */}
                            <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                              {/* Desktop image */}
                               <img 
                                  src={getMediaUrl(slide.left_image)} 
                                  alt={slide.left_title} 
-                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                 className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                              />
+                              {/* Mobile image */}
+                              <img 
+                                 src={getMediaUrl(slide.left_image_mobile || slide.left_image)} 
+                                 alt={slide.left_title} 
+                                 className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
                                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                               />
                            </div>
@@ -840,10 +879,18 @@ export default function Home() {
                         <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
                            {/* Left half: Image */}
                            <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                              {/* Desktop image */}
                               <img 
                                  src={getMediaUrl(slide.right_image)} 
                                  alt={slide.right_title} 
-                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                 className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                              />
+                              {/* Mobile image */}
+                              <img 
+                                 src={getMediaUrl(slide.right_image_mobile || slide.right_image)} 
+                                 alt={slide.right_title} 
+                                 className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
                                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                               />
                            </div>
@@ -1048,10 +1095,17 @@ export default function Home() {
                      
                      {/* Column 1: For Him */}
                      <div className="relative h-[340px] sm:h-[380px] md:h-[420px] group overflow-hidden bg-neutral-900 rounded shadow-xl">
+                        {/* Desktop image */}
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.men)} 
                            alt="Shop Men" 
-                           className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
+                           className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
+                        />
+                        {/* Mobile image */}
+                        <img 
+                           src={getMediaUrl(cmsLayout?.split_banners?.men_mobile || cmsLayout?.split_banners?.men)} 
+                           alt="Shop Men" 
+                           className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
                         />
                         <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-1000" />
                         <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center pb-12">
@@ -1116,10 +1170,17 @@ export default function Home() {
 
                      {/* Column 3: For Her */}
                      <div className="relative h-[340px] sm:h-[380px] md:h-[420px] group overflow-hidden bg-neutral-900 rounded shadow-xl">
+                        {/* Desktop image */}
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.women)} 
                            alt="Shop Women" 
-                           className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
+                           className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
+                        />
+                        {/* Mobile image */}
+                        <img 
+                           src={getMediaUrl(cmsLayout?.split_banners?.women_mobile || cmsLayout?.split_banners?.women)} 
+                           alt="Shop Women" 
+                           className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
                         />
                         <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-1000" />
                         <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center pb-12">
@@ -1141,7 +1202,10 @@ export default function Home() {
             /* Fallback Split Banner Promos when no loyalty rewards are available */
             <section className="grid grid-cols-1 md:grid-cols-2 gap-1 py-1 bg-white">
                <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
-                  <img src={getMediaUrl(cmsLayout?.split_banners?.men)} alt="Shop Men" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  {/* Desktop image */}
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.men)} alt="Shop Men" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  {/* Mobile image */}
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.men_mobile || cmsLayout?.split_banners?.men)} alt="Shop Men" className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
                      <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Refined & Bold</h3>
@@ -1153,7 +1217,10 @@ export default function Home() {
                </div>
 
                <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
-                  <img src={getMediaUrl(cmsLayout?.split_banners?.women)} alt="Shop Women" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  {/* Desktop image */}
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.women)} alt="Shop Women" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  {/* Mobile image */}
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.women_mobile || cmsLayout?.split_banners?.women)} alt="Shop Women" className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
                      <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Elegant & Sweet</h3>

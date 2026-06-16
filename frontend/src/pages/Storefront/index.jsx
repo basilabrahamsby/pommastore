@@ -16,11 +16,13 @@ export default function StorefrontCMS() {
 
   // Composite CMS state
   const [heroSlides, setHeroSlides] = useState([
-    { image: '/hero-1.png', title: '', subtitle: '', desc: '', cta: '' }
+    { image: '/hero-1.png', image_mobile: '', title: '', subtitle: '', desc: '', cta: '' }
   ])
   const [splitBanners, setSplitBanners] = useState({
     men: '/banner-men.png',
-    women: '/banner-women.png'
+    men_mobile: '',
+    women: '/banner-women.png',
+    women_mobile: ''
   })
   const [midQuote, setMidQuote] = useState({
     text: '',
@@ -53,11 +55,13 @@ export default function StorefrontCMS() {
   const [gridAds1, setGridAds1] = useState([
     {
       left_image: '',
+      left_image_mobile: '',
       left_title: '',
       left_subtitle: '',
       left_desc: '',
       left_product_id: '',
       right_image: '',
+      right_image_mobile: '',
       right_title: '',
       right_subtitle: '',
       right_desc: '',
@@ -67,6 +71,7 @@ export default function StorefrontCMS() {
   const [gridAds2, setGridAds2] = useState([
     {
       image: '',
+      image_mobile: '',
       title: '',
       subtitle: '',
       desc: '',
@@ -76,11 +81,13 @@ export default function StorefrontCMS() {
   const [gridAds3, setGridAds3] = useState([
     {
       left_image: '',
+      left_image_mobile: '',
       left_title: '',
       left_subtitle: '',
       left_desc: '',
       left_product_id: '',
       right_image: '',
+      right_image_mobile: '',
       right_title: '',
       right_subtitle: '',
       right_desc: '',
@@ -107,16 +114,74 @@ export default function StorefrontCMS() {
       const res = await api.get('/settings')
       const layout = res.data.storefront_layout
       if (layout) {
-        if (layout.hero_slides) setHeroSlides(layout.hero_slides)
-        if (layout.split_banners) setSplitBanners(layout.split_banners)
+        if (layout.hero_slides) {
+          setHeroSlides(layout.hero_slides.map(slide => ({
+            image: slide.image || '',
+            image_mobile: slide.image_mobile || '',
+            title: slide.title || '',
+            subtitle: slide.subtitle || '',
+            desc: slide.desc || '',
+            cta: slide.cta || ''
+          })))
+        }
+        if (layout.split_banners) {
+          setSplitBanners({
+            men: layout.split_banners.men || '',
+            men_mobile: layout.split_banners.men_mobile || '',
+            women: layout.split_banners.women || '',
+            women_mobile: layout.split_banners.women_mobile || ''
+          })
+        }
         if (layout.mid_quote) setMidQuote(layout.mid_quote)
         if (layout.house_favorites) setHouseFavorites(layout.house_favorites)
         if (layout.footer_settings) setFooterSettings(prev => ({ ...prev, ...layout.footer_settings }))
         if (layout.trust_badges) setTrustBadges(layout.trust_badges)
         if (layout.free_shipping_limit !== undefined) setFreeShippingLimit(layout.free_shipping_limit)
-        if (layout.grid_ads_1) setGridAds1(Array.isArray(layout.grid_ads_1) ? layout.grid_ads_1 : [layout.grid_ads_1])
-        if (layout.grid_ads_2) setGridAds2(Array.isArray(layout.grid_ads_2) ? layout.grid_ads_2 : [layout.grid_ads_2])
-        if (layout.grid_ads_3) setGridAds3(Array.isArray(layout.grid_ads_3) ? layout.grid_ads_3 : [layout.grid_ads_3])
+        if (layout.grid_ads_1) {
+          const ads1 = Array.isArray(layout.grid_ads_1) ? layout.grid_ads_1 : [layout.grid_ads_1]
+          setGridAds1(ads1.map(slide => ({
+            left_image: slide.left_image || '',
+            left_image_mobile: slide.left_image_mobile || '',
+            left_title: slide.left_title || '',
+            left_subtitle: slide.left_subtitle || '',
+            left_desc: slide.left_desc || '',
+            left_product_id: slide.left_product_id || '',
+            right_image: slide.right_image || '',
+            right_image_mobile: slide.right_image_mobile || '',
+            right_title: slide.right_title || '',
+            right_subtitle: slide.right_subtitle || '',
+            right_desc: slide.right_desc || '',
+            right_product_id: slide.right_product_id || ''
+          })))
+        }
+        if (layout.grid_ads_2) {
+          const ads2 = Array.isArray(layout.grid_ads_2) ? layout.grid_ads_2 : [layout.grid_ads_2]
+          setGridAds2(ads2.map(slide => ({
+            image: slide.image || '',
+            image_mobile: slide.image_mobile || '',
+            title: slide.title || '',
+            subtitle: slide.subtitle || '',
+            desc: slide.desc || '',
+            product_id: slide.product_id || ''
+          })))
+        }
+        if (layout.grid_ads_3) {
+          const ads3 = Array.isArray(layout.grid_ads_3) ? layout.grid_ads_3 : [layout.grid_ads_3]
+          setGridAds3(ads3.map(slide => ({
+            left_image: slide.left_image || '',
+            left_image_mobile: slide.left_image_mobile || '',
+            left_title: slide.left_title || '',
+            left_subtitle: slide.left_subtitle || '',
+            left_desc: slide.left_desc || '',
+            left_product_id: slide.left_product_id || '',
+            right_image: slide.right_image || '',
+            right_image_mobile: slide.right_image_mobile || '',
+            right_title: slide.right_title || '',
+            right_subtitle: slide.right_subtitle || '',
+            right_desc: slide.right_desc || '',
+            right_product_id: slide.right_product_id || ''
+          })))
+        }
       }
     } catch (err) {
       console.warn("Settings defaults fallback engaged.")
@@ -148,7 +213,7 @@ export default function StorefrontCMS() {
   }
 
   const addHeroSlide = () => {
-    setHeroSlides([...heroSlides, { image: '', title: '', subtitle: '', desc: '', cta: '' }])
+    setHeroSlides([...heroSlides, { image: '', image_mobile: '', title: '', subtitle: '', desc: '', cta: '' }])
   }
 
   const removeHeroSlide = (index) => {
@@ -164,11 +229,13 @@ export default function StorefrontCMS() {
   const addGridAds1Slide = () => {
     setGridAds1([...gridAds1, {
       left_image: '',
+      left_image_mobile: '',
       left_title: '',
       left_subtitle: '',
       left_desc: '',
       left_product_id: '',
       right_image: '',
+      right_image_mobile: '',
       right_title: '',
       right_subtitle: '',
       right_desc: '',
@@ -193,6 +260,7 @@ export default function StorefrontCMS() {
   const addGridAds2Slide = () => {
     setGridAds2([...gridAds2, {
       image: '',
+      image_mobile: '',
       title: '',
       subtitle: '',
       desc: '',
@@ -217,11 +285,13 @@ export default function StorefrontCMS() {
   const addGridAds3Slide = () => {
     setGridAds3([...gridAds3, {
       left_image: '',
+      left_image_mobile: '',
       left_title: '',
       left_subtitle: '',
       left_desc: '',
       left_product_id: '',
       right_image: '',
+      right_image_mobile: '',
       right_title: '',
       right_subtitle: '',
       right_desc: '',
@@ -310,26 +380,50 @@ export default function StorefrontCMS() {
                 <div key={index} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, position: 'relative' }}>
                    <div className="grid-2" style={{ gap: 24 }}>
                       {/* Image column */}
-                      <div>
-                         <label className="form-label">Asset Backdrop (Recommended 1920x1080)</label>
-                         <div style={{ height: 180, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', group: 'hover' }}>
-                            {slide.image ? (
-                               <>
-                                  <img src={getMediaUrl(slide.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
-                                     <label style={{ cursor: 'pointer', padding: '8px 16px', background: '#fff', color: '#000', fontSize: '0.8rem', fontWeight: 700, borderRadius: 4 }}>
-                                        Change Image
-                                        <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateHeroSlide(index, 'image', url))} />
-                                     </label>
-                                  </div>
-                               </>
-                            ) : (
-                               <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                  <ImageIcon size={30} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
-                                  <div style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>Upload Asset Binary</div>
-                                  <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateHeroSlide(index, 'image', url))} />
-                               </label>
-                            )}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                         <div>
+                            <label className="form-label">Web Image (Recommended 1920x1080 / 21:9)</label>
+                            <div style={{ height: 140, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                               {slide.image ? (
+                                  <>
+                                     <img src={getMediaUrl(slide.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                        <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                           Change Web Image
+                                           <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateHeroSlide(index, 'image', url))} />
+                                        </label>
+                                     </div>
+                                  </>
+                               ) : (
+                                  <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                     <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                                     <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Web</div>
+                                     <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateHeroSlide(index, 'image', url))} />
+                                  </label>
+                               )}
+                            </div>
+                         </div>
+                         <div>
+                            <label className="form-label">Mobile Image (Recommended 1080x1440 / 3:4)</label>
+                            <div style={{ height: 140, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                               {slide.image_mobile ? (
+                                  <>
+                                     <img src={getMediaUrl(slide.image_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                        <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                           Change Mobile Image
+                                           <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateHeroSlide(index, 'image_mobile', url))} />
+                                        </label>
+                                     </div>
+                                  </>
+                               ) : (
+                                  <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                     <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                                     <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Mobile</div>
+                                     <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateHeroSlide(index, 'image_mobile', url))} />
+                                  </label>
+                               )}
+                            </div>
                          </div>
                       </div>
                       
@@ -373,22 +467,47 @@ export default function StorefrontCMS() {
                  <h3 style={{ color: '#fff', fontWeight: 700, margin: 0 }}>Gender Splice: Masculine</h3>
               </div>
               
-              <div style={{ height: 250, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden' }}>
-                 {splitBanners.men ? (
-                    <>
-                       <img src={getMediaUrl(splitBanners.men)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                       <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Upload size={12} /> Override Image
-                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men: url })))} />
-                       </label>
-                    </>
-                 ) : (
-                    <label style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                       <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
-                       <div style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>Select File Binary</div>
-                       <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men: url })))} />
-                    </label>
-                 )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                 <div>
+                    <label className="form-label">Web (Recommended 1200x800 / 3:2)</label>
+                    <div style={{ height: 180, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       {splitBanners.men ? (
+                          <>
+                             <img src={getMediaUrl(splitBanners.men)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                             <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Upload size={12} /> Web
+                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men: url })))} />
+                             </label>
+                          </>
+                       ) : (
+                          <label style={{ height: '100%', display: 'flex', flexDirection: 'column', fontWeight: 700, alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                             <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                             <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Select Web</div>
+                             <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men: url })))} />
+                          </label>
+                       )}
+                    </div>
+                 </div>
+                 <div>
+                    <label className="form-label">Mobile (Recommended 800x1200 / 2:3)</label>
+                    <div style={{ height: 180, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       {splitBanners.men_mobile ? (
+                          <>
+                             <img src={getMediaUrl(splitBanners.men_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                             <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Upload size={12} /> Mobile
+                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men_mobile: url })))} />
+                             </label>
+                          </>
+                       ) : (
+                          <label style={{ height: '100%', display: 'flex', flexDirection: 'column', fontWeight: 700, alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                             <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                             <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Select Mobile</div>
+                             <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, men_mobile: url })))} />
+                          </label>
+                       )}
+                    </div>
+                 </div>
               </div>
            </div>
 
@@ -399,22 +518,47 @@ export default function StorefrontCMS() {
                  <h3 style={{ color: '#fff', fontWeight: 700, margin: 0 }}>Gender Splice: Feminine</h3>
               </div>
               
-              <div style={{ height: 250, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden' }}>
-                 {splitBanners.women ? (
-                    <>
-                       <img src={getMediaUrl(splitBanners.women)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                       <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Upload size={12} /> Override Image
-                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women: url })))} />
-                       </label>
-                    </>
-                 ) : (
-                    <label style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                       <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
-                       <div style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>Select File Binary</div>
-                       <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women: url })))} />
-                    </label>
-                 )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                 <div>
+                    <label className="form-label">Web (Recommended 1200x800 / 3:2)</label>
+                    <div style={{ height: 180, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       {splitBanners.women ? (
+                          <>
+                             <img src={getMediaUrl(splitBanners.women)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                             <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Upload size={12} /> Web
+                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women: url })))} />
+                             </label>
+                          </>
+                       ) : (
+                          <label style={{ height: '100%', display: 'flex', flexDirection: 'column', fontWeight: 700, alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                             <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                             <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Select Web</div>
+                             <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women: url })))} />
+                          </label>
+                       )}
+                    </div>
+                 </div>
+                 <div>
+                    <label className="form-label">Mobile (Recommended 800x1200 / 2:3)</label>
+                    <div style={{ height: 180, background: 'rgba(0,0,0,0.2)', borderRadius: 12, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       {splitBanners.women_mobile ? (
+                          <>
+                             <img src={getMediaUrl(splitBanners.women_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                             <label style={{ position: 'absolute', bottom: 12, right: 12, background: 'var(--gold)', color: '#000', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Upload size={12} /> Mobile
+                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women_mobile: url })))} />
+                             </label>
+                          </>
+                       ) : (
+                          <label style={{ height: '100%', display: 'flex', flexDirection: 'column', fontWeight: 700, alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                             <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                             <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Select Mobile</div>
+                             <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setSplitBanners(prev => ({ ...prev, women_mobile: url })))} />
+                          </label>
+                       )}
+                    </div>
+                 </div>
               </div>
            </div>
         </div>
@@ -538,24 +682,51 @@ export default function StorefrontCMS() {
                               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Left Banner Card</span>
                               
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                 <div style={{ height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {slide.left_image ? (
-                                       <>
-                                          <img src={getMediaUrl(slide.left_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
-                                             <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
-                                                Change Image
+                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Web (Recommended 1000x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.left_image ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.left_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Web
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'left_image', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Web</div>
                                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'left_image', url))} />
                                              </label>
-                                          </div>
-                                       </>
-                                    ) : (
-                                       <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                          <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
-                                          <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
-                                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'left_image', url))} />
-                                       </label>
-                                    )}
+                                          )}
+                                       </div>
+                                    </div>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Mobile (Recommended 800x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.left_image_mobile ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.left_image_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Mobile
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'left_image_mobile', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Mobile</div>
+                                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'left_image_mobile', url))} />
+                                             </label>
+                                          )}
+                                       </div>
+                                    </div>
                                  </div>
 
                                  <div className="form-group" style={{ margin: 0 }}>
@@ -587,24 +758,51 @@ export default function StorefrontCMS() {
                               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Right Banner Card</span>
                               
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                 <div style={{ height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {slide.right_image ? (
-                                       <>
-                                          <img src={getMediaUrl(slide.right_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
-                                             <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
-                                                Change Image
+                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Web (Recommended 1000x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.right_image ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.right_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Web
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'right_image', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Web</div>
                                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'right_image', url))} />
                                              </label>
-                                          </div>
-                                       </>
-                                    ) : (
-                                       <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                          <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
-                                          <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
-                                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'right_image', url))} />
-                                       </label>
-                                    )}
+                                          )}
+                                       </div>
+                                    </div>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Mobile (Recommended 800x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.right_image_mobile ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.right_image_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Mobile
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'right_image_mobile', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Mobile</div>
+                                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds1Slide(index, 'right_image_mobile', url))} />
+                                             </label>
+                                          )}
+                                       </div>
+                                    </div>
                                  </div>
 
                                  <div className="form-group" style={{ margin: 0 }}>
@@ -684,26 +882,50 @@ export default function StorefrontCMS() {
                            </div>
 
                            {/* Right: Widescreen Image */}
-                           <div>
-                              <label className="form-label">Banner Image Backdrop (Recommended 1200x500)</label>
-                              <div style={{ height: 210, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                 {slide.image ? (
-                                    <>
-                                       <img src={getMediaUrl(slide.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
-                                          <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
-                                             Change Image
-                                             <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds2Slide(index, 'image', url))} />
-                                          </label>
-                                       </div>
-                                    </>
-                                 ) : (
-                                    <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                       <ImageIcon size={30} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
-                                       <div style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>Upload Image</div>
-                                       <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds2Slide(index, 'image', url))} />
-                                    </label>
-                                 )}
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                              <div>
+                                 <label className="form-label">Web Image (Recommended 1200x500 / 24:10)</label>
+                                 <div style={{ height: 110, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {slide.image ? (
+                                       <>
+                                          <img src={getMediaUrl(slide.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                             <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                                Web Image
+                                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds2Slide(index, 'image', url))} />
+                                             </label>
+                                          </div>
+                                       </>
+                                    ) : (
+                                       <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                          <ImageIcon size={20} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
+                                          <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Web Image</div>
+                                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds2Slide(index, 'image', url))} />
+                                       </label>
+                                    )}
+                                 </div>
+                              </div>
+                              <div>
+                                 <label className="form-label">Mobile Image (Recommended 800x800 or 800x1000)</label>
+                                 <div style={{ height: 110, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {slide.image_mobile ? (
+                                       <>
+                                          <img src={getMediaUrl(slide.image_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                             <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                                Mobile Image
+                                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds2Slide(index, 'image_mobile', url))} />
+                                             </label>
+                                          </div>
+                                       </>
+                                    ) : (
+                                       <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                          <ImageIcon size={20} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
+                                          <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Mobile Image</div>
+                                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds2Slide(index, 'image_mobile', url))} />
+                                       </label>
+                                    )}
+                                 </div>
                               </div>
                            </div>
                         </div>
@@ -737,28 +959,53 @@ export default function StorefrontCMS() {
                            {/* Left Ad Banner */}
                            <div style={{ background: 'rgba(0,0,0,0.15)', padding: 18, borderRadius: 12, border: '1px solid var(--border)' }}>
                               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Left Banner Card</span>
-                              
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                 <div style={{ height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {slide.left_image ? (
-                                       <>
-                                          <img src={getMediaUrl(slide.left_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
-                                             <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
-                                                Change Image
+                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Web (Recommended 1000x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.left_image ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.left_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Web
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'left_image', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Web</div>
                                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'left_image', url))} />
                                              </label>
-                                          </div>
-                                       </>
-                                    ) : (
-                                       <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                          <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
-                                          <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
-                                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'left_image', url))} />
-                                       </label>
-                                    )}
+                                          )}
+                                       </div>
+                                    </div>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Mobile (Recommended 800x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.left_image_mobile ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.left_image_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Mobile
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'left_image_mobile', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Mobile</div>
+                                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'left_image_mobile', url))} />
+                                             </label>
+                                          )}
+                                       </div>
+                                    </div>
                                  </div>
-
                                  <div className="form-group" style={{ margin: 0 }}>
                                     <label className="form-label">Subtitle (Accent)</label>
                                     <input className="input input-sm" placeholder="Exquisite Collection" value={slide.left_subtitle || ''} onChange={e => updateGridAds3Slide(index, 'left_subtitle', e.target.value)} />
@@ -788,26 +1035,52 @@ export default function StorefrontCMS() {
                               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Right Banner Card</span>
                               
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                 <div style={{ height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {slide.right_image ? (
-                                       <>
-                                          <img src={getMediaUrl(slide.right_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
-                                             <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
-                                                Change Image
+                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Web (Recommended 1000x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.right_image ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.right_image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Web
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'right_image', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Web</div>
                                                 <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'right_image', url))} />
                                              </label>
-                                          </div>
-                                       </>
-                                    ) : (
-                                       <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                          <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
-                                          <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
-                                          <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'right_image', url))} />
-                                       </label>
-                                    )}
+                                          )}
+                                       </div>
+                                    </div>
+                                    <div>
+                                       <label className="form-label" style={{ fontSize: '0.65rem' }}>Mobile (Recommended 800x1000)</label>
+                                       <div style={{ height: 100, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {slide.right_image_mobile ? (
+                                             <>
+                                                <img src={getMediaUrl(slide.right_image_mobile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                                   <label style={{ cursor: 'pointer', padding: '4px 8px', background: '#fff', color: '#000', fontSize: '0.65rem', fontWeight: 700, borderRadius: 4 }}>
+                                                      Mobile
+                                                      <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'right_image_mobile', url))} />
+                                                   </label>
+                                                </div>
+                                             </>
+                                          ) : (
+                                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <ImageIcon size={18} style={{ color: 'var(--text-muted)', marginBottom: 2 }} />
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>Mobile</div>
+                                                <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGridAds3Slide(index, 'right_image_mobile', url))} />
+                                             </label>
+                                          )}
+                                       </div>
+                                    </div>
                                  </div>
-
                                  <div className="form-group" style={{ margin: 0 }}>
                                     <label className="form-label">Subtitle (Accent)</label>
                                     <input className="input input-sm" placeholder="Prestige Selection" value={slide.right_subtitle || ''} onChange={e => updateGridAds3Slide(index, 'right_subtitle', e.target.value)} />
