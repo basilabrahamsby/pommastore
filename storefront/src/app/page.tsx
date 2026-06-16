@@ -250,7 +250,7 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-         <section className="relative w-full h-[240px] sm:h-[350px] md:h-[420px] lg:h-[480px] bg-black overflow-hidden">
+         <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[350px] md:h-[420px] lg:h-[480px] bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
@@ -280,7 +280,7 @@ export default function Home() {
                      />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
-                     <div className="absolute inset-0 flex items-end pb-4 sm:pb-8 md:pb-12">
+                     <div className="absolute inset-0 flex items-end pb-12 sm:pb-14 md:pb-16">
                         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
                            <span className={`text-[9px] md:text-xs font-semibold tracking-[0.3em] text-accent uppercase mb-1 md:mb-3 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-montserrat`}>
@@ -757,16 +757,16 @@ export default function Home() {
 
                      {/* Dynamic Block 2: Full-Width Ad Banner Carousel */}
                      {newArrivals.length > 10 && (
-                        <div className="relative w-full min-h-[440px] md:min-h-0 md:h-[320px] mb-16 overflow-hidden">
+                        <div className="relative w-full h-[440px] md:min-h-0 md:h-[320px] mb-16 overflow-hidden">
                            {gridAds2ToUse.map((slide: any, idx: number) => (
                               <div
                                  key={idx}
-                                 className={`absolute inset-0 w-full h-full transition-all duration-[1200ms] ease-in-out w-full relative min-h-[440px] md:min-h-0 md:h-full bg-neutral-900 overflow-hidden group rounded-sm flex flex-col md:flex-row border border-neutral-800 ${
+                                 className={`absolute inset-0 w-full h-full transition-all duration-[1200ms] ease-in-out bg-neutral-900 overflow-hidden group rounded-sm flex flex-col md:flex-row border border-neutral-800 ${
                                     idx === currentAds2 ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-98 z-0 pointer-events-none'
                                  }`}
                               >
                                  {/* Left: Text Content */}
-                                 <div className="w-full md:w-[60%] bg-[#8b5a2b] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
+                                 <div className="w-full md:w-[60%] h-[260px] md:h-full bg-[#8b5a2b] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
                                     <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-white/75 uppercase mb-2 block font-sans">{slide.subtitle}</span>
                                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide uppercase leading-none mb-3">{slide.title}</h2>
                                     <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed font-light mb-5 sm:mb-6 tracking-wide max-w-xl line-clamp-3">
