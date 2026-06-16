@@ -40,6 +40,9 @@ export default function Home() {
    const [cmsLayout, setCmsLayout] = useState<any>(null);
    const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
    const [seenCategories, setSeenCategories] = useState<string[]>([]);
+   const [currentAds1, setCurrentAds1] = useState(0);
+   const [currentAds2, setCurrentAds2] = useState(0);
+   const [currentAds3, setCurrentAds3] = useState(0);
 
    useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -73,6 +76,33 @@ export default function Home() {
       }, 6000);
       return () => clearInterval(interval);
    }, [heroSlidesToUse]);
+
+   useEffect(() => {
+      const len = Array.isArray(cmsLayout?.grid_ads_1) ? cmsLayout.grid_ads_1.length : 1;
+      if (len <= 1) return;
+      const interval = setInterval(() => {
+         setCurrentAds1((prev) => (prev + 1) % len);
+      }, 6000);
+      return () => clearInterval(interval);
+   }, [cmsLayout?.grid_ads_1]);
+
+   useEffect(() => {
+      const len = Array.isArray(cmsLayout?.grid_ads_2) ? cmsLayout.grid_ads_2.length : 1;
+      if (len <= 1) return;
+      const interval = setInterval(() => {
+         setCurrentAds2((prev) => (prev + 1) % len);
+      }, 6000);
+      return () => clearInterval(interval);
+   }, [cmsLayout?.grid_ads_2]);
+
+   useEffect(() => {
+      const len = Array.isArray(cmsLayout?.grid_ads_3) ? cmsLayout.grid_ads_3.length : 1;
+      if (len <= 1) return;
+      const interval = setInterval(() => {
+         setCurrentAds3((prev) => (prev + 1) % len);
+      }, 6000);
+      return () => clearInterval(interval);
+   }, [cmsLayout?.grid_ads_3]);
 
    useEffect(() => {
       const fetchHomeData = async () => {
@@ -129,39 +159,91 @@ export default function Home() {
       return `/shop?product_id=${productId}`;
    };
 
-    const gridAds1 = {
-       left_image: cmsLayout?.grid_ads_1?.left_image || '/model-banner-1.png',
-       left_title: cmsLayout?.grid_ads_1?.left_title || 'Exclusive Fragrance',
-       left_subtitle: cmsLayout?.grid_ads_1?.left_subtitle || 'Exquisite Collection',
-       left_desc: cmsLayout?.grid_ads_1?.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
-       left_product_id: cmsLayout?.grid_ads_1?.left_product_id || '',
-       right_image: cmsLayout?.grid_ads_1?.right_image || '/model-banner-2.png',
-       right_title: cmsLayout?.grid_ads_1?.right_title || 'Premium Fragrances',
-       right_subtitle: cmsLayout?.grid_ads_1?.right_subtitle || 'Prestige Selection',
-       right_desc: cmsLayout?.grid_ads_1?.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
-       right_product_id: cmsLayout?.grid_ads_1?.right_product_id || ''
-    };
+    // Resolve array layout for Grid Ads 1
+    const gridAds1Raw = cmsLayout?.grid_ads_1;
+    const gridAds1List: any[] = Array.isArray(gridAds1Raw) 
+       ? gridAds1Raw 
+       : (gridAds1Raw && typeof gridAds1Raw === 'object' && Object.keys(gridAds1Raw).length > 0)
+          ? [gridAds1Raw] 
+          : [];
+    
+    const gridAds1ToUse = gridAds1List.length > 0 ? gridAds1List.map((item: any) => ({
+       left_image: item.left_image || '/model-banner-1.png',
+       left_title: item.left_title || 'Exclusive Fragrance',
+       left_subtitle: item.left_subtitle || 'Exquisite Collection',
+       left_desc: item.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_product_id: item.left_product_id || '',
+       right_image: item.right_image || '/model-banner-2.png',
+       right_title: item.right_title || 'Premium Fragrances',
+       right_subtitle: item.right_subtitle || 'Prestige Selection',
+       right_desc: item.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_product_id: item.right_product_id || ''
+    })) : [{
+       left_image: '/model-banner-1.png',
+       left_title: 'Exclusive Fragrance',
+       left_subtitle: 'Exquisite Collection',
+       left_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_product_id: '',
+       right_image: '/model-banner-2.png',
+       right_title: 'Premium Fragrances',
+       right_subtitle: 'Prestige Selection',
+       right_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_product_id: ''
+    }];
 
-    const gridAds2 = {
-       image: cmsLayout?.grid_ads_2?.image || '/model-banner-3.png',
-       title: cmsLayout?.grid_ads_2?.title || 'Top Curated Fragrances',
-       subtitle: cmsLayout?.grid_ads_2?.subtitle || 'Prestige Selection',
-       desc: cmsLayout?.grid_ads_2?.desc || 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
-       product_id: cmsLayout?.grid_ads_2?.product_id || ''
-    };
+    // Resolve array layout for Grid Ads 2
+    const gridAds2Raw = cmsLayout?.grid_ads_2;
+    const gridAds2List: any[] = Array.isArray(gridAds2Raw) 
+       ? gridAds2Raw 
+       : (gridAds2Raw && typeof gridAds2Raw === 'object' && Object.keys(gridAds2Raw).length > 0)
+          ? [gridAds2Raw] 
+          : [];
 
-    const gridAds3 = {
-       left_image: cmsLayout?.grid_ads_3?.left_image || '/model-banner-1.png',
-       left_title: cmsLayout?.grid_ads_3?.left_title || 'Top Curated Fragrances',
-       left_subtitle: cmsLayout?.grid_ads_3?.left_subtitle || 'Exquisite Collection',
-       left_desc: cmsLayout?.grid_ads_3?.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
-       left_product_id: cmsLayout?.grid_ads_3?.left_product_id || '',
-       right_image: cmsLayout?.grid_ads_3?.right_image || '/model-banner-3.png',
-       right_title: cmsLayout?.grid_ads_3?.right_title || 'Top Curated Fragrances',
-       right_subtitle: cmsLayout?.grid_ads_3?.right_subtitle || 'Prestige Selection',
-       right_desc: cmsLayout?.grid_ads_3?.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
-       right_product_id: cmsLayout?.grid_ads_3?.right_product_id || ''
-    };
+    const gridAds2ToUse = gridAds2List.length > 0 ? gridAds2List.map((item: any) => ({
+       image: item.image || '/model-banner-3.png',
+       title: item.title || 'Top Curated Fragrances',
+       subtitle: item.subtitle || 'Prestige Selection',
+       desc: item.desc || 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+       product_id: item.product_id || ''
+    })) : [{
+       image: '/model-banner-3.png',
+       title: 'Top Curated Fragrances',
+       subtitle: 'Prestige Selection',
+       desc: 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+       product_id: ''
+    }];
+
+    // Resolve array layout for Grid Ads 3
+    const gridAds3Raw = cmsLayout?.grid_ads_3;
+    const gridAds3List: any[] = Array.isArray(gridAds3Raw) 
+       ? gridAds3Raw 
+       : (gridAds3Raw && typeof gridAds3Raw === 'object' && Object.keys(gridAds3Raw).length > 0)
+          ? [gridAds3Raw] 
+          : [];
+
+    const gridAds3ToUse = gridAds3List.length > 0 ? gridAds3List.map((item: any) => ({
+       left_image: item.left_image || '/model-banner-1.png',
+       left_title: item.left_title || 'Top Curated Fragrances',
+       left_subtitle: item.left_subtitle || 'Exquisite Collection',
+       left_desc: item.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_product_id: item.left_product_id || '',
+       right_image: item.right_image || '/model-banner-3.png',
+       right_title: item.right_title || 'Top Curated Fragrances',
+       right_subtitle: item.right_subtitle || 'Prestige Selection',
+       right_desc: item.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_product_id: item.right_product_id || ''
+    })) : [{
+       left_image: '/model-banner-1.png',
+       left_title: 'Top Curated Fragrances',
+       left_subtitle: 'Exquisite Collection',
+       left_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_product_id: '',
+       right_image: '/model-banner-3.png',
+       right_title: 'Top Curated Fragrances',
+       right_subtitle: 'Prestige Selection',
+       right_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_product_id: ''
+    }];
 
    return (
       <div className="flex flex-col w-full bg-white">
@@ -558,62 +640,86 @@ export default function Home() {
                         ))}
                      </div>
 
-                     {/* Dynamic Block 1: Side-by-Side Ad Banners */}
+                     {/* Dynamic Block 1: Side-by-Side Ad Banners Carousel */}
                      {newArrivals.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 font-sans">
-                           {/* Left Ad Banner */}
-                           <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
-                              {/* Left half: Image */}
-                              <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
-                                 <img 
-                                    src={getMediaUrl(gridAds1.left_image)} 
-                                    alt={gridAds1.left_title} 
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                                 />
-                              </div>
-                              {/* Right half: Text Content */}
-                              <div className="w-[55%] bg-[#a5682a] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
-                                 <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds1.left_subtitle}</span>
-                                 <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds1.left_title}</h3>
-                                 <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
-                                    {gridAds1.left_desc}
-                                 </p>
-                                 <Link 
-                                    href={getProductRedirectUrl(gridAds1.left_product_id)} 
-                                    className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
-                                 >
-                                    Buy Now
-                                 </Link>
-                              </div>
-                           </div>
+                        <div className="relative w-full h-[470px] md:h-[300px] mb-16 overflow-hidden">
+                           {gridAds1ToUse.map((slide: any, idx: number) => (
+                              <div 
+                                 key={idx} 
+                                 className={`absolute inset-0 w-full h-full transition-all duration-[1200ms] ease-in-out grid grid-cols-1 md:grid-cols-2 gap-8 font-sans ${
+                                    idx === currentAds1 ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-98 z-0 pointer-events-none'
+                                 }`}
+                              >
+                                 {/* Left Ad Banner */}
+                                 <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                                    {/* Left half: Image */}
+                                    <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                                       <img 
+                                          src={getMediaUrl(slide.left_image)} 
+                                          alt={slide.left_title} 
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                       />
+                                    </div>
+                                    {/* Right half: Text Content */}
+                                    <div className="w-[55%] bg-[#a5682a] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                                       <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{slide.left_subtitle}</span>
+                                       <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{slide.left_title}</h3>
+                                       <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                                          {slide.left_desc}
+                                       </p>
+                                       <Link 
+                                          href={getProductRedirectUrl(slide.left_product_id)} 
+                                          className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                                       >
+                                          Buy Now
+                                       </Link>
+                                    </div>
+                                 </div>
 
-                           {/* Right Ad Banner */}
-                           <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
-                              {/* Left half: Image */}
-                              <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
-                                 <img 
-                                    src={getMediaUrl(gridAds1.right_image)} 
-                                    alt={gridAds1.right_title} 
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                                 />
+                                 {/* Right Ad Banner */}
+                                 <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                                    {/* Left half: Image */}
+                                    <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                                       <img 
+                                          src={getMediaUrl(slide.right_image)} 
+                                          alt={slide.right_title} 
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                       />
+                                    </div>
+                                    {/* Right half: Text Content */}
+                                    <div className="w-[55%] bg-[#5c4033] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                                       <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{slide.right_subtitle}</span>
+                                       <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{slide.right_title}</h3>
+                                       <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                                          {slide.right_desc}
+                                       </p>
+                                       <Link 
+                                          href={getProductRedirectUrl(slide.right_product_id)} 
+                                          className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                                       >
+                                          Buy Now
+                                       </Link>
+                                    </div>
+                                 </div>
                               </div>
-                              {/* Right half: Text Content */}
-                              <div className="w-[55%] bg-[#5c4033] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
-                                 <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds1.right_subtitle}</span>
-                                 <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds1.right_title}</h3>
-                                 <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
-                                    {gridAds1.right_desc}
-                                 </p>
-                                 <Link 
-                                    href={getProductRedirectUrl(gridAds1.right_product_id)} 
-                                    className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
-                                 >
-                                    Buy Now
-                                 </Link>
-                              </div>
-                           </div>
+                           ))}
+
+                           {/* Navigation Indicators */}
+                           {gridAds1ToUse.length > 1 && (
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
+                                 {gridAds1ToUse.map((_: any, idx: number) => (
+                                    <button
+                                       key={idx}
+                                       onClick={() => setCurrentAds1(idx)}
+                                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                          idx === currentAds1 ? 'bg-accent w-4' : 'bg-neutral-300 hover:bg-neutral-400'
+                                       }`}
+                                    />
+                                 ))}
+                               </div>
+                           )}
                         </div>
                      )}
 
@@ -626,32 +732,56 @@ export default function Home() {
                         </div>
                      )}
 
-                     {/* Dynamic Block 2: Full-Width Ad Banner */}
+                     {/* Dynamic Block 2: Full-Width Ad Banner Carousel */}
                      {newArrivals.length > 10 && (
-                        <div className="w-full relative min-h-[260px] md:h-[320px] bg-neutral-900 overflow-hidden group rounded-sm flex flex-col md:flex-row mb-16 border border-neutral-800">
-                           {/* Left: Text Content */}
-                           <div className="w-full md:w-[60%] bg-[#8b5a2b] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
-                              <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-white/75 uppercase mb-2 block font-sans">{gridAds2.subtitle}</span>
-                              <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide uppercase leading-none mb-3">{gridAds2.title}</h2>
-                              <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed font-light mb-5 sm:mb-6 tracking-wide max-w-xl line-clamp-3">
-                                 {gridAds2.desc}
-                              </p>
-                              <Link 
-                                 href={getProductRedirectUrl(gridAds2.product_id)} 
-                                 className="bg-black hover:bg-neutral-900 text-white text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase py-2.5 px-6 sm:py-3.5 sm:px-8 text-center max-w-[150px] sm:max-w-[180px] transition-all duration-300 rounded-sm font-sans"
+                        <div className="relative w-full min-h-[440px] md:min-h-0 md:h-[320px] mb-16 overflow-hidden">
+                           {gridAds2ToUse.map((slide: any, idx: number) => (
+                              <div
+                                 key={idx}
+                                 className={`absolute inset-0 w-full h-full transition-all duration-[1200ms] ease-in-out w-full relative min-h-[440px] md:min-h-0 md:h-full bg-neutral-900 overflow-hidden group rounded-sm flex flex-col md:flex-row border border-neutral-800 ${
+                                    idx === currentAds2 ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-98 z-0 pointer-events-none'
+                                 }`}
                               >
-                                 Buy Now
-                              </Link>
-                           </div>
-                           {/* Right: Large Image */}
-                           <div className="w-full md:w-[40%] h-[180px] sm:h-[220px] md:h-full relative overflow-hidden bg-neutral-950">
-                              <img 
-                                 src={getMediaUrl(gridAds2.image)} 
-                                 alt={gridAds2.title} 
-                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
-                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                              />
-                           </div>
+                                 {/* Left: Text Content */}
+                                 <div className="w-full md:w-[60%] bg-[#8b5a2b] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
+                                    <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-white/75 uppercase mb-2 block font-sans">{slide.subtitle}</span>
+                                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide uppercase leading-none mb-3">{slide.title}</h2>
+                                    <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed font-light mb-5 sm:mb-6 tracking-wide max-w-xl line-clamp-3">
+                                       {slide.desc}
+                                    </p>
+                                    <Link 
+                                       href={getProductRedirectUrl(slide.product_id)} 
+                                       className="bg-black hover:bg-neutral-900 text-white text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase py-2.5 px-6 sm:py-3.5 sm:px-8 text-center max-w-[150px] sm:max-w-[180px] transition-all duration-300 rounded-sm font-sans"
+                                    >
+                                       Buy Now
+                                    </Link>
+                                 </div>
+                                 {/* Right: Large Image */}
+                                 <div className="w-full md:w-[40%] h-[180px] sm:h-[220px] md:h-full relative overflow-hidden bg-neutral-950">
+                                    <img 
+                                       src={getMediaUrl(slide.image)} 
+                                       alt={slide.title} 
+                                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
+                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                    />
+                                 </div>
+                              </div>
+                           ))}
+
+                           {/* Navigation Indicators */}
+                           {gridAds2ToUse.length > 1 && (
+                              <div className="absolute bottom-4 left-6 z-20 flex space-x-2">
+                                 {gridAds2ToUse.map((_: any, idx: number) => (
+                                    <button
+                                       key={idx}
+                                       onClick={() => setCurrentAds2(idx)}
+                                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                          idx === currentAds2 ? 'bg-accent w-4' : 'bg-white/40 hover:bg-white/60'
+                                       }`}
+                                    />
+                                 ))}
+                              </div>
+                           )}
                         </div>
                      )}
 
@@ -671,60 +801,84 @@ export default function Home() {
          {/* Dynamic Block 3: Brand Spotlight Ad Banners (Above Brands) */}
          <section className="pb-16 bg-white">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
-                  {/* Left Ad Banner */}
-                  <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
-                     {/* Left half: Image */}
-                     <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
-                        <img 
-                           src={getMediaUrl(gridAds3.left_image)} 
-                           alt={gridAds3.left_title} 
-                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                        />
-                     </div>
-                     {/* Right half: Text Content */}
-                     <div className="w-[55%] bg-[#8c5a2b] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
-                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds3.left_subtitle}</span>
-                        <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds3.left_title}</h3>
-                        <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
-                           {gridAds3.left_desc}
-                        </p>
-                        <Link 
-                           href={getProductRedirectUrl(gridAds3.left_product_id)} 
-                           className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
-                        >
-                           Buy Now
-                        </Link>
-                     </div>
-                  </div>
+               <div className="relative w-full h-[470px] md:h-[300px] overflow-hidden">
+                  {gridAds3ToUse.map((slide: any, idx: number) => (
+                     <div 
+                        key={idx} 
+                        className={`absolute inset-0 w-full h-full transition-all duration-[1200ms] ease-in-out grid grid-cols-1 md:grid-cols-2 gap-8 font-sans ${
+                           idx === currentAds3 ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-98 z-0 pointer-events-none'
+                        }`}
+                     >
+                        {/* Left Ad Banner */}
+                        <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                           {/* Left half: Image */}
+                           <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                              <img 
+                                 src={getMediaUrl(slide.left_image)} 
+                                 alt={slide.left_title} 
+                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                              />
+                           </div>
+                           {/* Right half: Text Content */}
+                           <div className="w-[55%] bg-[#8c5a2b] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                              <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{slide.left_subtitle}</span>
+                              <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{slide.left_title}</h3>
+                              <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                                 {slide.left_desc}
+                              </p>
+                              <Link 
+                                 href={getProductRedirectUrl(slide.left_product_id)} 
+                                 className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                              >
+                                 Buy Now
+                              </Link>
+                           </div>
+                        </div>
 
-                  {/* Right Ad Banner */}
-                  <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
-                     {/* Left half: Image */}
-                     <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
-                        <img 
-                           src={getMediaUrl(gridAds3.right_image)} 
-                           alt={gridAds3.right_title} 
-                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                        />
+                        {/* Right Ad Banner */}
+                        <div className="relative overflow-hidden group rounded-sm border border-neutral-100 flex h-[220px] sm:h-[260px] md:h-[300px]">
+                           {/* Left half: Image */}
+                           <div className="w-[45%] h-full relative overflow-hidden bg-neutral-50">
+                              <img 
+                                 src={getMediaUrl(slide.right_image)} 
+                                 alt={slide.right_title} 
+                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                              />
+                           </div>
+                           {/* Right half: Text Content */}
+                           <div className="w-[55%] bg-[#1b3b22] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                              <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{slide.right_subtitle}</span>
+                              <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{slide.right_title}</h3>
+                              <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
+                                 {slide.right_desc}
+                              </p>
+                              <Link 
+                                 href={getProductRedirectUrl(slide.right_product_id)} 
+                                 className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
+                              >
+                                 Buy Now
+                              </Link>
+                           </div>
+                        </div>
                      </div>
-                     {/* Right half: Text Content */}
-                     <div className="w-[55%] bg-[#1b3b22] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
-                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{gridAds3.right_subtitle}</span>
-                        <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{gridAds3.right_title}</h3>
-                        <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
-                           {gridAds3.right_desc}
-                        </p>
-                        <Link 
-                           href={getProductRedirectUrl(gridAds3.right_product_id)} 
-                           className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
-                        >
-                           Buy Now
-                        </Link>
+                  ))}
+
+                  {/* Navigation Indicators */}
+                  {gridAds3ToUse.length > 1 && (
+                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
+                        {gridAds3ToUse.map((_: any, idx: number) => (
+                           <button
+                              key={idx}
+                              onClick={() => setCurrentAds3(idx)}
+                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                 idx === currentAds3 ? 'bg-accent w-4' : 'bg-neutral-300 hover:bg-neutral-400'
+                              }`}
+                           />
+                        ))}
                      </div>
-                  </div>
+                  )}
                </div>
             </div>
          </section>
