@@ -30,6 +30,7 @@ const getSkuProductName = (sku: string, products: any[]) => {
 export default function Home() {
    const [newArrivals, setNewArrivals] = useState([]);
    const [bestsellers, setBestsellers] = useState([]);
+   const [favoriteProducts, setFavoriteProducts] = useState([]);
    const [homepageOffers, setHomepageOffers] = useState([]);
    const [categories, setCategories] = useState([]);
    const [loyaltyRewards, setLoyaltyRewards] = useState([]);
@@ -107,24 +108,26 @@ export default function Home() {
    useEffect(() => {
       const fetchHomeData = async () => {
          try {
-            const [resNew, resFeatured, resCats, resOffers, resLayout, resRewards, resBrands] = await Promise.all([
+            const [resNew, resFeatured, resCats, resOffers, resLayout, resRewards, resBrands, resFavorites] = await Promise.all([
                api.get('/products?is_new_arrival=true&limit=20'),
                api.get('/products?is_featured=true&limit=10'),
                api.get('/categories'),
                api.get('/offers'),
                api.get('/settings/storefront_layout'),
                api.get('/loyalty/rewards'),
-               api.get('/brands')
+               api.get('/brands'),
+               api.get('/products?is_featured=false&is_new_arrival=false&limit=20')
             ]);
             
             let newArrivalsList = resNew.data;
             if (!newArrivalsList || newArrivalsList.length === 0) {
-               // Fallback to top latest active products
-               const fallbackRes = await api.get('/products?limit=20');
+               // Fallback to top latest active products (excluding featured)
+               const fallbackRes = await api.get('/products?is_featured=false&limit=20');
                newArrivalsList = fallbackRes.data;
             }
             setNewArrivals(newArrivalsList);
             setBestsellers(resFeatured.data);
+            setFavoriteProducts(resFavorites.data);
             setCategories(resCats.data);
             setHomepageOffers(resOffers.data);
             setCmsLayout(resLayout.data);
@@ -792,7 +795,29 @@ export default function Home() {
             </div>
          </section>
 
-         {/* Dynamic Block 3: Brand Spotlight Ad Banners (Above Brands) */}
+         {/* Favorite Products Grid */}
+         {favoriteProducts.length > 0 && (
+         <section className="py-24 md:py-32 bg-neutral-50 border-t border-b border-neutral-100">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+               <div className="flex justify-between items-end mb-16">
+                  <div>
+                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">Curated Selection</span>
+                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">Favorite Products</h2>
+                  </div>
+                  <Link href="/shop" className="group flex items-center space-x-3 text-[11px] font-bold tracking-widest text-black uppercase hover:text-accent transition-colors font-sans">
+                     <span>Explore Collection</span>
+                     <ChevronRight size={14} className="group-hover:translate-x-1.5 transition-transform text-accent" />
+                  </Link>
+               </div>
+
+               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                  {favoriteProducts.map((product: any) => (
+                     <ProductCard key={product.id} product={product} />
+                  ))}
+               </div>
+            </div>
+         </section>
+         )/* Dynamic Block 3: Brand Spotlight Ad Banners (Above Brands) */}
          <section className="pb-16 bg-white">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                <div className="relative w-full h-[470px] md:h-[300px] overflow-hidden">
