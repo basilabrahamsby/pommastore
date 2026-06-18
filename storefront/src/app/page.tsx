@@ -456,7 +456,7 @@ export default function Home() {
 
           {/* Cinematic Hero Slider for Flash Offers */}
           {homepageOffers.length > 0 && (
-             <section className="relative h-[680px] sm:h-[580px] lg:h-[480px] xl:h-[520px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
+             <section className="relative h-[480px] sm:h-[420px] lg:h-[380px] xl:h-[400px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
                 {/* Background Slider Engine */}
                 <div className="absolute inset-0">
                    {homepageOffers.map((promo: any, idx: number) => (
@@ -473,9 +473,9 @@ export default function Home() {
                         </Link>
                         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent pointer-events-none" />
                         
-                        <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-12">
+                        <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex items-center justify-start">
                            {/* Text Content */}
-                           <div className="lg:w-1/2 text-white pt-12 sm:pt-16 lg:pt-0 z-10">
+                           <div className="max-w-2xl text-white pt-6 z-10">
                               <div className="flex items-center gap-4 mb-2 sm:mb-3">
                                  <span className="h-[1.5px] w-8 bg-accent" />
                                  <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-accent uppercase font-sans">{promo.discount_type}</span>
@@ -483,7 +483,7 @@ export default function Home() {
                               <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif font-normal mb-2 leading-tight tracking-wide uppercase">
                                  {promo.title}
                               </h2>
-                              <p className="text-[10px] sm:text-[11px] md:text-xs text-neutral-300 max-w-xs mb-3 leading-relaxed font-light tracking-wide opacity-80 line-clamp-2">
+                              <p className="text-[10px] sm:text-[11px] md:text-xs text-neutral-300 max-w-md mb-3 leading-relaxed font-light tracking-wide opacity-80 line-clamp-2">
                                  {promo.subtitle || 'Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.'}
                               </p>
 
@@ -543,50 +543,6 @@ export default function Home() {
                                  <div className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-neutral-400">
                                     PROMO: <span className="text-white border-b border-white/20 pb-0.5 ml-1 sm:ml-2 font-mono">{promo.code}</span>
                                  </div>
-                              </div>
-                           </div>
-                           
-                           {/* Product Cards Shelf — compact */}
-                           <div className="lg:w-[45%] w-full flex items-center justify-end z-10 relative">
-                              <div className="flex gap-3 overflow-x-auto lg:overflow-visible scrollbar-hide py-6 px-3">
-                                 {(promo.products && promo.products.length > 0 ? promo.products : newArrivals)?.slice(0, 4).map((product: any, pidx: number) => {
-                                    const variant = product.variants?.[0];
-                                    const hasDiscount = variant?.compare_at_price > variant?.selling_price;
-                                    const discPct = hasDiscount ? Math.round(((variant.compare_at_price - variant.selling_price) / variant.compare_at_price) * 100) : 0;
-                                    return (
-                                    <Link
-                                       href={`/product/${product.slug}`}
-                                       key={product.id}
-                                       className="min-w-[155px] max-w-[155px] bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-sm transform transition-all duration-500 hover:-translate-y-3 hover:bg-white/[0.15] shadow-xl block text-left group/card flex-shrink-0 overflow-hidden"
-                                       style={{ transitionDelay: `${pidx * 100}ms` }}
-                                    >
-                                       {/* Image */}
-                                       <div className="relative bg-white/95 mx-2 mt-2 rounded-sm overflow-hidden" style={{ aspectRatio: '1/1' }}>
-                                          <img
-                                             src={getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png'}
-                                             alt={product.name}
-                                             className="w-full h-full object-contain p-3 group-hover/card:scale-105 transition-transform duration-500"
-                                             onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                                          />
-                                          {hasDiscount ? (
-                                             <div className="absolute top-1.5 right-1.5 bg-accent text-white text-[7px] font-black px-1.5 py-0.5 tracking-widest uppercase">{discPct}%</div>
-                                          ) : (
-                                             <div className="absolute top-1.5 right-1.5 bg-black/70 text-white text-[7px] font-black px-1.5 py-0.5 tracking-widest uppercase">New</div>
-                                          )}
-                                       </div>
-                                       {/* Info */}
-                                       <div className="px-3 pb-3 pt-2">
-                                          <p className="text-[7px] font-black text-white/35 uppercase tracking-[0.2em] mb-0.5 truncate">{product.brand_name}</p>
-                                          <h4 className="text-[10px] font-bold text-white/85 uppercase truncate mb-2 tracking-wide group-hover/card:text-yellow-400 transition-colors leading-tight">{product.name}</h4>
-                                          <div className="flex items-baseline gap-1.5 flex-wrap">
-                                             <span className="text-white font-black text-[13px]">₹{variant?.selling_price?.toLocaleString('en-IN')}</span>
-                                             {hasDiscount && <span className="text-white/30 text-[9px] line-through">₹{variant.compare_at_price.toLocaleString('en-IN')}</span>}
-                                          </div>
-                                          {variant?.size_ml && <p className="text-white/25 text-[7px] uppercase tracking-widest font-bold mt-1">{variant.size_ml}ml</p>}
-                                       </div>
-                                    </Link>
-                                    );
-                                 })}
                               </div>
                            </div>
                         </div>
