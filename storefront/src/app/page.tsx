@@ -732,7 +732,7 @@ export default function Home() {
                                  }`}
                               >
                                  {/* Left: Text Content */}
-                                 <div className="w-full md:w-[60%] h-[260px] md:h-full bg-[#8b5a2b] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
+                                 <div className="w-full md:w-[60%] h-[260px] md:h-full bg-[#1b3b22] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
                                     <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-white/75 uppercase mb-2 block font-sans">{slide.subtitle}</span>
                                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide uppercase leading-none mb-3">{slide.title}</h2>
                                     <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed font-light mb-5 sm:mb-6 tracking-wide max-w-xl line-clamp-3">
