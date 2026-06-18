@@ -3,7 +3,7 @@ import sys
 sys.path.append('/app')
 
 from app.core.database import AsyncSessionLocal
-from app.models.product import Product, Brand
+from app.models.product import Product, Brand, ProductImage
 from sqlalchemy import select
 
 async def main():
@@ -18,7 +18,11 @@ async def main():
         prods = res_p.scalars().all()
         print('=== PRODUCTS ===')
         for p in prods:
-            print(f'name: {p.name}, brand_id: {p.brand_id}, images: {p.images}')
+            # Get images for this product
+            res_img = await db.execute(select(ProductImage).where(ProductImage.product_id == p.id))
+            imgs = res_img.scalars().all()
+            img_urls = [img.url for img in imgs]
+            print(f'name: {p.name}, brand_id: {p.brand_id}, images: {img_urls}')
 
 if __name__ == '__main__':
     asyncio.run(main())
