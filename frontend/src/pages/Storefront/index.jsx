@@ -16,7 +16,7 @@ export default function StorefrontCMS() {
 
   // Composite CMS state
   const [heroSlides, setHeroSlides] = useState([
-    { image: '/hero-1.png', image_mobile: '', title: '', subtitle: '', desc: '', cta: '' }
+    { image: '/hero-1.png', image_mobile: '', title: '', subtitle: '', desc: '', cta: '', link_type: 'default', product_id: '', product_slug: '', offer_id: '', custom_link: '' }
   ])
   const [splitBanners, setSplitBanners] = useState({
     men: '/banner-men.png',
@@ -52,6 +52,7 @@ export default function StorefrontCMS() {
   ])
   const [freeShippingLimit, setFreeShippingLimit] = useState(999)
   const [products, setProducts] = useState([])
+  const [offers, setOffers] = useState([])
   const [gridAds1, setGridAds1] = useState([
     {
       left_image: '',
@@ -98,6 +99,7 @@ export default function StorefrontCMS() {
   useEffect(() => {
     fetchLayout()
     fetchProducts()
+    fetchOffers()
   }, [])
 
   const fetchProducts = async () => {
@@ -106,6 +108,15 @@ export default function StorefrontCMS() {
       setProducts(res.data)
     } catch (err) {
       console.warn("Failed to load products for ad link selector")
+    }
+  }
+
+  const fetchOffers = async () => {
+    try {
+      const res = await api.get('/offers')
+      setOffers(res.data || [])
+    } catch (err) {
+      console.warn("Failed to load offers for selector")
     }
   }
 
@@ -121,7 +132,12 @@ export default function StorefrontCMS() {
             title: slide.title || '',
             subtitle: slide.subtitle || '',
             desc: slide.desc || '',
-            cta: slide.cta || ''
+            cta: slide.cta || '',
+            link_type: slide.link_type || 'default',
+            product_id: slide.product_id || '',
+            product_slug: slide.product_slug || '',
+            offer_id: slide.offer_id || '',
+            custom_link: slide.custom_link || ''
           })))
         }
         if (layout.split_banners) {
@@ -213,7 +229,19 @@ export default function StorefrontCMS() {
   }
 
   const addHeroSlide = () => {
-    setHeroSlides([...heroSlides, { image: '', image_mobile: '', title: '', subtitle: '', desc: '', cta: '' }])
+    setHeroSlides([...heroSlides, { 
+      image: '', 
+      image_mobile: '', 
+      title: '', 
+      subtitle: '', 
+      desc: '', 
+      cta: '',
+      link_type: 'default',
+      product_id: '',
+      product_slug: '',
+      offer_id: '',
+      custom_link: ''
+    }])
   }
 
   const removeHeroSlide = (index) => {
@@ -442,9 +470,65 @@ export default function StorefrontCMS() {
                             <input className="input input-sm" placeholder="Short description for client readability" value={slide.desc} onChange={e => updateHeroSlide(index, 'desc', e.target.value)} />
                          </div>
                          <div className="form-group" style={{ margin: 0 }}>
-                            <label className="form-label">Call to Action Label</label>
-                            <input className="input input-sm" placeholder="Explore Now" value={slide.cta} onChange={e => updateHeroSlide(index, 'cta', e.target.value)} />
-                         </div>
+                             <label className="form-label">Call to Action Label</label>
+                             <input className="input input-sm" placeholder="Explore Now" value={slide.cta} onChange={e => updateHeroSlide(index, 'cta', e.target.value)} />
+                          </div>
+                          <div className="form-group" style={{ margin: 0 }}>
+                             <label className="form-label">Link Destination Type</label>
+                             <select className="input input-sm" value={slide.link_type || 'default'} onChange={e => {
+                               const type = e.target.value;
+                               updateHeroSlide(index, 'link_type', type);
+                               if (type !== 'product') {
+                                 updateHeroSlide(index, 'product_id', '');
+                                 updateHeroSlide(index, 'product_slug', '');
+                               }
+                               if (type !== 'offer') {
+                                 updateHeroSlide(index, 'offer_id', '');
+                               }
+                               if (type !== 'custom') {
+                                 updateHeroSlide(index, 'custom_link', '');
+                               }
+                             }}>
+                               <option value="default">Default Fallback (/shop or /offers)</option>
+                               <option value="product">Redirect to Specified Product</option>
+                               <option value="offer">Redirect to Offers Page / Specific Offer</option>
+                               <option value="custom">Custom URL Path</option>
+                             </select>
+                          </div>
+                          {slide.link_type === 'product' && (
+                             <div className="form-group" style={{ margin: 0 }}>
+                               <label className="form-label">Select Target Product</label>
+                               <select className="input input-sm" value={slide.product_id || ''} onChange={e => {
+                                 const selectedId = e.target.value;
+                                 const prodObj = products.find(p => p.id === selectedId);
+                                 const slug = prodObj ? prodObj.slug : '';
+                                 updateHeroSlide(index, 'product_id', selectedId);
+                                 updateHeroSlide(index, 'product_slug', slug);
+                               }}>
+                                 <option value="">Select a product...</option>
+                                 {products.map(p => (
+                                   <option key={p.id} value={p.id}>{p.name} ({p.brand_name || 'Exquisite House'})</option>
+                                 ))}
+                               </select>
+                             </div>
+                          )}
+                          {slide.link_type === 'offer' && (
+                             <div className="form-group" style={{ margin: 0 }}>
+                               <label className="form-label">Select Target Offer</label>
+                               <select className="input input-sm" value={slide.offer_id || ''} onChange={e => updateHeroSlide(index, 'offer_id', e.target.value)}>
+                                 <option value="">All Offers Page (/offers)</option>
+                                 {offers.map(o => (
+                                   <option key={o.id} value={o.id}>{o.title} (CODE: {o.code})</option>
+                                 ))}
+                               </select>
+                             </div>
+                          )}
+                          {slide.link_type === 'custom' && (
+                             <div className="form-group" style={{ margin: 0 }}>
+                               <label className="form-label">Custom Link Path (e.g. /rewards)</label>
+                               <input className="input input-sm" placeholder="e.g. /shop or /rewards" value={slide.custom_link || ''} onChange={e => updateHeroSlide(index, 'custom_link', e.target.value)} />
+                             </div>
+                          )}
                       </div>
                    </div>
 

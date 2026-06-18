@@ -162,12 +162,13 @@ export default function Home() {
       );
    }
 
-   const getProductRedirectUrl = (productId: string | null | undefined): string => {
-      if (!productId) return '/shop';
-      const match: any = newArrivals.find((p: any) => p.id === productId);
-      if (match) return `/product/${match.slug}`;
-      return `/shop?product_id=${productId}`;
-   };
+    const getProductRedirectUrl = (productId: string | null | undefined): string => {
+       if (!productId) return '/shop';
+       const combined = [...newArrivals, ...bestsellers, ...favoriteProducts];
+       const match: any = combined.find((p: any) => p.id === productId);
+       if (match) return `/product/${match.slug}`;
+       return `/shop?product_id=${productId}`;
+    };
 
     // Resolve array layout for Grid Ads 1
     const gridAds1Raw = cmsLayout?.grid_ads_1;
@@ -268,7 +269,27 @@ export default function Home() {
                const slideSubtitle = isPromo ? `${slide.discount_type} • CODE: ${slide.code}` : slide.subtitle;
                const slideDesc = isPromo ? (slide.subtitle || 'Exclusive fragrance savings & curated collections.') : slide.desc;
                const slideCta = isPromo ? 'Claim Offer' : (slide.cta || 'Shop Collection');
-               const slideLink = isPromo ? '/offers' : '/shop';
+               
+               let slideLink = isPromo ? '/offers' : '/shop';
+               if (slide.link_type === 'product' && slide.product_slug) {
+                  slideLink = `/product/${slide.product_slug}`;
+               } else if (slide.link_type === 'product' && slide.product_id) {
+                  slideLink = getProductRedirectUrl(slide.product_id);
+               } else if (slide.link_type === 'offer') {
+                  slideLink = slide.offer_id ? `/offers?id=${slide.offer_id}` : '/offers';
+               } else if (slide.link_type === 'custom' && slide.custom_link) {
+                  slideLink = slide.custom_link;
+               } else {
+                  if (slide.product_slug) {
+                     slideLink = `/product/${slide.product_slug}`;
+                  } else if (slide.product_id) {
+                     slideLink = getProductRedirectUrl(slide.product_id);
+                  } else if (slide.offer_id) {
+                     slideLink = `/offers?id=${slide.offer_id}`;
+                  } else if (slide.custom_link) {
+                     slideLink = slide.custom_link;
+                  }
+               }
                
                return (
                   <div
