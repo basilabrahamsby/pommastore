@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { getMediaUrl } from '@/services/media';
-import { Sparkles, Percent, ShoppingBag, ArrowRight, Tag, Gift, Zap, Copy, Check, ShoppingCart, Star } from 'lucide-react';
+import { Sparkles, Percent, ShoppingBag, ArrowRight, Tag, Gift, Zap, Copy, Check, ShoppingCart, Star, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 
 /* ── Helpers ── */
@@ -274,6 +274,15 @@ export default function OffersPage() {
   const [promoCampaigns, setPromoCampaigns] = useState<any[]>([]);
   const [loyaltyRewards, setLoyaltyRewards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPromoIdx, setCurrentPromoIdx] = useState(0);
+
+  useEffect(() => {
+    if (promoCampaigns.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentPromoIdx((prev) => (prev + 1) % promoCampaigns.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [promoCampaigns]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -296,26 +305,150 @@ export default function OffersPage() {
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
 
-      {/* ─── Hero Banner ─── */}
-      <div className="relative w-full bg-black py-28 overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-accent/20 via-transparent to-transparent opacity-70" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay" />
-        <div className="relative z-10 text-center px-6 animate-fadeIn">
-          <div className="flex items-center justify-center space-x-3 text-[10px] font-black tracking-[0.5em] text-accent uppercase mb-6">
-            <Sparkles size={12} className="fill-current" />
-            <span>Elite Exclusives</span>
-            <Sparkles size={12} className="fill-current" />
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif italic font-black text-white tracking-tight mb-6 leading-none">
-            The Vault
-          </h1>
-          <p className="text-neutral-400 text-xs md:text-sm font-medium tracking-[0.2em] uppercase max-w-xl mx-auto leading-relaxed">
-            Exclusive deals &amp; curated drops — limited time, unlimited style.
-          </p>
-        </div>
-      </div>
+      {/* ─── Hero Banner Slider ─── */}
+      {promoCampaigns.length > 0 ? (
+        <section className="relative h-[480px] sm:h-[420px] lg:h-[380px] xl:h-[400px] bg-neutral-950 overflow-hidden group border-b border-neutral-900 mb-10">
+          {/* Background Slider Engine */}
+          <div className="absolute inset-0">
+            {promoCampaigns.map((promo: any, idx: number) => (
+              <div 
+                key={promo.id} 
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === currentPromoIdx ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'}`}
+              >
+                <img
+                  src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
+                  alt={promo.title}
+                  className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center opacity-85 group-hover:scale-[1.02] transition-transform duration-[3s]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none" />
+                
+                <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex items-center justify-start">
+                  {/* Text Content */}
+                  <div className="max-w-2xl text-white pt-6 z-10">
+                    <div className="flex items-center gap-4 mb-2 sm:mb-3">
+                      <span className="h-[1.5px] w-8 bg-accent" />
+                      <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-accent uppercase font-sans">{promo.discount_type}</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif font-normal mb-2 leading-tight tracking-wide uppercase">
+                      {promo.title}
+                    </h2>
+                    <p className="text-[10px] sm:text-[11px] md:text-xs text-neutral-300 max-w-md mb-3 leading-relaxed font-light tracking-wide opacity-80 line-clamp-2">
+                      {promo.subtitle || 'Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.'}
+                    </p>
 
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-12 -mt-10 relative z-20 pb-32">
+                    {/* Dynamic Offer Rules / Details Block */}
+                    <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white/5 border border-white/10 rounded-sm max-w-xs backdrop-blur-md">
+                      <div className="text-[8px] sm:text-[9px] font-bold tracking-widest text-yellow-500 uppercase mb-1.5 font-sans">Offer Rules & Details</div>
+                      <div className="flex flex-col gap-1.5 text-[10px] sm:text-[11px]">
+                        {promo.discount_type?.toLowerCase().includes('bogo') ? (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-neutral-400 font-bold uppercase w-16 flex-shrink-0">Buy:</span>
+                              <span className="text-white font-medium uppercase tracking-wide">Qualifying items</span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-green-400 font-bold uppercase w-16 flex-shrink-0">Get Free:</span>
+                              <span className="text-white font-medium uppercase tracking-wide">Free pairing item</span>
+                            </div>
+                          </>
+                        ) : promo.discount_type?.toLowerCase().includes('percent') || promo.discount_type?.includes('%') ? (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
+                              <span className="text-white font-medium">{promo.discount_percentage}% OFF</span>
+                            </div>
+                            {promo.min_purchase_amount > 0 && (
+                              <div className="flex items-start">
+                                <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
+                                <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
+                              <span className="text-white font-medium">Flat ₹{promo.flat_discount_amount?.toLocaleString()} OFF</span>
+                            </div>
+                            {promo.min_purchase_amount > 0 && (
+                              <div className="flex items-start">
+                                <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
+                                <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-6 font-sans">
+                      <div className="text-[10px] font-black tracking-[0.2em] text-neutral-400 uppercase">
+                        PROMO CODE: <span className="text-white border border-white/20 px-2 py-1 ml-1.5 font-mono bg-white/5 rounded-sm">{promo.code}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation Controls & Counter */}
+          {promoCampaigns.length > 1 && (
+            <>
+              <div className="absolute bottom-6 left-6 lg:left-12 flex items-center gap-6 sm:gap-12 z-20 font-sans">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {promoCampaigns.map((_: any, idx: number) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setCurrentPromoIdx(idx)}
+                      className={`h-0.5 transition-all duration-1000 ${idx === currentPromoIdx ? 'w-12 sm:w-20 bg-accent' : 'w-6 sm:w-8 bg-white/20'}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] sm:text-[12px] font-black tracking-[0.5em] text-white/60">
+                  <span className="text-white">0{currentPromoIdx + 1}</span> / 0{promoCampaigns.length}
+                </span>
+              </div>
+
+              <div className="absolute bottom-6 right-6 lg:right-12 flex gap-2 sm:gap-4 z-20">
+                <button 
+                  onClick={() => setCurrentPromoIdx(p => (p === 0 ? promoCampaigns.length - 1 : p - 1))}
+                  className="w-10 h-10 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={1} />
+                </button>
+                <button 
+                  onClick={() => setCurrentPromoIdx(p => (p === promoCampaigns.length - 1 ? 0 : p + 1))}
+                  className="w-10 h-10 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-700 backdrop-blur-xl"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={1} />
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      ) : (
+        /* Fallback Static Hero Banner when loading or no active offers */
+        <div className="relative w-full bg-black py-28 overflow-hidden flex items-center justify-center mb-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-accent/20 via-transparent to-transparent opacity-70" />
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay" />
+          <div className="relative z-10 text-center px-6 animate-fadeIn">
+            <div className="flex items-center justify-center space-x-3 text-[10px] font-black tracking-[0.5em] text-accent uppercase mb-6">
+              <Sparkles size={12} className="fill-current" />
+              <span>Elite Exclusives</span>
+              <Sparkles size={12} className="fill-current" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif italic font-black text-white tracking-tight mb-6 leading-none">
+              The Vault
+            </h1>
+            <p className="text-neutral-400 text-xs md:text-sm font-medium tracking-[0.2em] uppercase max-w-xl mx-auto leading-relaxed">
+              Exclusive deals &amp; curated drops — limited time, unlimited style.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-12 relative z-20 pb-32">
 
         {/* ─── Loyalty Milestones ─── */}
         {loyaltyRewards.length > 0 && (
@@ -332,23 +465,23 @@ export default function OffersPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {loyaltyRewards.slice(0, 4).map((reward) => (
-                <div key={reward.id} className="bg-white border border-neutral-100 p-8 flex flex-col hover:shadow-2xl transition-all duration-500 group relative overflow-hidden">
-                  <div className="absolute -right-4 -top-8 text-[120px] font-serif italic text-neutral-50 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity">
+                <div key={reward.id} className="bg-gradient-to-b from-white to-neutral-50/30 border border-neutral-100/80 p-8 flex flex-col hover:shadow-[0_20px_50px_rgba(210,22,141,0.06)] hover:-translate-y-2 rounded-lg transition-all duration-500 group relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[3px] before:bg-gradient-to-r before:from-amber-400 before:to-accent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
+                  <div className="absolute -right-4 -top-8 text-[120px] font-serif italic text-neutral-200/20 opacity-[0.25] group-hover:opacity-[0.35] transition-opacity font-bold select-none pointer-events-none">
                     {reward.point_cost / 100}
                   </div>
                   <div className="relative z-10 flex flex-col h-full">
-                    <div className="mb-6 w-12 h-12 rounded-full bg-neutral-950 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-500">
+                    <div className="mb-6 w-12 h-12 rounded-full bg-neutral-950 group-hover:bg-accent flex items-center justify-center text-amber-500 group-hover:text-white group-hover:scale-110 transition-all duration-500 shadow-md">
                       <Sparkles size={20} />
                     </div>
                     <div className="mb-2">
-                      <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase">Requirement</span>
-                      <div className="text-xl font-serif italic text-black">{reward.point_cost} Points</div>
+                      <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase font-sans">Requirement</span>
+                      <div className="text-xl font-serif italic font-bold text-black">{reward.point_cost} Points</div>
                     </div>
-                    <div className="w-8 h-[1px] bg-neutral-200 my-6" />
-                    <h3 className="text-sm font-black text-black uppercase tracking-wide mb-3">{reward.name}</h3>
-                    <p className="text-[11px] text-neutral-500 leading-relaxed font-medium mb-8 uppercase tracking-widest">{reward.description}</p>
+                    <div className="w-8 h-[1px] bg-neutral-200 my-5" />
+                    <h3 className="text-sm font-black text-black uppercase tracking-wide mb-2.5 font-sans group-hover:text-accent transition-colors duration-300">{reward.name}</h3>
+                    <p className="text-[10px] text-neutral-500 leading-relaxed font-semibold mb-8 uppercase tracking-widest font-sans">{reward.description}</p>
                     <div className="mt-auto">
-                      <Link href="/rewards" className="inline-flex items-center text-[9px] font-black tracking-[0.2em] uppercase text-black border-b border-black pb-1 hover:text-neutral-500 hover:border-neutral-500 transition-all">
+                      <Link href="/rewards" className="inline-flex items-center text-[9px] font-bold tracking-[0.2em] uppercase text-black border-b border-black pb-1 hover:text-accent hover:border-accent transition-all duration-300 font-sans">
                         Redeem Privilege
                       </Link>
                     </div>
