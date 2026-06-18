@@ -108,7 +108,7 @@ export default function Home() {
       const fetchHomeData = async () => {
          try {
             const [resNew, resFeatured, resCats, resOffers, resLayout, resRewards, resBrands] = await Promise.all([
-               api.get('/products?limit=200'),
+               api.get('/products?is_new_arrival=true&limit=20'),
                api.get('/products?is_featured=true&limit=10'),
                api.get('/categories'),
                api.get('/offers'),
@@ -116,7 +116,14 @@ export default function Home() {
                api.get('/loyalty/rewards'),
                api.get('/brands')
             ]);
-            setNewArrivals(resNew.data);
+            
+            let newArrivalsList = resNew.data;
+            if (!newArrivalsList || newArrivalsList.length === 0) {
+               // Fallback to top latest active products
+               const fallbackRes = await api.get('/products?limit=20');
+               newArrivalsList = fallbackRes.data;
+            }
+            setNewArrivals(newArrivalsList);
             setBestsellers(resFeatured.data);
             setCategories(resCats.data);
             setHomepageOffers(resOffers.data);

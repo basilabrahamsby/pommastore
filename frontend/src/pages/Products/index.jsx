@@ -30,6 +30,8 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     sillage_rating: product?.sillage_rating || '',
     is_active: product?.is_active ?? true,
     is_featured: product?.is_featured ?? false,
+    is_new_arrival: product?.is_new_arrival ?? false,
+    priority: product?.priority ?? 0,
     scent_notes: product?.scent_notes || { top: [], heart: [], base: [] },
     
     // Extended Perfume Specific Fields
@@ -254,6 +256,8 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
       meta_description: form.meta_description || null,
       is_active: !!form.is_active,
       is_featured: !!form.is_featured,
+      is_new_arrival: !!form.is_new_arrival,
+      priority: parseInt(form.priority) || 0,
       variants: sanitizedVariants,
       images: form.images || []
     }
@@ -381,16 +385,48 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
               <textarea className="textarea" rows={4} value={form.full_description} onChange={e => set('full_description', e.target.value)} placeholder="Tell the complete detailed story of the perfume, raw extracts, and design..." />
             </div>
 
-            {/* Catalog Visibility & Featured Status */}
-            <div style={{ display: 'flex', gap: 24, marginBottom: 14, background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
-                <input type="checkbox" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} style={{ accentColor: 'var(--success)' }} />
-                🟢 Active in Catalog
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem', color: 'var(--gold-bright)' }}>
-                <input type="checkbox" checked={form.is_featured} onChange={e => set('is_featured', e.target.checked)} style={{ accentColor: 'var(--gold)' }} />
-                ⭐ Featured / Popular Pick (Homepage)
-              </label>
+            {/* Catalog Visibility, Section & Priority */}
+            <div style={{ background: 'rgba(255,255,255,0.01)', padding: 16, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 14 }}>
+              <div style={{ display: 'flex', gap: 24, marginBottom: 12 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="checkbox" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} style={{ accentColor: 'var(--success)' }} />
+                  🟢 Active in Catalog
+                </label>
+              </div>
+              <div className="grid-2" style={{ marginTop: 8 }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <LabelWithInfo label="Product Placement Section" info="Specify whether this product is featured, a new arrival, or a standard catalog item." />
+                  <select 
+                    className="select" 
+                    value={form.is_featured ? 'featured' : form.is_new_arrival ? 'new_arrival' : 'normal'}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === 'featured') {
+                        setForm(p => ({ ...p, is_featured: true, is_new_arrival: false }));
+                      } else if (val === 'new_arrival') {
+                        setForm(p => ({ ...p, is_featured: false, is_new_arrival: true }));
+                      } else {
+                        setForm(p => ({ ...p, is_featured: false, is_new_arrival: false }));
+                      }
+                    }}
+                  >
+                    <option value="normal">Standard / Normal Product</option>
+                    <option value="featured">★ Featured / Popular Pick (Homepage)</option>
+                    <option value="new_arrival">⚡ New Arrival (Homepage)</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <LabelWithInfo label="Section Priority" info="Set the display priority of this product inside its section. Higher values are displayed first." />
+                  <input 
+                    type="number" 
+                    className="input" 
+                    value={form.priority ?? 0} 
+                    onChange={e => set('priority', parseInt(e.target.value) || 0)} 
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Toggle Advanced ERP & 3D Parameters */}
@@ -810,14 +846,28 @@ export default function Products({ hideHeader }) {
     }
   }
 
-  const handleToggleFeatured = async (product) => {
-    const newStatus = !product.is_featured
+  const handleToggleSection = async (product) => {
+    let patchData = {};
+    let nextLabel = '';
+    if (product.is_featured) {
+      // Featured -> New Arrival
+      patchData = { is_featured: false, is_new_arrival: true };
+      nextLabel = 'New Arrival';
+    } else if (product.is_new_arrival) {
+      // New Arrival -> Standard
+      patchData = { is_featured: false, is_new_arrival: false };
+      nextLabel = 'Standard';
+    } else {
+      // Standard -> Featured
+      patchData = { is_featured: true, is_new_arrival: false };
+      nextLabel = 'Featured';
+    }
     try {
-      await api.patch(`/products/${product.id}`, { is_featured: newStatus })
-      toast.success(newStatus ? 'Product marked as featured' : 'Product marked as standard')
+      await api.patch(`/products/${product.id}`, patchData)
+      toast.success(`Product marked as ${nextLabel}`)
       load()
     } catch (err) {
-      toast.error('Failed to update product featured status')
+      toast.error('Failed to update product section')
     }
   }
 
@@ -906,11 +956,11 @@ export default function Products({ hideHeader }) {
                       {p.is_active ? 'Active' : 'Inactive'}
                     </button>
                     <button 
-                      onClick={() => handleToggleFeatured(p)}
-                      className={`badge ${p.is_featured ? 'badge-gold' : 'badge-neutral'}`}
+                      onClick={() => handleToggleSection(p)}
+                      className={`badge ${p.is_featured ? 'badge-gold' : p.is_new_arrival ? 'badge-warning' : 'badge-neutral'}`}
                       style={{ border: 'none', cursor: 'pointer', outline: 'none', display: 'flex', alignItems: 'center', gap: 2 }}
                     >
-                      ★ {p.is_featured ? 'Featured' : 'Standard'}
+                      {p.is_featured ? '★ Featured' : p.is_new_arrival ? '⚡ New Arrival' : 'Standard'}
                     </button>
                   </div>
                 </td>

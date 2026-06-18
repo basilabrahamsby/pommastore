@@ -84,6 +84,8 @@ class ProductCreate(BaseModel):
     meta_description: str | None = None
     is_active: bool = True
     is_featured: bool = False
+    is_new_arrival: bool = False
+    priority: int = 0
     shipping_zones_excluded: List[str] = []
     variants: List[VariantCreate] = []
     images: List[str] = []
@@ -114,6 +116,8 @@ class ProductUpdate(BaseModel):
     meta_description: str | None = None
     is_active: bool | None = None
     is_featured: bool | None = None
+    is_new_arrival: bool | None = None
+    priority: int | None = None
     shipping_zones_excluded: List[str] | None = None
 
 
@@ -135,6 +139,8 @@ class ProductOut(BaseModel):
     full_description: str | None = None
     is_active: bool
     is_featured: bool
+    is_new_arrival: bool
+    priority: int
     shipping_zones_excluded: list = []
     variants: List[VariantOut] = []
     images: List[str] = []

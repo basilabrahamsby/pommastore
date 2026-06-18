@@ -38,6 +38,7 @@ async def list_products(
     category_id: str | None = Query(None),
     is_active: bool | None = Query(None),
     is_featured: bool | None = Query(None),
+    is_new_arrival: bool | None = Query(None),
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -62,7 +63,9 @@ async def list_products(
         q = q.where(Product.is_active == is_active)
     if is_featured is not None:
         q = q.where(Product.is_featured == is_featured)
-    q = q.order_by(Product.created_at.desc()).offset(skip).limit(limit)
+    if is_new_arrival is not None:
+        q = q.where(Product.is_new_arrival == is_new_arrival)
+    q = q.order_by(Product.priority.desc(), Product.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(q)
     products = result.scalars().all()
     return [await enrich_product(p, db) for p in products]

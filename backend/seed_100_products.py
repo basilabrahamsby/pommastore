@@ -102,7 +102,11 @@ async def main():
                 "heart": random.sample(HEART_NOTES, 3),
                 "base": random.sample(BASE_NOTES, 3)
             }
-            
+            rand_val = random.random()
+            is_feat = rand_val < 0.20
+            is_new = 0.20 <= rand_val < 0.40
+            priority_val = random.randint(1, 10) if (is_feat or is_new) else 0
+
             # Create product object
             product = Product(
                 name=prod_name,
@@ -118,7 +122,9 @@ async def main():
                 short_description=f"An extraordinary display of {noun.lower()} layered with rich {notes['base'][0].lower()} and top notes of {notes['top'][0].lower()}.",
                 full_description=f"Experience the olfactory masterpiece of {prod_name} by the house of {brand.name}. Opens with a refreshing burst of {', '.join(notes['top'])}. Transitioning into a sophisticated heart of {', '.join(notes['heart'])}, the scent settles into a majestic, long-lasting base of {', '.join(notes['base'])}.",
                 is_active=True,
-                is_featured=(random.random() < 0.25) # 25% featured rate
+                is_featured=is_feat,
+                is_new_arrival=is_new,
+                priority=priority_val
             )
             
             db.add(product)
