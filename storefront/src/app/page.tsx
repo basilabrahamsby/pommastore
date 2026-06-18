@@ -1221,22 +1221,22 @@ export default function Home() {
             </section>
          )}
 
-         {/* Mid Quote Banner */}
-         <section className="bg-black text-white py-16 md:py-20 relative overflow-hidden flex items-center justify-center text-center">
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none overflow-hidden">
-               <img src="/kozmocart/logo.png" alt="Kozmocart Logo Watermark" className="w-[60vw] max-w-[700px] object-contain" />
-            </div>
-            <div className="relative z-10 max-w-3xl px-8">
-               <h3 className="text-xs font-bold tracking-[0.3em] text-accent uppercase mb-4 font-sans">
-                  {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
-               </h3>
-               <blockquote className="text-2xl md:text-4xl font-serif italic tracking-wide mb-6 text-white/90 leading-tight">
-                  &ldquo;{cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It's a reference mark."}&rdquo;
-               </blockquote>
-               <div className="w-16 h-[2px] bg-white mx-auto mb-4" />
-               <p className="text-[12px] font-black tracking-[0.3em] uppercase text-neutral-500">Authentic Fragrances Only</p>
-            </div>
-         </section>
+          {/* Mid Quote Banner */}
+          <section className="bg-[#FAF7F2] text-neutral-900 py-16 md:py-20 relative overflow-hidden flex items-center justify-center text-center border-t border-b border-neutral-100/50">
+             <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none select-none overflow-hidden">
+                <img src="/kozmocart/logo.png" alt="Kozmocart Logo Watermark" className="w-[60vw] max-w-[700px] object-contain" />
+             </div>
+             <div className="relative z-10 max-w-3xl px-8">
+                <h3 className="text-xs font-medium tracking-[0.3em] text-accent uppercase mb-4 font-sans">
+                   {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
+                </h3>
+                <blockquote className="text-2xl md:text-4xl font-serif font-normal italic tracking-wide mb-6 text-neutral-800 leading-tight">
+                   &ldquo;{cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It's a reference mark."}&rdquo;
+                </blockquote>
+                <div className="w-16 h-[1.5px] bg-accent/40 mx-auto mb-4" />
+                <p className="text-[11px] font-medium tracking-[0.3em] uppercase text-neutral-500 font-sans">Authentic Fragrances Only</p>
+             </div>
+          </section>
 
 
          {/* House Favorites Arches - only shown if configured in Storefront CMS */}
