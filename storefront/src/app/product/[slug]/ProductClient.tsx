@@ -635,74 +635,42 @@ export default function ProductClient({
           </div>
         </section>
 
-        {/* Middle Section: Scent Note Pyramid & Story — HIDDEN */}
-        <div className="hidden">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 mb-24 items-start">
+        {/* Olfactory Journey Section (Horizontal) */}
+        <section className="mb-24">
+          <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Composition</span>
+          <h2 className="text-2xl font-serif italic text-black mb-8 border-b border-neutral-100 pb-3">Olfactory Journey</h2>
           
-          {/* LEFT: Scent Pyramid */}
-          <div className="w-full lg:w-1/2">
-            <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Composition</span>
-            <h2 className="text-2xl font-serif italic text-black mb-8 border-b border-neutral-100 pb-3">Olfactory Journey</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <div className="space-y-6">
-              
-              <div className="flex items-start space-x-4 bg-neutral-50/50 p-5 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
-                <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Flame size={16} />
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-1">Top Notes (Opening)</h4>
-                  <p className="text-sm font-bold text-neutral-800 leading-relaxed">{topNotes}</p>
-                  <p className="text-[9px] text-neutral-400 mt-1 font-medium tracking-wide">First 15-30 minutes of initial impression.</p>
-                </div>
+            <div className="flex flex-col items-start bg-neutral-50/50 p-6 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
+              <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
+                <Flame size={18} />
               </div>
-
-              <div className="flex items-start space-x-4 bg-neutral-50/50 p-5 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
-                <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Heart size={16} />
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-1">Heart Notes (Core Profile)</h4>
-                  <p className="text-sm font-bold text-neutral-800 leading-relaxed">{heartNotes}</p>
-                  <p className="text-[9px] text-neutral-400 mt-1 font-medium tracking-wide">Main olfactory signature lasting 2-4 hours.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4 bg-neutral-50/50 p-5 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
-                <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Sparkles size={16} />
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-1">Base Notes (Dry Down)</h4>
-                  <p className="text-sm font-bold text-neutral-800 leading-relaxed">{baseNotes}</p>
-                  <p className="text-[9px] text-neutral-400 mt-1 font-medium tracking-wide">Deep, rich foundational notes lasting 8+ hours.</p>
-                </div>
-              </div>
-
+              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">Top Notes (Opening)</h4>
+              <p className="text-sm font-bold text-neutral-800 leading-relaxed mb-1">{topNotes}</p>
+              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">First 15-30 minutes of initial impression.</p>
             </div>
-          </div>
 
-          {/* RIGHT: Product Story */}
-          <div className="w-full lg:w-1/2">
-            <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Storytelling</span>
-            <h2 className="text-2xl font-serif italic text-black mb-8 border-b border-neutral-100 pb-3">Creation Narrative</h2>
-            <div className="text-neutral-600 text-sm leading-relaxed space-y-4 font-medium italic">
-              {product.full_description ? (
-                product.full_description.split('\n').map((para: string, idx: number) => (
-                  <p key={idx}>{para}</p>
-                ))
-              ) : (
-                <>
-                  <p>Every single spray represents a carefully calibrated artistic vision, bringing together the rarest essential oil extractions harvested by hand around the world.</p>
-                  <p>The composition introduces itself with a vibrant spark of citrus that immediately wakes the senses, before melting gracefully into an warm, intimate heart of fine woods and hand-picked flowers.</p>
-                  <p>As the fragrance settles, it leaves a long, unforgettable trail of ambergris and sweet organic vanilla that warms against the skin for an unforgettable molecular dry-down experience.</p>
-                </>
-              )}
+            <div className="flex flex-col items-start bg-neutral-50/50 p-6 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
+              <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
+                <Heart size={18} />
+              </div>
+              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">Heart Notes (Core Profile)</h4>
+              <p className="text-sm font-bold text-neutral-800 leading-relaxed mb-1">{heartNotes}</p>
+              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">Main olfactory signature lasting 2-4 hours.</p>
             </div>
-          </div>
 
-        </div>
-        </div>
+            <div className="flex flex-col items-start bg-neutral-50/50 p-6 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
+              <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
+                <Sparkles size={18} />
+              </div>
+              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">Base Notes (Dry Down)</h4>
+              <p className="text-sm font-bold text-neutral-800 leading-relaxed mb-1">{baseNotes}</p>
+              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">Deep, rich foundational notes lasting 8+ hours.</p>
+            </div>
+
+          </div>
+        </section>
 
         {/* DYNAMIC RECOMMENDATIONS SECTION 0: Suggest Same Category Items */}
         {sameCategoryProducts.length > 0 && (
