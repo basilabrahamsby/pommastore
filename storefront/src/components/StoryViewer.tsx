@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, ChevronLeft, ChevronRight, ShoppingBag, Star, RefreshCw } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ShoppingBag, Star, RefreshCw, Flame, Heart, Sparkles, MoveUp, Play } from 'lucide-react';
 import api from '@/services/api';
 import { getMediaUrl } from '@/services/media';
 import { useCartStore } from '@/store/cartStore';
@@ -49,6 +49,10 @@ export default function StoryViewer({
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Visual feedback overlay triggers
+  const [showTapLeft, setShowTapLeft] = useState(false);
+  const [showTapRight, setShowTapRight] = useState(false);
+
   // Products state for the active category
   const [catProducts, setCatProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -58,8 +62,13 @@ export default function StoryViewer({
   const updateQuantity = useCartStore((state) => state.updateQuantity);
 
   const activeCategory = categories[currentCatIdx];
-  const slideDuration = 5000; // 5 seconds per slide
-  const timerInterval = 50; // 50ms ticks for smooth animation
+  const slideDuration = 5500; // 5.5 seconds per slide
+  const timerInterval = 40; // 40ms ticks
+
+  const allProductsRef = useRef(allProducts);
+  useEffect(() => {
+    allProductsRef.current = allProducts;
+  }, [allProducts]);
 
   // Mark category as seen when it becomes active
   useEffect(() => {
@@ -68,12 +77,18 @@ export default function StoryViewer({
     }
   }, [currentCatIdx, activeCategory, onMarkAsSeen]);
 
+  // Reset slide and progress on category change
+  useEffect(() => {
+    setCurrentSlideIdx(0);
+    setProgress(0);
+  }, [currentCatIdx]);
+
   // Fetch category products: checks local products array first, then requests API if needed.
   useEffect(() => {
     if (!activeCategory) return;
 
     // Filter from pre-fetched products if available
-    const matched = allProducts.filter((p: any) => 
+    const matched = allProductsRef.current.filter((p: any) => 
       p.category_name?.toLowerCase() === activeCategory.name?.toLowerCase() ||
       p.category_id === activeCategory.id
     );
@@ -96,11 +111,7 @@ export default function StoryViewer({
       };
       fetchProducts();
     }
-    
-    // Reset slide and progress on category change
-    setCurrentSlideIdx(0);
-    setProgress(0);
-  }, [currentCatIdx, activeCategory, allProducts]);
+  }, [currentCatIdx, activeCategory]);
 
   // Main story progress timer hook
   useEffect(() => {
@@ -146,7 +157,6 @@ export default function StoryViewer({
       // Go to first slide of next category
       if (currentCatIdx < categories.length - 1) {
         setCurrentCatIdx((prev) => prev + 1);
-        setCurrentSlideIdx(0);
       } else {
         // Last slide of last category -> close stories
         onClose();
@@ -163,7 +173,9 @@ export default function StoryViewer({
       // Go to second slide of previous category
       if (currentCatIdx > 0) {
         setCurrentCatIdx((prev) => prev - 1);
-        setCurrentSlideIdx(1);
+        // We set slide idx to 1 inside the category reset or directly:
+        // Wait, to set it to 1, we can do it after the cat index update
+        setTimeout(() => setCurrentSlideIdx(1), 0);
       } else {
         // First slide of first category -> reset progress
         setProgress(0);
@@ -195,15 +207,27 @@ export default function StoryViewer({
     return clean;
   };
 
+  const triggerTapLeft = () => {
+    setShowTapLeft(true);
+    setTimeout(() => setShowTapLeft(false), 200);
+    handlePrev();
+  };
+
+  const triggerTapRight = () => {
+    setShowTapRight(true);
+    setTimeout(() => setShowTapRight(false), 200);
+    handleNext();
+  };
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-neutral-950/95 md:bg-neutral-950/80 backdrop-blur-xl animate-in fade-in duration-300">
       
       {/* Absolute background close area */}
-      <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
+      <div className="absolute inset-0 cursor-pointer hidden md:block" onClick={onClose} />
 
-      {/* Story Viewport (Sized like a premium phone screen) */}
+      {/* Story Viewport (Phone border frame wrapper for true Instagram feel) */}
       <div 
-        className="relative w-full h-full md:max-w-[430px] md:h-[80vh] md:max-h-[850px] md:rounded-2xl overflow-hidden bg-neutral-950 shadow-2xl flex flex-col justify-between select-none"
+        className="relative w-full h-full md:max-w-[412px] md:h-[84vh] md:max-h-[820px] md:rounded-[40px] md:border-[10px] md:border-neutral-900 overflow-hidden bg-[#070709] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] flex flex-col justify-between select-none md:ring-[5px] md:ring-neutral-800/30"
         onMouseDown={() => setIsPaused(true)}
         onMouseUp={() => setIsPaused(false)}
         onMouseLeave={() => setIsPaused(false)}
@@ -211,11 +235,14 @@ export default function StoryViewer({
         onTouchEnd={() => setIsPaused(false)}
       >
         
+        {/* Dynamic Island Notch - adds to phone aesthetic */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-b-2xl z-40 hidden md:block" />
+
         {/* Top Story Header & Progress Indicators */}
-        <div className="relative z-30 w-full pt-4 px-4 flex flex-col gap-3.5 bg-gradient-to-b from-black/80 via-black/40 to-transparent pb-10">
+        <div className="relative z-30 w-full pt-4 md:pt-6 px-4 flex flex-col gap-3 bg-gradient-to-b from-black/90 via-black/40 to-transparent pb-14">
           
           {/* Progress Bars */}
-          <div className="flex gap-1.5 w-full">
+          <div className="flex gap-1.2 w-full px-1">
             {[0, 1].map((idx) => {
               let barProgress = 0;
               if (idx < currentSlideIdx) barProgress = 100;
@@ -224,30 +251,33 @@ export default function StoryViewer({
               return (
                 <div key={idx} className="h-1 bg-white/20 rounded-full flex-1 overflow-hidden">
                   <div 
-                    className="h-full bg-white transition-all duration-[50ms] ease-linear"
+                    className="h-full bg-white transition-all duration-[40ms] ease-linear shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                     style={{ width: `${barProgress}%` }}
                   />
                 </div>
               );
             })}
           </div>
-
+ 
           {/* User Profile / Category Info */}
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center px-1">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full overflow-hidden border border-white/30 p-[1px] bg-white/10">
-                <img 
-                  src={categoryImageUrl} 
-                  alt={activeCategory.name} 
-                  className="w-full h-full object-cover rounded-full"
-                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                />
+              <div className="w-9 h-9 rounded-full overflow-hidden p-[1.5px] bg-gradient-to-tr from-amber-400 to-accent">
+                <div className="w-full h-full rounded-full border border-black/20 overflow-hidden bg-neutral-800">
+                  <img 
+                    src={categoryImageUrl} 
+                    alt={activeCategory.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                  />
+                </div>
               </div>
               <div>
-                <h3 className="text-[11px] font-bold text-white tracking-wider uppercase font-sans">
+                <h3 className="text-[11px] font-black text-white tracking-[0.1em] uppercase font-sans">
                   {activeCategory.name}
                 </h3>
-                <span className="text-[8px] md:text-[9px] text-white/50 tracking-wider uppercase font-sans">
+                <span className="text-[8px] font-bold text-accent tracking-[0.15em] uppercase font-sans flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                   Featured Curation
                 </span>
               </div>
@@ -259,7 +289,7 @@ export default function StoryViewer({
                 e.stopPropagation();
                 onClose();
               }}
-              className="p-1.5 rounded-full text-white/70 hover:text-white bg-white/10 hover:bg-white/20 transition-all duration-300"
+              className="p-1.5 rounded-full text-white/80 hover:text-white bg-black/30 hover:bg-black/50 border border-white/5 transition-all duration-300"
             >
               <X size={16} />
             </button>
@@ -267,73 +297,89 @@ export default function StoryViewer({
         </div>
 
         {/* Tap targets for navigation (left 30% / right 70%) */}
-        <div className="absolute inset-x-0 top-24 bottom-24 z-20 flex pointer-events-auto">
-          <div className="w-[30%] h-full cursor-pointer" onClick={(e) => { e.stopPropagation(); handlePrev(); }} />
-          <div className="w-[70%] h-full cursor-pointer" onClick={(e) => { e.stopPropagation(); handleNext(); }} />
+        <div className="absolute inset-x-0 top-24 bottom-28 z-20 flex pointer-events-auto">
+          <div className="w-[30%] h-full cursor-pointer relative" onClick={(e) => { e.stopPropagation(); triggerTapLeft(); }}>
+            {/* Tap indicator flash */}
+            <div className={`absolute inset-0 bg-white/5 transition-opacity duration-200 pointer-events-none ${showTapLeft ? 'opacity-100' : 'opacity-0'}`} />
+          </div>
+          <div className="w-[70%] h-full cursor-pointer relative" onClick={(e) => { e.stopPropagation(); triggerTapRight(); }}>
+            {/* Tap indicator flash */}
+            <div className={`absolute inset-0 bg-white/5 transition-opacity duration-200 pointer-events-none ${showTapRight ? 'opacity-100' : 'opacity-0'}`} />
+          </div>
         </div>
+
+        {/* Hold/Pause visual indicator */}
+        {isPaused && (
+          <div className="absolute top-20 right-6 z-40 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5 animate-pulse">
+            <Play size={10} className="text-white fill-white" />
+            <span className="text-[8px] font-bold tracking-widest text-white uppercase">PAUSED</span>
+          </div>
+        )}
 
         {/* Story Body Panel */}
         <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center">
           
           {/* SLIDE 0: Category Welcome / Intro Banner */}
           {currentSlideIdx === 0 && (
-            <div className="w-full h-full relative">
+            <div className="w-full h-full relative animate-in fade-in zoom-in-95 duration-500">
               <img 
                 src={categoryImageUrl} 
                 alt={activeCategory.name} 
-                className="w-full h-full object-cover opacity-90 animate-out scale-105"
+                className="w-full h-full object-cover opacity-95"
                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60" />
+              {/* Vignette overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/50" />
               
-              <div className="absolute inset-x-0 bottom-28 px-8 text-left z-20">
-                <span className="text-[9px] font-medium tracking-[0.25em] text-accent uppercase mb-1.5 block font-sans">
+              {/* Instagram style overlay banner */}
+              <div className="absolute inset-x-4 bottom-28 z-20 bg-black/30 backdrop-blur-xl border border-white/10 p-6 rounded-2xl text-left shadow-xl">
+                <span className="text-[9px] font-black tracking-[0.25em] text-accent uppercase mb-1.5 block font-sans">
                   Discover Signature
                 </span>
-                <h1 className="text-xs font-semibold tracking-[0.2em] text-white/95 uppercase mb-3 font-sans">
+                <h1 className="text-xl font-bold tracking-[0.1em] text-white uppercase mb-3 font-sans leading-tight">
                   {activeCategory.name}
                 </h1>
-                <p className="text-xs text-neutral-300 leading-relaxed tracking-wide font-light max-w-sm mb-5">
+                <p className="text-[11px] text-neutral-300 leading-relaxed tracking-wide font-medium max-w-sm mb-5 italic">
                   {cleanDescription(activeCategory.description) || 'Explore a masterfully curated selection of premium fragrances, hand-selected to elevate your signature scent profile.'}
                 </p>
-                <div className="flex items-center gap-2 text-white/50 text-[9px] tracking-wider font-bold uppercase font-sans animate-pulse">
-                  <span>Swipe or tap to explore</span>
-                  <ChevronRight size={12} />
+                <div className="flex items-center gap-2 text-white/60 text-[8px] tracking-widest font-black uppercase font-sans animate-pulse">
+                  <span>Tap on the right to discover</span>
+                  <ChevronRight size={10} className="text-accent" />
                 </div>
               </div>
             </div>
           )}
 
-          {/* SLIDE 1: Featured Category Product */}
+          {/* SLIDE 1: Featured Category Product (Interactive Product Sticker) */}
           {currentSlideIdx === 1 && (
-            <div className="w-full h-full flex flex-col justify-center px-6 pt-24 pb-28 relative bg-[#0a0a0f]">
+            <div className="w-full h-full flex flex-col justify-center px-4 pt-24 pb-28 relative bg-[#070709] animate-in fade-in zoom-in-95 duration-500">
               
-              {/* Blurred background thumbnail for depth */}
+              {/* Blurred background image for luxury depth */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <img 
                   src={categoryImageUrl} 
                   alt="" 
-                  className="w-full h-full object-cover opacity-10 blur-2xl scale-125"
+                  className="w-full h-full object-cover opacity-[0.12] blur-xl scale-110"
                 />
-                <div className="absolute inset-0 bg-black/60" />
+                <div className="absolute inset-0 bg-neutral-950/70" />
               </div>
 
               {loadingProducts ? (
                 <div className="flex flex-col items-center justify-center gap-4 text-white z-30">
                   <RefreshCw size={24} className="animate-spin text-accent" />
-                  <span className="text-[10px] font-semibold tracking-widest uppercase text-neutral-400">Loading Featured scent...</span>
+                  <span className="text-[9px] font-black tracking-widest uppercase text-neutral-400">Loading Curation...</span>
                 </div>
               ) : featuredProduct ? (
-                <div className="z-30 w-full flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
-                  <span className="text-[8px] md:text-[9px] font-medium tracking-wider text-accent uppercase mb-2 font-sans">
-                    Bestseller In {activeCategory.name}
+                <div className="z-30 w-full flex flex-col items-center text-center px-2">
+                  <span className="text-[9px] font-black tracking-[0.2em] text-accent uppercase mb-4 font-sans animate-pulse">
+                    ★ Bestseller Curation ★
                   </span>
                   
-                  {/* Glassmorphic Product Card */}
-                  <div className="w-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-xl p-5 mb-6 flex flex-col items-center">
+                  {/* Glassmorphic Product Sticker Card */}
+                  <div className="w-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-5 mb-3 flex flex-col items-center shadow-2xl hover:border-white/20 transition-all duration-300">
                     
-                    {/* Image */}
-                    <div className="relative w-44 h-44 bg-white/95 rounded-lg overflow-hidden flex items-center justify-center shadow-lg p-4 mb-4 select-none pointer-events-none">
+                    {/* Interactive Product Image Container */}
+                    <div className="relative w-40 h-40 bg-white/95 rounded-2xl overflow-hidden flex items-center justify-center shadow-md p-4 mb-4 select-none pointer-events-none">
                       <img 
                         src={getMediaUrl(featuredProduct.images?.[0])} 
                         alt={featuredProduct.name}
@@ -342,19 +388,21 @@ export default function StoryViewer({
                       />
                     </div>
 
-                    {/* Brand & Name */}
-                    <span className="text-[9px] font-medium tracking-wider text-neutral-400 uppercase mb-1 font-sans">
+                    {/* Brand */}
+                    <span className="text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1 font-sans">
                       {featuredProduct.brand_name}
                     </span>
-                    <h2 className="text-base font-semibold text-white uppercase tracking-wide mb-2 font-nelphim line-clamp-1 max-w-[280px]">
+                    
+                    {/* Product Name */}
+                    <h2 className="text-sm font-semibold text-white uppercase tracking-wide mb-2.5 font-nelphim line-clamp-1 max-w-[280px]">
                       {featuredProduct.name}
                     </h2>
 
-                    {/* Scent notes */}
+                    {/* Scent note badges */}
                     {featuredProduct.scent_notes?.top && (
-                      <div className="flex items-center justify-center gap-2 mb-3">
-                        {featuredProduct.scent_notes.top.slice(0, 3).map((note: string, nidx: number) => (
-                          <span key={nidx} className="inline-flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[7.5px] font-medium text-neutral-300 uppercase tracking-wider font-sans">
+                      <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
+                        {featuredProduct.scent_notes.top.slice(0, 2).map((note: string, nidx: number) => (
+                          <span key={nidx} className="inline-flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full text-[8px] font-bold text-neutral-300 uppercase tracking-widest font-sans">
                             <span>{getNoteEmoji(note)}</span>
                             <span>{note}</span>
                           </span>
@@ -362,39 +410,31 @@ export default function StoryViewer({
                       </div>
                     )}
 
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 mb-4 text-xs">
-                      <Star size={12} className="fill-rating text-rating" />
-                      <span className="text-white font-semibold text-[10px] font-sans">4.8</span>
-                      <span className="text-neutral-500 font-sans">|</span>
-                      <span className="text-[10px] text-neutral-400 font-sans">Featured</span>
-                    </div>
-
                     {/* Pricing */}
-                    <div className="flex items-baseline gap-2 mb-6">
-                      <span className="text-xl font-semibold text-white font-sans">
+                    <div className="flex items-baseline gap-2 mb-5">
+                      <span className="text-lg font-bold text-white font-sans">
                         ₹{primaryVariant?.selling_price?.toLocaleString('en-IN')}
                       </span>
                       {primaryVariant?.compare_at_price > primaryVariant?.selling_price && (
-                        <span className="text-xs text-neutral-500 line-through font-sans">
+                        <span className="text-[10px] text-neutral-500 line-through font-sans">
                           ₹{primaryVariant.compare_at_price.toLocaleString('en-IN')}
                         </span>
                       )}
                     </div>
 
-                    {/* Action buttons inside the story */}
+                    {/* Sticker Action buttons inside the story */}
                     <div className="w-full flex gap-3 pointer-events-auto">
                       <Link 
                         href={`/product/${featuredProduct.slug}`}
                         onClick={onClose}
-                        className="flex-1 border border-white/20 bg-transparent hover:bg-white/10 text-white py-3 text-[9px] font-semibold tracking-wider transition-all duration-300 uppercase text-center rounded font-sans"
+                        className="flex-1 border border-white/10 bg-white/5 hover:bg-white/10 text-white py-3 text-[8.5px] font-bold tracking-widest transition-all duration-300 uppercase text-center rounded-xl font-sans"
                       >
                         View Details
                       </Link>
                       
                       {primaryVariant && (
                         cartItem ? (
-                          <div className="flex-1 flex items-center justify-between border border-white/10 bg-white/5 h-[40px] rounded overflow-hidden">
+                          <div className="flex-1 flex items-center justify-between border border-white/10 bg-white/5 h-[38px] rounded-xl overflow-hidden">
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
@@ -405,7 +445,7 @@ export default function StoryViewer({
                             >
                               -
                             </button>
-                            <span className="text-[8px] font-semibold tracking-wider uppercase text-white font-sans">
+                            <span className="text-[7.5px] font-black tracking-widest uppercase text-accent font-sans">
                               {cartItem.quantity} In Bag
                             </span>
                             <button
@@ -436,7 +476,7 @@ export default function StoryViewer({
                                 loyaltyPoints: primaryVariant.loyalty_points,
                               });
                             }}
-                            className="flex-1 bg-accent hover:bg-accent/90 text-white py-3 text-[9px] font-semibold tracking-wider transition-all duration-300 uppercase rounded font-sans shadow-[0_2px_8px_rgba(210,22,141,0.2)]"
+                            className="flex-1 bg-accent hover:bg-accent/90 text-white py-3 text-[8.5px] font-bold tracking-widest transition-all duration-300 uppercase rounded-xl font-sans shadow-[0_2px_12px_rgba(210,22,141,0.3)]"
                           >
                             Add to Bag
                           </button>
@@ -446,12 +486,12 @@ export default function StoryViewer({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center text-white z-30 pointer-events-auto">
+                <div className="flex flex-col items-center justify-center text-white z-30 pointer-events-auto px-4">
                   <p className="text-neutral-400 text-xs italic font-serif mb-4">No featured products available.</p>
                   <Link 
                     href={`/shop?category=${activeCategory.slug || activeCategory.id}`}
                     onClick={onClose}
-                    className="border border-white/20 px-6 py-2.5 rounded text-[10px] font-black tracking-widest uppercase text-white"
+                    className="border border-white/20 px-6 py-2.5 rounded-full text-[9px] font-black tracking-widest uppercase text-white"
                   >
                     View Collection
                   </Link>
@@ -462,14 +502,14 @@ export default function StoryViewer({
         </div>
 
         {/* Swipe Up/Tap to Shop Footer (Static link at bottom) */}
-        <div className="relative z-30 w-full px-6 pb-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-12 flex flex-col items-center pointer-events-auto">
+        <div className="relative z-30 w-full px-4 pb-6 bg-gradient-to-t from-black via-black/20 to-transparent pt-12 flex flex-col items-center pointer-events-auto">
           <Link 
             href={`/shop?category=${activeCategory.slug || activeCategory.id}`}
             onClick={onClose}
-            className="w-full py-4 bg-white hover:bg-accent text-black hover:text-white text-[9px] font-bold tracking-[0.15em] uppercase rounded-sm text-center flex items-center justify-center gap-2 transition-all duration-500 shadow-2xl font-sans"
+            className="w-full py-3.5 bg-white/10 hover:bg-white text-white hover:text-black text-[9px] font-black tracking-[0.15em] uppercase rounded-full text-center flex items-center justify-center gap-2 transition-all duration-500 shadow-2xl border border-white/20 font-sans"
           >
-            <span>Shop Full {activeCategory.name} Collection</span>
-            <ChevronRight size={14} />
+            <MoveUp size={10} className="animate-bounce" />
+            <span>Swipe Up to shop full collection</span>
           </Link>
         </div>
 
@@ -480,18 +520,18 @@ export default function StoryViewer({
         <button 
           onClick={handlePrev}
           disabled={currentCatIdx === 0 && currentSlideIdx === 0}
-          className="w-14 h-14 rounded-full border border-white/20 bg-black/40 hover:bg-white hover:text-black text-white flex items-center justify-center transition-all duration-300 disabled:opacity-30 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-full border border-white/10 bg-black/40 hover:bg-white hover:text-black text-white flex items-center justify-center transition-all duration-300 disabled:opacity-20 disabled:pointer-events-none"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={20} />
         </button>
       </div>
       <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-8 lg:right-24 z-40">
         <button 
           onClick={handleNext}
           disabled={currentCatIdx === categories.length - 1 && currentSlideIdx === 1}
-          className="w-14 h-14 rounded-full border border-white/20 bg-black/40 hover:bg-white hover:text-black text-white flex items-center justify-center transition-all duration-300 disabled:opacity-30 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-full border border-white/10 bg-black/40 hover:bg-white hover:text-black text-white flex items-center justify-center transition-all duration-300 disabled:opacity-20 disabled:pointer-events-none"
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={20} />
         </button>
       </div>
 
