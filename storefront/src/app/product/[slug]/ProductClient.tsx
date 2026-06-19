@@ -20,8 +20,11 @@ import {
   User,
   Sparkles,
   Flame,
-  Award
+  Award,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+
 
 export default function ProductClient({ 
   slug, 
@@ -36,6 +39,7 @@ export default function ProductClient({
   const [selectedVariant, setSelectedVariant] = useState<any>(initialProduct?.variants?.[0] || null);
   const [activeImage, setActiveImage] = useState<string>(initialProduct?.images?.[0] || '');
   const [loading, setLoading] = useState(!initialProduct);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // Offers State
   const [matchingOffers, setMatchingOffers] = useState<any[]>(initialOffers || []);
@@ -401,9 +405,9 @@ export default function ProductClient({
             )}
 
             {/* Micro details */}
-            <p className="text-neutral-600 text-sm leading-relaxed mb-8 font-medium">
+            <div className="text-neutral-600 text-sm leading-relaxed mb-8 font-medium whitespace-pre-wrap">
               {product.short_description || defaultDescription}
-            </p>
+            </div>
 
             {/* ACTIVE OFFERS BANNER */}
             {matchingOffers.map((off: any) => {
@@ -599,6 +603,36 @@ export default function ProductClient({
                 </div>
               </div>
             </div>
+
+            {/* COLLAPSIBLE DETAILS Accordion */}
+            {product.full_description && (
+              <div className="border-t border-neutral-100 pt-6 mt-6">
+                <div className="border border-neutral-200 rounded overflow-hidden">
+                  <button
+                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    className="w-full flex items-center justify-between p-4 bg-neutral-50/30 hover:bg-neutral-50/80 transition-colors select-none text-left"
+                  >
+                    <span className="text-[10px] font-black tracking-[0.2em] text-neutral-900 uppercase">
+                      Creation Narrative (Click to view details)
+                    </span>
+                    {isDescriptionExpanded ? (
+                      <ChevronUp size={16} className="text-neutral-900" />
+                    ) : (
+                      <ChevronDown size={16} className="text-neutral-400" />
+                    )}
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isDescriptionExpanded ? 'max-h-[1000px] opacity-100 border-t border-neutral-100 bg-white' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="p-4 text-neutral-600 text-xs leading-relaxed font-medium whitespace-pre-wrap">
+                      {product.full_description}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
