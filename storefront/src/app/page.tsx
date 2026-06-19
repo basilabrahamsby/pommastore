@@ -1285,10 +1285,10 @@ export default function Home() {
                 </div>
 
                 {/* Main quote */}
-                <blockquote className="relative text-xl sm:text-2xl md:text-[2.25rem] font-nelphim font-normal italic tracking-wide text-white/90 leading-[1.3] mb-6 px-6">
-                   <span className="text-accent/30 text-5xl leading-none absolute -top-4 -left-1 select-none font-serif">&ldquo;</span>
+                <blockquote className="relative text-xl sm:text-2xl md:text-[2.25rem] font-serif font-normal uppercase tracking-wide text-[#d4af37] leading-[1.3] mb-6 px-6">
+                   <span className="text-[#d4af37]/20 text-5xl leading-none absolute -top-4 -left-1 select-none font-serif">&ldquo;</span>
                    {cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It\u2019s a reference mark."}
-                   <span className="text-accent/30 text-5xl leading-none absolute -bottom-8 -right-1 select-none font-serif">&rdquo;</span>
+                   <span className="text-[#d4af37]/20 text-5xl leading-none absolute -bottom-8 -right-1 select-none font-serif">&rdquo;</span>
                 </blockquote>
 
                 {/* Divider */}
