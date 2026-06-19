@@ -957,15 +957,21 @@ export default function Home() {
                  <div className="max-w-[1400px] mx-auto px-8">
                     <div className="flex flex-col md:flex-row gap-6 items-stretch w-full justify-center">
                        {brands.map((brand: any, idx: number) => {
-                          const DEFAULT_BANNERS = [
-                             "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800",
-                             "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800"
-                          ];
+                          // Find first product for this brand from loaded product arrays
+                          const allProducts: any[] = [...newArrivals, ...bestsellers, ...favoriteProducts];
+                          const brandProduct = allProducts.find(
+                             (p: any) => p.brand_id === brand.id || p.brand === brand.id || p.brand === brand.name
+                          );
+                          const productImage = brandProduct?.images?.[0]
+                             ? getMediaUrl(brandProduct.images[0])
+                             : brandProduct?.image
+                             ? getMediaUrl(brandProduct.image)
+                             : null;
                           const image = brand.brand_banner 
                              ? getMediaUrl(brand.brand_banner) 
                              : (brand.banner_url 
                                 ? getMediaUrl(brand.banner_url) 
-                                : DEFAULT_BANNERS[idx % DEFAULT_BANNERS.length]);
+                                : (productImage || null));
                           const desc = brand.description || `Discover the signature collections and exclusive raw extractions crafted by the luxury house of ${brand.name}.`;
                           
                           return (
@@ -979,12 +985,18 @@ export default function Home() {
 
                                 {/* Circular image showcase container */}
                                 <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-accent/20 p-1 group-hover:border-accent transition-all duration-700 mb-4 mx-auto">
-                                   <img
-                                      src={image}
-                                      alt={brand.name}
-                                      className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-[2.5s] ease-out"
-                                      onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
-                                   />
+                                   {image ? (
+                                      <img
+                                         src={image}
+                                         alt={brand.name}
+                                         className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-[2.5s] ease-out"
+                                         onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                      />
+                                   ) : (
+                                      <div className="w-full h-full rounded-full bg-gradient-to-br from-accent/20 via-[#1a1a22] to-accent/5 flex items-center justify-center">
+                                         <span className="text-accent/60 text-2xl font-serif italic">{brand.name?.[0] || '✦'}</span>
+                                      </div>
+                                   )}
                                 </div>
 
                                 {/* Logo Badge with mix-blend-multiply */}
@@ -1242,20 +1254,58 @@ export default function Home() {
             </section>
          )}
 
-          {/* Mid Quote Banner */}
-          <section className="bg-[#FAF7F2] text-neutral-900 py-16 md:py-20 relative overflow-hidden flex items-center justify-center text-center border-t border-b border-neutral-100/50">
-             <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none select-none overflow-hidden">
-                <img src="/kozmocart/logo.png" alt="Kozmocart Logo Watermark" className="w-[60vw] max-w-[700px] object-contain" />
+          {/* Mid Quote Banner - Essence of Beauty */}
+          <section className="relative overflow-hidden bg-[#0a0a0d] text-white py-20 md:py-32 flex items-center justify-center text-center">
+             {/* Deep radial glow – gold */}
+             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(212,175,55,0.10)_0%,transparent_70%)] pointer-events-none" />
+             {/* Subtle corner vignettes */}
+             <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.06)_0%,transparent_60%)] pointer-events-none" />
+             <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.06)_0%,transparent_60%)] pointer-events-none" />
+             {/* Decorative hairlines */}
+             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-gradient-to-r from-transparent via-accent/20 to-transparent pointer-events-none" />
+             <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-accent/10 to-transparent pointer-events-none" />
+             {/* Oversized watermark logo */}
+             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+                <img src="/kozmocart/logo.png" alt="" className="w-[55vw] max-w-[640px] object-contain opacity-[0.025] mix-blend-luminosity" />
              </div>
-             <div className="relative z-10 max-w-3xl px-8">
-                <h3 className="text-xs font-medium tracking-[0.3em] text-accent uppercase mb-4 font-sans">
-                   {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
-                </h3>
-                <blockquote className="text-2xl md:text-4xl font-serif font-normal italic tracking-wide mb-6 text-neutral-800 leading-tight">
-                   &ldquo;{cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It's a reference mark."}&rdquo;
+             {/* Small corner ornaments */}
+             <svg className="absolute top-6 left-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute top-6 right-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M47 47V1H1" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute bottom-6 left-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M1 1v46h46" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute bottom-6 right-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M47 1v46H1" stroke="currentColor" strokeWidth="1"/></svg>
+
+             <div className="relative z-10 max-w-4xl px-8 md:px-12">
+                {/* Eyebrow label */}
+                <div className="flex items-center justify-center gap-4 mb-8">
+                   <div className="w-10 h-[1px] bg-accent/50" />
+                   <span className="text-[9px] font-bold tracking-[0.45em] text-accent uppercase font-sans">
+                      {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
+                   </span>
+                   <div className="w-10 h-[1px] bg-accent/50" />
+                </div>
+
+                {/* Main quote */}
+                <blockquote className="relative text-3xl sm:text-4xl md:text-[3.25rem] font-nelphim font-normal italic tracking-wide text-white/90 leading-[1.25] mb-10">
+                   <span className="text-accent/40 text-7xl leading-none absolute -top-6 -left-4 select-none font-serif">&ldquo;</span>
+                   {cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It\u2019s a reference mark."}
+                   <span className="text-accent/40 text-7xl leading-none absolute -bottom-10 -right-2 select-none font-serif">&rdquo;</span>
                 </blockquote>
-                <div className="w-16 h-[1.5px] bg-accent/40 mx-auto mb-4" />
-                <p className="text-[11px] font-medium tracking-[0.3em] uppercase text-neutral-500 font-sans">Authentic Fragrances Only</p>
+
+                {/* Divider */}
+                <div className="flex items-center justify-center gap-3 mb-8">
+                   <div className="w-6 h-6 rotate-45 border border-accent/30" />
+                   <div className="w-24 h-[1px] bg-gradient-to-r from-accent/60 via-accent to-accent/60" />
+                   <div className="w-2 h-2 rounded-full bg-accent" />
+                   <div className="w-24 h-[1px] bg-gradient-to-r from-accent/60 via-accent to-accent/60" />
+                   <div className="w-6 h-6 rotate-45 border border-accent/30" />
+                </div>
+
+                {/* Tagline + CTA */}
+                <p className="text-[10px] font-medium tracking-[0.5em] uppercase text-white/30 font-sans mb-8">Authentic Fragrances Only</p>
+                <Link href="/shop" className="group inline-flex items-center gap-3 border border-accent/40 hover:border-accent hover:bg-accent/10 text-accent text-[10px] font-bold tracking-[0.35em] uppercase px-8 py-3.5 transition-all duration-500 font-sans">
+                   <span>Explore Collection</span>
+                   <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform duration-300" />
+                </Link>
              </div>
           </section>
 

@@ -115,9 +115,10 @@ const Navbar = () => {
                <Link href="/" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Home</Link>
                <Link href="/shop?gender=Men" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Men</Link>
                <Link href="/shop?gender=Women" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Women</Link>
+               <Link href="/shop?gender=Unisex" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Unisex</Link>
                <Link href="/brands" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Brands</Link>
                <Link href="/offers" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300 text-accent">Sale</Link>
-               <Link href="/shop?new=true" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">New</Link>
+               <Link href="/shop" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Products</Link>
             </nav>
           </div>
 
@@ -392,9 +393,10 @@ const Navbar = () => {
              <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
              <Link href="/shop?gender=Men" onClick={() => setIsMobileMenuOpen(false)}>Men</Link>
              <Link href="/shop?gender=Women" onClick={() => setIsMobileMenuOpen(false)}>Women</Link>
+             <Link href="/shop?gender=Unisex" onClick={() => setIsMobileMenuOpen(false)}>Unisex</Link>
              <Link href="/brands" onClick={() => setIsMobileMenuOpen(false)}>Brands</Link>
              <Link href="/offers" className="text-accent" onClick={() => setIsMobileMenuOpen(false)}>Sale</Link>
-             <Link href="/shop?new=true" onClick={() => setIsMobileMenuOpen(false)}>New Arrivals</Link>
+             <Link href="/shop" onClick={() => setIsMobileMenuOpen(false)}>Products</Link>
              <div className="h-[1px] bg-neutral-100 my-2" />
              <Link href="/track-order" className="text-neutral-500 text-[10px]" onClick={() => setIsMobileMenuOpen(false)}>Track Your Order</Link>
              <Link href="/rewards" className="text-neutral-500 text-[10px]" onClick={() => setIsMobileMenuOpen(false)}>Rewards Program</Link>

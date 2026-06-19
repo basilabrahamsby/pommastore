@@ -635,7 +635,8 @@ export default function ProductClient({
           </div>
         </section>
 
-        {/* Middle Section: Scent Note Pyramid & Story */}
+        {/* Middle Section: Scent Note Pyramid & Story — HIDDEN */}
+        <div className="hidden">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 mb-24 items-start">
           
           {/* LEFT: Scent Pyramid */}
@@ -700,6 +701,7 @@ export default function ProductClient({
             </div>
           </div>
 
+        </div>
         </div>
 
         {/* DYNAMIC RECOMMENDATIONS SECTION 0: Suggest Same Category Items */}
