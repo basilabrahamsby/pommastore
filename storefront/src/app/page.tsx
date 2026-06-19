@@ -1255,24 +1255,24 @@ export default function Home() {
          )}
 
           {/* Mid Quote Banner - Essence of Beauty */}
-          <section className="relative overflow-hidden bg-[#0a0a0d] text-white py-12 md:py-20 flex items-center justify-center text-center">
-             {/* Deep radial glow – gold */}
-             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(212,175,55,0.08)_0%,transparent_70%)] pointer-events-none" />
+          <section className="relative overflow-hidden bg-[#FAF8F5] text-neutral-800 py-12 md:py-20 flex items-center justify-center text-center border-t border-b border-neutral-100">
+             {/* Subtle radial glow */}
+             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(212,175,55,0.03)_0%,transparent_70%)] pointer-events-none" />
              {/* Subtle corner vignettes */}
-             <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none" />
-             <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none" />
+             <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.02)_0%,transparent_60%)] pointer-events-none" />
+             <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.02)_0%,transparent_60%)] pointer-events-none" />
              {/* Decorative hairlines */}
-             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-gradient-to-r from-transparent via-accent/15 to-transparent pointer-events-none" />
-             <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-accent/10 to-transparent pointer-events-none" />
+             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-gradient-to-r from-transparent via-neutral-200/50 to-transparent pointer-events-none" />
+             <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-neutral-200/30 to-transparent pointer-events-none" />
              {/* Oversized watermark logo */}
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-                <img src="/kozmocart/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.02] mix-blend-luminosity" />
+                <img src="/kozmocart/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.015] mix-blend-multiply" />
              </div>
              {/* Small corner ornaments */}
-             <svg className="absolute top-4 left-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>
-             <svg className="absolute top-4 right-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M47 47V1H1" stroke="currentColor" strokeWidth="1"/></svg>
-             <svg className="absolute bottom-4 left-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M1 1v46h46" stroke="currentColor" strokeWidth="1"/></svg>
-             <svg className="absolute bottom-4 right-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M47 1v46H1" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute top-4 left-4 w-8 h-8 text-neutral-300/60" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute top-4 right-4 w-8 h-8 text-neutral-300/60" viewBox="0 0 48 48" fill="none"><path d="M47 47V1H1" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute bottom-4 left-4 w-8 h-8 text-neutral-300/60" viewBox="0 0 48 48" fill="none"><path d="M1 1v46h46" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute bottom-4 right-4 w-8 h-8 text-neutral-300/60" viewBox="0 0 48 48" fill="none"><path d="M47 1v46H1" stroke="currentColor" strokeWidth="1"/></svg>
 
              <div className="relative z-10 max-w-3xl px-6 md:px-8">
                 {/* Eyebrow label */}
@@ -1285,24 +1285,24 @@ export default function Home() {
                 </div>
 
                 {/* Main quote */}
-                <blockquote className="relative text-xl sm:text-2xl md:text-[2.25rem] font-serif font-normal uppercase tracking-wide text-[#d4af37] leading-[1.3] mb-6 px-6">
-                   <span className="text-[#d4af37]/20 text-5xl leading-none absolute -top-4 -left-1 select-none font-serif">&ldquo;</span>
+                <blockquote className="relative text-xl sm:text-2xl md:text-[2.25rem] font-serif font-normal uppercase tracking-wide text-neutral-800 leading-[1.3] mb-6 px-6">
+                   <span className="text-neutral-200 text-5xl leading-none absolute -top-4 -left-1 select-none font-serif">&ldquo;</span>
                    {cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It\u2019s a reference mark."}
-                   <span className="text-[#d4af37]/20 text-5xl leading-none absolute -bottom-8 -right-1 select-none font-serif">&rdquo;</span>
+                   <span className="text-neutral-200 text-5xl leading-none absolute -bottom-8 -right-1 select-none font-serif">&rdquo;</span>
                 </blockquote>
 
                 {/* Divider */}
                 <div className="flex items-center justify-center gap-2 mb-5">
-                   <div className="w-4 h-4 rotate-45 border border-accent/20" />
-                   <div className="w-16 h-[1px] bg-gradient-to-r from-accent/40 via-accent/80 to-accent/40" />
+                   <div className="w-4 h-4 rotate-45 border border-neutral-200" />
+                   <div className="w-16 h-[1px] bg-gradient-to-r from-neutral-200 via-neutral-400 to-neutral-200" />
                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                   <div className="w-16 h-[1px] bg-gradient-to-r from-accent/40 via-accent/80 to-accent/40" />
-                   <div className="w-4 h-4 rotate-45 border border-accent/20" />
+                   <div className="w-16 h-[1px] bg-gradient-to-r from-neutral-200 via-neutral-400 to-neutral-200" />
+                   <div className="w-4 h-4 rotate-45 border border-neutral-200" />
                 </div>
 
                 {/* Tagline + CTA */}
-                <p className="text-[9px] font-medium tracking-[0.4em] uppercase text-white/25 font-sans mb-6">Authentic Fragrances Only</p>
-                <Link href="/shop" className="group inline-flex items-center gap-3 border border-accent/40 hover:border-accent hover:bg-accent/10 text-accent text-[9px] font-bold tracking-[0.3em] uppercase px-6 py-3 transition-all duration-500 font-sans">
+                <p className="text-[9px] font-medium tracking-[0.4em] uppercase text-neutral-400 font-sans mb-6">Authentic Fragrances Only</p>
+                <Link href="/shop" className="group inline-flex items-center gap-3 border border-neutral-800 hover:border-accent hover:bg-accent/5 text-neutral-800 hover:text-accent text-[9px] font-bold tracking-[0.3em] uppercase px-6 py-3 transition-all duration-500 font-sans rounded-sm">
                    <span>Explore Collection</span>
                    <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
