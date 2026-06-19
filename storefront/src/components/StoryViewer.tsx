@@ -109,8 +109,7 @@ export default function StoryViewer({
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          handleNext();
-          return 0;
+          return 100;
         }
         return prev + (timerInterval / slideDuration) * 100;
       });
@@ -118,6 +117,13 @@ export default function StoryViewer({
 
     return () => clearInterval(interval);
   }, [isPaused, loadingProducts, currentCatIdx, currentSlideIdx]);
+
+  // Handle slide transition when progress reaches 100
+  useEffect(() => {
+    if (progress >= 100) {
+      handleNext();
+    }
+  }, [progress, currentSlideIdx, currentCatIdx]);
 
   // Keyboard navigation listener (Escape, Left Arrow, Right Arrow)
   useEffect(() => {
