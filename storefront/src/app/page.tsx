@@ -1255,56 +1255,56 @@ export default function Home() {
          )}
 
           {/* Mid Quote Banner - Essence of Beauty */}
-          <section className="relative overflow-hidden bg-[#0a0a0d] text-white py-20 md:py-32 flex items-center justify-center text-center">
+          <section className="relative overflow-hidden bg-[#0a0a0d] text-white py-12 md:py-20 flex items-center justify-center text-center">
              {/* Deep radial glow – gold */}
-             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(212,175,55,0.10)_0%,transparent_70%)] pointer-events-none" />
+             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(212,175,55,0.08)_0%,transparent_70%)] pointer-events-none" />
              {/* Subtle corner vignettes */}
-             <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.06)_0%,transparent_60%)] pointer-events-none" />
-             <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.06)_0%,transparent_60%)] pointer-events-none" />
+             <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none" />
+             <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none" />
              {/* Decorative hairlines */}
-             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-gradient-to-r from-transparent via-accent/20 to-transparent pointer-events-none" />
+             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-gradient-to-r from-transparent via-accent/15 to-transparent pointer-events-none" />
              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-accent/10 to-transparent pointer-events-none" />
              {/* Oversized watermark logo */}
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-                <img src="/kozmocart/logo.png" alt="" className="w-[55vw] max-w-[640px] object-contain opacity-[0.025] mix-blend-luminosity" />
+                <img src="/kozmocart/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.02] mix-blend-luminosity" />
              </div>
              {/* Small corner ornaments */}
-             <svg className="absolute top-6 left-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>
-             <svg className="absolute top-6 right-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M47 47V1H1" stroke="currentColor" strokeWidth="1"/></svg>
-             <svg className="absolute bottom-6 left-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M1 1v46h46" stroke="currentColor" strokeWidth="1"/></svg>
-             <svg className="absolute bottom-6 right-6 w-12 h-12 text-accent/20" viewBox="0 0 48 48" fill="none"><path d="M47 1v46H1" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute top-4 left-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute top-4 right-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M47 47V1H1" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute bottom-4 left-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M1 1v46h46" stroke="currentColor" strokeWidth="1"/></svg>
+             <svg className="absolute bottom-4 right-4 w-8 h-8 text-accent/15" viewBox="0 0 48 48" fill="none"><path d="M47 1v46H1" stroke="currentColor" strokeWidth="1"/></svg>
 
-             <div className="relative z-10 max-w-4xl px-8 md:px-12">
+             <div className="relative z-10 max-w-3xl px-6 md:px-8">
                 {/* Eyebrow label */}
-                <div className="flex items-center justify-center gap-4 mb-8">
-                   <div className="w-10 h-[1px] bg-accent/50" />
-                   <span className="text-[9px] font-bold tracking-[0.45em] text-accent uppercase font-sans">
+                <div className="flex items-center justify-center gap-3 mb-5">
+                   <div className="w-8 h-[1px] bg-accent/40" />
+                   <span className="text-[9px] font-bold tracking-[0.4em] text-accent uppercase font-sans">
                       {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
                    </span>
-                   <div className="w-10 h-[1px] bg-accent/50" />
+                   <div className="w-8 h-[1px] bg-accent/40" />
                 </div>
 
                 {/* Main quote */}
-                <blockquote className="relative text-3xl sm:text-4xl md:text-[3.25rem] font-nelphim font-normal italic tracking-wide text-white/90 leading-[1.25] mb-10">
-                   <span className="text-accent/40 text-7xl leading-none absolute -top-6 -left-4 select-none font-serif">&ldquo;</span>
+                <blockquote className="relative text-xl sm:text-2xl md:text-[2.25rem] font-nelphim font-normal italic tracking-wide text-white/90 leading-[1.3] mb-6 px-6">
+                   <span className="text-accent/30 text-5xl leading-none absolute -top-4 -left-1 select-none font-serif">&ldquo;</span>
                    {cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It\u2019s a reference mark."}
-                   <span className="text-accent/40 text-7xl leading-none absolute -bottom-10 -right-2 select-none font-serif">&rdquo;</span>
+                   <span className="text-accent/30 text-5xl leading-none absolute -bottom-8 -right-1 select-none font-serif">&rdquo;</span>
                 </blockquote>
 
                 {/* Divider */}
-                <div className="flex items-center justify-center gap-3 mb-8">
-                   <div className="w-6 h-6 rotate-45 border border-accent/30" />
-                   <div className="w-24 h-[1px] bg-gradient-to-r from-accent/60 via-accent to-accent/60" />
-                   <div className="w-2 h-2 rounded-full bg-accent" />
-                   <div className="w-24 h-[1px] bg-gradient-to-r from-accent/60 via-accent to-accent/60" />
-                   <div className="w-6 h-6 rotate-45 border border-accent/30" />
+                <div className="flex items-center justify-center gap-2 mb-5">
+                   <div className="w-4 h-4 rotate-45 border border-accent/20" />
+                   <div className="w-16 h-[1px] bg-gradient-to-r from-accent/40 via-accent/80 to-accent/40" />
+                   <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                   <div className="w-16 h-[1px] bg-gradient-to-r from-accent/40 via-accent/80 to-accent/40" />
+                   <div className="w-4 h-4 rotate-45 border border-accent/20" />
                 </div>
 
                 {/* Tagline + CTA */}
-                <p className="text-[10px] font-medium tracking-[0.5em] uppercase text-white/30 font-sans mb-8">Authentic Fragrances Only</p>
-                <Link href="/shop" className="group inline-flex items-center gap-3 border border-accent/40 hover:border-accent hover:bg-accent/10 text-accent text-[10px] font-bold tracking-[0.35em] uppercase px-8 py-3.5 transition-all duration-500 font-sans">
+                <p className="text-[9px] font-medium tracking-[0.4em] uppercase text-white/25 font-sans mb-6">Authentic Fragrances Only</p>
+                <Link href="/shop" className="group inline-flex items-center gap-3 border border-accent/40 hover:border-accent hover:bg-accent/10 text-accent text-[9px] font-bold tracking-[0.3em] uppercase px-6 py-3 transition-all duration-500 font-sans">
                    <span>Explore Collection</span>
-                   <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform duration-300" />
+                   <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
              </div>
           </section>
