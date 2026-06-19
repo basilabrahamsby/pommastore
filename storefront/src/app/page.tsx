@@ -608,7 +608,7 @@ export default function Home() {
          )}
 
          {/* New Arrivals Grid */}
-         <section className="py-24 md:py-32 bg-white">
+         <section className="pt-24 pb-12 md:pt-32 md:pb-16 bg-white">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                <div className="flex justify-between items-end mb-16">
                   <div>
@@ -744,7 +744,9 @@ export default function Home() {
 
                      {/* Dynamic Block 2: Full-Width Ad Banner Carousel */}
                      {newArrivals.length > 10 && (
-                        <div className="relative w-full h-[440px] md:min-h-0 md:h-[320px] mb-16 overflow-hidden">
+                        <div className={`relative w-full h-[440px] md:min-h-0 md:h-[320px] overflow-hidden ${
+                           newArrivals.length > 20 ? 'mb-16' : 'mb-6'
+                        }`}>
                            {gridAds2ToUse.map((slide: any, idx: number) => (
                               <div
                                  key={idx}

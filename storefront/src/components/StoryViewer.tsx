@@ -94,15 +94,19 @@ export default function StoryViewer({
     );
 
     if (matched.length > 0) {
-      setCatProducts(matched.slice(0, 2));
+      // Shuffle the matched list to suggest a different product each time
+      const shuffled = [...matched].sort(() => Math.random() - 0.5);
+      setCatProducts(shuffled);
       setLoadingProducts(false);
     } else {
       // Fallback: fetch dynamically from API using category filter
       const fetchProducts = async () => {
         setLoadingProducts(true);
         try {
-          const res = await api.get(`/products?category_id=${activeCategory.id}&limit=10`);
-          setCatProducts(res.data.slice(0, 2));
+          // Fetch more products to have a good pool for randomization
+          const res = await api.get(`/products?category_id=${activeCategory.id}&limit=40`);
+          const shuffled = (res.data || []).sort(() => Math.random() - 0.5);
+          setCatProducts(shuffled);
         } catch (err) {
           console.error('Failed to fetch story products', err);
         } finally {
