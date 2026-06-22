@@ -943,13 +943,13 @@ export default function Home() {
 
           {/* Elite Brand Houses */}
           {brands.length > 0 && (
-          <section className="py-10 md:py-12 bg-[#0a0a0f] relative overflow-hidden">
+          <section className="py-10 md:py-12 bg-[#FAF8F5] border-t border-b border-neutral-100 relative overflow-hidden">
              <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
                 <div>
                    <span className="text-[9px] font-medium tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
-                   <h2 className="text-2xl md:text-3xl font-serif font-normal text-white leading-none uppercase tracking-wide">Elite Perfumery</h2>
+                   <h2 className="text-2xl md:text-3xl font-serif font-normal text-neutral-900 leading-none uppercase tracking-wide">Elite Perfumery</h2>
                 </div>
-                <Link href="/brands" className="text-white text-[11px] font-medium tracking-[0.2em] uppercase border-b border-white/20 pb-2 hover:border-accent hover:text-accent transition-all duration-700">
+                <Link href="/brands" className="text-neutral-900 text-[11px] font-medium tracking-[0.2em] uppercase border-b border-neutral-900/10 pb-2 hover:border-accent hover:text-accent hover:border-accent transition-all duration-700">
                    Explore All Houses
                 </Link>
              </div>
@@ -980,7 +980,7 @@ export default function Home() {
                              <Link
                                 key={brand.id || idx}
                                 href={`/shop?brand=${brand.id}`}
-                                className="group relative flex-1 bg-gradient-to-b from-[#111116] to-[#07070a] rounded-lg border border-white/[0.04] hover:border-accent/40 p-6 sm:p-8 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-1.5 shadow-2xl overflow-hidden"
+                                className="group relative flex-1 bg-gradient-to-b from-white to-neutral-50/50 rounded-lg border border-neutral-200/50 hover:border-accent/40 p-6 sm:p-8 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-1.5 shadow-lg overflow-hidden"
                              >
                                 {/* Subtle spotlight gradient on hover */}
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.06)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
@@ -1003,7 +1003,7 @@ export default function Home() {
 
                                 {/* Logo Badge with mix-blend-multiply */}
                                 {brand.logo_url && (
-                                   <div className="w-12 h-12 bg-white flex items-center justify-center p-2 rounded-full shadow-md border border-white/10 mb-3 group-hover:border-accent/40 transition-all duration-700 mx-auto">
+                                   <div className="w-12 h-12 bg-white flex items-center justify-center p-2 rounded-full shadow-md border border-neutral-100 mb-3 group-hover:border-accent/40 transition-all duration-700 mx-auto">
                                       <img
                                          src={getMediaUrl(brand.logo_url)}
                                          alt={`${brand.name} logo`}
@@ -1016,15 +1016,15 @@ export default function Home() {
                                    Signature House
                                 </span>
 
-                                <h3 className="text-xl sm:text-2xl font-serif font-normal text-white uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
+                                <h3 className="text-xl sm:text-2xl font-serif font-normal text-neutral-900 uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
                                    {brand.name}
                                 </h3>
 
-                                <p className="text-[11px] text-neutral-400 leading-relaxed font-light max-w-sm mb-4 tracking-wide line-clamp-2">
+                                <p className="text-[11px] text-neutral-600 leading-relaxed font-light max-w-sm mb-4 tracking-wide line-clamp-2">
                                    {desc}
                                 </p>
 
-                                <div className="bg-transparent border border-white/20 group-hover:border-accent group-hover:bg-accent text-white py-2 px-5 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-full flex items-center gap-2 mt-auto">
+                                <div className="bg-transparent border border-neutral-200 group-hover:border-accent group-hover:bg-accent text-neutral-800 group-hover:text-white py-2 px-5 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-full flex items-center gap-2 mt-auto font-sans">
                                    <span>Explore House</span>
                                    <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform" />
                                 </div>
@@ -1043,7 +1043,7 @@ export default function Home() {
                             <Link 
                                key={brand.id || idx} 
                                href={`/shop?brand=${brand.id}`}
-                               className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-neutral-900 shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 rounded-sm"
+                               className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-white shadow-md hover:-translate-y-1.5 hover:shadow-lg transition-all duration-700 rounded-sm"
                             >
                                <img 
                                   src={getMediaUrl(brand.brand_banner)} 
@@ -1076,11 +1076,11 @@ export default function Home() {
                             <Link 
                                key={brand.id || idx} 
                                href={`/shop?brand=${brand.id}`}
-                               className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-gradient-to-b from-[#141419] to-[#09090d] border border-white/[0.06] shadow-xl hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-700 flex flex-col items-center justify-center p-3 rounded-sm"
+                               className="group/brand relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden bg-gradient-to-b from-white to-neutral-50/50 border border-neutral-200/50 shadow-md hover:-translate-y-1.5 hover:shadow-lg transition-all duration-700 flex flex-col items-center justify-center p-3 rounded-sm"
                             >
                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_65%)] opacity-0 group-hover/brand:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                                
-                               <div className="w-[76px] h-[76px] bg-white flex items-center justify-center p-2 rounded-xs shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] border border-white/10 group-hover/brand:border-accent/30 transition-all duration-700 mb-2">
+                               <div className="w-[76px] h-[76px] bg-white flex items-center justify-center p-2 rounded-xs shadow-sm border border-neutral-100 group-hover/brand:border-accent/30 transition-all duration-700 mb-2">
                                   {brand.logo_url ? (
                                      <img 
                                         src={getMediaUrl(brand.logo_url)} 
@@ -1097,7 +1097,7 @@ export default function Home() {
                                   )}
                                </div>
                                
-                               <span className="block text-[9px] font-medium tracking-[0.2em] text-neutral-300 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
+                               <span className="block text-[9px] font-medium tracking-[0.2em] text-neutral-800 group-hover/brand:text-accent transition-all duration-700 leading-none text-center">{brand.name}</span>
                                <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent scale-x-0 group-hover/brand:scale-x-100 transition-transform duration-700 origin-center z-20" />
                                <div className="absolute inset-0 border border-transparent group-hover/brand:border-accent/30 transition-all duration-700 pointer-events-none z-20" />
                             </Link>
