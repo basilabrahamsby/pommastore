@@ -18,6 +18,13 @@ interface Brand {
   primary_color?: string;
   secondary_color?: string;
   origin_country?: string;
+  founding_year?: string;
+  lead_perfumer?: string;
+  philosophy?: string;
+  instagram_url?: string;
+  tiktok_url?: string;
+  fragrantica_url?: string;
+  brand_tier?: string;
 }
 
 export default function BrandsPage() {
@@ -226,10 +233,13 @@ export default function BrandsPage() {
               const hasBanner = !!bannerImg;
               const desc = brand.description || `Discover the exclusive fragrance collections and olfactory philosophy of the house of ${brand.name}.`;
 
+              // Dynamically extract product categories for this brand
+              const brandProducts = products.filter(p => p.brand_id === brand.id || p.brand_name === brand.name || p.brand === brand.name || p.brand === brand.id);
+              const categories = Array.from(new Set(brandProducts.map(p => p.category_name).filter(Boolean))) as string[];
+
               return (
-                <Link 
-                  key={brand.id} 
-                  href={`/shop?brand=${brand.id}`}
+                <div 
+                  key={brand.id}
                   className="group relative bg-white rounded-lg border border-neutral-200/50 hover:border-accent/40 shadow-sm hover:shadow-xl transition-all duration-700 hover:-translate-y-1.5 overflow-hidden flex flex-col items-center text-center"
                 >
                   {/* Top Banner Image Container */}
@@ -271,9 +281,9 @@ export default function BrandsPage() {
                   </div>
 
                   {/* Card details */}
-                  <div className="p-6 pt-1 pb-8 flex flex-col items-center text-center flex-1 w-full">
+                  <div className="p-6 pt-1 pb-8 flex flex-col items-center text-center flex-1 w-full px-5">
                      <span className="text-[8px] font-bold tracking-[0.25em] text-accent uppercase mb-2 block font-sans">
-                        {brand.origin_country || 'Signature House'}
+                        {brand.brand_tier || 'Signature House'}
                      </span>
 
                      <h3 className="text-base sm:text-lg font-serif font-normal text-neutral-900 uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
@@ -284,12 +294,81 @@ export default function BrandsPage() {
                         {desc}
                      </p>
 
-                     <div className="mt-auto flex items-center gap-1.5 text-[9px] font-bold tracking-[0.2em] text-neutral-400 group-hover:text-accent transition-colors duration-300 uppercase font-sans">
-                        <span>{brand.product_count} Products</span>
-                        <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform" />
-                     </div>
+                     {/* Philosophy Quote */}
+                     {brand.philosophy && (
+                       <blockquote className="text-[10px] text-neutral-500 italic max-w-xs mb-4 px-4 font-serif border-l border-accent/20 py-0.5 my-1 text-center">
+                         "{brand.philosophy}"
+                       </blockquote>
+                     )}
+
+                     {/* Specification Details Grid */}
+                     {(brand.origin_country || brand.founding_year || brand.lead_perfumer) && (
+                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] text-left w-full border-t border-neutral-100 pt-3 pb-2 mb-3">
+                          {brand.origin_country && (
+                            <div>
+                              <span className="block text-[7.5px] uppercase tracking-wider text-neutral-400 font-sans">Origin</span>
+                              <span className="font-medium text-neutral-800">{brand.origin_country}</span>
+                            </div>
+                          )}
+                          {brand.founding_year && (
+                            <div>
+                              <span className="block text-[7.5px] uppercase tracking-wider text-neutral-400 font-sans">Est. Year</span>
+                              <span className="font-medium text-neutral-800">{brand.founding_year}</span>
+                            </div>
+                          )}
+                          {brand.lead_perfumer && (
+                            <div className="col-span-2">
+                              <span className="block text-[7.5px] uppercase tracking-wider text-neutral-400 font-sans">Lead Nose</span>
+                              <span className="font-medium text-neutral-800">{brand.lead_perfumer}</span>
+                            </div>
+                          )}
+                       </div>
+                     )}
+
+                     {/* Brand Product Categories pills */}
+                     {categories.length > 0 && (
+                       <div className="w-full border-t border-neutral-100 pt-3 mb-4">
+                          <span className="block text-[7.5px] uppercase tracking-wider text-neutral-400 text-left mb-2 font-sans">Olfactory Families</span>
+                          <div className="flex flex-wrap gap-1.5 justify-start">
+                            {categories.map((catName) => (
+                              <span key={catName} className="text-[8px] font-bold tracking-wider bg-[#FAF8F5] text-neutral-600 border border-neutral-200/60 px-2 py-0.5 rounded font-sans uppercase">
+                                {catName}
+                              </span>
+                            ))}
+                          </div>
+                       </div>
+                     )}
+
+                     {/* Social Links Row */}
+                     {(brand.instagram_url || brand.tiktok_url || brand.fragrantica_url) && (
+                       <div className="flex gap-4 justify-center mb-4 mt-auto pt-2">
+                          {brand.instagram_url && (
+                            <a href={brand.instagram_url} target="_blank" rel="noreferrer" className="text-[8px] font-bold text-neutral-400 hover:text-accent tracking-widest uppercase font-sans">
+                              Instagram
+                            </a>
+                          )}
+                          {brand.tiktok_url && (
+                            <a href={brand.tiktok_url} target="_blank" rel="noreferrer" className="text-[8px] font-bold text-neutral-400 hover:text-accent tracking-widest uppercase font-sans">
+                              TikTok
+                            </a>
+                          )}
+                          {brand.fragrantica_url && (
+                            <a href={brand.fragrantica_url} target="_blank" rel="noreferrer" className="text-[8px] font-bold text-neutral-400 hover:text-accent tracking-widest uppercase font-sans">
+                              Fragrantica
+                            </a>
+                          )}
+                       </div>
+                     )}
+
+                     <Link 
+                       href={`/shop?brand=${brand.id}`}
+                       className="w-full bg-transparent border border-neutral-200 group-hover/brand:border-accent group-hover/brand:bg-accent text-neutral-800 group-hover/brand:text-white py-2 px-6 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-md flex items-center justify-center gap-2 mt-auto font-sans"
+                     >
+                       <span>Explore House ({brand.product_count} Products)</span>
+                       <ChevronRight size={10} className="group-hover/brand:translate-x-1 transition-transform" />
+                     </Link>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
