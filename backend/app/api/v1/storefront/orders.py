@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
@@ -16,6 +16,10 @@ from app.models.inventory import InventoryBatch, InventoryMovement
 from app.models.product import ProductVariant, Product
 from app.models.offer import Offer
 from app.schemas.order import OrderCreate, OrderOut, OrderItemOut
+from app.services.email import (
+    send_order_confirmation_email,
+    order_items_to_email_list,
+)
 
 router = APIRouter(prefix="/orders", tags=["Storefront Orders"])
 
@@ -77,6 +81,7 @@ async def track_order(body: OrderTrackRequest, db: AsyncSession = Depends(get_db
 @router.post("/checkout", response_model=OrderOut, status_code=201)
 async def storefront_checkout(
     body: OrderCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     customer: Customer = Depends(get_current_customer)
 ):
@@ -260,4 +265,26 @@ async def storefront_checkout(
         )
     )
     order = final_result.scalar_one()
-    return _enrich_order(order)
+    enriched = _enrich_order(order)
+
+    # Send order confirmation email in background
+    if enriched.customer_email:
+        background_tasks.add_task(
+            send_order_confirmation_email,
+            to_email=enriched.customer_email,
+            customer_name=enriched.customer_name or "Valued Customer",
+            order_number=enriched.order_number,
+            items=order_items_to_email_list(order.items),
+            total=float(enriched.total_amount),
+            subtotal=float(enriched.subtotal),
+            discount=float(enriched.discount_amount),
+            shipping=float(enriched.shipping_amount),
+            tax=float(enriched.tax_amount),
+            loyalty_used=enriched.loyalty_points_used or 0,
+            shipping_address=enriched.shipping_address,
+            payment_method=enriched.payment_method or "",
+            coupon_code=enriched.coupon_code or "",
+            gift_message=enriched.gift_message or "",
+        )
+
+    return enriched

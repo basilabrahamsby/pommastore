@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
@@ -15,6 +15,15 @@ from app.models.inventory import InventoryBatch, InventoryMovement
 from app.models.offer import Offer
 from app.models.user import User
 from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderStatusUpdate, OrderContactUpdate, CustomerCreate, CustomerOut
+from app.services.email import (
+    send_order_confirmation_email,
+    send_order_processing_email,
+    send_order_shipped_email,
+    send_out_for_delivery_email,
+    send_order_delivered_email,
+    send_order_cancelled_email,
+    order_items_to_email_list,
+)
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -78,6 +87,7 @@ async def get_order(order_id: str, db: AsyncSession = Depends(get_db), _: User =
 @router.post("", response_model=OrderOut, status_code=201)
 async def create_order(
     body: OrderCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -276,13 +286,37 @@ async def create_order(
         )
     )
     order = result.scalar_one()
-    return _enrich_order(order)
+    enriched = _enrich_order(order)
+
+    # Send order confirmation email
+    to_email = enriched.customer_email
+    if to_email:
+        background_tasks.add_task(
+            send_order_confirmation_email,
+            to_email=to_email,
+            customer_name=enriched.customer_name or "Valued Customer",
+            order_number=enriched.order_number,
+            items=order_items_to_email_list(order.items),
+            total=float(enriched.total_amount),
+            subtotal=float(enriched.subtotal),
+            discount=float(enriched.discount_amount),
+            shipping=float(enriched.shipping_amount),
+            tax=float(enriched.tax_amount),
+            loyalty_used=enriched.loyalty_points_used or 0,
+            shipping_address=enriched.shipping_address,
+            payment_method=enriched.payment_method or "",
+            coupon_code=enriched.coupon_code or "",
+            gift_message=enriched.gift_message or "",
+        )
+
+    return enriched
 
 
 @router.patch("/{order_id}/status", response_model=OrderOut)
 async def update_order_status(
     order_id: str,
     body: OrderStatusUpdate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_manager),
 ):
@@ -320,7 +354,41 @@ async def update_order_status(
 
     await db.commit()
     await db.refresh(order)
-    return _enrich_order(order)
+    enriched = _enrich_order(order)
+
+    # Send status-specific email notification
+    to_email = enriched.customer_email
+    customer_name = enriched.customer_name or "Valued Customer"
+    if to_email and order.status != body.status:  # only if status actually changed
+        status = body.status
+        items_list = order_items_to_email_list(order.items)
+        if status == OrderStatus.confirmed:
+            background_tasks.add_task(send_order_processing_email, to_email, customer_name, enriched.order_number)
+        elif status == OrderStatus.shipped:
+            background_tasks.add_task(
+                send_order_shipped_email,
+                to_email, customer_name, enriched.order_number,
+                carrier=body.carrier or enriched.carrier or "",
+                tracking_number=body.tracking_number or enriched.tracking_number or "",
+                items=items_list,
+            )
+        elif status == OrderStatus.out_for_delivery:
+            background_tasks.add_task(
+                send_out_for_delivery_email,
+                to_email, customer_name, enriched.order_number,
+                shipping_address=enriched.shipping_address,
+            )
+        elif status == OrderStatus.delivered:
+            background_tasks.add_task(send_order_delivered_email, to_email, customer_name, enriched.order_number, items_list)
+        elif status == OrderStatus.cancelled:
+            background_tasks.add_task(
+                send_order_cancelled_email,
+                to_email, customer_name, enriched.order_number,
+                reason=body.notes or "",
+                total=float(enriched.total_amount),
+            )
+
+    return enriched
 
 
 @router.patch("/{order_id}/contact", response_model=OrderOut)
