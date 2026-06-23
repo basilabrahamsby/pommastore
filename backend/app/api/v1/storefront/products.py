@@ -7,9 +7,7 @@ from app.core.database import get_db
 from app.models.product import Product, ProductVariant, ProductImage
 from app.models.inventory import InventoryBatch
 from app.schemas.product import ProductOut, ProductDetailOut
-
 router = APIRouter(prefix="/products", tags=["Storefront Products"])
-
 
 async def enrich_product(product: Product, db: AsyncSession, detail: bool = False) -> ProductOut | ProductDetailOut:
     # Get stock per variant
@@ -28,6 +26,35 @@ async def enrich_product(product: Product, db: AsyncSession, detail: bool = Fals
     for v_out in out.variants:
         v_out.current_stock = stock_map.get(v_out.id, 0)
     return out
+
+
+async def enrich_products_bulk(products: list[Product], db: AsyncSession) -> list[ProductOut]:
+    if not products:
+        return []
+
+    # Collect all variant IDs
+    variant_ids = [v.id for p in products for v in p.variants]
+
+    stock_map = {}
+    if variant_ids:
+        stock_result = await db.execute(
+            select(InventoryBatch.variant_id, func.sum(InventoryBatch.current_quantity))
+            .where(InventoryBatch.variant_id.in_(variant_ids))
+            .group_by(InventoryBatch.variant_id)
+        )
+        stock_map = {row[0]: int(row[1]) for row in stock_result.all()}
+
+    enriched = []
+    for p in products:
+        out = ProductOut.model_validate(p)
+        out.brand_name = p.brand.name if p.brand else ""
+        out.category_name = p.category.name if p.category else None
+        out.images = [img.url for img in p.images]
+        for v_out in out.variants:
+            v_out.current_stock = stock_map.get(v_out.id, 0)
+        enriched.append(out)
+
+    return enriched
 
 
 @router.get("", response_model=list[ProductOut])
@@ -71,9 +98,7 @@ async def list_products(
     q = q.order_by(case((Product.priority == 0, 999999), else_=Product.priority).asc(), Product.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(q)
     products = result.scalars().all()
-    return [await enrich_product(p, db) for p in products]
-
-
+    return await enrich_products_bulk(products, db)
 @router.get("/{slug}", response_model=ProductDetailOut)
 async def get_product_by_slug(slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(

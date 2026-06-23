@@ -108,31 +108,17 @@ export default function Home() {
    useEffect(() => {
       const fetchHomeData = async () => {
          try {
-            const [resNew, resFeatured, resCats, resOffers, resLayout, resRewards, resBrands, resFavorites] = await Promise.all([
-               api.get('/products?is_new_arrival=true&limit=20'),
-               api.get('/products?is_featured=true&limit=10'),
-               api.get('/categories'),
-               api.get('/offers'),
-               api.get('/settings/storefront_layout'),
-               api.get('/loyalty/rewards'),
-               api.get('/brands'),
-               api.get('/products?is_featured=false&is_new_arrival=false&limit=20')
-            ]);
+            const res = await api.get('/homepage');
+            const data = res.data || {};
             
-            let newArrivalsList = resNew.data;
-            if (!newArrivalsList || newArrivalsList.length === 0) {
-               // Fallback to top latest active products (excluding featured)
-               const fallbackRes = await api.get('/products?is_featured=false&limit=20');
-               newArrivalsList = fallbackRes.data;
-            }
-            setNewArrivals(newArrivalsList);
-            setBestsellers(resFeatured.data);
-            setFavoriteProducts(resFavorites.data);
-            setCategories(resCats.data);
-            setHomepageOffers(resOffers.data);
-            setCmsLayout(resLayout.data);
-            setLoyaltyRewards(resRewards.data);
-            setBrands(resBrands.data);
+            setNewArrivals(data.new_arrivals || []);
+            setBestsellers(data.bestsellers || []);
+            setFavoriteProducts(data.favorites || []);
+            setCategories(data.categories || []);
+            setHomepageOffers(data.offers || []);
+            setCmsLayout(data.layout || {});
+            setLoyaltyRewards(data.rewards || []);
+            setBrands(data.brands || []);
          } catch (err) {
             console.error('Failed to fetch home data', err);
          } finally {

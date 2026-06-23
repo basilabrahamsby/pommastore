@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.storefront import auth, products, account, categories, brands, offers, settings, wishlist, orders, loyalty
+from app.api.v1.storefront import auth, products, account, categories, brands, offers, settings, wishlist, orders, loyalty, homepage
 
 router = APIRouter(prefix="/storefront")
 
@@ -13,3 +13,4 @@ router.include_router(settings.router)
 router.include_router(wishlist.router)
 router.include_router(orders.router)
 router.include_router(loyalty.router)
+router.include_router(homepage.router)
