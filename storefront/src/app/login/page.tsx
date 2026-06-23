@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { getMediaUrl } from '@/services/media';
 import { Mail, Lock, ArrowRight, Smartphone, ShieldCheck, X } from 'lucide-react';
 
 function LoginContent() {
@@ -20,6 +21,7 @@ function LoginContent() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [cmsLayout, setCmsLayout] = useState<any>(null);
 
   // Simulated Google SSO states
   const [showGoogleModal, setShowGoogleModal] = useState(false);
@@ -63,6 +65,15 @@ function LoginContent() {
     if (section === 'continue' && continueRef?.current) {
       continueRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+    
+    // Fetch storefront layout settings
+    api.get('/settings/storefront_layout')
+      .then((res) => {
+        setCmsLayout(res.data);
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch storefront layout for login background', err);
+      });
   }, []);
 
   useEffect(() => {
@@ -130,29 +141,38 @@ function LoginContent() {
     }
   };
 
+  const bgImage = cmsLayout?.login_bg_image 
+    ? getMediaUrl(cmsLayout.login_bg_image) 
+    : "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop";
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row mt-20 md:mt-0">
       {/* Left Side - Luxury Branding */}
       <div className="hidden md:flex md:w-1/2 bg-black relative overflow-hidden items-center justify-center p-20">
-        <div className="absolute inset-0 opacity-40">
-           <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black" />
-           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-125 mix-blend-overlay" />
+        <div className="absolute inset-0 opacity-45">
+           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-neutral-950 to-black" />
+           <div 
+             className="w-full h-full bg-cover bg-center grayscale contrast-125 mix-blend-overlay"
+             style={{ backgroundImage: `url(${bgImage})` }}
+           />
         </div>
         <div className="relative z-10 text-center max-w-lg">
-          <h2 className="text-white text-5xl font-serif italic mb-8 font-black leading-tight">The Art of <br/> Fragrance.</h2>
-          <div className="w-16 h-1 bg-white mx-auto mb-8" />
-          <p className="text-gray-400 text-sm tracking-widest uppercase font-bold leading-relaxed">
+          <h2 className="text-white text-4xl md:text-5xl font-serif tracking-[0.2em] uppercase mb-8 leading-tight font-normal">
+            The Art of <br/> <span className="text-[#d4af37]">Fragrance</span>
+          </h2>
+          <div className="w-16 h-[1px] bg-[#d4af37]/80 mx-auto mb-8" />
+          <p className="text-neutral-400 font-light font-montserrat text-[10px] md:text-xs tracking-[0.3em] uppercase leading-relaxed max-w-md mx-auto">
             Exclusive access to the world's most <br/> prestigious perfume houses.
           </p>
-          <div className="mt-16 flex items-center justify-center space-x-6 text-white/50">
+          <div className="mt-16 flex items-center justify-center space-x-8 text-neutral-400 font-montserrat">
             <div className="flex flex-col items-center">
-               <ShieldCheck size={24} />
-               <span className="text-[9px] mt-2 tracking-[0.2em] font-black">AUTHENTIC</span>
+               <ShieldCheck size={20} className="text-[#d4af37]" />
+               <span className="text-[9px] mt-2 tracking-[0.25em] font-semibold uppercase">AUTHENTIC</span>
             </div>
-            <div className="w-px h-8 bg-white/20" />
+            <div className="w-px h-8 bg-white/10" />
             <div className="flex flex-col items-center">
-               <Smartphone size={24} />
-               <span className="text-[9px] mt-2 tracking-[0.2em] font-black">SECURE</span>
+               <Smartphone size={20} className="text-[#d4af37]" />
+               <span className="text-[9px] mt-2 tracking-[0.25em] font-semibold uppercase">SECURE</span>
             </div>
           </div>
         </div>
@@ -165,10 +185,10 @@ function LoginContent() {
             <Link href="/" className="md:hidden inline-block mb-8">
               <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-8 object-contain" />
             </Link>
-            <h1 className="text-3xl font-serif text-gray-900 mb-3 italic font-black">
+            <h1 className="text-3xl font-serif text-neutral-950 mb-3 tracking-[0.15em] uppercase font-normal">
               {step === 'send' ? 'Sign In' : 'Verify Account'}
             </h1>
-            <p className="text-gray-400 text-[11px] font-bold tracking-widest uppercase">
+            <p className="text-neutral-500 font-montserrat text-[10px] tracking-[0.25em] uppercase font-semibold">
               {step === 'send' 
                 ? 'Unlock your personalized scent journey' 
                 : `Enter the code sent to ${identifier}`}
@@ -183,16 +203,16 @@ function LoginContent() {
 
           {step === 'send' ? (
             <div className="space-y-8">
-              <div className="flex space-x-8 border-b border-gray-100 mb-4">
+              <div className="flex space-x-8 border-b border-neutral-100 mb-6">
                 <button
                   onClick={() => { setLoginMethod('email'); setIdentifier(''); }}
-                  className={`text-[10px] font-black tracking-widest uppercase pb-4 border-b-2 transition-all ${loginMethod === 'email' ? 'border-black text-black' : 'border-transparent text-gray-300'}`}
+                  className={`text-[10px] font-bold font-montserrat tracking-[0.25em] uppercase pb-3 border-b-2 transition-all ${loginMethod === 'email' ? 'border-neutral-950 text-neutral-950' : 'border-transparent text-neutral-300 hover:text-neutral-500'}`}
                 >
                   Email
                 </button>
                 <button
                   onClick={() => { setLoginMethod('phone'); setIdentifier(''); }}
-                  className={`text-[10px] font-black tracking-widest uppercase pb-4 border-b-2 transition-all ${loginMethod === 'phone' ? 'border-black text-black' : 'border-transparent text-gray-300'}`}
+                  className={`text-[10px] font-bold font-montserrat tracking-[0.25em] uppercase pb-3 border-b-2 transition-all ${loginMethod === 'phone' ? 'border-neutral-950 text-neutral-950' : 'border-transparent text-neutral-300 hover:text-neutral-500'}`}
                 >
                   Mobile
                 </button>
@@ -200,19 +220,19 @@ function LoginContent() {
 
               <form onSubmit={handleSendOTP} className="space-y-8">
                 <div>
-                  <label className="block text-[9px] font-black text-black uppercase tracking-[0.3em] mb-4">
+                  <label className="block text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em] mb-3">
                     {loginMethod === 'email' ? 'Email Identification' : 'Mobile Verification'}
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-black transition-transform group-focus-within:scale-110 duration-300">
-                      {loginMethod === 'email' ? <Mail size={18} /> : <Smartphone size={18} />}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-neutral-800 transition-transform group-focus-within:scale-110 duration-300">
+                      {loginMethod === 'email' ? <Mail size={16} /> : <Smartphone size={16} />}
                     </div>
                     <input
                       type={loginMethod === 'email' ? 'email' : 'tel'}
                       required
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      className="w-full border-b-2 border-gray-100 bg-transparent py-4 pl-10 pr-4 text-sm focus:border-black transition-all outline-none font-medium placeholder:text-gray-200"
+                      className="w-full border-b border-neutral-200 bg-transparent py-4 pl-8 pr-4 text-sm focus:border-neutral-950 transition-all outline-none font-sans placeholder:text-neutral-300 tracking-wider"
                       placeholder={loginMethod === 'email' ? 'your@email.com' : '9876543210'}
                     />
                   </div>
@@ -221,54 +241,57 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-black text-white py-6 text-[11px] font-black tracking-[0.4em] hover:bg-gray-800 transition-all flex items-center justify-center space-x-3 disabled:bg-gray-200 group"
+                  className="w-full bg-neutral-950 text-white py-4 rounded-full text-[11px] font-bold font-montserrat tracking-[0.3em] hover:bg-neutral-900 transition-all duration-300 flex items-center justify-center space-x-2.5 disabled:bg-neutral-200 group"
                 >
                   {loading ? 'PROCESSING...' : (
                     <>
                       <span>CONTINUE</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
                     </>
                   )}
                 </button>
               </form>
 
               {/* Social Login Placeholders */}
-              <div className="pt-10">
-                <div className="relative mb-10 text-center">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
-                  <span className="relative bg-white px-6 text-[9px] font-black tracking-[0.3em] text-gray-300 uppercase">Or connect with</span>
+              <div className="pt-8">
+                <div className="relative mb-8 text-center">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-100"></div></div>
+                  <span className="relative bg-white px-6 text-[9px] font-bold font-montserrat tracking-[0.25em] text-neutral-400 uppercase">Or connect with</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <button 
                     type="button"
                     onClick={() => setShowGoogleModal(true)}
-                    className="flex items-center justify-center space-x-3 border border-gray-100 py-4 hover:border-black transition-all group"
+                    className="flex items-center justify-center space-x-3 border border-neutral-200 rounded-full py-3.5 hover:border-neutral-950 transition-all duration-300 group"
                   >
-                    <span className="text-[10px] font-black tracking-widest uppercase">Google</span>
+                    <span className="text-[10px] font-bold font-montserrat tracking-[0.2em] uppercase text-neutral-800">Google</span>
                   </button>
-                  <button type="button" className="flex items-center justify-center space-x-3 border border-gray-100 py-4 hover:border-black transition-all group">
-                    <span className="text-[10px] font-black tracking-widest uppercase">Apple</span>
+                  <button 
+                    type="button" 
+                    className="flex items-center justify-center space-x-3 border border-neutral-200 rounded-full py-3.5 hover:border-neutral-950 transition-all duration-300 group"
+                  >
+                    <span className="text-[10px] font-bold font-montserrat tracking-[0.2em] uppercase text-neutral-800">Apple</span>
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-10">
-              <form onSubmit={handleVerifyOTP} className="space-y-10">
+            <div className="space-y-8">
+              <form onSubmit={handleVerifyOTP} className="space-y-8">
                 <div>
                   <div className="flex justify-between items-end mb-4">
-                    <label className="text-[9px] font-black text-black uppercase tracking-[0.3em]">Access Code</label>
+                    <label className="text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em]">Access Code</label>
                     <button 
                       type="button"
                       onClick={() => setStep('send')}
-                      className="text-[9px] font-black text-gray-300 uppercase tracking-widest hover:text-black transition-colors"
+                      className="text-[9px] font-bold font-montserrat text-neutral-400 uppercase tracking-widest hover:text-neutral-950 transition-colors"
                     >
                       Change Details
                     </button>
                   </div>
                   <div className="relative group">
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-black transition-transform group-focus-within:scale-110 duration-300">
-                      <Lock size={18} />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-neutral-800 transition-transform group-focus-within:scale-110 duration-300">
+                      <Lock size={16} />
                     </div>
                     <input
                       ref={otpRef}
@@ -277,7 +300,7 @@ function LoginContent() {
                       maxLength={6}
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="w-full border-b-2 border-gray-100 bg-transparent py-4 pl-10 pr-4 text-2xl tracking-[0.5em] font-black focus:border-black transition-all outline-none placeholder:text-gray-100"
+                      className="w-full border-b border-neutral-200 bg-transparent py-4 pl-8 pr-4 text-2xl tracking-[0.5em] font-medium focus:border-neutral-950 transition-all outline-none placeholder:text-neutral-200 font-serif"
                       placeholder="000000"
                     />
                   </div>
@@ -286,12 +309,12 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-black text-white py-6 text-[11px] font-black tracking-[0.4em] hover:bg-gray-800 transition-all flex items-center justify-center space-x-3 disabled:bg-gray-200 group"
+                  className="w-full bg-neutral-950 text-white py-4 rounded-full text-[11px] font-bold font-montserrat tracking-[0.3em] hover:bg-neutral-900 transition-all duration-300 flex items-center justify-center space-x-2.5 disabled:bg-neutral-200 group"
                 >
                   {loading ? 'VERIFYING...' : (
                     <>
                       <span>SECURE LOGIN</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
                     </>
                   )}
                 </button>
@@ -299,13 +322,13 @@ function LoginContent() {
 
               <div className="text-center">
                 {timer > 0 ? (
-                  <p className="text-[10px] font-black text-gray-300 tracking-[0.2em] uppercase">
-                    Resend Code in <span className="text-black">{timer}s</span>
+                  <p className="text-[10px] font-bold font-montserrat text-neutral-400 tracking-[0.2em] uppercase">
+                    Resend Code in <span className="text-neutral-950 font-semibold">{timer}s</span>
                   </p>
                 ) : (
                   <button
                     onClick={() => handleSendOTP()}
-                    className="text-[10px] font-black text-black tracking-[0.2em] uppercase border-b-2 border-black pb-1 hover:text-gray-500 hover:border-gray-500 transition-all"
+                    className="text-[10px] font-bold font-montserrat text-neutral-950 tracking-[0.2em] uppercase border-b border-neutral-950 pb-0.5 hover:text-neutral-600 hover:border-neutral-600 transition-all"
                   >
                     Resend Access Code
                   </button>
@@ -314,9 +337,9 @@ function LoginContent() {
             </div>
           )}
 
-          <div className="mt-16 pt-8 border-t border-gray-100 flex items-center justify-center">
-             <ShieldCheck size={14} className="text-gray-300 mr-2" />
-             <p className="text-[9px] text-gray-300 font-bold uppercase tracking-[0.2em]">End-to-end encrypted session</p>
+          <div className="mt-12 pt-6 border-t border-neutral-100 flex items-center justify-center">
+             <ShieldCheck size={14} className="text-neutral-300 mr-2" />
+             <p className="text-[9px] text-neutral-400 font-semibold font-montserrat uppercase tracking-[0.2em]">End-to-end encrypted session</p>
           </div>
         </div>
       </div>

@@ -28,6 +28,7 @@ export default function StorefrontCMS() {
     text: '',
     author: ''
   })
+  const [loginBgImage, setLoginBgImage] = useState('')
   const [houseFavorites, setHouseFavorites] = useState([
     { img: '/arch-1.png', name: 'YVES SAINT LAURENT' },
     { img: '/arch-2.png', name: 'CALVIN KLEIN' },
@@ -149,6 +150,7 @@ export default function StorefrontCMS() {
           })
         }
         if (layout.mid_quote) setMidQuote(layout.mid_quote)
+        if (layout.login_bg_image) setLoginBgImage(layout.login_bg_image)
         if (layout.house_favorites) setHouseFavorites(layout.house_favorites)
         if (layout.footer_settings) setFooterSettings(prev => ({ ...prev, ...layout.footer_settings }))
         if (layout.trust_badges) setTrustBadges(layout.trust_badges)
@@ -355,7 +357,8 @@ export default function StorefrontCMS() {
           free_shipping_limit: freeShippingLimit,
           grid_ads_1: gridAds1,
           grid_ads_2: gridAds2,
-          grid_ads_3: gridAds3
+          grid_ads_3: gridAds3,
+          login_bg_image: loginBgImage
         }
       }
       await api.patch('/settings', payload)
@@ -731,6 +734,36 @@ export default function StorefrontCMS() {
               </div>
            </div>
         </div>
+
+         {/* SECTION 4.5: LOGIN PAGE VISUALS */}
+         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+               <ImageIcon size={20} style={{ color: 'var(--gold)' }} />
+               <h3 style={{ color: '#fff', fontWeight: 700, margin: 0 }}>Login Page Art of Fragrance Background</h3>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
+               <label className="form-label">Art of Fragrance Background Image (Recommended 1080x1440 / 3:4)</label>
+               <div style={{ height: 200, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {loginBgImage ? (
+                     <>
+                        <img src={getMediaUrl(loginBgImage)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                           <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                              Change Background Image
+                              <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setLoginBgImage(url))} />
+                           </label>
+                        </div>
+                     </>
+                  ) : (
+                     <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                        <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                        <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Background</div>
+                        <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => setLoginBgImage(url))} />
+                     </label>
+                  )}
+               </div>
+            </div>
+         </div>
 
          {/* SECTION 5: GRID AD BANNERS */}
          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
