@@ -29,6 +29,7 @@ export default function StorefrontCMS() {
     author: ''
   })
   const [loginBgImage, setLoginBgImage] = useState('')
+  const [galleryImages, setGalleryImages] = useState([])
   const [houseFavorites, setHouseFavorites] = useState([
     { img: '/arch-1.png', name: 'YVES SAINT LAURENT' },
     { img: '/arch-2.png', name: 'CALVIN KLEIN' },
@@ -151,6 +152,7 @@ export default function StorefrontCMS() {
         }
         if (layout.mid_quote) setMidQuote(layout.mid_quote)
         if (layout.login_bg_image) setLoginBgImage(layout.login_bg_image)
+        if (layout.gallery_images) setGalleryImages(layout.gallery_images || [])
         if (layout.house_favorites) setHouseFavorites(layout.house_favorites)
         if (layout.footer_settings) setFooterSettings(prev => ({ ...prev, ...layout.footer_settings }))
         if (layout.trust_badges) setTrustBadges(layout.trust_badges)
@@ -256,6 +258,18 @@ export default function StorefrontCMS() {
     setHeroSlides(copy)
   }
 
+  const addGalleryImage = () => {
+    setGalleryImages(prev => [...prev, { image: '', link: '' }])
+  }
+
+  const removeGalleryImage = (index) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const updateGalleryImage = (index, field, val) => {
+    setGalleryImages(prev => prev.map((item, i) => i === index ? { ...item, [field]: val } : item))
+  }
+
   const addGridAds1Slide = () => {
     setGridAds1([...gridAds1, {
       left_image: '',
@@ -358,7 +372,8 @@ export default function StorefrontCMS() {
           grid_ads_1: gridAds1,
           grid_ads_2: gridAds2,
           grid_ads_3: gridAds3,
-          login_bg_image: loginBgImage
+          login_bg_image: loginBgImage,
+          gallery_images: galleryImages
         }
       }
       await api.patch('/settings', payload)
@@ -763,6 +778,75 @@ export default function StorefrontCMS() {
                   )}
                </div>
             </div>
+         </div>
+
+         {/* SECTION 4.7: HOMEPAGE VISUAL GALLERY */}
+         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <ImageIcon size={20} style={{ color: 'var(--gold)' }} />
+                  <h3 style={{ color: '#fff', fontWeight: 700, margin: 0 }}>Product Landing Page Gallery (Social/Lifestyle Images)</h3>
+               </div>
+               <button className="btn btn-sm" onClick={addGalleryImage} style={{ gap: 6, display: 'flex', alignItems: 'center' }}>
+                  <Plus size={14} /> Add Image
+               </button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
+               {galleryImages.map((item, idx) => (
+                  <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, position: 'relative' }}>
+                     <button 
+                        onClick={() => removeGalleryImage(idx)} 
+                        style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,77,79,0.1)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff4d4f', cursor: 'pointer', transition: '0.2s', zIndex: 10 }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,77,79,0.25)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,77,79,0.1)'}
+                     >
+                        <Trash2 size={14} />
+                     </button>
+                     
+                     <div style={{ height: 160, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed var(--border)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                        {item.image ? (
+                           <>
+                              <img src={getMediaUrl(item.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-overlay">
+                                 <label style={{ cursor: 'pointer', padding: '6px 12px', background: '#fff', color: '#000', fontSize: '0.75rem', fontWeight: 700, borderRadius: 4 }}>
+                                    Change Image
+                                    <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGalleryImage(idx, 'image', url))} />
+                                 </label>
+                              </div>
+                           </>
+                        ) : (
+                           <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                              <ImageIcon size={24} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                              <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>Upload Image</div>
+                              <input type="file" hidden onChange={(e) => handleFileUpload(e, (url) => updateGalleryImage(idx, 'image', url))} />
+                           </label>
+                        )}
+                     </div>
+                     
+                     <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Target Redirect Link (Optional)</label>
+                        <div style={{ position: 'relative' }}>
+                           <LinkIcon size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                           <input 
+                              className="input input-sm" 
+                              style={{ paddingLeft: 30, fontSize: '0.75rem' }}
+                              value={item.link || ''}
+                              placeholder="e.g. https://instagram.com/... or /shop"
+                              onChange={e => updateGalleryImage(idx, 'link', e.target.value)}
+                           />
+                        </div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            
+            {galleryImages.length === 0 && (
+               <div style={{ textAlign: 'center', padding: '40px 0', border: '1px dashed var(--border)', borderRadius: 12, background: 'rgba(0,0,0,0.1)' }}>
+                  <ImageIcon size={32} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>No gallery images configured. Click "Add Image" to get started.</p>
+               </div>
+            )}
          </div>
 
          {/* SECTION 5: GRID AD BANNERS */}
