@@ -35,7 +35,7 @@ async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: 
     if body.email:
         background_tasks.add_task(send_otp_email, body.email, otp)
     
-    return {"message": "OTP sent successfully", "debug_otp": otp if settings.DEBUG else None}
+    return {"message": "OTP sent successfully"}
 
 
 @router.post("/otp/verify", response_model=CustomerTokenResponse)

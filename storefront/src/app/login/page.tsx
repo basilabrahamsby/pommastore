@@ -17,7 +17,6 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(0);
-  const [debugOtp, setDebugOtp] = useState('');
   const otpRef = useRef<HTMLInputElement>(null);
   const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();
@@ -102,12 +101,7 @@ function LoginContent() {
 
     try {
       const payload = loginMethod === 'email' ? { email: identifier } : { phone: identifier };
-      const res = await api.post('/auth/otp/send', payload);
-      if (res.data?.debug_otp) {
-        setDebugOtp(res.data.debug_otp);
-      } else {
-        setDebugOtp('');
-      }
+      await api.post('/auth/otp/send', payload);
       setStep('verify');
       setTimer(60); // 60 seconds resend timer
     } catch (err: any) {
@@ -287,9 +281,7 @@ function LoginContent() {
               <form onSubmit={handleVerifyOTP} className="space-y-8">
                 <div>
                   <div className="flex justify-between items-end mb-4">
-                    <label className="text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em]">
-                      Access Code {debugOtp && <span className="text-accent font-mono normal-case tracking-normal ml-2 bg-accent/5 px-2 py-0.5 rounded">({debugOtp})</span>}
-                    </label>
+                    <label className="text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em]">Access Code</label>
                     <button 
                       type="button"
                       onClick={() => setStep('send')}
