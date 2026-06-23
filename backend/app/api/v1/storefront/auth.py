@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -13,11 +13,12 @@ from app.core.config import settings
 import random
 from app.core.redis import redis_service
 from app.schemas.storefront_auth import OTPSendRequest, OTPVerifyRequest, GoogleAuthRequest
+from app.services.email import send_otp_email
 
 router = APIRouter(prefix="/auth", tags=["Storefront Auth"])
 
 @router.post("/otp/send")
-async def send_otp(body: OTPSendRequest, db: AsyncSession = Depends(get_db)):
+async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     identifier = body.email or body.phone
     if not identifier:
         raise HTTPException(status_code=400, detail="Email or phone is required")
@@ -30,6 +31,9 @@ async def send_otp(body: OTPSendRequest, db: AsyncSession = Depends(get_db)):
     
     # In a real app, send via SMS/Email
     print(f"OTP for {identifier}: {otp}")
+    
+    if body.email:
+        background_tasks.add_task(send_otp_email, body.email, otp)
     
     return {"message": "OTP sent successfully", "debug_otp": otp if settings.DEBUG else None}
 

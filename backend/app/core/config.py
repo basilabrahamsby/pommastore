@@ -19,6 +19,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
 
+    # SMTP Settings
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "Kozmocart"
+    SMTP_TLS: bool = True
+    SMTP_SSL: bool = False
+
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
