@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
@@ -68,7 +68,7 @@ async def list_products(
     if on_sale:
         q = q.where(Product.variants.any(ProductVariant.compare_at_price > ProductVariant.selling_price))
     
-    q = q.order_by(Product.priority.desc(), Product.created_at.desc()).offset(skip).limit(limit)
+    q = q.order_by(case((Product.priority == 0, 999999), else_=Product.priority).asc(), Product.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(q)
     products = result.scalars().all()
     return [await enrich_product(p, db) for p in products]
