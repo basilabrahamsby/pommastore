@@ -980,53 +980,56 @@ export default function Home() {
                              <Link
                                 key={brand.id || idx}
                                 href={`/shop?brand=${brand.id}`}
-                                className="group relative flex-1 bg-gradient-to-b from-white to-neutral-50/50 rounded-lg border border-neutral-200/50 hover:border-accent/40 p-6 sm:p-8 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-1.5 shadow-lg overflow-hidden"
+                                className="group relative flex-1 bg-gradient-to-b from-white to-neutral-50/50 rounded-lg border border-neutral-200/50 hover:border-accent/40 flex flex-col items-center text-center transition-all duration-700 hover:-translate-y-1.5 shadow-lg overflow-hidden"
                              >
                                 {/* Subtle spotlight gradient on hover */}
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.06)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
-                                {/* Circular image showcase container */}
-                                <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-accent/20 p-1 group-hover:border-accent transition-all duration-700 mb-4 mx-auto">
-                                   {image ? (
+                                {/* Top Banner Image */}
+                                <div className="w-full h-36 md:h-44 relative overflow-hidden bg-neutral-100 flex-shrink-0">
+                                   <img
+                                      src={image || '/kozmocart/placeholder-perfume.png'}
+                                      alt={`${brand.name} banner`}
+                                      className="w-full h-full object-cover transition-transform duration-[2.5s] group-hover:scale-105 ease-out"
+                                      onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                   />
+                                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-700" />
+                                </div>
+
+                                {/* Floating Logo Avatar */}
+                                <div className="relative -mt-10 sm:-mt-12 mb-3 w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white bg-white shadow-md z-10 flex items-center justify-center group-hover:border-accent transition-all duration-700">
+                                   {brand.logo_url ? (
                                       <img
-                                         src={image}
-                                         alt={brand.name}
-                                         className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-[2.5s] ease-out"
+                                         src={getMediaUrl(brand.logo_url)}
+                                         alt={`${brand.name} logo`}
+                                         className="max-w-[80%] max-h-[80%] object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
                                       />
                                    ) : (
-                                      <div className="w-full h-full rounded-full bg-gradient-to-br from-accent/20 via-[#1a1a22] to-accent/5 flex items-center justify-center">
-                                         <span className="text-accent/60 text-2xl font-serif italic">{brand.name?.[0] || '✦'}</span>
+                                      <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                                         <span className="text-accent text-xl font-serif italic">{brand.name?.[0] || '✦'}</span>
                                       </div>
                                    )}
                                 </div>
 
-                                {/* Logo Badge with mix-blend-multiply */}
-                                {brand.logo_url && (
-                                   <div className="w-12 h-12 bg-white flex items-center justify-center p-2 rounded-full shadow-md border border-neutral-100 mb-3 group-hover:border-accent/40 transition-all duration-700 mx-auto">
-                                      <img
-                                         src={getMediaUrl(brand.logo_url)}
-                                         alt={`${brand.name} logo`}
-                                         className="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-                                      />
+                                {/* Content Details */}
+                                <div className="p-6 pt-1 pb-8 flex flex-col items-center text-center flex-1 w-full">
+                                   <span className="text-[9px] font-bold tracking-[0.25em] text-accent uppercase mb-2 block font-sans">
+                                      Signature House
+                                   </span>
+
+                                   <h3 className="text-xl sm:text-2xl font-serif font-normal text-neutral-900 uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
+                                      {brand.name}
+                                   </h3>
+
+                                   <p className="text-[11px] text-neutral-600 leading-relaxed font-light max-w-sm mb-5 tracking-wide line-clamp-2">
+                                      {desc}
+                                   </p>
+
+                                   <div className="bg-transparent border border-neutral-200 group-hover:border-accent group-hover:bg-accent text-neutral-800 group-hover:text-white py-2.5 px-6 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-full flex items-center gap-2 mt-auto font-sans">
+                                      <span>Explore House</span>
+                                      <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform" />
                                    </div>
-                                )}
-
-                                <span className="text-[9px] font-bold tracking-[0.25em] text-accent uppercase mb-2 block font-sans">
-                                   Signature House
-                                </span>
-
-                                <h3 className="text-xl sm:text-2xl font-serif font-normal text-neutral-900 uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
-                                   {brand.name}
-                                </h3>
-
-                                <p className="text-[11px] text-neutral-600 leading-relaxed font-light max-w-sm mb-4 tracking-wide line-clamp-2">
-                                   {desc}
-                                </p>
-
-                                <div className="bg-transparent border border-neutral-200 group-hover:border-accent group-hover:bg-accent text-neutral-800 group-hover:text-white py-2 px-5 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-full flex items-center gap-2 mt-auto font-sans">
-                                   <span>Explore House</span>
-                                   <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform" />
                                 </div>
                              </Link>
                           );
