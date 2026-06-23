@@ -22,7 +22,12 @@ import {
   Flame,
   Award,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ExternalLink
 } from 'lucide-react';
 
 
@@ -40,6 +45,31 @@ export default function ProductClient({
   const [activeImage, setActiveImage] = useState<string>(initialProduct?.images?.[0] || '');
   const [loading, setLoading] = useState(!initialProduct);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  // Gallery Lightbox State
+  const [activeLightboxIndex, setActiveLightboxIndex] = useState<number | null>(null);
+
+  // Lightbox Keyboard navigation
+  useEffect(() => {
+    if (activeLightboxIndex === null) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveLightboxIndex(null);
+      } else if (e.key === 'ArrowLeft') {
+        setActiveLightboxIndex((prev) => 
+          prev !== null ? (prev - 1 + (product?.gallery_images?.length || 0)) % (product?.gallery_images?.length || 1) : null
+        );
+      } else if (e.key === 'ArrowRight') {
+        setActiveLightboxIndex((prev) => 
+          prev !== null ? (prev + 1) % (product?.gallery_images?.length || 1) : null
+        );
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeLightboxIndex, product?.gallery_images]);
 
   // Offers State
   const [matchingOffers, setMatchingOffers] = useState<any[]>(initialOffers || []);
@@ -708,56 +738,172 @@ export default function ProductClient({
 
         {/* Visual Gallery Grid Section */}
         {product?.gallery_images?.length > 0 && (
-          <section className="bg-white py-12 md:py-16 border-t border-neutral-100 mt-12 w-full">
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-10">
-              <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">Olfactory Visuals</span>
-              <h2 className="text-3xl md:text-4xl font-serif text-black uppercase tracking-wider font-normal">The Gallery</h2>
-              <div className="w-12 h-[1px] bg-neutral-900 mx-auto mt-4" />
+          <section className="bg-white py-16 md:py-24 border-t border-neutral-100 mt-16 w-full">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-12">
+              <span className="text-[10px] font-black tracking-[0.35em] text-neutral-400 uppercase mb-3 block">Olfactory Vignettes</span>
+              <h2 className="text-3xl md:text-5xl font-serif text-black uppercase tracking-widest font-light">The Visual Gallery</h2>
+              <div className="w-12 h-[1px] bg-neutral-300 mx-auto mt-5" />
             </div>
 
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
                 {product.gallery_images.map((item: any, idx: number) => {
                   const imageUrl = getMediaUrl(item.image);
-                  const itemLink = item.link || '#';
+                  const itemLink = item.link || '';
                   const isExternal = itemLink.startsWith('http') || itemLink.startsWith('//');
                   
-                  const Content = (
-                    <div className="group relative aspect-square overflow-hidden bg-neutral-950 shadow-sm border border-neutral-100/50 hover:shadow-md transition-all duration-700">
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => setActiveLightboxIndex(idx)}
+                      className="group relative aspect-square overflow-hidden bg-neutral-950 border border-neutral-100/60 hover:shadow-2xl transition-all duration-700 cursor-pointer rounded-md shadow-xs"
+                    >
                       <img 
                         src={imageUrl} 
                         alt={`Gallery Image ${idx + 1}`} 
-                        className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 group-hover:opacity-85"
+                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-500 flex items-center justify-center">
-                        {item.link && (
-                          <span className="text-white text-[10px] font-bold font-montserrat tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500 border border-white/20 px-4 py-2 rounded-full backdrop-blur-sm bg-black/20 hover:bg-white hover:text-black">
-                            View
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
+                      
+                      {/* Luxury frame border overlay on hover */}
+                      <div className="absolute inset-3 border border-amber-500/0 group-hover:border-amber-500/20 transition-all duration-700 pointer-events-none" />
 
-                  return item.link ? (
-                    isExternal ? (
-                      <a key={idx} href={itemLink} target="_blank" rel="noopener noreferrer" className="block">
-                        {Content}
-                      </a>
-                    ) : (
-                      <Link key={idx} href={itemLink} className="block">
-                        {Content}
-                      </Link>
-                    )
-                  ) : (
-                    <div key={idx} className="block">
-                      {Content}
+                      {/* Glassmorphic Dark Overlay with explicit Enlarge and Shop buttons */}
+                      <div className="absolute inset-0 bg-neutral-950/0 group-hover:bg-neutral-950/40 transition-all duration-500 flex flex-col items-center justify-center p-4">
+                        <div className="flex items-center space-x-3 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500 transform translate-y-3 group-hover:translate-y-0">
+                          {/* Full Screen View Icon Button */}
+                          <div 
+                            className="bg-black/80 hover:bg-white hover:text-black border border-white/20 p-3 rounded-full text-white transition-all duration-300 shadow-md hover:scale-110 flex items-center justify-center"
+                            title="Fullscreen View"
+                          >
+                            <Maximize2 size={16} />
+                          </div>
+
+                          {/* Redirect Shop Link Icon Button */}
+                          {itemLink && (
+                            <div onClick={(e) => e.stopPropagation()} className="flex">
+                              {isExternal ? (
+                                <a 
+                                  href={itemLink} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="bg-amber-500 text-black hover:bg-white border border-amber-400 p-3 rounded-full transition-all duration-300 shadow-md hover:scale-110 flex items-center justify-center"
+                                  title="Shop the Look"
+                                >
+                                  <ExternalLink size={16} />
+                                </a>
+                              ) : (
+                                <Link 
+                                  href={itemLink} 
+                                  className="bg-amber-500 text-black hover:bg-white border border-amber-400 p-3 rounded-full transition-all duration-300 shadow-md hover:scale-110 flex items-center justify-center"
+                                  title="Shop the Look"
+                                >
+                                  <ExternalLink size={16} />
+                                </Link>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <span className="text-white text-[8px] font-black tracking-[0.25em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500 mt-3 block">
+                          {itemLink ? 'Discover & Shop' : 'View Fullscreen'}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
           </section>
+        )}
+
+        {/* Fullscreen Lightbox Modal */}
+        {activeLightboxIndex !== null && product?.gallery_images?.[activeLightboxIndex] && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md transition-opacity duration-500"
+            onClick={() => setActiveLightboxIndex(null)}
+          >
+            {/* Close Button */}
+            <button 
+              onClick={() => setActiveLightboxIndex(null)} 
+              className="absolute top-6 right-6 text-neutral-400 hover:text-white transition-colors duration-300 p-2 z-55"
+              aria-label="Close Lightbox"
+            >
+              <X size={28} />
+            </button>
+
+            {/* Left Control Arrow */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveLightboxIndex((prev) => 
+                  prev !== null ? (prev - 1 + product.gallery_images.length) % product.gallery_images.length : null
+                );
+              }}
+              className="absolute left-4 md:left-8 text-neutral-400 hover:text-white transition-colors duration-300 p-3 bg-neutral-900/30 hover:bg-neutral-900/60 rounded-full z-55"
+              aria-label="Previous Image"
+            >
+              <ChevronLeft size={28} />
+            </button>
+
+            {/* Main Lightbox Content Container */}
+            <div 
+              className="max-w-[90vw] max-h-[80vh] flex flex-col items-center justify-center relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img 
+                src={getMediaUrl(product.gallery_images[activeLightboxIndex].image)}
+                alt={`Gallery View ${activeLightboxIndex + 1}`}
+                className="max-w-full max-h-[70vh] object-contain border border-neutral-800 rounded shadow-2xl transition-all duration-500"
+                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+              />
+              
+              {/* Footer details bar */}
+              <div className="w-full mt-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                <span className="text-[10px] font-black font-montserrat tracking-[0.25em] text-neutral-400 uppercase">
+                  Image {String(activeLightboxIndex + 1).padStart(2, '0')} / {String(product.gallery_images.length).padStart(2, '0')}
+                </span>
+
+                {product.gallery_images[activeLightboxIndex].link && (
+                  <div>
+                    {product.gallery_images[activeLightboxIndex].link.startsWith('http') || product.gallery_images[activeLightboxIndex].link.startsWith('//') ? (
+                      <a 
+                        href={product.gallery_images[activeLightboxIndex].link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center space-x-2 border border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-black transition-all duration-300 px-6 py-2.5 rounded text-[9px] font-bold tracking-[0.2em] uppercase"
+                      >
+                        <span>Shop the Look</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    ) : (
+                      <Link 
+                        href={product.gallery_images[activeLightboxIndex].link}
+                        className="inline-flex items-center space-x-2 border border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-black transition-all duration-300 px-6 py-2.5 rounded text-[9px] font-bold tracking-[0.2em] uppercase"
+                      >
+                        <span>Shop the Look</span>
+                        <ExternalLink size={12} />
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Control Arrow */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveLightboxIndex((prev) => 
+                  prev !== null ? (prev + 1) % product.gallery_images.length : null
+                );
+              }}
+              className="absolute right-4 md:right-8 text-neutral-400 hover:text-white transition-colors duration-300 p-3 bg-neutral-900/30 hover:bg-neutral-900/60 rounded-full z-55"
+              aria-label="Next Image"
+            >
+              <ChevronRight size={28} />
+            </button>
+          </div>
         )}
 
         {/* DYNAMIC RECOMMENDATIONS SECTION 0: Suggest Same Category Items */}
