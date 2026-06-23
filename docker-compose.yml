@@ -31,7 +31,7 @@ services:
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
       SMTP_USER: info@kozmocart.com
-      SMTP_PASSWORD: boxrxytuyycyesnof
+      SMTP_PASSWORD: "boxr xytu ycye snof"
       SMTP_FROM_EMAIL: info@kozmocart.com
       SMTP_FROM_NAME: "Kozmocart.com"
       SMTP_TLS: "true"
