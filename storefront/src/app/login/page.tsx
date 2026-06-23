@@ -149,12 +149,13 @@ function LoginContent() {
     <div className="min-h-screen flex flex-col md:flex-row mt-20 md:mt-0">
       {/* Left Side - Luxury Branding */}
       <div className="hidden md:flex md:w-1/2 bg-black relative overflow-hidden items-center justify-center p-20">
-        <div className="absolute inset-0 opacity-45">
-           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-neutral-950 to-black" />
-           <div 
-             className="w-full h-full bg-cover bg-center grayscale contrast-125 mix-blend-overlay"
-             style={{ backgroundImage: `url(${bgImage})` }}
+        <div className="absolute inset-0">
+           <img 
+             src={bgImage} 
+             alt="Luxury Perfumery Background" 
+             className="w-full h-full object-cover opacity-60" 
            />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/85" />
         </div>
         <div className="relative z-10 text-center max-w-lg">
           <h2 className="text-white text-4xl md:text-5xl font-serif tracking-[0.2em] uppercase mb-8 leading-tight font-normal">
