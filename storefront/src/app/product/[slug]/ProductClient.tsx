@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -40,6 +41,7 @@ export default function ProductClient({
   initialProduct: any; 
   initialOffers: any[]; 
 }) {
+  const router = useRouter();
   const [product, setProduct] = useState<any>(initialProduct);
   const [selectedVariant, setSelectedVariant] = useState<any>(initialProduct?.variants?.[0] || null);
   const [activeImage, setActiveImage] = useState<string>(initialProduct?.images?.[0] || '');
@@ -239,6 +241,24 @@ export default function ProductClient({
       sizeMl: selectedVariant.size_ml,
       loyaltyPoints: selectedVariant.loyalty_points,
     });
+  };
+
+  const handleBuyNow = () => {
+    if (!selectedVariant) return;
+    if (!cartItem) {
+      addItem({
+        id: selectedVariant.id,
+        productId: product.id,
+        name: product.name,
+        variantName: selectedVariant.sku,
+        price: selectedVariant.selling_price,
+        image: getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png',
+        quantity: 1,
+        sizeMl: selectedVariant.size_ml,
+        loyaltyPoints: selectedVariant.loyalty_points,
+      });
+    }
+    router.push('/checkout');
   };
 
   const handleAddBundleToBag = () => {
@@ -572,16 +592,16 @@ export default function ProductClient({
                 <div className="flex-1 flex border border-black rounded overflow-hidden">
                   <button
                     onClick={() => updateQuantity(cartItem.id, cartItem.quantity - 1)}
-                    className="w-16 flex items-center justify-center text-black hover:bg-neutral-50 transition-colors font-bold text-lg"
+                    className="w-10 flex items-center justify-center text-black hover:bg-neutral-50 transition-colors font-bold text-lg"
                   >
                     -
                   </button>
-                  <div className="flex-1 flex items-center justify-center text-[10px] font-semibold tracking-[0.25em] bg-neutral-50/50 text-black uppercase">
-                    {cartItem.quantity} In Shopping Bag
+                  <div className="flex-1 flex items-center justify-center text-[9px] font-semibold tracking-[0.15em] bg-neutral-50/50 text-black uppercase text-center px-1">
+                    {cartItem.quantity} In Bag
                   </div>
                   <button
                     onClick={() => updateQuantity(cartItem.id, cartItem.quantity + 1)}
-                    className="w-16 flex items-center justify-center text-black hover:bg-neutral-50 transition-colors font-bold text-lg"
+                    className="w-10 flex items-center justify-center text-black hover:bg-neutral-50 transition-colors font-bold text-lg"
                   >
                     +
                   </button>
@@ -589,12 +609,19 @@ export default function ProductClient({
               ) : (
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-black text-white text-[10px] font-semibold tracking-[0.25em] hover:bg-neutral-900 transition-colors flex items-center justify-center space-x-3 h-full rounded shadow-sm hover:shadow-md duration-300"
+                  className="flex-1 bg-black text-white text-[9px] font-semibold tracking-[0.15em] hover:bg-neutral-900 transition-colors flex items-center justify-center space-x-2 h-full rounded shadow-sm hover:shadow-md duration-300"
                 >
-                  <ShoppingBag size={16} />
-                  <span>ADD TO SHOPPING BAG</span>
+                  <ShoppingBag size={14} />
+                  <span>ADD TO BAG</span>
                 </button>
               )}
+              
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 bg-amber-500 text-black text-[9px] font-black tracking-[0.15em] hover:bg-amber-600 transition-colors flex items-center justify-center space-x-2 h-full rounded shadow-sm hover:shadow-md duration-300"
+              >
+                <span>BUY NOW</span>
+              </button>
               
               <button
                 onClick={() => {
