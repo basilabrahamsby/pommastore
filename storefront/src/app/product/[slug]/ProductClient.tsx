@@ -959,7 +959,7 @@ export default function ProductClient({
         )}
 
         {/* Visual Gallery Grid Section */}
-        {cmsLayout?.gallery_images?.length > 0 && (
+        {product?.gallery_images?.length > 0 && (
           <section className="bg-white py-12 md:py-16 border-t border-neutral-100 mt-12 w-full">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-10">
               <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">Olfactory Visuals</span>
@@ -969,7 +969,7 @@ export default function ProductClient({
 
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {cmsLayout.gallery_images.map((item: any, idx: number) => {
+                {product.gallery_images.map((item: any, idx: number) => {
                   const imageUrl = getMediaUrl(item.image);
                   const itemLink = item.link || '#';
                   const isExternal = itemLink.startsWith('http') || itemLink.startsWith('//');
