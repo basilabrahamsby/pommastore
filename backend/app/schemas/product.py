@@ -89,6 +89,7 @@ class ProductCreate(BaseModel):
     shipping_zones_excluded: List[str] = []
     variants: List[VariantCreate] = []
     images: List[str] = []
+    gallery_images: List[dict] = []
 
     @field_validator("slug", mode="before")
     @classmethod
@@ -119,6 +120,7 @@ class ProductUpdate(BaseModel):
     is_new_arrival: bool | None = None
     priority: int | None = None
     shipping_zones_excluded: List[str] | None = None
+    gallery_images: List[dict] | None = None
 
 
 class ProductOut(BaseModel):
@@ -144,6 +146,7 @@ class ProductOut(BaseModel):
     shipping_zones_excluded: list = []
     variants: List[VariantOut] = []
     images: List[str] = []
+    gallery_images: list = []
     created_at: datetime
     updated_at: datetime
 
@@ -166,7 +169,7 @@ class ProductOut(BaseModel):
             return {"top": [], "heart": [], "base": []}
         return v
 
-    @field_validator("occasion_tags", "season_tags", "shipping_zones_excluded", mode="before")
+    @field_validator("occasion_tags", "season_tags", "shipping_zones_excluded", "gallery_images", mode="before")
     @classmethod
     def validate_list_fields(cls, v):
         if v is None:

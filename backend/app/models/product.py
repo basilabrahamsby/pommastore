@@ -130,6 +130,7 @@ class Product(Base):
     is_new_arrival: Mapped[bool] = mapped_column(Boolean, default=False)
     priority: Mapped[int] = mapped_column(Integer, default=0)
     shipping_zones_excluded: Mapped[list | None] = mapped_column(JSONB, default=list)
+    gallery_images: Mapped[list | None] = mapped_column(JSONB, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
