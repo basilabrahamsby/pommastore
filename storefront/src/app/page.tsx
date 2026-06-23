@@ -385,7 +385,7 @@ export default function Home() {
                <div className="flex gap-6 md:gap-10 overflow-x-auto py-2 px-6 md:px-12 scrollbar-hide select-none w-full justify-start md:justify-center">
                   {categories.map((cat: any, idx: number) => {
                      const name = cat.name;
-                     const image = getMediaUrl(cat.image_url || cat.banner_url);
+                     const image = getMediaUrl(cat.image_url || cat.images?.[0] || cat.banner_url);
                      const isSeen = seenCategories.includes(cat.id);
                      
                      return (

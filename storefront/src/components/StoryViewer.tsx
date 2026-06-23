@@ -189,7 +189,7 @@ export default function StoryViewer({
 
   if (!activeCategory) return null;
 
-  const categoryImageUrl = getMediaUrl(activeCategory.image_url || activeCategory.banner_url);
+  const categoryImageUrl = getMediaUrl(activeCategory.image_url || activeCategory.images?.[0] || activeCategory.banner_url);
   const featuredProduct = catProducts[0];
   const primaryVariant = featuredProduct?.variants?.[0];
   const cartItem = primaryVariant ? cartItems.find((i) => i.id === primaryVariant.id) : null;

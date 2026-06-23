@@ -127,11 +127,12 @@ function CategoryModal({ category, onClose, onSaved }) {
       seo_title: form.seo_title || null,
       meta_description: form.meta_description || null,
       keywords: form.keywords || null,
+      is_active: form.is_active,
       
       // Media persistence
       images: form.images || [],
-      image_url: form.image_url || (form.images?.[0] || null),
-      banner_url: form.banner_url || (form.images?.[1] || form.images?.[0] || null),
+      image_url: (form.images?.includes(form.image_url) ? form.image_url : null) || (form.images?.[0] || null),
+      banner_url: (form.images?.includes(form.banner_url) ? form.banner_url : null) || (form.images?.[1] || form.images?.[0] || null),
       video_url: form.video_url || null,
     }
     try {
