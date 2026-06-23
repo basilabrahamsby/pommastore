@@ -464,11 +464,24 @@ export default function ProductClient({
                 }).join(', ') || 'a free item';
               };
 
+              const bannerUrl = off.images?.[0] || off.banner_url;
+
               return (
               <Link key={off.id} href={`/offers`} className="block mb-8 group">
-                <div className="p-5 bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-lg shadow-sm border border-neutral-800 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-neutral-700">
+                <div 
+                  className="p-5 text-white rounded-lg shadow-sm border border-neutral-800 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-neutral-700 bg-neutral-900"
+                  style={{
+                    backgroundImage: bannerUrl ? `url(${getMediaUrl(bannerUrl)})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  {/* Dark transparent overlay to keep text highly readable and premium */}
+                  {bannerUrl && (
+                    <div className="absolute inset-0 bg-neutral-950/75 group-hover:bg-neutral-950/65 transition-colors duration-300 z-0" />
+                  )}
                   {/* Background pattern */}
-                  <div className="absolute right-0 bottom-0 opacity-10 font-black text-5xl select-none font-serif italic pointer-events-none -mr-3 -mb-3">
+                  <div className="absolute right-0 bottom-0 opacity-10 font-black text-5xl select-none font-serif italic pointer-events-none -mr-3 -mb-3 z-5">
                     {off.discount_type?.split(' ')[0] || 'OFFER'}
                   </div>
                   
