@@ -92,18 +92,26 @@ function LoginContent() {
     }
   }, [step]);
 
+  const [resendSuccess, setResendSuccess] = useState(false);
+
   const handleSendOTP = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (timer > 0) return;
 
     setLoading(true);
     setError('');
+    setResendSuccess(false);
 
     try {
       const payload = loginMethod === 'email' ? { email: identifier } : { phone: identifier };
       await api.post('/auth/otp/send', payload);
       setStep('verify');
+      setOtp(''); // Clear previous OTP on resend
       setTimer(60); // 60 seconds resend timer
+      if (step === 'verify') {
+        setResendSuccess(true);
+        setTimeout(() => setResendSuccess(false), 4000);
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to send OTP. Please try again.');
     } finally {
@@ -322,6 +330,11 @@ function LoginContent() {
               </form>
 
               <div className="text-center">
+                {resendSuccess && (
+                  <div className="mb-4 py-2.5 px-4 bg-emerald-50 border border-emerald-200 rounded text-[10px] font-bold font-montserrat text-emerald-700 tracking-[0.2em] uppercase animate-fadeIn">
+                    ✓ New code sent to {identifier}
+                  </div>
+                )}
                 {timer > 0 ? (
                   <p className="text-[10px] font-bold font-montserrat text-neutral-400 tracking-[0.2em] uppercase">
                     Resend Code in <span className="text-neutral-950 font-semibold">{timer}s</span>
