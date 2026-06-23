@@ -28,6 +28,14 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://kozmocart:kozmocart_dev_2026@postgres:5432/kozmocart_db
       REDIS_URL: redis://redis:6379/0
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: info@kozmocart.com
+      SMTP_PASSWORD: boxrxytuyycyesnof
+      SMTP_FROM_EMAIL: info@kozmocart.com
+      SMTP_FROM_NAME: "Kozmocart.com"
+      SMTP_TLS: "true"
+      SMTP_SSL: "false"
     ports:
       - "8020:8000"
     volumes:
