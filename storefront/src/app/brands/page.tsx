@@ -22,21 +22,31 @@ interface Brand {
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchBrands = async () => {
+    const fetchBrandsAndProducts = async () => {
       try {
-        const res = await api.get('/brands');
-        setBrands(res.data);
+        const [resBrands, resProducts] = await Promise.allSettled([
+          api.get('/brands'),
+          api.get('/products?limit=40')
+        ]);
+        
+        if (resBrands.status === 'fulfilled') {
+          setBrands(resBrands.value.data);
+        }
+        if (resProducts.status === 'fulfilled') {
+          setProducts(resProducts.value.data);
+        }
       } catch (err) {
-        console.error('Failed to load brands', err);
+        console.error('Failed to load brands and products', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchBrands();
+    fetchBrandsAndProducts();
   }, []);
 
   const filteredBrands = brands.filter(b => 
@@ -54,8 +64,28 @@ export default function BrandsPage() {
 
   const alphabet = Object.keys(groupedBrands).sort();
 
+  const displayProducts = products.filter(p => 
+    brands.some(b => b.id === p.brand_id || b.name === p.brand_name)
+  ).length > 0 ? products.filter(p => 
+    brands.some(b => b.id === p.brand_id || b.name === p.brand_name)
+  ) : products;
+
   return (
     <div className="min-h-screen bg-[#FCFAF7]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          display: flex;
+          width: max-content;
+          animation: marquee 35s linear infinite;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}} />
       {/* Banner / Header */}
       <div className="bg-[#FAF8F5] py-24 border-b border-neutral-200/50 relative overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center relative z-10">
@@ -86,6 +116,96 @@ export default function BrandsPage() {
           </div>
         </div>
       </div>
+
+      {/* Dynamic Moving Product Showcase Banner */}
+      {displayProducts.length > 0 && (
+        <div className="w-full bg-[#FAF8F5] border-t border-b border-neutral-200/50 py-6 overflow-hidden relative">
+          <div className="max-w-[1400px] mx-auto px-6 mb-4 flex flex-col items-start font-sans">
+             <span className="text-[8px] font-bold tracking-[0.25em] text-accent uppercase mb-1">Featured Creations</span>
+             <h2 className="text-lg font-serif font-normal text-neutral-900 uppercase tracking-wider leading-none">Olfactory Exhibition</h2>
+          </div>
+          
+          <div className="w-full relative overflow-hidden flex">
+            <div className="animate-marquee flex gap-6">
+              {/* First loop */}
+              {displayProducts.map((product: any, idx: number) => {
+                const imgUrl = product.images?.[0] 
+                  ? getMediaUrl(product.images[0]) 
+                  : (product.image ? getMediaUrl(product.image) : '/kozmocart/placeholder-perfume.png');
+                const price = product.variants?.[0]?.selling_price;
+                
+                return (
+                  <Link 
+                    key={`m1-${product.id || idx}`} 
+                    href={`/product/${product.slug}`}
+                    className="flex items-center gap-4 p-3 bg-white border border-neutral-200/60 rounded-lg hover:border-accent/60 shadow-sm transition-all duration-300 w-[280px] flex-shrink-0 cursor-pointer"
+                  >
+                    <div className="w-16 h-16 bg-neutral-50 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-neutral-100">
+                      <img 
+                        src={imgUrl} 
+                        alt={product.name} 
+                        className="max-w-full max-h-full object-cover hover:scale-105 transition-transform duration-500" 
+                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                      />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[7.5px] font-bold text-accent tracking-[0.2em] uppercase leading-none mb-1">
+                        {product.brand_name || 'Brand House'}
+                      </span>
+                      <h4 className="text-xs font-serif font-normal text-neutral-800 tracking-wide line-clamp-1 leading-tight mb-1 uppercase">
+                        {product.name}
+                      </h4>
+                      {price && (
+                        <span className="text-[11px] text-neutral-900 font-semibold font-sans leading-none">
+                          ₹{price.toLocaleString('en-IN')}/-
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+              
+              {/* Duplicate loop for seamless scroll */}
+              {displayProducts.map((product: any, idx: number) => {
+                const imgUrl = product.images?.[0] 
+                  ? getMediaUrl(product.images[0]) 
+                  : (product.image ? getMediaUrl(product.image) : '/kozmocart/placeholder-perfume.png');
+                const price = product.variants?.[0]?.selling_price;
+                
+                return (
+                  <Link 
+                    key={`m2-${product.id || idx}`} 
+                    href={`/product/${product.slug}`}
+                    className="flex items-center gap-4 p-3 bg-white border border-neutral-200/60 rounded-lg hover:border-accent/60 shadow-sm transition-all duration-300 w-[280px] flex-shrink-0 cursor-pointer"
+                  >
+                    <div className="w-16 h-16 bg-neutral-50 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-neutral-100">
+                      <img 
+                        src={imgUrl} 
+                        alt={product.name} 
+                        className="max-w-full max-h-full object-cover hover:scale-105 transition-transform duration-500" 
+                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                      />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[7.5px] font-bold text-accent tracking-[0.2em] uppercase leading-none mb-1">
+                        {product.brand_name || 'Brand House'}
+                      </span>
+                      <h4 className="text-xs font-serif font-normal text-neutral-800 tracking-wide line-clamp-1 leading-tight mb-1 uppercase">
+                        {product.name}
+                      </h4>
+                      {price && (
+                        <span className="text-[11px] text-neutral-900 font-semibold font-sans leading-none">
+                          ₹{price.toLocaleString('en-IN')}/-
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Listing Grid */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20">
