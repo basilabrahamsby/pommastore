@@ -438,7 +438,7 @@ export default function OffersPage() {
               <span>Elite Exclusives</span>
               <Sparkles size={12} className="fill-current" />
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif italic font-black text-white tracking-tight mb-6 leading-none">
+            <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif font-normal tracking-wide text-white uppercase mb-6 leading-none">
               The Vault
             </h1>
             <p className="text-neutral-400 text-xs md:text-sm font-medium tracking-[0.2em] uppercase max-w-xl mx-auto leading-relaxed">
@@ -456,7 +456,7 @@ export default function OffersPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
               <div>
                 <span className="text-[10px] font-black tracking-[0.4em] text-amber-600 uppercase mb-3 block">LOYALTY PRIVILEGES</span>
-                <h2 className="text-4xl md:text-5xl font-serif italic text-black font-light tracking-tight">Reach Point Milestones.</h2>
+                <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">Reach Point Milestones.</h2>
               </div>
               <Link href="/rewards" className="group flex items-center space-x-3 text-[10px] font-black tracking-widest uppercase text-neutral-400 hover:text-black transition-all">
                 <span>View All Rewards</span>
@@ -466,7 +466,7 @@ export default function OffersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {loyaltyRewards.slice(0, 4).map((reward) => (
                 <div key={reward.id} className="bg-gradient-to-b from-white to-neutral-50/30 border border-neutral-100/80 p-8 flex flex-col hover:shadow-[0_20px_50px_rgba(210,22,141,0.06)] hover:-translate-y-2 rounded-lg transition-all duration-500 group relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[3px] before:bg-gradient-to-r before:from-amber-400 before:to-accent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
-                  <div className="absolute -right-4 -top-8 text-[120px] font-serif italic text-neutral-200/20 opacity-[0.25] group-hover:opacity-[0.35] transition-opacity font-bold select-none pointer-events-none">
+                  <div className="absolute -right-4 -top-8 text-[120px] font-serif text-neutral-200/20 opacity-[0.25] group-hover:opacity-[0.35] transition-opacity font-bold select-none pointer-events-none">
                     {reward.point_cost / 100}
                   </div>
                   <div className="relative z-10 flex flex-col h-full">
@@ -475,7 +475,7 @@ export default function OffersPage() {
                     </div>
                     <div className="mb-2">
                       <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase font-sans">Requirement</span>
-                      <div className="text-xl font-serif italic font-bold text-black">{reward.point_cost} Points</div>
+                      <div className="text-xl font-serif font-bold text-black">{reward.point_cost} Points</div>
                     </div>
                     <div className="w-8 h-[1px] bg-neutral-200 my-5" />
                     <h3 className="text-sm font-black text-black uppercase tracking-wide mb-2.5 font-sans group-hover:text-accent transition-colors duration-300">{reward.name}</h3>
@@ -549,7 +549,7 @@ export default function OffersPage() {
                         <span className="text-[9rem] font-black tracking-tighter text-black uppercase">{promo.discount_type?.split(' ')[0]}</span>
                       </div>
 
-                      <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif italic font-black tracking-tight text-black uppercase mb-4 leading-[1.1]">
+                      <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif font-normal tracking-wide text-black uppercase mb-4 leading-[1.1]">
                         {promo.title}
                       </h2>
                       <div className="w-10 h-1 bg-accent mb-5" />
