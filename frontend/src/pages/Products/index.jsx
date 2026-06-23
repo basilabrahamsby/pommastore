@@ -78,6 +78,9 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     three_d_source_image: product?.three_d_source_image || '',
     is_3d_active: product?.is_3d_active || false,
 
+    // Per-product Visual Gallery
+    gallery_images: product?.gallery_images || [],
+
     variants: product?.variants?.length ? [] : [{
       sku: '', size_ml: '', concentration: 'EDP', selling_price: '', compare_at_price: '', cost_price: '', min_stock_alert: 5, loyalty_points: 0,
       barcode: '', batch_number: '', expiry_date: ''
@@ -111,6 +114,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
             ...p,
             full_description: fullProd.full_description || '',
             olfactory_family: fullProd.occasion_tags?.find(t => t.startsWith('family:'))?.replace('family:', '') || fullProd.olfactory_family || 'Woody',
+            gallery_images: fullProd.gallery_images || [],
           }));
         })
         .catch(err => console.warn('Failed to fetch full product details', err));
@@ -173,6 +177,42 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
       list.splice(idx, 1)
       return { ...p, images: list }
     })
+  }
+
+  // Gallery Handlers
+  const addGallerySlot = () => {
+    setForm(p => ({ ...p, gallery_images: [...(p.gallery_images || []), { image: '', link: '' }] }))
+  }
+
+  const removeGallerySlot = (idx) => {
+    setForm(p => {
+      const list = [...(p.gallery_images || [])]
+      list.splice(idx, 1)
+      return { ...p, gallery_images: list }
+    })
+  }
+
+  const updateGallerySlot = (idx, field, value) => {
+    setForm(p => {
+      const list = [...(p.gallery_images || [])]
+      list[idx] = { ...list[idx], [field]: value }
+      return { ...p, gallery_images: list }
+    })
+  }
+
+  const handleGalleryImageUpload = async (e, idx) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const toastId = toast.loading('Uploading gallery image...')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await api.post('/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      updateGallerySlot(idx, 'image', res.data.url)
+      toast.success('Gallery image uploaded!', { id: toastId })
+    } catch (err) {
+      toast.error('Upload failed. Check file size/type.', { id: toastId })
+    }
   }
 
   const handleThreeDImageUpload = (e) => {
@@ -259,7 +299,8 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
       is_new_arrival: !!form.is_new_arrival,
       priority: parseInt(form.priority) || 0,
       variants: sanitizedVariants,
-      images: form.images || []
+      images: form.images || [],
+      gallery_images: form.gallery_images || []
     }
 
     try {
@@ -753,6 +794,51 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                 </div>
               )}
             </div>
+
+            {/* ── SECTION 5: PRODUCT VISUAL GALLERY ── */}
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold)', marginTop: 24, marginBottom: 12, borderBottom: '1px solid rgba(201,168,76,0.2)', paddingBottom: 4 }}>🖼️ Product Visual Gallery</p>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 14, lineHeight: 1.5 }}>Upload lifestyle, social media, and editorial images for this product. These are displayed in a stunning gallery grid on the product landing page. You can optionally link each image to an Instagram post, campaign page, or product URL.</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+              {(form.gallery_images || []).map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 10 }}>
+                  {/* Thumbnail */}
+                  <div style={{ position: 'relative', width: 60, height: 60, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.25)', background: '#0c0c12', flexShrink: 0 }}>
+                    {item.image ? (
+                      <img src={getMediaUrl(item.image)} alt={`Gallery ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <label htmlFor={`gallery-upload-${idx}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-muted)' }} title="Click to upload">
+                        📸
+                      </label>
+                    )}
+                    <label htmlFor={`gallery-upload-${idx}`} style={{ position: 'absolute', inset: 0, cursor: 'pointer', opacity: item.image ? 0 : 1 }} />
+                    <input id={`gallery-upload-${idx}`} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleGalleryImageUpload(e, idx)} />
+                  </div>
+                  {/* Link input */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {item.image && (
+                      <label htmlFor={`gallery-change-${idx}`} style={{ fontSize: '0.68rem', color: 'var(--gold)', cursor: 'pointer', textDecoration: 'underline', width: 'fit-content' }}>
+                        Change Image
+                        <input id={`gallery-change-${idx}`} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleGalleryImageUpload(e, idx)} />
+                      </label>
+                    )}
+                    <input
+                      className="input"
+                      style={{ fontSize: '0.75rem', padding: '5px 10px' }}
+                      placeholder="Target link (optional): https://instagram.com/p/... or /product/slug"
+                      value={item.link || ''}
+                      onChange={e => updateGallerySlot(idx, 'link', e.target.value)}
+                    />
+                  </div>
+                  {/* Remove */}
+                  <button type="button" onClick={() => removeGallerySlot(idx)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,50,50,0.12)', color: '#e05555', border: '1px solid rgba(220,50,50,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.75rem', flexShrink: 0 }} title="Remove slot">✕</button>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" onClick={addGallerySlot} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 'var(--radius-sm)', border: '1px dashed rgba(201,168,76,0.4)', background: 'rgba(201,168,76,0.04)', color: 'var(--gold-bright)', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', marginBottom: 20, width: '100%', justifyContent: 'center' }}>
+              <span style={{ fontSize: '1rem' }}>+</span> Add Gallery Image Slot
+            </button>
 
             <style>{`
               @keyframes spin {
