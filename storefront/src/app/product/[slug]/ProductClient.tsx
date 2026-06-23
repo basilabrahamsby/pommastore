@@ -706,6 +706,60 @@ export default function ProductClient({
           </div>
         </section>
 
+        {/* Visual Gallery Grid Section */}
+        {product?.gallery_images?.length > 0 && (
+          <section className="bg-white py-12 md:py-16 border-t border-neutral-100 mt-12 w-full">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-10">
+              <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">Olfactory Visuals</span>
+              <h2 className="text-3xl md:text-4xl font-serif text-black uppercase tracking-wider font-normal">The Gallery</h2>
+              <div className="w-12 h-[1px] bg-neutral-900 mx-auto mt-4" />
+            </div>
+
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {product.gallery_images.map((item: any, idx: number) => {
+                  const imageUrl = getMediaUrl(item.image);
+                  const itemLink = item.link || '#';
+                  const isExternal = itemLink.startsWith('http') || itemLink.startsWith('//');
+                  
+                  const Content = (
+                    <div className="group relative aspect-square overflow-hidden bg-neutral-950 shadow-sm border border-neutral-100/50 hover:shadow-md transition-all duration-700">
+                      <img 
+                        src={imageUrl} 
+                        alt={`Gallery Image ${idx + 1}`} 
+                        className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-500 flex items-center justify-center">
+                        {item.link && (
+                          <span className="text-white text-[10px] font-bold font-montserrat tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500 border border-white/20 px-4 py-2 rounded-full backdrop-blur-sm bg-black/20 hover:bg-white hover:text-black">
+                            View
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+
+                  return item.link ? (
+                    isExternal ? (
+                      <a key={idx} href={itemLink} target="_blank" rel="noopener noreferrer" className="block">
+                        {Content}
+                      </a>
+                    ) : (
+                      <Link key={idx} href={itemLink} className="block">
+                        {Content}
+                      </Link>
+                    )
+                  ) : (
+                    <div key={idx} className="block">
+                      {Content}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* DYNAMIC RECOMMENDATIONS SECTION 0: Suggest Same Category Items */}
         {sameCategoryProducts.length > 0 && (
           <section className="mb-20 border-t border-neutral-100 pt-16">
@@ -958,59 +1012,6 @@ export default function ProductClient({
           </section>
         )}
 
-        {/* Visual Gallery Grid Section */}
-        {product?.gallery_images?.length > 0 && (
-          <section className="bg-white py-12 md:py-16 border-t border-neutral-100 mt-12 w-full">
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-10">
-              <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">Olfactory Visuals</span>
-              <h2 className="text-3xl md:text-4xl font-serif text-black uppercase tracking-wider font-normal">The Gallery</h2>
-              <div className="w-12 h-[1px] bg-neutral-900 mx-auto mt-4" />
-            </div>
-
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {product.gallery_images.map((item: any, idx: number) => {
-                  const imageUrl = getMediaUrl(item.image);
-                  const itemLink = item.link || '#';
-                  const isExternal = itemLink.startsWith('http') || itemLink.startsWith('//');
-                  
-                  const Content = (
-                    <div className="group relative aspect-square overflow-hidden bg-neutral-950 shadow-sm border border-neutral-100/50 hover:shadow-md transition-all duration-700">
-                      <img 
-                        src={imageUrl} 
-                        alt={`Gallery Image ${idx + 1}`} 
-                        className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-500 flex items-center justify-center">
-                        {item.link && (
-                          <span className="text-white text-[10px] font-bold font-montserrat tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500 border border-white/20 px-4 py-2 rounded-full backdrop-blur-sm bg-black/20 hover:bg-white hover:text-black">
-                            View
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-
-                  return item.link ? (
-                    isExternal ? (
-                      <a key={idx} href={itemLink} target="_blank" rel="noopener noreferrer" className="block">
-                        {Content}
-                      </a>
-                    ) : (
-                      <Link key={idx} href={itemLink} className="block">
-                        {Content}
-                      </Link>
-                    )
-                  ) : (
-                    <div key={idx} className="block">
-                      {Content}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
 
       </div>
     </div>
