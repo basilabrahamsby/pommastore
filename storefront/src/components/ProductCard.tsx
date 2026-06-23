@@ -187,7 +187,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         name: product.name,
         brand: product.brand_name,
         price: primaryVariant?.selling_price || 0,
-        image: getMediaUrl(product.images?.[0])
+        image: getMediaUrl(product.images?.[0]),
+        slug: product.slug
       });
     }
   };

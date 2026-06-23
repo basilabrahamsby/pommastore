@@ -634,7 +634,8 @@ export default function ProductClient({
                       name: product.name,
                       brand: product.brand_name,
                       price: selectedVariant?.selling_price || 0,
-                      image: getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png'
+                      image: getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png',
+                      slug: product.slug
                     });
                   }
                 }}
