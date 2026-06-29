@@ -356,87 +356,66 @@ export default function Home() {
             </div>
          </section>
 
-         {/* Signature Categories (Instagram Story Mode) */}
+         {/* Signature Categories */}
          {categories.length > 0 && (
-         <section className="pt-12 pb-6 bg-white border-b border-neutral-50 overflow-hidden">
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-4">
-               <span className="text-[9px] font-medium tracking-[0.25em] text-neutral-400 uppercase mb-2 block">Discover More</span>
-               <h2 className="text-2xl md:text-3xl font-nelphim font-medium text-black leading-none inline-block uppercase tracking-wide">
-                  Signature Categories
-               </h2>
-               <div className="w-12 h-[2.5px] bg-accent mx-auto mt-2.5" />
-            </div>
+          <section className="pt-12 pb-6 bg-white border-b border-neutral-50 overflow-hidden">
+             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-4">
+                <span className="text-[9px] font-medium tracking-[0.25em] text-neutral-400 uppercase mb-2 block">Discover More</span>
+                <h2 className="text-2xl md:text-3xl font-nelphim font-medium text-black leading-none inline-block uppercase tracking-wide">
+                   Signature Categories
+                </h2>
+                <div className="w-12 h-[2.5px] bg-accent mx-auto mt-2.5" />
+             </div>
 
-            <div className="relative w-full overflow-hidden">
-               <div className="flex gap-6 md:gap-10 overflow-x-auto py-2 px-6 md:px-12 scrollbar-hide select-none w-full justify-start md:justify-center">
-                  {categories.map((cat: any, idx: number) => {
-                     const name = cat.name;
-                     const image = getMediaUrl(cat.image_url || cat.images?.[0] || cat.banner_url);
-                     const isSeen = seenCategories.includes(cat.id);
-                     
-                     return (
-                        <button
-                           key={cat.id || idx}
-                           onClick={() => setActiveStoryIdx(idx)}
-                           className="group/cat flex flex-col items-center space-y-3 flex-shrink-0 cursor-pointer focus:outline-none"
-                        >
-                           {/* Outer Ring: gradient for unseen, simple light gray border for seen */}
-                           <div className={`relative p-[3px] rounded-full transition-all duration-500 transform group-hover/cat:scale-105 active:scale-95 ${
-                              isSeen 
-                                 ? 'bg-neutral-200 hover:bg-neutral-300' 
-                                 : 'bg-gradient-to-tr from-amber-400 via-rose-500 to-accent'
-                           }`}>
-                              {/* White Spacer Gap */}
-                              <div className="p-[2px] bg-white rounded-full">
-                                 {/* Circular Image wrapper */}
-                                 <div className="w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center border border-neutral-100/80 shadow-sm group-hover/cat:shadow-md transition-all duration-700">
-                                    <img 
-                                       src={image} 
-                                       alt={name} 
-                                       loading="lazy"
-                                       decoding="async"
-                                       className="w-full h-full object-cover group-hover/cat:scale-110 transition-transform duration-[1.5s]" 
-                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
-                                    />
-                                 </div>
-                              </div>
-                              
-                              {/* Glowing Pulse Dot for Unseen Stories */}
-                              {!isSeen && (
-                                 <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-white animate-pulse shadow-md" />
-                              )}
-                           </div>
-                           
-                           {/* Text label */}
-                           <span className="text-[9px] md:text-[10px] font-medium tracking-wider text-neutral-700 uppercase transition-all group-hover/cat:text-accent font-sans whitespace-nowrap">
-                              {name}
-                           </span>
-                        </button>
-                     );
-                  })}
-               </div>
-               
-               {/* Left/Right fading edges for long scrollable content */}
-               {categories.length >= 6 && (
-                  <>
-                     <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
-                     <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
-                  </>
-               )}
-            </div>
-
-            {/* Immersive Modal overlay */}
-            {activeStoryIdx !== null && (
-               <StoryViewer
-                  categories={categories}
-                  initialCategoryIndex={activeStoryIdx}
-                  allProducts={[...newArrivals, ...bestsellers]}
-                  onClose={() => setActiveStoryIdx(null)}
-                  onMarkAsSeen={markCategoryAsSeen}
-               />
-            )}
-         </section>
-         )}
+             <div className="relative w-full overflow-hidden">
+                <div className="flex gap-6 md:gap-10 overflow-x-auto py-2 px-6 md:px-12 scrollbar-hide select-none w-full justify-start md:justify-center">
+                   {categories.map((cat: any, idx: number) => {
+                      const name = cat.name;
+                      const image = getMediaUrl(cat.image_url || cat.images?.[0] || cat.banner_url);
+                      
+                      return (
+                         <Link
+                            key={cat.id || idx}
+                            href={`/shop?category=${cat.slug || cat.id}`}
+                            className="group/cat flex flex-col items-center space-y-3 flex-shrink-0 cursor-pointer focus:outline-none"
+                         >
+                            {/* Outer Ring: elegant gradient border */}
+                            <div className="relative p-[3px] rounded-full transition-all duration-500 transform group-hover/cat:scale-105 active:scale-95 bg-gradient-to-tr from-amber-400 via-rose-500 to-accent">
+                               {/* White Spacer Gap */}
+                               <div className="p-[2px] bg-white rounded-full">
+                                  {/* Circular Image wrapper */}
+                                  <div className="w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center border border-neutral-100/80 shadow-sm group-hover/cat:shadow-md transition-all duration-700">
+                                     <img 
+                                        src={image} 
+                                        alt={name} 
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-full object-cover group-hover/cat:scale-110 transition-transform duration-[1.5s]" 
+                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                                     />
+                                  </div>
+                               </div>
+                            </div>
+                            
+                            {/* Text label */}
+                            <span className="text-[9px] md:text-[10px] font-medium tracking-wider text-neutral-700 uppercase transition-all group-hover/cat:text-accent font-sans whitespace-nowrap">
+                               {name}
+                            </span>
+                         </Link>
+                      );
+                   })}
+                </div>
+                
+                {/* Left/Right fading edges for long scrollable content */}
+                {categories.length >= 6 && (
+                   <>
+                      <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
+                      <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+                   </>
+                )}
+             </div>
+          </section>
+          )}
 
          {/* Bestsellers Grid */}
          <section className="py-24 bg-neutral-50 border-t border-b border-neutral-100">
