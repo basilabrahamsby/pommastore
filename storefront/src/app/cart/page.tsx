@@ -121,7 +121,7 @@ export default function Cart() {
                 >
                   {/* Product Image */}
                   <Link
-                    href={`/product/${item.productId || ''}`}
+                    href={`/product/${(item as any).productId || ''}`}
                     className="relative flex-shrink-0 w-24 h-28 md:w-28 md:h-32 bg-neutral-50 border border-neutral-100 overflow-hidden rounded-sm group"
                   >
                     <img
@@ -135,18 +135,18 @@ export default function Cart() {
                   <div className="flex-grow min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <Link href={`/product/${item.productId || ''}`}>
+                        <Link href={`/product/${(item as any)?.productId || ''}`}>
                           <h3 className="text-[11px] md:text-xs font-black text-black uppercase tracking-widest leading-tight hover:text-accent transition-colors truncate">
                             {item.name}
                           </h3>
                         </Link>
                         <p className="text-[9px] md:text-[10px] text-neutral-400 mt-1 uppercase tracking-[0.2em] font-medium">
-                          {item.variantName || `${item.sizeMl}ml`}
+                          {(item as any).variantName || `${item.sizeMl}ml`}
                         </p>
-                        {item.loyaltyPoints > 0 && (
+                        {(item.loyaltyPoints ?? 0) > 0 && (
                           <span className="inline-flex items-center gap-1 mt-1.5 text-[8px] font-black tracking-widest text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase">
                             <Sparkles size={7} />
-                            +{item.loyaltyPoints * item.quantity} pts
+                            +{(item.loyaltyPoints ?? 0) * item.quantity} pts
                           </span>
                         )}
                       </div>
