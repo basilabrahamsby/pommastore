@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Shield, RotateCcw, Truck, Sparkles, ChevronRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Shield, Truck, Sparkles, ChevronRight } from 'lucide-react';
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCartStore();
@@ -211,10 +211,9 @@ export default function Cart() {
             </div>
 
             {/* Trust Badges — Desktop */}
-            <div className="hidden lg:grid grid-cols-3 gap-3 mt-8">
+            <div className="hidden lg:grid grid-cols-2 gap-3 mt-8">
               {[
                 { icon: Shield, label: '100% Authentic', sub: 'Genuine products only' },
-                { icon: RotateCcw, label: 'Easy Returns', sub: '7-day return policy' },
                 { icon: Truck, label: 'Fast Delivery', sub: '2–5 working days' },
               ].map((b, i) => (
                 <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-sm border border-neutral-200 shadow-sm">
@@ -326,7 +325,7 @@ export default function Cart() {
 
                 {/* Payment methods */}
                 <div className="flex items-center justify-center gap-2 flex-wrap pt-1">
-                  {['UPI', 'Cards', 'Razorpay', 'EMI'].map(m => (
+                  {['UPI', 'Cards', 'Razorpay'].map(m => (
                     <span key={m} className="text-[8px] font-black tracking-widest text-neutral-400 border border-neutral-200 px-2.5 py-1 rounded-full uppercase bg-neutral-50">
                       {m}
                     </span>
@@ -339,10 +338,9 @@ export default function Cart() {
         </div>
 
         {/* Mobile Trust Badges */}
-        <div className="lg:hidden grid grid-cols-3 gap-3 mt-8">
+        <div className="lg:hidden grid grid-cols-2 gap-3 mt-8">
           {[
             { icon: Shield, label: 'Authentic' },
-            { icon: RotateCcw, label: 'Returns' },
             { icon: Truck, label: 'Fast Delivery' },
           ].map((b, i) => (
             <div key={i} className="flex flex-col items-center gap-2 p-3 bg-white rounded-sm border border-neutral-200 shadow-sm text-center">
