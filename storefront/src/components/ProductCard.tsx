@@ -230,7 +230,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 alt={`${product.name} ${idx + 1}`}
                 loading="lazy"
                 decoding="async"
-                className={`absolute inset-0 h-full w-full object-contain mix-blend-multiply transition-all duration-[1200ms] ease-in-out p-6 group-hover:scale-105 z-0 ${
+                className={`absolute inset-0 h-full w-full object-contain mix-blend-multiply transition-all duration-[1200ms] ease-in-out p-2 group-hover:scale-105 z-0 ${
                   idx === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                 }`}
                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
@@ -242,7 +242,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               alt={product.name}
               loading="lazy"
               decoding="async"
-              className="h-full w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 p-6"
+              className="h-full w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 p-2"
             />
           )}
           <div className="absolute inset-0 bg-black/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
