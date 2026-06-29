@@ -325,15 +325,27 @@ export default function StoryViewer({
           
           {/* SLIDE 0: Category Welcome / Intro Banner */}
           {currentSlideIdx === 0 && (
-            <div className="w-full h-full relative animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-full h-full relative flex items-center justify-center bg-[#070709] animate-in fade-in zoom-in-95 duration-500">
+              {/* Blurred background image for luxury depth */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                <img 
+                  src={categoryImageUrl} 
+                  alt="" 
+                  className="w-full h-full object-cover opacity-30 blur-2xl scale-110"
+                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                />
+                <div className="absolute inset-0 bg-black/40" />
+              </div>
+
+              {/* Foreground main image - responsive and fully visible */}
               <img 
                 src={categoryImageUrl} 
                 alt={activeCategory.name} 
-                className="w-full h-full object-cover opacity-95"
+                className="w-full h-full object-contain opacity-95 z-10 relative"
                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
               />
               {/* Vignette overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/50" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/40 z-20 pointer-events-none" />
               
               {/* Instagram style overlay banner */}
               <div className="absolute inset-x-4 bottom-28 z-20 bg-black/30 backdrop-blur-xl border border-white/10 p-6 rounded-2xl text-left shadow-xl">
