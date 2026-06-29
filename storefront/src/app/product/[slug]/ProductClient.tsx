@@ -233,6 +233,7 @@ export default function ProductClient({
     addItem({
       id: selectedVariant.id,
       productId: product.id,
+      slug: product.slug,
       name: product.name,
       variantName: selectedVariant.sku,
       price: selectedVariant.selling_price,
@@ -249,6 +250,7 @@ export default function ProductClient({
       addItem({
         id: selectedVariant.id,
         productId: product.id,
+        slug: product.slug,
         name: product.name,
         variantName: selectedVariant.sku,
         price: selectedVariant.selling_price,
@@ -275,6 +277,7 @@ export default function ProductClient({
       addItem({
         id: variant.id,
         productId: itemObj.id,
+        slug: itemObj.slug,
         name: itemObj.name,
         variantName: variant.sku,
         price: isBundle ? Math.round(variant.selling_price * 0.9) : variant.selling_price,

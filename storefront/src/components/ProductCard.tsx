@@ -143,6 +143,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     addItem({
       id: primaryVariant.id,
       productId: product.id,
+      slug: product.slug,
       name: product.name,
       variantName: primaryVariant.sku,
       price: primaryVariant.selling_price,
@@ -162,6 +163,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       addItem({
         id: primaryVariant.id,
         productId: product.id,
+        slug: product.slug,
         name: product.name,
         variantName: primaryVariant.sku,
         price: primaryVariant.selling_price,

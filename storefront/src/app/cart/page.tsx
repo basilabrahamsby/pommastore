@@ -121,7 +121,7 @@ export default function Cart() {
                 >
                   {/* Product Image */}
                   <Link
-                    href={`/product/${(item as any).productId || ''}`}
+                    href={`/product/${item.slug || (item as any).productId || ''}`}
                     className="relative flex-shrink-0 w-24 h-28 md:w-28 md:h-32 bg-neutral-50 border border-neutral-100 overflow-hidden rounded-sm group"
                   >
                     <img
@@ -135,7 +135,7 @@ export default function Cart() {
                   <div className="flex-grow min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <Link href={`/product/${(item as any)?.productId || ''}`}>
+                        <Link href={`/product/${item.slug || (item as any)?.productId || ''}`}>
                           <h3 className="text-[11px] md:text-xs font-black text-black uppercase tracking-widest leading-tight hover:text-neutral-500 transition-colors truncate">
                             {item.name}
                           </h3>
