@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Shield, RotateCcw, Truck, Tag, Sparkles, ChevronRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Shield, RotateCcw, Truck, Sparkles, ChevronRight } from 'lucide-react';
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCartStore();
@@ -30,12 +30,12 @@ export default function Cart() {
     }, 350);
   };
 
-  // ─── Empty State ────────────────────────────────────────────────────────────
+  // ─── Empty State ─────────────────────────────────────────────────────────────
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-32 mt-10">
+      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6 py-32 mt-10">
         <div className="flex flex-col items-center text-center max-w-sm">
-          <div className="w-24 h-24 bg-neutral-50 rounded-full flex items-center justify-center mb-8 border border-neutral-100">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-8 border border-neutral-200 shadow-sm">
             <ShoppingBag size={36} className="text-neutral-300" strokeWidth={1} />
           </div>
           <span className="text-[9px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-3">Shopping Bag</span>
@@ -58,16 +58,16 @@ export default function Cart() {
     );
   }
 
-  // ─── Cart Page ───────────────────────────────────────────────────────────────
+  // ─── Cart Page ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 mt-8">
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-10 md:mb-14">
           <Link
             href="/shop"
-            className="w-9 h-9 flex items-center justify-center border border-neutral-200 hover:border-black hover:bg-black hover:text-white transition-all duration-300 rounded-sm"
+            className="w-9 h-9 flex items-center justify-center border border-neutral-200 bg-white hover:border-black hover:bg-black hover:text-white transition-all duration-300 rounded-sm shadow-sm"
           >
             <ArrowLeft size={16} />
           </Link>
@@ -82,40 +82,40 @@ export default function Cart() {
           </div>
         </div>
 
-        {/* Free Shipping Progress Bar - Mobile Top Banner */}
+        {/* Mobile: Free Shipping Banner */}
         {!isFreeShipping && (
-          <div className="lg:hidden mb-6 bg-neutral-950 text-white p-4 rounded-sm">
+          <div className="lg:hidden mb-6 bg-white border border-neutral-200 p-4 rounded-sm shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Truck size={13} className="text-accent" />
-                <span className="text-[9px] font-bold tracking-widest uppercase">Free Shipping Progress</span>
+                <Truck size={13} className="text-neutral-500" />
+                <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-600">Free Shipping Progress</span>
               </div>
-              <span className="text-[10px] font-black text-accent">₹{amountToFreeShipping.toLocaleString('en-IN')} away</span>
+              <span className="text-[10px] font-black text-black">₹{amountToFreeShipping.toLocaleString('en-IN')} away</span>
             </div>
-            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-accent transition-all duration-700 rounded-full"
+                className="h-full bg-black transition-all duration-700 rounded-full"
                 style={{ width: `${shippingProgressPct}%` }}
               />
             </div>
           </div>
         )}
         {isFreeShipping && (
-          <div className="lg:hidden mb-6 bg-emerald-950 text-white p-4 rounded-sm flex items-center gap-3">
-            <Truck size={16} className="text-emerald-400 flex-shrink-0" />
-            <span className="text-[10px] font-black tracking-widest uppercase text-emerald-400">You've unlocked Free Standard Delivery! 🎉</span>
+          <div className="lg:hidden mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-sm flex items-center gap-3">
+            <Truck size={16} className="text-emerald-600 flex-shrink-0" />
+            <span className="text-[10px] font-black tracking-widest uppercase text-emerald-700">You've unlocked Free Standard Delivery! 🎉</span>
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-8 xl:gap-14">
+        <div className="flex flex-col lg:flex-row gap-8 xl:gap-10">
 
-          {/* ── Left: Cart Items ─────────────────────────────────────────── */}
+          {/* ── Left: Cart Items ───────────────────────────────────────────── */}
           <div className="w-full lg:w-[60%] xl:w-[62%]">
-            <div className="divide-y divide-neutral-100">
+            <div className="bg-white border border-neutral-200 rounded-sm shadow-sm divide-y divide-neutral-100">
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className={`py-6 md:py-8 flex gap-4 md:gap-6 transition-all duration-350 ${
+                  className={`p-5 md:p-6 flex gap-4 md:gap-5 transition-all duration-350 ${
                     removing === item.id ? 'opacity-0 translate-x-4 pointer-events-none' : 'opacity-100 translate-x-0'
                   }`}
                 >
@@ -136,7 +136,7 @@ export default function Cart() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <Link href={`/product/${(item as any)?.productId || ''}`}>
-                          <h3 className="text-[11px] md:text-xs font-black text-black uppercase tracking-widest leading-tight hover:text-accent transition-colors truncate">
+                          <h3 className="text-[11px] md:text-xs font-black text-black uppercase tracking-widest leading-tight hover:text-neutral-500 transition-colors truncate">
                             {item.name}
                           </h3>
                         </Link>
@@ -170,7 +170,7 @@ export default function Cart() {
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="w-9 h-8 flex items-center justify-center text-[11px] font-black text-black border-x border-neutral-200">
+                        <span className="w-9 h-8 flex items-center justify-center text-[11px] font-black text-black border-x border-neutral-200 bg-neutral-50">
                           {item.quantity}
                         </span>
                         <button
@@ -200,24 +200,24 @@ export default function Cart() {
             </div>
 
             {/* Continue Shopping */}
-            <div className="mt-6 pt-6 border-t border-neutral-100">
+            <div className="mt-5 flex items-center">
               <Link
                 href="/shop"
-                className="inline-flex items-center gap-2 text-[10px] font-bold tracking-widest text-neutral-500 hover:text-black transition-colors uppercase"
+                className="inline-flex items-center gap-2 text-[10px] font-bold tracking-widest text-neutral-400 hover:text-black transition-colors uppercase"
               >
                 <ArrowLeft size={13} />
                 Continue Shopping
               </Link>
             </div>
 
-            {/* Trust Badges - Desktop */}
-            <div className="hidden lg:grid grid-cols-3 gap-4 mt-10 pt-8 border-t border-neutral-100">
+            {/* Trust Badges — Desktop */}
+            <div className="hidden lg:grid grid-cols-3 gap-3 mt-8">
               {[
                 { icon: Shield, label: '100% Authentic', sub: 'Genuine products only' },
                 { icon: RotateCcw, label: 'Easy Returns', sub: '7-day return policy' },
                 { icon: Truck, label: 'Fast Delivery', sub: '2–5 working days' },
               ].map((b, i) => (
-                <div key={i} className="flex items-center gap-3 p-4 bg-neutral-50 rounded-sm border border-neutral-100">
+                <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-sm border border-neutral-200 shadow-sm">
                   <b.icon size={18} className="text-neutral-400 flex-shrink-0" strokeWidth={1.5} />
                   <div>
                     <p className="text-[9px] font-black tracking-widest uppercase text-black">{b.label}</p>
@@ -228,120 +228,124 @@ export default function Cart() {
             </div>
           </div>
 
-          {/* ── Right: Order Summary ─────────────────────────────────────── */}
+          {/* ── Right: Order Summary ──────────────────────────────────────── */}
           <div className="w-full lg:w-[40%] xl:w-[38%]">
-            <div className="bg-neutral-950 text-white p-6 md:p-8 sticky top-28 rounded-sm">
+            <div className="bg-white border border-neutral-200 rounded-sm shadow-sm sticky top-28 overflow-hidden">
 
-              <h2 className="text-[10px] font-black tracking-[0.35em] uppercase text-neutral-400 mb-6 pb-5 border-b border-white/10">
-                Order Summary
-              </h2>
+              {/* Summary Header */}
+              <div className="px-6 py-5 border-b border-neutral-100 bg-neutral-50">
+                <h2 className="text-[10px] font-black tracking-[0.35em] uppercase text-neutral-600">
+                  Order Summary
+                </h2>
+              </div>
 
-              {/* Line Items */}
-              <div className="space-y-3 mb-6">
-                {items.map(item => (
-                  <div key={item.id} className="flex justify-between items-center">
-                    <div className="min-w-0 mr-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-white truncate">{item.name}</p>
-                      <p className="text-[9px] text-neutral-500 font-medium">Qty: {item.quantity}</p>
+              <div className="px-6 py-6 space-y-5">
+
+                {/* Line Items */}
+                <div className="space-y-3">
+                  {items.map(item => (
+                    <div key={item.id} className="flex justify-between items-center">
+                      <div className="min-w-0 mr-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-black truncate">{item.name}</p>
+                        <p className="text-[9px] text-neutral-400 font-medium">Qty: {item.quantity}</p>
+                      </div>
+                      <span className="text-[11px] font-black text-black flex-shrink-0">
+                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-black text-white flex-shrink-0">
-                      ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Shipping Progress */}
-              <div className="mb-6 pb-6 border-b border-white/10">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Truck size={11} className={isFreeShipping ? 'text-emerald-400' : 'text-neutral-500'} />
-                    <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-400">Shipping</span>
-                  </div>
-                  <span className={`text-[10px] font-black ${isFreeShipping ? 'text-emerald-400' : 'text-white'}`}>
-                    {isFreeShipping ? 'FREE' : `₹150`}
-                  </span>
+                  ))}
                 </div>
-                <div className="h-1 bg-white/10 rounded-full overflow-hidden mb-2">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${isFreeShipping ? 'bg-emerald-400' : 'bg-accent'}`}
-                    style={{ width: `${shippingProgressPct}%` }}
-                  />
-                </div>
-                <p className="text-[9px] text-neutral-500 font-medium">
-                  {isFreeShipping
-                    ? '🎉 You qualify for free delivery!'
-                    : `Add ₹${amountToFreeShipping.toLocaleString('en-IN')} more for free delivery`}
-                </p>
-              </div>
 
-              {/* Loyalty Points */}
-              {totalLoyaltyPoints > 0 && (
-                <div className="mb-6 flex items-center justify-between bg-amber-400/10 border border-amber-400/20 rounded-sm px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={13} className="text-amber-400" />
-                    <span className="text-[9px] font-black tracking-widest uppercase text-amber-400">Points to earn</span>
-                  </div>
-                  <span className="text-[11px] font-black text-amber-400">+{totalLoyaltyPoints} PTS</span>
-                </div>
-              )}
+                <div className="border-t border-neutral-100" />
 
-              {/* Subtotal + Total */}
-              <div className="space-y-3 mb-8">
+                {/* Subtotal Row */}
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-neutral-500 font-medium uppercase tracking-widest">Subtotal</span>
-                  <span className="text-[12px] font-black text-white">₹{totalPrice().toLocaleString('en-IN')}</span>
+                  <span className="text-[12px] font-black text-black">₹{totalPrice().toLocaleString('en-IN')}</span>
                 </div>
+
+                {/* Shipping Progress */}
+                <div className="bg-neutral-50 border border-neutral-100 rounded-sm p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Truck size={11} className={isFreeShipping ? 'text-emerald-600' : 'text-neutral-400'} />
+                      <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-500">Shipping</span>
+                    </div>
+                    <span className={`text-[10px] font-black ${isFreeShipping ? 'text-emerald-600' : 'text-black'}`}>
+                      {isFreeShipping ? 'FREE' : `₹150`}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden mb-2">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${isFreeShipping ? 'bg-emerald-500' : 'bg-black'}`}
+                      style={{ width: `${shippingProgressPct}%` }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-neutral-400 font-medium">
+                    {isFreeShipping
+                      ? '🎉 You qualify for free delivery!'
+                      : `Add ₹${amountToFreeShipping.toLocaleString('en-IN')} more for free delivery`}
+                  </p>
+                </div>
+
+                {/* Loyalty Points */}
+                {totalLoyaltyPoints > 0 && (
+                  <div className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-sm px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={13} className="text-amber-500" />
+                      <span className="text-[9px] font-black tracking-widest uppercase text-amber-700">Points to earn</span>
+                    </div>
+                    <span className="text-[11px] font-black text-amber-700">+{totalLoyaltyPoints} PTS</span>
+                  </div>
+                )}
+
+                <div className="border-t border-neutral-100" />
+
+                {/* Total */}
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-neutral-500 font-medium uppercase tracking-widest">Shipping</span>
-                  <span className={`text-[12px] font-black ${isFreeShipping ? 'text-emerald-400' : 'text-white'}`}>
-                    {isFreeShipping ? 'FREE' : '₹150'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                  <span className="text-[11px] font-black tracking-widest uppercase text-white">Total</span>
-                  <span className="text-xl font-black text-white">
+                  <span className="text-[11px] font-black tracking-widest uppercase text-black">Total</span>
+                  <span className="text-xl font-black text-black">
                     ₹{(totalPrice() + (isFreeShipping ? 0 : 150)).toLocaleString('en-IN')}
                   </span>
                 </div>
+
+                {/* CTA */}
+                <Link
+                  href="/checkout"
+                  className="w-full bg-black text-white py-4 md:py-5 flex items-center justify-center gap-3 text-[10px] font-black tracking-[0.3em] uppercase transition-all duration-300 hover:bg-neutral-800 rounded-sm"
+                >
+                  <Shield size={13} />
+                  Proceed to Checkout
+                </Link>
+
+                {/* Security note */}
+                <div className="flex items-center justify-center gap-2 text-[9px] text-neutral-400 font-bold tracking-widest uppercase">
+                  <Shield size={10} />
+                  Secure & Encrypted Checkout
+                </div>
+
+                {/* Payment methods */}
+                <div className="flex items-center justify-center gap-2 flex-wrap pt-1">
+                  {['UPI', 'Cards', 'Razorpay', 'EMI'].map(m => (
+                    <span key={m} className="text-[8px] font-black tracking-widest text-neutral-400 border border-neutral-200 px-2.5 py-1 rounded-full uppercase bg-neutral-50">
+                      {m}
+                    </span>
+                  ))}
+                </div>
+
               </div>
-
-              {/* CTA */}
-              <Link
-                href="/checkout"
-                className="w-full bg-accent hover:bg-accent/90 text-white py-4 md:py-5 flex items-center justify-center gap-3 text-[10px] font-black tracking-[0.3em] uppercase transition-all duration-300 shadow-[0_4px_24px_rgba(210,22,141,0.35)] hover:shadow-[0_6px_32px_rgba(210,22,141,0.5)] rounded-sm mb-4"
-              >
-                <Shield size={13} />
-                Proceed to Checkout
-              </Link>
-
-              {/* Security */}
-              <div className="flex items-center justify-center gap-2 text-[9px] text-neutral-600 font-bold tracking-widest uppercase">
-                <Shield size={10} className="text-neutral-600" />
-                Secure & Encrypted Checkout
-              </div>
-
-              {/* Accepted Payments */}
-              <div className="mt-5 pt-5 border-t border-white/10 flex items-center justify-center gap-3 flex-wrap">
-                {['UPI', 'Cards', 'Razorpay', 'EMI'].map(m => (
-                  <span key={m} className="text-[8px] font-black tracking-widest text-neutral-600 border border-white/10 px-2.5 py-1 rounded-full uppercase">
-                    {m}
-                  </span>
-                ))}
-              </div>
-
             </div>
           </div>
         </div>
 
         {/* Mobile Trust Badges */}
-        <div className="lg:hidden grid grid-cols-3 gap-3 mt-10 pt-8 border-t border-neutral-100">
+        <div className="lg:hidden grid grid-cols-3 gap-3 mt-8">
           {[
             { icon: Shield, label: 'Authentic' },
             { icon: RotateCcw, label: 'Returns' },
             { icon: Truck, label: 'Fast Delivery' },
           ].map((b, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 p-3 bg-neutral-50 rounded-sm border border-neutral-100 text-center">
+            <div key={i} className="flex flex-col items-center gap-2 p-3 bg-white rounded-sm border border-neutral-200 shadow-sm text-center">
               <b.icon size={16} className="text-neutral-400" strokeWidth={1.5} />
               <p className="text-[8px] font-black tracking-widest uppercase text-black">{b.label}</p>
             </div>
