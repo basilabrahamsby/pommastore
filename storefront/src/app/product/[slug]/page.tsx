@@ -1,15 +1,15 @@
 import { Metadata } from 'next';
 import ProductClient from './ProductClient';
 
-// Explicitly defining Dynamic Routing mode ensures each unique slug request hits the generator
-export const dynamic = 'force-dynamic';
+// Enable Incremental Static Regeneration (ISR) - cache page for up to 30 seconds
+export const revalidate = 30;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   
   try {
     // Direct connection to core backend API over Docker shared network
-    const res = await fetch(`http://api:8000/api/v1/storefront/products/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`http://api:8000/api/v1/storefront/products/${slug}`, { next: { revalidate: 30 } });
     if (!res.ok) throw new Error('API Disconnected');
     
     const product = await res.json();
@@ -38,12 +38,12 @@ export default async function ProductServerPage({ params }: { params: Promise<{ 
   let initialOffers: any[] = [];
 
   try {
-    const prodRes = await fetch(`http://api:8000/api/v1/storefront/products/${slug}`, { cache: 'no-store' });
+    const prodRes = await fetch(`http://api:8000/api/v1/storefront/products/${slug}`, { next: { revalidate: 30 } });
     if (prodRes.ok) {
       initialProduct = await prodRes.json();
 
       try {
-        const offersRes = await fetch(`http://api:8000/api/v1/storefront/offers`, { cache: 'no-store' });
+        const offersRes = await fetch(`http://api:8000/api/v1/storefront/offers`, { next: { revalidate: 30 } });
         if (offersRes.ok) {
           const allOffers = await offersRes.json();
           const productSkus = initialProduct.variants?.map((v: any) => v.sku) || [];
