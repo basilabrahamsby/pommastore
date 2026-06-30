@@ -404,7 +404,15 @@ function ShopContent() {
                   return (
                     <button
                       key={cat.id || idx}
-                      onClick={() => toggleFilter('Category', cat.name)}
+                      onClick={() => {
+                        setSelectedFilters(prev => {
+                          const isAlreadySelected = prev.Category.includes(cat.name);
+                          return {
+                            ...prev,
+                            Category: isAlreadySelected ? [] : [cat.name]
+                          };
+                        });
+                      }}
                       className="flex flex-col items-center space-y-2 focus:outline-none cursor-pointer"
                     >
                       {/* Outer Ring: elegant gradient border if selected, else light gray */}
