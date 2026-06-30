@@ -42,51 +42,44 @@ function ShopContent() {
 
   // Initialize filters from URL parameters if provided
   useEffect(() => {
-    if (genderQuery) {
-      const formattedGender = genderQuery.charAt(0).toUpperCase() + genderQuery.slice(1).toLowerCase();
-      setSelectedFilters(prev => ({
-        ...prev,
-        Gender: prev.Gender.includes(formattedGender) ? prev.Gender : [...prev.Gender, formattedGender]
-      }));
-    }
-    
-    if (brand && brandsList.length > 0) {
-      // Find brand by ID, Slug or Name for maximum resilience
-      const brandObj = brandsList.find((b: any) => 
-        b.id === brand || 
-        b.slug === brand || 
-        b.name?.toLowerCase() === brand.toLowerCase()
-      );
+    setSelectedFilters(prev => {
+      const updated = { ...prev };
       
-      if (brandObj) {
-        setSelectedFilters(prev => {
-          if (prev.Brand.includes(brandObj.name)) return prev;
-          return {
-            ...prev,
-            Brand: [...prev.Brand, brandObj.name]
-          };
-        });
+      if (genderQuery) {
+        const formattedGender = genderQuery.charAt(0).toUpperCase() + genderQuery.slice(1).toLowerCase();
+        updated.Gender = [formattedGender];
+      } else {
+        updated.Gender = [];
       }
-    }
+      
+      if (brand && brandsList.length > 0) {
+        const brandObj = brandsList.find((b: any) => 
+          b.id === brand || 
+          b.slug === brand || 
+          b.name?.toLowerCase() === brand.toLowerCase()
+        );
+        if (brandObj) {
+          updated.Brand = [brandObj.name];
+        }
+      } else {
+        updated.Brand = [];
+      }
 
-    if (categoryQuery && categoriesList.length > 0) {
-      // Find category by ID, Slug or Name
-      const catObj = categoriesList.find((c: any) => 
-        c.id === categoryQuery || 
-        c.slug === categoryQuery || 
-        c.name?.toLowerCase() === categoryQuery.toLowerCase()
-      );
-      
-      if (catObj) {
-        setSelectedFilters(prev => {
-          if (prev.Category.includes(catObj.name)) return prev;
-          return {
-            ...prev,
-            Category: [...prev.Category, catObj.name]
-          };
-        });
+      if (categoryQuery && categoriesList.length > 0) {
+        const catObj = categoriesList.find((c: any) => 
+          c.id === categoryQuery || 
+          c.slug === categoryQuery || 
+          c.name?.toLowerCase() === categoryQuery.toLowerCase()
+        );
+        if (catObj) {
+          updated.Category = [catObj.name];
+        }
+      } else {
+        updated.Category = [];
       }
-    }
+      
+      return updated;
+    });
   }, [genderQuery, brand, brandsList, categoryQuery, categoriesList]);
 
   // Sync URL search query to local search state
