@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/services/api';
 import ProductCard from '@/components/ProductCard';
+import { getMediaUrl } from '@/services/media';
 import { SlidersHorizontal, ChevronDown, ChevronRight, LayoutGrid, List, X } from 'lucide-react';
 
 function ShopContent() {
@@ -392,6 +393,54 @@ function ShopContent() {
               </div>
             </div>
           </div>
+
+          {/* Mobile Fast Categories Carousel */}
+          {categoriesList.length > 0 && (
+            <div className="lg:hidden w-full mb-6 overflow-x-auto scrollbar-hide py-1">
+              <div className="flex gap-4 min-w-max px-1">
+                {categoriesList.map((cat: any, idx: number) => {
+                  const isSelected = selectedFilters.Category.includes(cat.name);
+                  const image = getMediaUrl(cat.image_url || cat.images?.[0] || cat.banner_url);
+                  return (
+                    <button
+                      key={cat.id || idx}
+                      onClick={() => toggleFilter('Category', cat.name)}
+                      className="flex flex-col items-center space-y-2 focus:outline-none cursor-pointer"
+                    >
+                      {/* Outer Ring: elegant gradient border if selected, else light gray */}
+                      <div className={`relative p-[2px] rounded-full transition-all duration-300 transform active:scale-95 ${
+                        isSelected 
+                          ? 'bg-gradient-to-tr from-amber-400 via-rose-500 to-accent scale-105 shadow-sm' 
+                          : 'bg-neutral-200'
+                      }`}>
+                        {/* White Spacer Gap */}
+                        <div className="p-[2.5px] bg-white rounded-full">
+                          {/* Circular Image wrapper */}
+                          <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center border border-neutral-100/80">
+                            <img 
+                              src={image} 
+                              alt={cat.name} 
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover" 
+                              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Text label */}
+                      <span className={`text-[9px] font-black tracking-wider uppercase transition-colors ${
+                        isSelected ? 'text-accent font-black' : 'text-neutral-500'
+                      }`}>
+                        {cat.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Mobile Fast Filters Panel */}
           <button 
