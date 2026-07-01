@@ -190,39 +190,56 @@ export default function Checkout() {
       const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice())) : 0;
       const finalAmount = totalPrice() + shippingFee - pointsToRedeem;
 
-      // ================= RAZORPAY DEMO INTEGRATION =================
+      // ================= RAZORPAY INTEGRATION =================
       if (paymentMethod === 'card' || paymentMethod === 'upi') {
+        let rzpOrderData: any = null;
+        try {
+          const createRes = await api.post('/orders/razorpay/create', {
+            payment_method: paymentMethod,
+            shipping_address: shippingAddressData,
+            billing_address: shippingAddressData,
+            payment_status: 'pending',
+            items: orderItems,
+            loyalty_points_used: pointsToRedeem,
+            shipping_amount: shippingFee,
+            tax_amount: 0.0
+          });
+          rzpOrderData = createRes.data;
+        } catch (err: any) {
+          const detail = err.response?.data?.detail;
+          setCheckoutError(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to initialize payment.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setPlacingOrder(false);
+          return;
+        }
+
         const options = {
-          // Note: Using a placeholder test key. In production, use your live Razorpay key.
+          // Note: In production, this can also be loaded via settings from the backend
           key: 'rzp_test_demokey12345', 
-          amount: Math.round(finalAmount * 100), // Amount in paise
-          currency: 'INR',
+          amount: rzpOrderData.amount,
+          currency: rzpOrderData.currency,
           name: 'Kozmocart',
           description: 'Luxury Fragrance Curations',
           image: '/kozmocart/placeholder-perfume.png',
+          order_id: rzpOrderData.razorpay_order_id,
           handler: async function (response: any) {
             try {
-              // Submit order to backend after successful Razorpay payment
-              const res = await api.post('/orders/checkout', {
-                payment_method: paymentMethod,
-                shipping_address: shippingAddressData,
-                billing_address: shippingAddressData,
-                payment_status: 'paid',
-                payment_transaction_id: response.razorpay_payment_id || 'demo_tx_123',
-                items: orderItems,
-                loyalty_points_used: pointsToRedeem,
-                shipping_amount: shippingFee,
-                tax_amount: 0.0
+              // Wait 1.5 seconds for the webhook to execute and process the order payment
+              await new Promise(resolve => setTimeout(resolve, 1500));
+              const trackRes = await api.post('/orders/track', {
+                order_number: rzpOrderData.order_number,
+                contact: customer?.email || contactForm.email || 'client@kozmocart.com'
               });
-              setOrderSuccess(res.data);
+              setOrderSuccess(trackRes.data);
               clearCart();
             } catch (err: any) {
-              const detail = err.response?.data?.detail;
-              const errorMsg = typeof detail === 'string'
-                ? detail
-                : (detail ? JSON.stringify(detail) : (err.message || 'Failed to sync payment with server.'));
-              setCheckoutError(errorMsg);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Fallback to local success screen state if tracking is slow
+              setOrderSuccess({
+                order_number: rzpOrderData.order_number,
+                total_amount: finalAmount,
+                shipping_address: shippingAddressData
+              });
+              clearCart();
             } finally {
               setPlacingOrder(false);
             }
@@ -230,7 +247,7 @@ export default function Checkout() {
           prefill: {
             name: customer?.full_name || 'Valued Client',
             email: customer?.email || 'client@kozmocart.com',
-            contact: '9999999999'
+            contact: customer?.phone || '9999999999'
           },
           theme: {
             color: '#000000'

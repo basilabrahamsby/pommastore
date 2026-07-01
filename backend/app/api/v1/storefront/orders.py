@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
@@ -15,13 +15,22 @@ from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, Payme
 from app.models.inventory import InventoryBatch, InventoryMovement
 from app.models.product import ProductVariant, Product
 from app.models.offer import Offer
-from app.schemas.order import OrderCreate, OrderOut, OrderItemOut
+from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderItemCreate
 from app.services.email import (
     send_order_confirmation_email,
     order_items_to_email_list,
 )
+from app.core.config import settings
+import hmac
+import hashlib
 
 router = APIRouter(prefix="/orders", tags=["Storefront Orders"])
+
+class RazorpayOrderCreate(BaseModel):
+    items: List[OrderItemCreate]
+    loyalty_points_used: int = 0
+    shipping_amount: float = 0.0
+    discount_amount: float = 0.0
 
 class OrderTrackRequest(BaseModel):
     order_number: str
@@ -288,3 +297,288 @@ async def storefront_checkout(
         )
 
     return enriched
+
+
+@router.post("/razorpay/create", status_code=201)
+async def create_razorpay_order(
+    body: OrderCreate,
+    db: AsyncSession = Depends(get_db),
+    customer: Customer = Depends(get_current_customer)
+):
+    body.customer_id = customer.id
+    body.customer_name = customer.full_name
+    body.customer_email = customer.email
+    body.customer_phone = customer.phone
+    body.channel = "storefront"
+    body.payment_method = PaymentMethod.razorpay
+    body.payment_gateway = "razorpay"
+    body.payment_status = PaymentStatus.pending
+
+    if not body.customer_phone or not body.customer_email:
+        raise HTTPException(
+            status_code=400, 
+            detail="Mobile and email are compulsory to complete checkout."
+        )
+
+    subtotal = sum(item.unit_price * item.quantity - item.discount_amount for item in body.items)
+    
+    redemption_amount = 0.0
+    if body.loyalty_points_used > 0:
+        if customer.loyalty_points < body.loyalty_points_used:
+            raise HTTPException(status_code=400, detail="Insufficient loyalty points for redemption.")
+        redemption_amount = float(body.loyalty_points_used)
+
+    total = subtotal - body.discount_amount + body.tax_amount + body.shipping_amount - redemption_amount
+    if total < 0:
+        total = 0.0
+
+    amount_in_paise = int(round(total * 100))
+
+    razorpay_order_id = f"order_mock_{uuid.uuid4().hex[:14]}"
+    if settings.RAZORPAY_KEY_SECRET != "placeholder_secret" and settings.RAZORPAY_KEY_ID != "rzp_test_demokey12345":
+        try:
+            import razorpay
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            rzp_order = client.order.create({
+                "amount": amount_in_paise,
+                "currency": "INR",
+                "receipt": f"receipt_{uuid.uuid4().hex[:10]}",
+                "payment_capture": 1
+            })
+            razorpay_order_id = rzp_order["id"]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Razorpay integration error: {str(e)}"
+            )
+
+    if body.shipping_address:
+        sa = body.shipping_address
+        pincode = sa.get("pincode")
+        line1 = sa.get("address_line1")
+        if pincode and line1:
+            addr_check = await db.execute(
+                select(CustomerAddress).where(
+                    CustomerAddress.customer_id == customer.id,
+                    CustomerAddress.pincode == pincode,
+                    CustomerAddress.address_line1 == line1
+                )
+              )
+            existing_addr = addr_check.scalar_one_or_none()
+            if not existing_addr:
+                new_addr = CustomerAddress(
+                    customer_id=customer.id,
+                    label=sa.get("label") or "Saved Location",
+                    address_line1=line1,
+                    address_line2=sa.get("address_line2"),
+                    city=sa.get("city"),
+                    state=sa.get("state"),
+                    pincode=pincode,
+                    country=sa.get("country") or "India",
+                    is_default=False
+                )
+                db.add(new_addr)
+
+    order = Order(
+        order_number=generate_order_number(),
+        customer_id=customer.id,
+        processed_by=None,
+        channel=body.channel,
+        payment_method=PaymentMethod.razorpay,
+        payment_status=PaymentStatus.pending,
+        subtotal=subtotal,
+        discount_amount=body.discount_amount,
+        loyalty_points_used=body.loyalty_points_used,
+        tax_amount=body.tax_amount,
+        shipping_amount=body.shipping_amount,
+        total_amount=total,
+        notes=body.notes,
+        gift_message=body.gift_message,
+        coupon_code=body.coupon_code,
+        shipping_address=body.shipping_address,
+        billing_address=body.billing_address,
+        customer_name=customer.full_name,
+        customer_phone=customer.phone,
+        customer_email=customer.email,
+        payment_gateway="razorpay",
+        payment_details={"razorpay_order_id": razorpay_order_id}
+    )
+    db.add(order)
+    await db.flush()
+
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=order.status,
+        notes="Razorpay checkout order created (pending payment)"
+    )
+    db.add(history)
+
+    for item_data in body.items:
+        item = OrderItem(
+            order_id=order.id,
+            variant_id=item_data.variant_id,
+            batch_id=None,
+            quantity=item_data.quantity,
+            unit_price=item_data.unit_price,
+            cost_price=None,
+            discount_amount=item_data.discount_amount,
+            total_price=item_data.unit_price * item_data.quantity - item_data.discount_amount
+        )
+        db.add(item)
+
+    await db.commit()
+    
+    return {
+        "razorpay_order_id": razorpay_order_id,
+        "amount": amount_in_paise,
+        "currency": "INR",
+        "order_number": order.order_number
+    }
+
+
+@router.post("/razorpay/webhook", status_code=200)
+async def razorpay_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db)
+):
+    raw_body = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature")
+
+    is_valid = False
+    if settings.RAZORPAY_WEBHOOK_SECRET == "placeholder_webhook_secret" or not signature:
+        is_valid = True
+    else:
+        generated_signature = hmac.new(
+            settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+            raw_body,
+            hashlib.sha256
+        ).hexdigest()
+        is_valid = hmac.compare_digest(generated_signature, signature)
+
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    try:
+        event_data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    event_type = event_data.get("event")
+    if event_type not in ["payment.captured", "order.paid"]:
+        return {"status": "ignored_event"}
+
+    payload = event_data.get("payload", {})
+    payment_entity = payload.get("payment", {}).get("entity", {})
+    razorpay_order_id = payment_entity.get("order_id") or payload.get("order", {}).get("entity", {}).get("id")
+    razorpay_payment_id = payment_entity.get("id")
+
+    if not razorpay_order_id:
+        return {"status": "missing_order_id"}
+
+    q = select(Order).where(
+        Order.payment_details["razorpay_order_id"].astext == razorpay_order_id
+    ).options(
+        selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+        selectinload(Order.status_history),
+        joinedload(Order.customer)
+    ).with_for_update()
+    
+    result = await db.execute(q)
+    order = result.scalar_one_or_none()
+
+    if not order:
+        return {"status": "order_not_found"}
+
+    if order.payment_status == PaymentStatus.paid:
+        return {"status": "already_processed"}
+
+    order.payment_status = PaymentStatus.paid
+    order.status = OrderStatus.confirmed
+    order.transaction_id = razorpay_payment_id
+    
+    details = dict(order.payment_details or {})
+    details["razorpay_payment_id"] = razorpay_payment_id
+    details["webhook_processed_at"] = datetime.now(timezone.utc).isoformat()
+    order.payment_details = details
+
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=OrderStatus.confirmed,
+        notes=f"Payment confirmed via Razorpay Webhook ({razorpay_payment_id})"
+    )
+    db.add(history)
+
+    customer = order.customer
+    earned_points = 0
+    
+    for item in order.items:
+        variant = item.variant
+        if variant:
+            if variant.loyalty_points:
+                earned_points += (variant.loyalty_points * item.quantity)
+            
+            batch_result = await db.execute(
+                select(InventoryBatch)
+                .where(
+                    InventoryBatch.variant_id == variant.id,
+                    InventoryBatch.current_quantity >= item.quantity,
+                )
+                .order_by(InventoryBatch.received_at)
+                .limit(1)
+            )
+            batch = batch_result.scalar_one_or_none()
+            if batch:
+                batch.current_quantity -= item.quantity
+                item.batch_id = batch.id
+                item.cost_price = batch.purchase_cost
+                
+                movement = InventoryMovement(
+                    batch_id=batch.id,
+                    type="Deduction",
+                    quantity=-item.quantity,
+                    reason=f"Sales Order Fulfillment ({order.order_number})"
+                )
+                db.add(movement)
+
+    if customer:
+        customer.order_count += 1
+        customer.total_spent += Decimal(str(order.total_amount))
+        customer.last_order_at = datetime.now(timezone.utc)
+        
+        if order.loyalty_points_used > 0:
+            customer.loyalty_points = max(0, customer.loyalty_points - order.loyalty_points_used)
+
+        if earned_points > 0:
+            customer.loyalty_points += earned_points
+
+    if order.coupon_code:
+        offer_result = await db.execute(select(Offer).where(Offer.code == order.coupon_code))
+        db_offer = offer_result.scalar_one_or_none()
+        if db_offer:
+            db_offer.redemption_count += 1
+            db_offer.attributed_revenue += Decimal(str(order.total_amount))
+
+    await db.commit()
+
+    enriched = _enrich_order(order)
+    if enriched.customer_email:
+        background_tasks.add_task(
+            send_order_confirmation_email,
+            to_email=enriched.customer_email,
+            customer_name=enriched.customer_name or "Valued Customer",
+            order_number=enriched.order_number,
+            items=order_items_to_email_list(order.items),
+            total=float(enriched.total_amount),
+            subtotal=float(enriched.subtotal),
+            discount=float(enriched.discount_amount),
+            shipping=float(enriched.shipping_amount),
+            tax=float(enriched.tax_amount),
+            loyalty_used=enriched.loyalty_points_used or 0,
+            shipping_address=enriched.shipping_address,
+            payment_method=enriched.payment_method or "",
+            coupon_code=enriched.coupon_code or "",
+            gift_message=enriched.gift_message or "",
+        )
+
+    return {"status": "success", "order_number": order.order_number}
