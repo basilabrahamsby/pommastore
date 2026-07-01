@@ -26,7 +26,7 @@ export default function Checkout() {
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod' | 'upi'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
@@ -270,19 +270,7 @@ export default function Checkout() {
       }
       // ============================================================
 
-      // Regular COD Flow
-      const res = await api.post('/orders/checkout', {
-        payment_method: paymentMethod,
-        shipping_address: shippingAddressData,
-        billing_address: shippingAddressData, 
-        payment_status: 'pending',
-        items: orderItems,
-        loyalty_points_used: pointsToRedeem,
-        shipping_amount: shippingFee, 
-        tax_amount: 0.0
-      });
-
-      setOrderSuccess(res.data);
+      throw new Error('Selected payment method is not supported.');
       clearCart();
     } catch (err: any) {
       const detail = err.response?.data?.detail;
@@ -698,26 +686,7 @@ export default function Checkout() {
                 </div>
               )}
 
-              <label 
-                className={`border p-5 flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                  paymentMethod === 'cod' ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-400'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="radio" 
-                    name="payment_mode" 
-                    className="accent-black"
-                    checked={paymentMethod === 'cod'} 
-                    onChange={() => setPaymentMethod('cod')} 
-                  />
-                  <div>
-                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">Cash on Delivery (COD)</p>
-                    <p className="text-[10px] text-neutral-400 font-medium">Pay in cash upon package receipt</p>
-                  </div>
-                </div>
-                <MapPin size={20} className="text-neutral-400" />
-              </label>
+
             </div>
           </div>
         </div>

@@ -53,6 +53,52 @@ def _enrich_order(order: Order) -> OrderOut:
             out.customer_phone = order.customer.phone
     return out
 
+
+from app.core.database import AsyncSessionLocal
+
+async def book_delhivery_shipment_task(order_id: uuid.UUID):
+    from app.services.delhivery import create_delhivery_shipment
+    
+    async with AsyncSessionLocal() as db:
+        q = select(Order).where(Order.id == order_id)
+        res = await db.execute(q)
+        order = res.scalar_one_or_none()
+        if not order:
+            return
+            
+        order_data = {
+            "order_number": order.order_number,
+            "total_amount": float(order.total_amount),
+            "payment_method": order.payment_method.value if order.payment_method else "prepaid",
+            "customer_name": order.customer_name,
+            "customer_phone": order.customer_phone,
+            "customer_email": order.customer_email,
+            "shipping_address": order.shipping_address
+        }
+        
+        result = await create_delhivery_shipment(order_data)
+        if result.get("success") and result.get("waybill"):
+            order.tracking_number = result["waybill"]
+            order.carrier = "Delhivery"
+            
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=order.status,
+                notes=f"Automated shipping label generated with Delhivery. Waybill: {result['waybill']}"
+            )
+            db.add(history)
+            await db.commit()
+
+
+@router.get("/shipping/verify-pincode", status_code=200)
+async def verify_shipping_pincode(pincode: str):
+    if not pincode or len(pincode.strip()) < 6:
+        raise HTTPException(status_code=400, detail="Invalid pincode format.")
+    from app.services.delhivery import check_pincode_serviceability
+    result = await check_pincode_serviceability(pincode.strip())
+    return result
+
+
 @router.post("/track")
 async def track_order(body: OrderTrackRequest, db: AsyncSession = Depends(get_db)):
     q = select(Order).where(Order.order_number.ilike(body.order_number.strip()))
@@ -295,6 +341,8 @@ async def storefront_checkout(
             coupon_code=enriched.coupon_code or "",
             gift_message=enriched.gift_message or "",
         )
+    
+    background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
     return enriched
 
@@ -580,5 +628,7 @@ async def razorpay_webhook(
             coupon_code=enriched.coupon_code or "",
             gift_message=enriched.gift_message or "",
         )
+    
+    background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
     return {"status": "success", "order_number": order.order_number}
