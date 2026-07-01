@@ -14,12 +14,81 @@ from app.api.v1.router import api_router
 from app.core.deps import get_current_user
 
 
+import asyncio
+
+async def delhivery_status_polling_loop():
+    from app.models.order import Order, OrderStatus, OrderStatusHistory
+    from app.services.delhivery import get_delhivery_tracking_status
+
+    # Wait 60 seconds after startup before running the first poll
+    await asyncio.sleep(60)
+    
+    while True:
+        try:
+            async with AsyncSessionLocal() as db:
+                # Query all active orders booked with Delhivery
+                q = select(Order).where(
+                    Order.carrier == "Delhivery",
+                    Order.tracking_number.isnot(None),
+                    Order.status.in_([
+                        OrderStatus.confirmed,
+                        OrderStatus.processing,
+                        OrderStatus.packed,
+                        OrderStatus.shipped,
+                        OrderStatus.out_for_delivery
+                    ])
+                )
+                res = await db.execute(q)
+                orders = res.scalars().all()
+
+                for order in orders:
+                    tracking_info = await get_delhivery_tracking_status(order.tracking_number)
+                    if tracking_info.get("success") and tracking_info.get("status"):
+                        status_str = tracking_info["status"].lower()
+                        mapped_status = None
+                        
+                        if "delivered" in status_str:
+                            mapped_status = OrderStatus.delivered
+                        elif "out for delivery" in status_str:
+                            mapped_status = OrderStatus.out_for_delivery
+                        elif "in transit" in status_str or "shipped" in status_str:
+                            mapped_status = OrderStatus.shipped
+                        
+                        if mapped_status and order.status != mapped_status:
+                            order.status = mapped_status
+                            
+                            # Add to status history
+                            history = OrderStatusHistory(
+                                order_id=order.id,
+                                status=mapped_status,
+                                notes=f"Automated status update from Delhivery tracking API: {tracking_info['status']}"
+                            )
+                            db.add(history)
+                            db.add(order)
+                            
+                await db.commit()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"Error in Delhivery automated polling loop: {str(e)}")
+            
+        # Poll every 10 minutes in sandbox/debug mode, otherwise every 2 hours in production
+        sleep_interval = 600 if settings.DELHIVERY_SANDBOX else 7200
+        await asyncio.sleep(sleep_interval)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: seed default data
     await seed_defaults()
+    # Start automated status update polling task
+    polling_task = asyncio.create_task(delhivery_status_polling_loop())
     yield
     # Shutdown
+    polling_task.cancel()
+    try:
+        await polling_task
+    except asyncio.CancelledError:
+        pass
     await engine.dispose()
 
 

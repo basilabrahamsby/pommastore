@@ -109,6 +109,17 @@ class KPIReport(BaseModel):
     # Sales Tab
     pipeline: List[PipelineStage]
 
+class LogisticsReport(BaseModel):
+    total_shipments: int
+    pending_delivery: int
+    shipped: int
+    out_for_delivery: int
+    delivered: int
+    untracked_orders: int
+    delhivery_percentage: float
+    carrier_breakdown: List[Dict[str, Any]]
+    payment_methods_breakdown: List[Dict[str, Any]]
+
 # --- ENDPOINTS ---
 
 @router.get("/customer-report", response_model=List[CustomerReportRow])
@@ -700,4 +711,75 @@ async def get_kpis_report(
         total_tax_liability=round(total_tax_liability, 2),
         gstr1_ledger=gstr1_ledger,
         pipeline=pipeline
+    )
+
+
+@router.get("/logistics", response_model=LogisticsReport)
+async def get_logistics_report(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """
+    Returns full delivery and payment diagnostics report for admin dashboard.
+    """
+    # 1. Total shipments count
+    stmt = select(Order.carrier, Order.status, Order.payment_method, func.count(Order.id))\
+        .group_by(Order.carrier, Order.status, Order.payment_method)
+    res = await db.execute(stmt)
+    rows = res.all()
+    
+    total_orders = 0
+    total_delhivery = 0
+    pending_delivery = 0
+    shipped = 0
+    out_for_delivery = 0
+    delivered = 0
+    untracked_orders = 0
+    
+    payment_methods = {}
+    carrier_counts = {}
+    
+    for row in rows:
+        carrier, status, payment_method, count = row
+        total_orders += count
+        
+        # Payment breakdown
+        pm_str = payment_method.value if payment_method else "unspecified"
+        payment_methods[pm_str] = payment_methods.get(pm_str, 0) + count
+        
+        # Carrier breakdown
+        c_str = carrier or "Unassigned"
+        carrier_counts[c_str] = carrier_counts.get(c_str, 0) + count
+        
+        if carrier == "Delhivery":
+            total_delhivery += count
+            if status == OrderStatus.delivered:
+                delivered += count
+            elif status == OrderStatus.out_for_delivery:
+                out_for_delivery += count
+            elif status in [OrderStatus.shipped, OrderStatus.packed]:
+                shipped += count
+            elif status in [OrderStatus.confirmed, OrderStatus.processing, OrderStatus.pending]:
+                pending_delivery += count
+        else:
+            untracked_orders += count
+            
+    # Format payment breakdown
+    pm_list = [{"method": k.upper(), "count": v} for k, v in payment_methods.items()]
+    
+    # Format carrier breakdown
+    c_list = [{"carrier": k, "count": v} for k, v in carrier_counts.items()]
+    
+    delhivery_pct = (total_delhivery / total_orders * 100) if total_orders > 0 else 0.0
+    
+    return LogisticsReport(
+        total_shipments=total_delhivery,
+        pending_delivery=pending_delivery,
+        shipped=shipped,
+        out_for_delivery=out_for_delivery,
+        delivered=delivered,
+        untracked_orders=untracked_orders,
+        delhivery_percentage=round(delhivery_pct, 1),
+        carrier_breakdown=c_list,
+        payment_methods_breakdown=pm_list
     )

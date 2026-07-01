@@ -502,8 +502,117 @@ const InventoryHealth = ({ healthData }) => (
   </div>
 )
 
+const LogisticsReports = ({ data = null }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="grid-4">
+      <div className="stat-card" style={{ padding: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+            Total Shipments Booked
+          </span>
+          <Truck size={16} color="var(--gold)" />
+        </div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{data ? data.total_shipments : '0'}</div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--success)', marginTop: 4 }}>Delhivery logistics partner</div>
+      </div>
+      <div className="stat-card" style={{ padding: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+            In Transit / Shipped
+          </span>
+          <Globe2 size={16} color="var(--gold)" />
+        </div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{data ? data.shipped : '0'}</div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>Packages currently in route</div>
+      </div>
+      <div className="stat-card" style={{ padding: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+            Out For Delivery
+          </span>
+          <AlertCircle size={16} color="var(--gold)" />
+        </div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{data ? data.out_for_delivery : '0'}</div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--warning)', marginTop: 4 }}>Expected delivery today</div>
+      </div>
+      <div className="stat-card" style={{ padding: 20, background: 'linear-gradient(145deg, rgba(16,185,129,0.05), rgba(0,0,0,0.2))', border: '1px solid rgba(16,185,129,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: 700, textTransform: 'uppercase' }}>
+            Successful Deliveries
+          </span>
+          <ShieldCheck size={16} color="var(--success)" />
+        </div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>{data ? data.delivered : '0'}</div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--success)', marginTop: 4 }}>Completed handovers</div>
+      </div>
+    </div>
+
+    <div className="grid-2">
+      {/* PAYMENTS REPORT */}
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+        <h4 style={{ marginBottom: 20, fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Receipt size={18} color="var(--gold)" /> Gateway & Payment Type Volume
+        </h4>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Transaction Count</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.payment_methods_breakdown?.map(pm => (
+              <tr key={pm.method}>
+                <td><strong style={{ color: '#fff' }}>{pm.method === 'CARD' ? 'Credit/Debit Card' : pm.method === 'UPI' ? 'UPI / NetBanking' : pm.method === 'COD' ? 'Cash on Delivery (Disabled)' : pm.method}</strong></td>
+                <td>{pm.count} orders</td>
+                <td><span className="badge badge-success">Processed</span></td>
+              </tr>
+            ))}
+            {(!data || !data.payment_methods_breakdown || data.payment_methods_breakdown.length === 0) && (
+              <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No payment transactions found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* CARRIERS REPORT */}
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+        <h4 style={{ marginBottom: 20, fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Truck size={18} color="var(--gold)" /> Carrier Distribution & Automated Sync
+        </h4>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Carrier</th>
+              <th>Shipments Handled</th>
+              <th>Webhook Sync</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.carrier_breakdown?.map(cb => (
+              <tr key={cb.carrier}>
+                <td><strong style={{ color: '#fff' }}>{cb.carrier}</strong></td>
+                <td>{cb.count} packages</td>
+                <td>
+                  <span className={`badge ${cb.carrier === 'Delhivery' ? 'badge-success' : 'badge-secondary'}`}>
+                    {cb.carrier === 'Delhivery' ? 'Active Polling' : 'Manual'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {(!data || !data.carrier_breakdown || data.carrier_breakdown.length === 0) && (
+              <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No carrier assignments found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)
+
 export default function Analytics() {
-  const [activeTab, setActiveTab] = useState('marketing') // marketing | sales | finance | inventory | customers
+  const [activeTab, setActiveTab] = useState('marketing') // marketing | sales | finance | inventory | customers | logistics
   const [rfmData, setRfmData] = useState(null)
   const [healthData, setHealthData] = useState(null)
   const [scentTrends, setScentTrends] = useState([])
@@ -513,6 +622,7 @@ export default function Analytics() {
   const [products, setProducts] = useState([])
   const [offers, setOffers] = useState([])
   const [kpiData, setKpiData] = useState(null)
+  const [logisticsData, setLogisticsData] = useState(null)
   const [loading, setLoading] = useState({
     rfm: true,
     health: true,
@@ -522,7 +632,8 @@ export default function Analytics() {
     seo: true,
     products: true,
     offers: true,
-    kpis: true
+    kpis: true,
+    logistics: true
   })
 
   const setLoad = (key, val) => setLoading(prev => ({ ...prev, [key]: val }))
@@ -537,6 +648,7 @@ export default function Analytics() {
     api.get('/products?limit=100').then(r => setProducts(r.data)).finally(() => setLoad('products', false))
     api.get('/offers').then(r => setOffers(r.data)).finally(() => setLoad('offers', false))
     api.get('/analytics/kpis').then(r => setKpiData(r.data)).finally(() => setLoad('kpis', false))
+    api.get('/analytics/logistics').then(r => setLogisticsData(r.data)).finally(() => setLoad('logistics', false))
   }, [])
 
   const tabs = [
@@ -544,7 +656,8 @@ export default function Analytics() {
     { id: 'customers', label: 'Customer Report', icon: UserSquare2 },
     { id: 'sales', label: 'Sales & Conversion', icon: TrendingUp },
     { id: 'finance', label: 'Tax & Compliance', icon: Landmark },
-    { id: 'inventory', label: 'Inventory Health', icon: Activity }
+    { id: 'inventory', label: 'Inventory Health', icon: Activity },
+    { id: 'logistics', label: 'Logistics & Payments', icon: Truck }
   ]
 
   // Removed full page block
@@ -633,6 +746,7 @@ export default function Analytics() {
         {activeTab === 'finance' && <FinancialReports kpiData={kpiData} />}
         {activeTab === 'sales' && <SalesAnalytics rfmData={rfmData} kpiData={kpiData} />}
         {activeTab === 'inventory' && <InventoryHealth healthData={healthData} />}
+        {activeTab === 'logistics' && <LogisticsReports data={logisticsData} />}
       </div>
     </div>
   )

@@ -162,3 +162,50 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
         "carrier": "Delhivery",
         "message": "Network or server failure during Delhivery booking"
     }
+
+async def get_delhivery_tracking_status(waybill: str) -> Dict[str, Any]:
+    """
+    Retrieves real-time tracking status of a shipment from Delhivery.
+    """
+    if settings.DELHIVERY_API_TOKEN == "placeholder_delhivery_token":
+        # Simulates delivery updates based on the waybill digits for sandbox demo
+        last_digit = int(waybill[-1]) if waybill and waybill[-1].isdigit() else 5
+        if last_digit <= 3:
+            status_str = "In Transit"
+        elif last_digit <= 6:
+            status_str = "Out for Delivery"
+        else:
+            status_str = "Delivered"
+            
+        return {
+            "success": True,
+            "status": status_str,
+            "remarks": "Mock tracking response"
+        }
+
+    url = f"{get_base_url()}/api/v1/packages/json/?waybills={waybill}"
+    headers = {"Authorization": f"Token {settings.DELHIVERY_API_TOKEN}"}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=10.0)
+            if res.status_code == 200:
+                data = res.json()
+                shipment_data = data.get("shipment_data", [])
+                if shipment_data:
+                    shipment = shipment_data[0].get("shipment", {})
+                    status_obj = shipment.get("status", {})
+                    status_name = status_obj.get("status", "")
+                    return {
+                        "success": True,
+                        "status": status_name,
+                        "remarks": status_obj.get("instructions", "")
+                    }
+    except Exception as e:
+        logger.error(f"Delhivery tracking check error: {str(e)}")
+
+    return {
+        "success": False,
+        "status": None,
+        "remarks": "Failed to fetch status"
+    }
