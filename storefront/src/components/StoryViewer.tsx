@@ -272,7 +272,7 @@ export default function StoryViewer({
                     src={categoryImageUrl} 
                     alt={activeCategory.name} 
                     className="w-full h-full object-cover"
-                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                    onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                   />
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function StoryViewer({
                   src={categoryImageUrl} 
                   alt="" 
                   className="w-full h-full object-cover opacity-30 blur-2xl scale-110"
-                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                  onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                 />
                 <div className="absolute inset-0 bg-black/40" />
               </div>
@@ -342,7 +342,7 @@ export default function StoryViewer({
                 src={categoryImageUrl} 
                 alt={activeCategory.name} 
                 className="w-full h-full object-contain opacity-95 z-10 relative"
-                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
               />
               {/* Vignette overlays */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/40 z-20 pointer-events-none" />
@@ -400,7 +400,7 @@ export default function StoryViewer({
                         src={getMediaUrl(featuredProduct.images?.[0])} 
                         alt={featuredProduct.name}
                         className="max-w-full max-h-full object-contain"
-                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                        onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                       />
                     </div>
 

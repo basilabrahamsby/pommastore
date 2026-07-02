@@ -393,7 +393,7 @@ export default function Home() {
                                         loading="lazy"
                                         decoding="async"
                                         className="w-full h-full object-cover group-hover/cat:scale-110 transition-transform duration-[1.5s]" 
-                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                                        onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
                                      />
                                   </div>
                                </div>
@@ -617,14 +617,14 @@ export default function Home() {
                                           src={getMediaUrl(slide.left_image)} 
                                           alt={slide.left_title} 
                                           className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                          onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                        />
                                        {/* Mobile image */}
                                        <img 
                                           src={getMediaUrl(slide.left_image_mobile || slide.left_image)} 
                                           alt={slide.left_title} 
                                           className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                          onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                        />
                                     </div>
                                     {/* Right half: Text Content */}
@@ -652,14 +652,14 @@ export default function Home() {
                                           src={getMediaUrl(slide.right_image)} 
                                           alt={slide.right_title} 
                                           className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                          onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                        />
                                        {/* Mobile image */}
                                        <img 
                                           src={getMediaUrl(slide.right_image_mobile || slide.right_image)} 
                                           alt={slide.right_title} 
                                           className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                          onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                        />
                                     </div>
                                     {/* Right half: Text Content */}
@@ -739,14 +739,14 @@ export default function Home() {
                                        src={getMediaUrl(slide.image)} 
                                        alt={slide.title} 
                                        className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
-                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                       onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                     />
                                     {/* Mobile image */}
                                     <img 
                                        src={getMediaUrl(slide.image_mobile || slide.image)} 
                                        alt={slide.title} 
                                        className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s]"
-                                       onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                       onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                     />
                                  </div>
                               </div>
@@ -824,14 +824,14 @@ export default function Home() {
                                  src={getMediaUrl(slide.left_image)} 
                                  alt={slide.left_title} 
                                  className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                 onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                               />
                               {/* Mobile image */}
                               <img 
                                  src={getMediaUrl(slide.left_image_mobile || slide.left_image)} 
                                  alt={slide.left_title} 
                                  className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                 onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                               />
                            </div>
                            {/* Right half: Text Content */}
@@ -859,14 +859,14 @@ export default function Home() {
                                  src={getMediaUrl(slide.right_image)} 
                                  alt={slide.right_title} 
                                  className="hidden md:block w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                 onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                               />
                               {/* Mobile image */}
                               <img 
                                  src={getMediaUrl(slide.right_image_mobile || slide.right_image)} 
                                  alt={slide.right_title} 
                                  className="block md:hidden w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
-                                 onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                 onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                               />
                            </div>
                            {/* Right half: Text Content */}
@@ -952,10 +952,10 @@ export default function Home() {
                                 {/* Top Banner Image */}
                                 <div className="w-full h-36 md:h-44 relative overflow-hidden bg-neutral-100 flex-shrink-0">
                                    <img
-                                      src={image || '/kozmocart/placeholder-perfume.png'}
+                                      src={image || '/placeholder-perfume.png'}
                                       alt={`${brand.name} banner`}
                                       className="w-full h-full object-cover transition-transform duration-[2.5s] group-hover:scale-105 ease-out"
-                                      onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                      onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                    />
                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-700" />
                                 </div>
@@ -967,7 +967,7 @@ export default function Home() {
                                          src={getMediaUrl(brand.logo_url)}
                                          alt={`${brand.name} logo`}
                                          className="max-w-[80%] max-h-[80%] object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-                                         onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                         onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                       />
                                    ) : (
                                       <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
@@ -1020,7 +1020,7 @@ export default function Home() {
                                   className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2s] ease-out ${
                                      idx % 3 === 0 ? 'animate-kenburns-1' : idx % 3 === 1 ? 'animate-kenburns-2' : 'animate-kenburns-3'
                                   }`} 
-                                  onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                  onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }} 
                                />
                                {brand.logo_url && (
                                   <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/10 group-hover/brand:bg-black/5 transition-all duration-700">
@@ -1055,7 +1055,7 @@ export default function Home() {
                                         loading="lazy"
                                         decoding="async"
                                         className="max-w-full max-h-full object-contain mix-blend-multiply group-hover/brand:scale-105 transition-transform duration-500"
-                                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }} 
+                                        onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }} 
                                      />
                                   ) : (
                                      <span className="font-serif italic font-black text-lg uppercase tracking-tight text-neutral-800">
@@ -1235,7 +1235,7 @@ export default function Home() {
              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-neutral-200/30 to-transparent pointer-events-none" />
              {/* Oversized watermark logo */}
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-                <img src="/kozmocart/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.015] mix-blend-multiply" />
+                <img src="/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.015] mix-blend-multiply" />
              </div>
              {/* Small corner ornaments */}
              <svg className="absolute top-4 left-4 w-8 h-8 text-neutral-300/60" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>

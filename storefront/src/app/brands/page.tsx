@@ -96,14 +96,14 @@ export default function BrandsPage() {
               ? getMediaUrl(brand.brand_banner) 
               : brand.banner_url 
               ? getMediaUrl(brand.banner_url) 
-              : '/kozmocart/placeholder-perfume.png';
+              : '/placeholder-perfume.png';
             return (
                <div key={`hero-split-${brand.id || idx}`} className="flex-1 h-full relative overflow-hidden group/split border-r last:border-r-0 border-white/10">
                   <img 
                      src={banner} 
                      alt={brand.name} 
                      className="w-full h-full object-cover animate-slowzoom opacity-50 group-hover/split:opacity-65 transition-opacity duration-700"
-                     onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                     onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                   
@@ -189,7 +189,7 @@ export default function BrandsPage() {
                            src={bannerImg} 
                            alt={`${brand.name} banner`} 
                            className="w-full h-full object-cover transition-transform duration-[2.5s] group-hover/brand:scale-105 ease-out"
-                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                           onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                         />
                      ) : (
                         <div 
@@ -211,7 +211,7 @@ export default function BrandsPage() {
                            src={getMediaUrl(brand.logo_url)} 
                            alt={`${brand.name} logo`} 
                            className="max-w-[80%] max-h-[80%] object-contain mix-blend-multiply group-hover/brand:scale-105 transition-transform duration-500"
-                           onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                           onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                         />
                      ) : (
                         <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
@@ -289,7 +289,7 @@ export default function BrandsPage() {
                              {brandProducts.map((product: any, pIdx: number) => {
                                 const pImg = product.images?.[0] 
                                   ? getMediaUrl(product.images[0]) 
-                                  : (product.image ? getMediaUrl(product.image) : '/kozmocart/placeholder-perfume.png');
+                                  : (product.image ? getMediaUrl(product.image) : '/placeholder-perfume.png');
                                 const pPrice = product.variants?.[0]?.selling_price;
                                 
                                 return (
@@ -303,7 +303,7 @@ export default function BrandsPage() {
                                             src={pImg} 
                                             alt={product.name} 
                                             className="max-w-full max-h-full object-contain group-hover/prod:scale-105 transition-transform duration-500"
-                                            onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                                            onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                                          />
                                       </div>
                                       <h5 className="text-[10px] font-serif font-normal text-neutral-800 tracking-wide line-clamp-1 mb-1 uppercase w-full text-center leading-none">

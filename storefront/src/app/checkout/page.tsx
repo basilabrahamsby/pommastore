@@ -348,7 +348,7 @@ export default function Checkout() {
           currency: rzpOrderData.currency,
           name: 'Kozmocart',
           description: 'Luxury Fragrance Curations',
-          image: '/kozmocart/placeholder-perfume.png',
+          image: '/placeholder-perfume.png',
           order_id: rzpOrderData.razorpay_order_id,
           handler: async function (response: any) {
             try {

@@ -146,7 +146,7 @@ export default function Rewards() {
                   {/* Image Container with Parallax Effect */}
                   <div className="aspect-[3/4] relative overflow-hidden bg-neutral-50 flex-shrink-0">
                     <img 
-                      src={getMediaUrl(reward.image_url) || '/kozmocart/placeholder-perfume.png'} 
+                      src={getMediaUrl(reward.image_url) || '/placeholder-perfume.png'} 
                       alt={reward.name} 
                       className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
                     />

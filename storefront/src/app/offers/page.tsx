@@ -119,10 +119,10 @@ const OfferProductCard = ({ item, isBuyItem, isGetItem, promoCode }: {
       {/* Image Area */}
       <Link href={`/product/${item.slug}`} className="block relative aspect-square bg-neutral-50 overflow-hidden">
         <img
-          src={getMediaUrl(item.images?.[0]) || '/kozmocart/placeholder-perfume.png'}
+          src={getMediaUrl(item.images?.[0]) || '/placeholder-perfume.png'}
           alt={item.name}
           className="w-full h-full object-contain p-3.5 mix-blend-multiply group-hover/item:scale-105 transition-transform duration-500 ease-out"
-          onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+          onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
         />
         {/* Overlay on hover */}
         <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/5 transition-colors duration-500" />

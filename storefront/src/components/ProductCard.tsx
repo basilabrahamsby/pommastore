@@ -235,12 +235,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 className={`absolute inset-0 h-full w-full object-contain mix-blend-multiply transition-all duration-[1200ms] ease-in-out p-2 group-hover:scale-105 z-0 ${
                   idx === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                 }`}
-                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
               />
             ))
           ) : (
             <img
-              src="/kozmocart/placeholder-perfume.png"
+              src="/placeholder-perfume.png"
               alt={product.name}
               loading="lazy"
               decoding="async"

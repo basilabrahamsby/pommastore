@@ -424,7 +424,7 @@ function ShopContent() {
                               loading="lazy"
                               decoding="async"
                               className="w-full h-full object-cover" 
-                              onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                              onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
                             />
                           </div>
                         </div>

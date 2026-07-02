@@ -237,7 +237,7 @@ export default function ProductClient({
       name: product.name,
       variantName: selectedVariant.sku,
       price: selectedVariant.selling_price,
-      image: getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png',
+      image: getMediaUrl(product.images?.[0]) || '/placeholder-perfume.png',
       quantity: 1,
       sizeMl: selectedVariant.size_ml,
       loyaltyPoints: selectedVariant.loyalty_points,
@@ -254,7 +254,7 @@ export default function ProductClient({
         name: product.name,
         variantName: selectedVariant.sku,
         price: selectedVariant.selling_price,
-        image: getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png',
+        image: getMediaUrl(product.images?.[0]) || '/placeholder-perfume.png',
         quantity: 1,
         sizeMl: selectedVariant.size_ml,
         loyaltyPoints: selectedVariant.loyalty_points,
@@ -281,7 +281,7 @@ export default function ProductClient({
         name: itemObj.name,
         variantName: variant.sku,
         price: isBundle ? Math.round(variant.selling_price * 0.9) : variant.selling_price,
-        image: getMediaUrl(itemObj.images?.[0]) || '/kozmocart/placeholder-perfume.png',
+        image: getMediaUrl(itemObj.images?.[0]) || '/placeholder-perfume.png',
         quantity: 1,
         sizeMl: variant.size_ml,
         loyaltyPoints: variant.loyalty_points,
@@ -375,10 +375,10 @@ export default function ProductClient({
             {/* Main Image Container */}
             <div className="w-full bg-neutral-50 border border-neutral-100 rounded-lg flex items-center justify-center p-2 relative overflow-hidden group shadow-sm">
               <img
-                src={getMediaUrl(activeImage) || '/kozmocart/placeholder-perfume.png'}
+                src={getMediaUrl(activeImage) || '/placeholder-perfume.png'}
                 alt={product.name}
                 className="w-full h-auto object-contain rounded transition-transform duration-[1000ms] group-hover:scale-105"
-                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
               />
               <div className="absolute inset-0 bg-neutral-950/2 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
               
@@ -405,7 +405,7 @@ export default function ProductClient({
                       src={getMediaUrl(img)}
                       alt={`Thumbnail ${idx + 1}`}
                       className="w-full h-full object-contain mix-blend-multiply"
-                      onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                      onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
                     />
                   </button>
                 ))}
@@ -637,7 +637,7 @@ export default function ProductClient({
                       name: product.name,
                       brand: product.brand_name,
                       price: selectedVariant?.selling_price || 0,
-                      image: getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png',
+                      image: getMediaUrl(product.images?.[0]) || '/placeholder-perfume.png',
                       slug: product.slug
                     });
                   }
@@ -806,7 +806,7 @@ export default function ProductClient({
                         src={imageUrl} 
                         alt={`Gallery Image ${idx + 1}`} 
                         className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 group-hover:opacity-85"
-                        onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                        onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
                       />
                       
                       {/* Luxury frame border overlay on hover */}
@@ -899,7 +899,7 @@ export default function ProductClient({
                 src={getMediaUrl(product.gallery_images[activeLightboxIndex].image)}
                 alt={`Gallery View ${activeLightboxIndex + 1}`}
                 className="max-w-full max-h-[70vh] object-contain border border-neutral-800 rounded shadow-2xl transition-all duration-500"
-                onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png' }}
+                onError={(e: any) => { e.target.src = '/placeholder-perfume.png' }}
               />
               
               {/* Footer details bar */}
@@ -1042,7 +1042,7 @@ export default function ProductClient({
                   />
                   <div className="w-16 h-16 bg-neutral-50 border border-neutral-100 flex-shrink-0 flex items-center justify-center p-1 rounded">
                     <img
-                      src={getMediaUrl(product.images?.[0]) || '/kozmocart/placeholder-perfume.png'}
+                      src={getMediaUrl(product.images?.[0]) || '/placeholder-perfume.png'}
                       alt={product.name}
                       className="w-full h-full object-contain mix-blend-multiply"
                     />
@@ -1078,7 +1078,7 @@ export default function ProductClient({
                       <label htmlFor={`bundle-check-${bundleProducts[0].id}`} className="flex items-center space-x-4 cursor-pointer flex-1 min-w-0">
                         <div className="w-16 h-16 bg-neutral-50 border border-neutral-100 flex-shrink-0 flex items-center justify-center p-1 rounded">
                           <img
-                            src={getMediaUrl(bundleProducts[0].images?.[0]) || '/kozmocart/placeholder-perfume.png'}
+                            src={getMediaUrl(bundleProducts[0].images?.[0]) || '/placeholder-perfume.png'}
                             alt={bundleProducts[0].name}
                             className="w-full h-full object-contain mix-blend-multiply"
                           />
@@ -1117,7 +1117,7 @@ export default function ProductClient({
                       <label htmlFor={`bundle-check-${bundleProducts[1].id}`} className="flex items-center space-x-4 cursor-pointer flex-1 min-w-0">
                         <div className="w-16 h-16 bg-neutral-50 border border-neutral-100 flex-shrink-0 flex items-center justify-center p-1 rounded">
                           <img
-                            src={getMediaUrl(bundleProducts[1].images?.[0]) || '/kozmocart/placeholder-perfume.png'}
+                            src={getMediaUrl(bundleProducts[1].images?.[0]) || '/placeholder-perfume.png'}
                             alt={bundleProducts[1].name}
                             className="w-full h-full object-contain mix-blend-multiply"
                           />

@@ -230,7 +230,7 @@ export default function Wishlist() {
                     src={item.image}
                     alt={item.name}
                     className="max-h-full object-contain mix-blend-multiply transition-transform duration-700 p-2 group-hover:scale-105"
-                    onError={(e: any) => { e.target.src = '/kozmocart/placeholder-perfume.png'; }}
+                    onError={(e: any) => { e.target.src = '/placeholder-perfume.png'; }}
                   />
                   <div className="absolute inset-0 bg-black/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
 
