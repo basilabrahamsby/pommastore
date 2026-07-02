@@ -351,17 +351,12 @@ async def storefront_checkout(
         msg = f"Thank you for your order #{enriched.order_number} at KOZMOCART! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
         
-    # Notify admin via SMS
-    admin_result = await db.execute(
-        select(User).where(User.role == UserRole.superadmin, User.phone.isnot(None)).limit(1)
+    # Notify admin/manager via SMS
+    background_tasks.add_task(
+        sendsms_orderadmin,
+        "918848079307",
+        f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
     )
-    admin_user = admin_result.scalar_one_or_none()
-    if admin_user and admin_user.phone:
-        background_tasks.add_task(
-            sendsms_orderadmin,
-            admin_user.phone,
-            f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
-        )
 
     background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
@@ -726,17 +721,12 @@ async def verify_razorpay_payment(
         msg = f"Payment confirmed! Order #{enriched.order_number} placed at KOZMOCART. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}. Track: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
 
-    # Notify admin
-    admin_result = await db.execute(
-        select(User).where(User.role == UserRole.superadmin, User.phone.isnot(None)).limit(1)
+    # Notify admin/manager via SMS
+    background_tasks.add_task(
+        sendsms_orderadmin,
+        "918848079307",
+        f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}"
     )
-    admin_user = admin_result.scalar_one_or_none()
-    if admin_user and admin_user.phone:
-        background_tasks.add_task(
-            sendsms_orderadmin,
-            admin_user.phone,
-            f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}"
-        )
 
     background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
@@ -904,17 +894,12 @@ async def razorpay_webhook(
         msg = f"Thank you for your order #{enriched.order_number} at KOZMOCART! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
         
-    # Notify admin via SMS
-    admin_result = await db.execute(
-        select(User).where(User.role == UserRole.superadmin, User.phone.isnot(None)).limit(1)
+    # Notify admin/manager via SMS
+    background_tasks.add_task(
+        sendsms_orderadmin,
+        "918848079307",
+        f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
     )
-    admin_user = admin_result.scalar_one_or_none()
-    if admin_user and admin_user.phone:
-        background_tasks.add_task(
-            sendsms_orderadmin,
-            admin_user.phone,
-            f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
-        )
 
     background_tasks.add_task(book_delhivery_shipment_task, order.id)
 

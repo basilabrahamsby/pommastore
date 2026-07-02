@@ -28,7 +28,7 @@ from app.services.email import (
     send_order_returned_email,
     order_items_to_email_list,
 )
-from app.services.sms import sendsms_status
+from app.services.sms import sendsms_status, sendsms_orderadmin
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -313,6 +313,13 @@ async def create_order(
             coupon_code=enriched.coupon_code or "",
             gift_message=enriched.gift_message or "",
         )
+
+    # Notify admin/manager via SMS
+    background_tasks.add_task(
+        sendsms_orderadmin,
+        "918848079307",
+        f"ALERT: New POS Order #{enriched.order_number} has been created successfully for a total of INR {float(enriched.total_amount):.2f}."
+    )
 
     return enriched
 
