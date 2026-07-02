@@ -688,6 +688,17 @@ async def verify_razorpay_payment(
 
     await db.commit()
 
+    # Re-fetch fully loaded, hydrated order output structure after commit to prevent MissingGreenlet/lazy-load error
+    final_result = await db.execute(
+        select(Order)
+        .where(Order.id == order.id)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            selectinload(Order.status_history),
+            joinedload(Order.customer),
+        )
+    )
+    order = final_result.scalar_one()
     enriched = _enrich_order(order)
 
     # Send confirmation email
@@ -857,6 +868,17 @@ async def razorpay_webhook(
 
     await db.commit()
 
+    # Re-fetch fully loaded, hydrated order output structure after commit to prevent MissingGreenlet/lazy-load error
+    final_result = await db.execute(
+        select(Order)
+        .where(Order.id == order.id)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            selectinload(Order.status_history),
+            joinedload(Order.customer),
+        )
+    )
+    order = final_result.scalar_one()
     enriched = _enrich_order(order)
     if enriched.customer_email:
         background_tasks.add_task(
