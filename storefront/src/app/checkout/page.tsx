@@ -49,7 +49,7 @@ export default function Checkout() {
   useEffect(() => {
     const autoApplyOffers = async () => {
       try {
-        const res = await api.get('/storefront/offers');
+        const res = await api.get('/offers');
         const offers = res.data || [];
         
         let bestOffer: any = null;

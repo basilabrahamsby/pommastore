@@ -93,7 +93,7 @@ function TrackOrderContent() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/storefront/orders/track', {
+      const res = await api.post('/orders/track', {
         order_number: o,
         contact: c
       });
@@ -116,7 +116,7 @@ function TrackOrderContent() {
     setOrderData(null);
     
     try {
-      const res = await api.post('/storefront/orders/track', {
+      const res = await api.post('/orders/track', {
         order_number: orderNumber.trim(),
         contact: contact.trim()
       });
