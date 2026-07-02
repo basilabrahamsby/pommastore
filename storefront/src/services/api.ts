@@ -9,8 +9,13 @@ const api = axios.create({
 
 import { useAuthStore } from '@/store/authStore';
 
-// Cache key paths that contain mostly static layout or campaign configuration data
-const CACHE_KEYS = ['/settings/storefront_layout', '/offers', '/brands', '/categories'];
+const isCacheableUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  const exact = ['/settings/storefront_layout', '/offers', '/brands', '/categories', '/homepage'];
+  if (exact.some(key => url === key || url.endsWith(key))) return true;
+  if (url.includes('/products')) return true;
+  return false;
+};
 
 // For client-side requests, inject token and handle caching / low-internet fallbacks
 if (typeof window !== 'undefined') {
@@ -21,7 +26,7 @@ if (typeof window !== 'undefined') {
     }
 
     // Serve cached settings immediately if available and under 5 minutes old
-    if (config.method === 'get' && config.url && CACHE_KEYS.includes(config.url)) {
+    if (config.method === 'get' && config.url && isCacheableUrl(config.url)) {
       try {
         const cached = sessionStorage.getItem(`cache:${config.url}`);
         if (cached) {
@@ -48,7 +53,7 @@ if (typeof window !== 'undefined') {
     (response) => {
       // Store successful GET layout/config responses in cache
       const url = response.config.url;
-      if (response.config.method === 'get' && url && CACHE_KEYS.includes(url)) {
+      if (response.config.method === 'get' && url && isCacheableUrl(url)) {
         try {
           sessionStorage.setItem(`cache:${url}`, JSON.stringify({
             data: response.data,
@@ -61,7 +66,7 @@ if (typeof window !== 'undefined') {
     async (error) => {
       const config = error.config;
       // Low-internet Recovery: Fallback to session cache on network error or timeout
-      if (config && config.method === 'get' && config.url && CACHE_KEYS.includes(config.url)) {
+      if (config && config.method === 'get' && config.url && isCacheableUrl(config.url)) {
         try {
           const cached = sessionStorage.getItem(`cache:${config.url}`);
           if (cached) {
