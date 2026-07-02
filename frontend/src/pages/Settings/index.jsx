@@ -1192,49 +1192,25 @@ export default function Settings() {
               <Truck size={24} style={{ color: 'var(--gold)' }} />
               <div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', margin: 0 }}>Delhivery Shipping Integration</h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Configure credentials and parameters for automated Delhivery shipping label generation</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Configure shipping parameters for automated Delhivery label generation</p>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div className="form-group">
-                <label className="form-label">Delhivery API Token *</label>
+              <div className="form-group" style={{ maxWidth: 500 }}>
+                <label className="form-label">Pickup Location Name *</label>
                 <input 
                   type="text" 
                   className="input" 
-                  placeholder="Enter Delhivery API Token"
-                  style={{ fontFamily: 'monospace' }}
-                  value={delhiveryConfig.api_token}
-                  onChange={e => setDelhiveryConfig(prev => ({ ...prev, api_token: e.target.value }))}
+                  placeholder="e.g. Kozmocart Main Warehouse"
+                  value={delhiveryConfig.pickup_location}
+                  onChange={e => setDelhiveryConfig(prev => ({ ...prev, pickup_location: e.target.value }))}
                 />
-              </div>
-
-              <div className="grid-2" style={{ gap: 20 }}>
-                <div className="form-group">
-                  <label className="form-label">Pickup Location Name *</label>
-                  <input 
-                    type="text" 
-                    className="input" 
-                    placeholder="e.g. Kozmocart Main Warehouse"
-                    value={delhiveryConfig.pickup_location}
-                    onChange={e => setDelhiveryConfig(prev => ({ ...prev, pickup_location: e.target.value }))}
-                  />
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                    Must match the exact pickup location name configured in your Delhivery dashboard.
-                  </p>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Environment Mode</label>
-                  <select 
-                    className="select" 
-                    value={delhiveryConfig.sandbox ? 'sandbox' : 'production'} 
-                    onChange={e => setDelhiveryConfig(prev => ({ ...prev, sandbox: e.target.value === 'sandbox' }))}
-                  >
-                    <option value="sandbox">Sandbox / Staging (Testing Mode)</option>
-                    <option value="production">Production (Real Shipments)</option>
-                  </select>
-                </div>
+                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.4 }}>
+                  Enter the exact pickup location name registered in your Delhivery client panel.
+                  <br />
+                  <span style={{ color: 'var(--gold)' }}>Note:</span> API Credentials (API Token) and environment mode (Sandbox/Production) are managed securely via code environment variables.
+                </p>
               </div>
             </div>
           </div>

@@ -14,28 +14,25 @@ PRODUCTION_URL = "https://track.delhivery.com"
 
 async def get_delhivery_config() -> Dict[str, Any]:
     """
-    Fetches Delhivery configuration from the database system_settings table,
-    falling back to settings.py (.env) if not configured in DB.
+    Fetches Delhivery configuration. 
+    API Token and Sandbox mode are loaded from code settings (.env),
+    while the Pickup Location can be set from the database system_settings table.
     """
+    db_pickup_location = None
     try:
         async with AsyncSessionLocal() as db:
             q = select(SystemSettings).where(SystemSettings.key == "delhivery")
             res = await db.execute(q)
             setting = res.scalar_one_or_none()
             if setting and setting.value:
-                val = setting.value
-                return {
-                    "api_token": val.get("api_token") or settings.DELHIVERY_API_TOKEN,
-                    "sandbox": val.get("sandbox") if val.get("sandbox") is not None else settings.DELHIVERY_SANDBOX,
-                    "pickup_location": val.get("pickup_location") or settings.DELHIVERY_PICKUP_LOCATION
-                }
+                db_pickup_location = setting.value.get("pickup_location")
     except Exception as e:
         logger.error(f"Failed to fetch Delhivery config from DB: {e}")
         
     return {
         "api_token": settings.DELHIVERY_API_TOKEN,
         "sandbox": settings.DELHIVERY_SANDBOX,
-        "pickup_location": settings.DELHIVERY_PICKUP_LOCATION
+        "pickup_location": db_pickup_location or settings.DELHIVERY_PICKUP_LOCATION
     }
 
 def get_base_url(sandbox: bool) -> str:
