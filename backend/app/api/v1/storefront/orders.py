@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload, joinedload
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -502,6 +502,34 @@ async def create_razorpay_order(
         "order_number": order.order_number,
         "razorpay_key_id": settings.RAZORPAY_KEY_ID
     }
+
+@router.post("/razorpay/cancel")
+async def cancel_pending_order(
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    customer: Customer = Depends(get_current_customer)
+):
+    order_number = body.get("order_number")
+    if not order_number:
+        raise HTTPException(status_code=400, detail="Missing order number")
+        
+    q = select(Order).where(
+        Order.order_number == order_number,
+        Order.customer_id == customer.id,
+        Order.payment_status == PaymentStatus.pending
+    )
+    result = await db.execute(q)
+    order = result.scalar_one_or_none()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Pending order not found")
+        
+    # Delete status history, order items, and the order itself
+    await db.execute(delete(OrderStatusHistory).where(OrderStatusHistory.order_id == order.id))
+    await db.execute(delete(OrderItem).where(OrderItem.order_id == order.id))
+    await db.delete(order)
+    await db.commit()
+    return {"status": "cancelled", "order_number": order_number}
 
 
 @router.post("/razorpay/webhook", status_code=200)

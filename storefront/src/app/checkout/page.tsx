@@ -384,17 +384,27 @@ export default function Checkout() {
             flow: 'intent'
           },
           modal: {
-            ondismiss: function () {
+            ondismiss: async function () {
               setPlacingOrder(false);
+              try {
+                await api.post('/orders/razorpay/cancel', {
+                  order_number: rzpOrderData.order_number
+                });
+              } catch (err) {}
             }
           }
         };
 
         const rzp1 = new (window as any).Razorpay(options);
-        rzp1.on('payment.failed', function (response: any) {
+        rzp1.on('payment.failed', async function (response: any) {
           setCheckoutError('Payment Failed: ' + (response.error?.description || 'Oops! Something went wrong. Please check your credentials and try again.'));
           window.scrollTo({ top: 0, behavior: 'smooth' });
           setPlacingOrder(false);
+          try {
+            await api.post('/orders/razorpay/cancel', {
+              order_number: rzpOrderData.order_number
+            });
+          } catch (err) {}
         });
         rzp1.open();
         return; // Halt execution and wait for Razorpay handler
