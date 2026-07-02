@@ -2,6 +2,9 @@ import httpx
 from typing import Dict, Any, List
 from app.core.config import settings
 import logging
+from app.core.database import AsyncSessionLocal
+from app.models.system import SystemSettings
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -9,12 +12,38 @@ logger = logging.getLogger(__name__)
 SANDBOX_URL = "https://staging-express.delhivery.com"
 PRODUCTION_URL = "https://track.delhivery.com"
 
-def get_base_url() -> str:
-    return SANDBOX_URL if settings.DELHIVERY_SANDBOX else PRODUCTION_URL
-
-def get_headers() -> Dict[str, str]:
+async def get_delhivery_config() -> Dict[str, Any]:
+    """
+    Fetches Delhivery configuration from the database system_settings table,
+    falling back to settings.py (.env) if not configured in DB.
+    """
+    try:
+        async with AsyncSessionLocal() as db:
+            q = select(SystemSettings).where(SystemSettings.key == "delhivery")
+            res = await db.execute(q)
+            setting = res.scalar_one_or_none()
+            if setting and setting.value:
+                val = setting.value
+                return {
+                    "api_token": val.get("api_token") or settings.DELHIVERY_API_TOKEN,
+                    "sandbox": val.get("sandbox") if val.get("sandbox") is not None else settings.DELHIVERY_SANDBOX,
+                    "pickup_location": val.get("pickup_location") or settings.DELHIVERY_PICKUP_LOCATION
+                }
+    except Exception as e:
+        logger.error(f"Failed to fetch Delhivery config from DB: {e}")
+        
     return {
-        "Authorization": f"Token {settings.DELHIVERY_API_TOKEN}",
+        "api_token": settings.DELHIVERY_API_TOKEN,
+        "sandbox": settings.DELHIVERY_SANDBOX,
+        "pickup_location": settings.DELHIVERY_PICKUP_LOCATION
+    }
+
+def get_base_url(sandbox: bool) -> str:
+    return SANDBOX_URL if sandbox else PRODUCTION_URL
+
+def get_headers(api_token: str) -> Dict[str, str]:
+    return {
+        "Authorization": f"Token {api_token}",
         "Content-Type": "application/json"
     }
 
@@ -22,7 +51,11 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
     """
     Checks if Delhivery delivers to the given pincode.
     """
-    if settings.DELHIVERY_API_TOKEN == "placeholder_delhivery_token":
+    config = await get_delhivery_config()
+    api_token = config["api_token"]
+    sandbox = config["sandbox"]
+
+    if api_token == "placeholder_delhivery_token":
         # Mock successful serviceability for local/testing flows
         return {
             "serviceable": True,
@@ -33,8 +66,8 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
             "message": "Mock Serviceable"
         }
 
-    url = f"{get_base_url()}/c/api/pin-codes/json/?filter_codes={pincode}"
-    headers = {"Authorization": f"Token {settings.DELHIVERY_API_TOKEN}"}
+    url = f"{get_base_url(sandbox)}/c/api/pin-codes/json/?filter_codes={pincode}"
+    headers = {"Authorization": f"Token {api_token}"}
     
     try:
         async with httpx.AsyncClient() as client:
@@ -68,18 +101,14 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
 
 async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Books a shipment with Delhivery and returns waybill/tracking details.
-    
-    Input order_data expects:
-        - order_number
-        - total_amount
-        - payment_method ("cod" or "prepaid" / "razorpay" etc.)
-        - customer_name
-        - customer_phone
-        - customer_email
-        - shipping_address (dict containing address_line1, city, state, pincode)
+    Book a shipment with Delhivery and return waybill/tracking details.
     """
-    if settings.DELHIVERY_API_TOKEN == "placeholder_delhivery_token":
+    config = await get_delhivery_config()
+    api_token = config["api_token"]
+    sandbox = config["sandbox"]
+    pickup_location = config["pickup_location"]
+
+    if api_token == "placeholder_delhivery_token":
         # Mock successful waybill generation for testing
         import random
         mock_waybill = "".join([str(random.randint(0, 9)) for _ in range(12)])
@@ -117,12 +146,12 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
             }
         ],
         "pickup_location": {
-            "name": settings.DELHIVERY_PICKUP_LOCATION
+            "name": pickup_location
         }
     }
 
-    url = f"{get_base_url()}/api/v1/packages/json/"
-    headers = get_headers()
+    url = f"{get_base_url(sandbox)}/api/v1/packages/json/"
+    headers = get_headers(api_token)
 
     try:
         async with httpx.AsyncClient() as client:
@@ -167,7 +196,11 @@ async def get_delhivery_tracking_status(waybill: str) -> Dict[str, Any]:
     """
     Retrieves real-time tracking status of a shipment from Delhivery.
     """
-    if settings.DELHIVERY_API_TOKEN == "placeholder_delhivery_token":
+    config = await get_delhivery_config()
+    api_token = config["api_token"]
+    sandbox = config["sandbox"]
+
+    if api_token == "placeholder_delhivery_token":
         # Simulates delivery updates based on the waybill digits for sandbox demo
         last_digit = int(waybill[-1]) if waybill and waybill[-1].isdigit() else 5
         if last_digit <= 3:
@@ -183,8 +216,8 @@ async def get_delhivery_tracking_status(waybill: str) -> Dict[str, Any]:
             "remarks": "Mock tracking response"
         }
 
-    url = f"{get_base_url()}/api/v1/packages/json/?waybills={waybill}"
-    headers = {"Authorization": f"Token {settings.DELHIVERY_API_TOKEN}"}
+    url = f"{get_base_url(sandbox)}/api/v1/packages/json/?waybills={waybill}"
+    headers = {"Authorization": f"Token {api_token}"}
 
     try:
         async with httpx.AsyncClient() as client:

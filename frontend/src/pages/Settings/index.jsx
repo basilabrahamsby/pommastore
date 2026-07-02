@@ -116,6 +116,12 @@ export default function Settings() {
   const [emailTemplates, setEmailTemplates] = useState(DEFAULT_EMAIL_TEMPLATES)
   const [selectedEmailStatus, setSelectedEmailStatus] = useState('confirmed')
 
+  const [delhiveryConfig, setDelhiveryConfig] = useState({
+    api_token: 'placeholder_delhivery_token',
+    sandbox: true,
+    pickup_location: 'Kozmocart Warehouse'
+  })
+
   // Load settings from DB on mount
   useEffect(() => {
     api.get('/settings')
@@ -142,6 +148,7 @@ export default function Settings() {
         if (d.return_policy) setReturnPolicy(d.return_policy)
         if (d.privacy_policy) setPrivacyPolicy(d.privacy_policy)
         if (d.terms_conditions) setTermsConditions(d.terms_conditions)
+        if (d.delhivery) setDelhiveryConfig(prev => ({ ...prev, ...d.delhivery }))
       })
       .catch(() => toast.error('Cloud config not initialized. Showing defaults.'))
       .finally(() => setLoading(false))
@@ -187,7 +194,8 @@ export default function Settings() {
         smsConfig: { ...smsConfig },
         return_policy: returnPolicy,
         privacy_policy: privacyPolicy,
-        terms_conditions: termsConditions
+        terms_conditions: termsConditions,
+        delhivery: delhiveryConfig
       }
       await api.patch('/settings', payload)
       // Also persist to localStorage for use across the app
@@ -269,6 +277,7 @@ export default function Settings() {
     { id: 'return_policy', label: 'Return Policy', icon: FileText },
     { id: 'privacy_policy', label: 'Privacy Policy', icon: FileText },
     { id: 'terms_conditions', label: 'Terms & Conditions', icon: FileText },
+    { id: 'delhivery', label: 'Delhivery Shipping', icon: Truck },
   ]
 
   return (
@@ -1172,6 +1181,61 @@ export default function Settings() {
               <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 6 }}>
                 You can write complete HTML blocks here (e.g. &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;ol&gt;, &lt;strong&gt;) to style your terms sections dynamically.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 13: DELHIVERY SHIPPING */}
+        {activeTab === 'delhivery' && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+              <Truck size={24} style={{ color: 'var(--gold)' }} />
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', margin: 0 }}>Delhivery Shipping Integration</h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Configure credentials and parameters for automated Delhivery shipping label generation</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div className="form-group">
+                <label className="form-label">Delhivery API Token *</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  placeholder="Enter Delhivery API Token"
+                  style={{ fontFamily: 'monospace' }}
+                  value={delhiveryConfig.api_token}
+                  onChange={e => setDelhiveryConfig(prev => ({ ...prev, api_token: e.target.value }))}
+                />
+              </div>
+
+              <div className="grid-2" style={{ gap: 20 }}>
+                <div className="form-group">
+                  <label className="form-label">Pickup Location Name *</label>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    placeholder="e.g. Kozmocart Main Warehouse"
+                    value={delhiveryConfig.pickup_location}
+                    onChange={e => setDelhiveryConfig(prev => ({ ...prev, pickup_location: e.target.value }))}
+                  />
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    Must match the exact pickup location name configured in your Delhivery dashboard.
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Environment Mode</label>
+                  <select 
+                    className="select" 
+                    value={delhiveryConfig.sandbox ? 'sandbox' : 'production'} 
+                    onChange={e => setDelhiveryConfig(prev => ({ ...prev, sandbox: e.target.value === 'sandbox' }))}
+                  >
+                    <option value="sandbox">Sandbox / Staging (Testing Mode)</option>
+                    <option value="production">Production (Real Shipments)</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         )}
