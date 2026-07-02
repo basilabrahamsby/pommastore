@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 import uuid
 from decimal import Decimal
+import hmac
+import hashlib
 
 from app.core.database import get_db
 from app.core.deps import get_current_customer
@@ -585,22 +587,16 @@ async def verify_razorpay_payment(
         raise HTTPException(status_code=400, detail="Missing payment reference fields")
 
     # Verify signature if real credentials are configured
-    if (
-        settings.RAZORPAY_KEY_SECRET != "placeholder_secret"
-        and settings.RAZORPAY_KEY_SECRET != "rzp_test_demokey12345"
-        and razorpay_signature
-    ):
-        import hmac as _hmac
-        import hashlib as _hashlib
-        generated = _hmac.new(
+    if razorpay_signature and settings.RAZORPAY_KEY_SECRET not in ("placeholder_secret", "rzp_test_demokey12345", ""):
+        expected = hmac.new(
             settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
             f"{razorpay_order_id}|{razorpay_payment_id}".encode("utf-8"),
-            _hashlib.sha256
+            hashlib.sha256
         ).hexdigest()
-        if not _hmac.compare_digest(generated, razorpay_signature):
+        if not hmac.compare_digest(expected, razorpay_signature):
             raise HTTPException(status_code=400, detail="Payment signature verification failed")
 
-    # Fetch the order
+    # Fetch the order (do NOT use with_for_update alongside eager-loaded joins in async)
     q = select(Order).where(
         Order.order_number == order_number,
         Order.customer_id == customer.id,
@@ -608,7 +604,7 @@ async def verify_razorpay_payment(
         selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
         selectinload(Order.status_history),
         joinedload(Order.customer)
-    ).with_for_update()
+    )
 
     result = await db.execute(q)
     order = result.scalar_one_or_none()
