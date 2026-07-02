@@ -1,4 +1,7 @@
 from fastapi import APIRouter, Depends
+from fastapi.encoders import jsonable_encoder
+import json
+from app.core.redis import redis_service
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, case
 from sqlalchemy.orm import selectinload
@@ -24,6 +27,12 @@ class OfferWithProductsOut(OfferOut):
 @router.get("")
 async def get_homepage_data(db: AsyncSession = Depends(get_db)):
     """Consolidated endpoint fetching all homepage layouts and product curation data en-masse."""
+    try:
+        cached = await redis_service.redis.get("storefront:homepage")
+        if cached:
+            return json.loads(cached)
+    except Exception:
+        pass
     
     # 1. Fetch system layouts & settings
     settings_result = await db.execute(
@@ -176,7 +185,7 @@ async def get_homepage_data(db: AsyncSession = Depends(get_db)):
         offers_out.append(out_obj)
 
     # 7. Package and return the aggregated payload
-    return {
+    response_payload = {
         "layout": {
             **layout,
             "company": company,
@@ -191,3 +200,12 @@ async def get_homepage_data(db: AsyncSession = Depends(get_db)):
         "favorites": favorites_out,
         "offers": offers_out
     }
+
+    try:
+        serializable_payload = jsonable_encoder(response_payload)
+        # Cache for 60 seconds (1 minute) to ensure fast updates
+        await redis_service.redis.setex("storefront:homepage", 60, json.dumps(serializable_payload))
+    except Exception:
+        pass
+
+    return response_payload

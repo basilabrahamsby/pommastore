@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.system import SystemSettings
 from app.schemas.system import GlobalSettingsUpdate
+from app.core.redis import redis_service
 
 router = APIRouter()
 
@@ -45,6 +46,11 @@ async def update_settings(
             db.add(setting)
             
     await db.commit()
+    
+    try:
+        await redis_service.redis.delete("storefront:homepage")
+    except Exception:
+        pass
     
     # Return fresh state
     result = await db.execute(select(SystemSettings))
