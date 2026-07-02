@@ -24,7 +24,7 @@ class CustomerAddressOut(CustomerAddressBase):
 
 
 class CustomerBase(BaseModel):
-    email: EmailStr
+    email: EmailStr | None = None
     phone: str | None = None
     full_name: str | None = None
     date_of_birth: date | None = None
