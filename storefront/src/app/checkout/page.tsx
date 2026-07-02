@@ -42,6 +42,13 @@ export default function Checkout() {
   const [updatingContact, setUpdatingContact] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [emailOtp, setEmailOtp] = useState('');
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [verifyingOtps, setVerifyingOtps] = useState(false);
+  const [verifyEmailNeeded, setVerifyEmailNeeded] = useState(false);
+  const [verifyPhoneNeeded, setVerifyPhoneNeeded] = useState(false);
+
   const [appliedPromo, setAppliedPromo] = useState<any>(null);
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
 
@@ -120,20 +127,74 @@ export default function Checkout() {
       alert('Email and mobile number are compulsory fields.');
       return;
     }
-    setUpdatingContact(true);
+
+    const emailChanged = contactForm.email.trim().toLowerCase() !== (customer?.email || '').trim().toLowerCase();
+    const phoneChanged = contactForm.phone.trim() !== (customer?.phone || '').trim();
+
+    if (emailChanged || phoneChanged) {
+      setUpdatingContact(true);
+      try {
+        await api.post('/account/verify/send', {
+          email: emailChanged ? contactForm.email.trim() : undefined,
+          phone: phoneChanged ? contactForm.phone.trim() : undefined
+        });
+        setVerifyEmailNeeded(emailChanged);
+        setVerifyPhoneNeeded(phoneChanged);
+        setEmailOtp('');
+        setPhoneOtp('');
+        setShowVerifyModal(true);
+      } catch (err: any) {
+        const detail = err.response?.data?.detail;
+        alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to send verification code.');
+      } finally {
+        setUpdatingContact(false);
+      }
+    } else {
+      // If only name changed (or nothing changed)
+      setUpdatingContact(true);
+      try {
+        const res = await api.patch('/account/me', {
+          full_name: contactForm.full_name.trim()
+        });
+        useAuthStore.setState({ customer: res.data });
+        alert('Contact details updated successfully!');
+      } catch (err: any) {
+        const detail = err.response?.data?.detail;
+        alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to update contact details.');
+      } finally {
+        setUpdatingContact(false);
+      }
+    }
+  };
+
+  const handleConfirmVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (verifyEmailNeeded && !emailOtp.trim()) {
+      alert('Please enter the Email verification code.');
+      return;
+    }
+    if (verifyPhoneNeeded && !phoneOtp.trim()) {
+      alert('Please enter the Mobile verification code.');
+      return;
+    }
+
+    setVerifyingOtps(true);
     try {
-      const res = await api.patch('/account/me', {
-        email: contactForm.email.trim(),
-        phone: contactForm.phone.trim(),
+      const res = await api.post('/account/verify/confirm', {
+        email_otp: verifyEmailNeeded ? emailOtp.trim() : undefined,
+        phone_otp: verifyPhoneNeeded ? phoneOtp.trim() : undefined,
         full_name: contactForm.full_name.trim()
       });
       useAuthStore.setState({ customer: res.data });
-      alert('Contact details updated successfully!');
+      setShowVerifyModal(false);
+      setEmailOtp('');
+      setPhoneOtp('');
+      alert('Contact details verified and updated successfully!');
     } catch (err: any) {
       const detail = err.response?.data?.detail;
-      alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to update contact details.');
+      alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Verification failed. Please try again.');
     } finally {
-      setUpdatingContact(false);
+      setVerifyingOtps(false);
     }
   };
 
@@ -868,6 +929,69 @@ export default function Checkout() {
           </div>
         </div>
       </form>
+
+      {/* VERIFY CONTACT DETAILS MODAL */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-65 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-white border border-neutral-200 max-w-md w-full p-8 md:p-10 shadow-2xl relative">
+            <h3 className="text-xl font-serif italic text-neutral-900 mb-2">Verify Contact Details</h3>
+            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-8 leading-relaxed">
+              We have dispatched a verification passcode to your new contact information.
+            </p>
+
+            <form onSubmit={handleConfirmVerification} className="space-y-6">
+              {verifyEmailNeeded && (
+                <div>
+                  <label className="block text-[9px] font-black text-neutral-900 uppercase tracking-[0.2em] mb-2">
+                    Email Passcode (Sent to {contactForm.email})
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter 6-digit code"
+                    value={emailOtp}
+                    onChange={(e) => setEmailOtp(e.target.value)}
+                    className="w-full border-b border-neutral-300 py-2.5 px-0 text-sm focus:border-black outline-none tracking-widest font-mono text-center rounded-none"
+                  />
+                </div>
+              )}
+
+              {verifyPhoneNeeded && (
+                <div>
+                  <label className="block text-[9px] font-black text-neutral-900 uppercase tracking-[0.2em] mb-2">
+                    Mobile Passcode (Sent to {contactForm.phone})
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter 6-digit code"
+                    value={phoneOtp}
+                    onChange={(e) => setPhoneOtp(e.target.value)}
+                    className="w-full border-b border-neutral-300 py-2.5 px-0 text-sm focus:border-black outline-none tracking-widest font-mono text-center rounded-none"
+                  />
+                </div>
+              )}
+
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowVerifyModal(false)}
+                  className="flex-1 bg-transparent border border-neutral-200 text-neutral-900 py-4 text-xs font-black tracking-widest hover:border-black transition-colors uppercase rounded-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={verifyingOtps}
+                  className="flex-1 bg-black text-white py-4 text-xs font-black tracking-widest hover:bg-neutral-800 transition-colors uppercase rounded-none disabled:opacity-50"
+                >
+                  {verifyingOtps ? 'Verifying...' : 'Verify & Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
