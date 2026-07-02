@@ -288,8 +288,8 @@ export default function OffersPage() {
     const fetchAllData = async () => {
       try {
         const [offersRes, rewardsRes] = await Promise.all([
-          api.get('/storefront/offers'),
-          api.get('/storefront/loyalty/rewards')
+          api.get('/offers'),
+          api.get('/loyalty/rewards')
         ]);
         setPromoCampaigns(offersRes.data);
         setLoyaltyRewards(rewardsRes.data);
@@ -381,11 +381,7 @@ export default function OffersPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-6 font-sans">
-                      <div className="text-[10px] font-black tracking-[0.2em] text-neutral-400 uppercase">
-                        PROMO CODE: <span className="text-white border border-white/20 px-2 py-1 ml-1.5 font-mono bg-white/5 rounded-sm">{promo.code}</span>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               </div>
@@ -533,13 +529,16 @@ export default function OffersPage() {
                         )}
                       </div>
 
-                      {/* Promo Code Block */}
-                      {promo.code && (
-                        <div className="absolute bottom-5 left-5 right-5">
-                          <p className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2">Apply Code at Checkout</p>
-                          <CopyCodeButton code={promo.code} />
-                        </div>
-                      )}
+                      {/* Auto Applied Info Block */}
+                      <div className="absolute bottom-5 left-5 right-5 bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-sm">
+                        <p className="text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles size={11} className="fill-emerald-400 text-emerald-400 animate-pulse" />
+                          Auto-Applied Offer
+                        </p>
+                        <p className="text-[8.5px] text-neutral-300 uppercase tracking-widest mt-0.5 leading-relaxed">
+                          This discount will automatically activate in your checkout bag.
+                        </p>
+                      </div>
                     </div>
 
                     {/* Details Panel */}
@@ -680,15 +679,12 @@ export default function OffersPage() {
                         })}
                       </div>
 
-                      {/* Promo code bar at bottom */}
-                      {promo.code && (
-                        <div className="mt-6 pt-5 border-t border-dashed border-neutral-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <p className="text-[11px] text-neutral-500 font-medium">
-                            💡 Use code <strong className="text-black font-mono">{promo.code}</strong> at checkout to apply this offer automatically.
-                          </p>
-                          <CopyCodeButton code={promo.code} />
-                        </div>
-                      )}
+                      {/* Automatic discount message */}
+                      <div className="mt-6 pt-5 border-t border-dashed border-neutral-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <p className="text-[11px] text-neutral-500 font-medium">
+                          💡 This offer is applied automatically. Add the eligible items above to your bag, and the discount will activate at checkout.
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>

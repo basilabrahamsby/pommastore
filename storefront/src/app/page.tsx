@@ -529,9 +529,6 @@ export default function Home() {
                                     Explore Curation
                                     <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                  </Link>
-                                 <div className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-neutral-400">
-                                    PROMO: <span className="text-white border-b border-white/20 pb-0.5 ml-1 sm:ml-2 font-mono">{promo.code}</span>
-                                 </div>
                               </div>
                            </div>
                         </div>
