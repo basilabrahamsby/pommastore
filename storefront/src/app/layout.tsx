@@ -53,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
       google: seo.googleConsoleId
     } : undefined,
     icons: {
-      icon: '/favicon.ico'
+      icon: '/logo.png'
     }
   };
 }

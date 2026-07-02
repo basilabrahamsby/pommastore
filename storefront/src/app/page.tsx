@@ -287,12 +287,14 @@ export default function Home() {
                      <img
                         src={slideImage}
                         alt={slideTitle}
+                        fetchPriority={idx === 0 ? "high" : "low"}
                         className="hidden md:block absolute inset-0 w-full h-full object-contain md:object-cover object-center"
                      />
                      {/* Mobile display - fall back to Web image if mobile image is blank */}
                      <img
                         src={getMediaUrl(slide.image_mobile || slide.banner_url_mobile || slide.banner_url || slide.image)}
                         alt={slideTitle}
+                        fetchPriority={idx === 0 ? "high" : "low"}
                         className="block md:hidden absolute inset-0 w-full h-full object-cover object-center"
                      />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
