@@ -20,6 +20,8 @@ from app.services.email import (
     send_order_confirmation_email,
     order_items_to_email_list,
 )
+from app.services.sms import sendsms_ordercustomer, sendsms_orderadmin
+from app.models.user import User, UserRole
 from app.core.config import settings
 import hmac
 import hashlib
@@ -342,6 +344,23 @@ async def storefront_checkout(
             gift_message=enriched.gift_message or "",
         )
     
+    # Send order confirmation SMS to customer
+    if enriched.customer_phone:
+        msg = f"Thank you for your order #{enriched.order_number} at KOZMOCART! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
+        
+    # Notify admin via SMS
+    admin_result = await db.execute(
+        select(User).where(User.role == UserRole.superadmin, User.phone.isnot(None)).limit(1)
+    )
+    admin_user = admin_result.scalar_one_or_none()
+    if admin_user and admin_user.phone:
+        background_tasks.add_task(
+            sendsms_orderadmin,
+            admin_user.phone,
+            f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
+        )
+
     background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
     return enriched
@@ -629,6 +648,23 @@ async def razorpay_webhook(
             gift_message=enriched.gift_message or "",
         )
     
+    # Send order confirmation SMS to customer
+    if enriched.customer_phone:
+        msg = f"Thank you for your order #{enriched.order_number} at KOZMOCART! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
+        
+    # Notify admin via SMS
+    admin_result = await db.execute(
+        select(User).where(User.role == UserRole.superadmin, User.phone.isnot(None)).limit(1)
+    )
+    admin_user = admin_result.scalar_one_or_none()
+    if admin_user and admin_user.phone:
+        background_tasks.add_task(
+            sendsms_orderadmin,
+            admin_user.phone,
+            f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
+        )
+
     background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
     return {"status": "success", "order_number": order.order_number}

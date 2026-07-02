@@ -14,6 +14,7 @@ import random
 from app.core.redis import redis_service
 from app.schemas.storefront_auth import OTPSendRequest, OTPVerifyRequest, GoogleAuthRequest
 from app.services.email import send_otp_email
+from app.services.sms import sendsms_otp, sendsms_welcome
 
 router = APIRouter(prefix="/auth", tags=["Storefront Auth"])
 
@@ -29,11 +30,13 @@ async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: 
     # Store in Redis for 5 minutes
     await redis_service.set_otp(identifier, otp, expire=300)
     
-    # In a real app, send via SMS/Email
+    # Send via SMS/Email
     print(f"OTP for {identifier}: {otp}")
     
     if body.email:
         background_tasks.add_task(send_otp_email, body.email, otp)
+    elif body.phone:
+        background_tasks.add_task(sendsms_otp, body.phone, otp)
     
     return {"message": "OTP sent successfully"}
 
@@ -81,7 +84,7 @@ async def verify_otp(body: OTPVerifyRequest, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/register", response_model=CustomerOut, status_code=201)
-async def register(body: CustomerCreate, db: AsyncSession = Depends(get_db)):
+async def register(body: CustomerCreate, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(Customer).where(Customer.email == str(body.email)))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -102,6 +105,12 @@ async def register(body: CustomerCreate, db: AsyncSession = Depends(get_db)):
     db.add(customer)
     await db.commit()
     await db.refresh(customer)
+
+    # Send welcome SMS if phone number is available
+    if customer.phone:
+        welcome_msg = f"Welcome to KOZMOCART, {customer.full_name or 'Valued Customer'}! Discover exclusive premium fragrances at kozmocart.com. Thank you for joining us!"
+        background_tasks.add_task(sendsms_welcome, customer.phone, welcome_msg)
+
     return CustomerOut.model_validate(customer)
 
 
@@ -120,13 +129,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     return CustomerTokenResponse(access_token=token, customer=CustomerOut.model_validate(customer))
 
 @router.post("/google", response_model=CustomerTokenResponse)
-async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
+async def google_auth(body: GoogleAuthRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     # Support seamless auto-registration and authentication for Gmail OAuth payloads
     email = body.email.strip().lower()
     
     result = await db.execute(select(Customer).where(Customer.email == email))
     customer = result.scalar_one_or_none()
-    
+    is_new = False
+
     if not customer:
         # Derive name from email if not provided by Google
         final_name = body.name
@@ -141,9 +151,15 @@ async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_db
         db.add(customer)
         await db.commit()
         await db.refresh(customer)
+        is_new = True
         
     if not customer.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is disabled")
+
+    # Welcome SMS for newly registered Google customers who have a phone
+    if is_new and customer.phone:
+        welcome_msg = f"Welcome to KOZMOCART, {customer.full_name or 'Valued Customer'}! Discover exclusive premium fragrances at kozmocart.com. Thank you for joining us!"
+        background_tasks.add_task(sendsms_welcome, customer.phone, welcome_msg)
 
     token = create_access_token(str(customer.id))
     return CustomerTokenResponse(access_token=token, customer=CustomerOut.model_validate(customer))

@@ -24,6 +24,7 @@ from app.services.email import (
     send_order_cancelled_email,
     order_items_to_email_list,
 )
+from app.services.sms import sendsms_status
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -387,6 +388,29 @@ async def update_order_status(
                 reason=body.notes or "",
                 total=float(enriched.total_amount),
             )
+
+    # Send status-specific SMS notification
+    to_phone = enriched.customer_phone
+    if to_phone and order.status != body.status:
+        status = body.status
+        if status == OrderStatus.confirmed:
+            msg = f"Your order #{enriched.order_number} has been confirmed. We are preparing it for shipping."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.shipped:
+            carrier = body.carrier or enriched.carrier or "Delhivery"
+            tracking_number = body.tracking_number or enriched.tracking_number or ""
+            msg = f"Good news! Your order #{enriched.order_number} has been shipped via {carrier}. Tracking AWB: {tracking_number}. Track it: https://kozmocart.com/track-order?order={enriched.order_number}&contact={to_phone}"
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.out_for_delivery:
+            msg = f"Your order #{enriched.order_number} is out for delivery today! Our Delhivery delivery executive will arrive soon."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.delivered:
+            msg = f"Success! Your order #{enriched.order_number} has been delivered. Thank you for shopping with KOZMOCART!"
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.cancelled:
+            reason = body.notes or "No reason specified"
+            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact support for help."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
 
     return enriched
 
