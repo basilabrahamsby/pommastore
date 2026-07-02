@@ -352,20 +352,27 @@ export default function Checkout() {
           order_id: rzpOrderData.razorpay_order_id,
           handler: async function (response: any) {
             try {
-              // Wait 1.5 seconds for the webhook to execute and process the order payment
-              await new Promise(resolve => setTimeout(resolve, 1500));
-              const trackRes = await api.post('/orders/track', {
-                order_number: rzpOrderData.order_number,
-                contact: customer?.email || contactForm.email || 'client@kozmocart.com'
+              // Immediately verify payment with server and save reference number
+              const verifyRes = await api.post('/orders/razorpay/verify', {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                order_number: rzpOrderData.order_number
               });
-              setOrderSuccess(trackRes.data);
+              setOrderSuccess(verifyRes.data.order || {
+                order_number: rzpOrderData.order_number,
+                total_amount: finalAmount,
+                shipping_address: shippingAddressData,
+                transaction_id: response.razorpay_payment_id
+              });
               clearCart();
             } catch (err: any) {
-              // Fallback to local success screen state if tracking is slow
+              // Fallback: show success screen anyway, server will confirm via webhook
               setOrderSuccess({
                 order_number: rzpOrderData.order_number,
                 total_amount: finalAmount,
-                shipping_address: shippingAddressData
+                shipping_address: shippingAddressData,
+                transaction_id: response.razorpay_payment_id
               });
               clearCart();
             } finally {
@@ -459,6 +466,12 @@ export default function Checkout() {
               <p className="text-neutral-400 mb-1">Total Paid</p>
               <p className="text-sm text-neutral-900">₹{orderSuccess.total_amount?.toLocaleString('en-IN')}</p>
             </div>
+            {(orderSuccess.transaction_id) && (
+              <div className="md:col-span-2">
+                <p className="text-neutral-400 mb-1">Payment Reference (Razorpay)</p>
+                <p className="text-xs text-neutral-700 normal-case tracking-normal font-mono font-medium">{orderSuccess.transaction_id}</p>
+              </div>
+            )}
             <div>
               <p className="text-neutral-400 mb-1">Delivery Destination</p>
               <p className="text-sm text-neutral-900 tracking-normal normal-case font-medium line-clamp-2 mt-0.5">

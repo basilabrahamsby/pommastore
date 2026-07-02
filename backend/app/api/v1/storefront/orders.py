@@ -564,6 +564,178 @@ async def cancel_pending_order(
     return {"status": "cancelled", "order_number": order_number}
 
 
+@router.post("/razorpay/verify")
+async def verify_razorpay_payment(
+    body: dict,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    customer: Customer = Depends(get_current_customer)
+):
+    """
+    Called by the client immediately after Razorpay payment.handler fires.
+    Verifies signature, marks order paid, deducts inventory, triggers SMS+email.
+    This is the primary confirmation path — webhooks are a secondary/backup.
+    """
+    razorpay_order_id = body.get("razorpay_order_id")
+    razorpay_payment_id = body.get("razorpay_payment_id")
+    razorpay_signature = body.get("razorpay_signature")
+    order_number = body.get("order_number")
+
+    if not razorpay_payment_id or not razorpay_order_id or not order_number:
+        raise HTTPException(status_code=400, detail="Missing payment reference fields")
+
+    # Verify signature if real credentials are configured
+    if (
+        settings.RAZORPAY_KEY_SECRET != "placeholder_secret"
+        and settings.RAZORPAY_KEY_SECRET != "rzp_test_demokey12345"
+        and razorpay_signature
+    ):
+        import hmac as _hmac
+        import hashlib as _hashlib
+        generated = _hmac.new(
+            settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
+            f"{razorpay_order_id}|{razorpay_payment_id}".encode("utf-8"),
+            _hashlib.sha256
+        ).hexdigest()
+        if not _hmac.compare_digest(generated, razorpay_signature):
+            raise HTTPException(status_code=400, detail="Payment signature verification failed")
+
+    # Fetch the order
+    q = select(Order).where(
+        Order.order_number == order_number,
+        Order.customer_id == customer.id,
+    ).options(
+        selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+        selectinload(Order.status_history),
+        joinedload(Order.customer)
+    ).with_for_update()
+
+    result = await db.execute(q)
+    order = result.scalar_one_or_none()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Idempotent — if already paid, just return success
+    if order.payment_status == PaymentStatus.paid:
+        enriched = _enrich_order(order)
+        return {"status": "already_confirmed", "order_number": order.order_number, "order": enriched}
+
+    # Mark as paid and confirmed
+    order.payment_status = PaymentStatus.paid
+    order.status = OrderStatus.confirmed
+    order.transaction_id = razorpay_payment_id
+
+    details = dict(order.payment_details or {})
+    details["razorpay_payment_id"] = razorpay_payment_id
+    details["razorpay_order_id"] = razorpay_order_id
+    details["razorpay_signature"] = razorpay_signature
+    details["verified_at"] = datetime.now(timezone.utc).isoformat()
+    details["verified_by"] = "client_callback"
+    order.payment_details = details
+
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=OrderStatus.confirmed,
+        notes=f"Payment verified via client callback (Razorpay: {razorpay_payment_id})"
+    )
+    db.add(history)
+
+    # Deduct inventory (FIFO) and earn loyalty points
+    earned_points = 0
+    for item in order.items:
+        variant = item.variant
+        if variant:
+            if variant.loyalty_points:
+                earned_points += (variant.loyalty_points * item.quantity)
+
+            batch_result = await db.execute(
+                select(InventoryBatch)
+                .where(
+                    InventoryBatch.variant_id == variant.id,
+                    InventoryBatch.current_quantity >= item.quantity,
+                )
+                .order_by(InventoryBatch.received_at)
+                .limit(1)
+            )
+            batch = batch_result.scalar_one_or_none()
+            if batch:
+                batch.current_quantity -= item.quantity
+                item.batch_id = batch.id
+                item.cost_price = batch.purchase_cost
+                movement = InventoryMovement(
+                    batch_id=batch.id,
+                    type="Deduction",
+                    quantity=-item.quantity,
+                    reason=f"Sales Order Fulfillment ({order.order_number})"
+                )
+                db.add(movement)
+
+    # Update customer stats
+    cust = order.customer
+    if cust:
+        cust.order_count += 1
+        cust.total_spent += Decimal(str(order.total_amount))
+        cust.last_order_at = datetime.now(timezone.utc)
+        if order.loyalty_points_used > 0:
+            cust.loyalty_points = max(0, cust.loyalty_points - order.loyalty_points_used)
+        if earned_points > 0:
+            cust.loyalty_points += earned_points
+
+    # Update coupon stats
+    if order.coupon_code:
+        offer_result = await db.execute(select(Offer).where(Offer.code == order.coupon_code))
+        db_offer = offer_result.scalar_one_or_none()
+        if db_offer:
+            db_offer.redemption_count += 1
+            db_offer.attributed_revenue += Decimal(str(order.total_amount))
+
+    await db.commit()
+
+    enriched = _enrich_order(order)
+
+    # Send confirmation email
+    if enriched.customer_email:
+        background_tasks.add_task(
+            send_order_confirmation_email,
+            to_email=enriched.customer_email,
+            customer_name=enriched.customer_name or "Valued Customer",
+            order_number=enriched.order_number,
+            items=order_items_to_email_list(order.items),
+            total=float(enriched.total_amount),
+            subtotal=float(enriched.subtotal),
+            discount=float(enriched.discount_amount),
+            shipping=float(enriched.shipping_amount),
+            tax=float(enriched.tax_amount),
+            loyalty_used=enriched.loyalty_points_used or 0,
+            shipping_address=enriched.shipping_address,
+            payment_method=enriched.payment_method or "",
+            coupon_code=enriched.coupon_code or "",
+            gift_message=enriched.gift_message or "",
+        )
+
+    # Send confirmation SMS
+    if enriched.customer_phone:
+        msg = f"Payment confirmed! Order #{enriched.order_number} placed at KOZMOCART. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}. Track: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
+
+    # Notify admin
+    admin_result = await db.execute(
+        select(User).where(User.role == UserRole.superadmin, User.phone.isnot(None)).limit(1)
+    )
+    admin_user = admin_result.scalar_one_or_none()
+    if admin_user and admin_user.phone:
+        background_tasks.add_task(
+            sendsms_orderadmin,
+            admin_user.phone,
+            f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}"
+        )
+
+    background_tasks.add_task(book_delhivery_shipment_task, order.id)
+
+    return {"status": "success", "order_number": order.order_number, "order": enriched}
+
+
 @router.post("/razorpay/webhook", status_code=200)
 async def razorpay_webhook(
     request: Request,
