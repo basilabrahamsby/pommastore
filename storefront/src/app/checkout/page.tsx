@@ -41,66 +41,67 @@ export default function Checkout() {
   const [updatingContact, setUpdatingContact] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const [promoCode, setPromoCode] = useState<string>('');
   const [appliedPromo, setAppliedPromo] = useState<any>(null);
-  const [promoError, setPromoError] = useState<string | null>(null);
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
 
-  const handleApplyPromo = async () => {
-    try {
-      setPromoError(null);
-      const res = await api.get('/storefront/offers');
-      const offers = res.data || [];
-      const offer = offers.find((o: any) => o.code.toUpperCase() === promoCode.trim().toUpperCase());
-      
-      if (!offer) {
-        setPromoError('Invalid promo code.');
-        setPromoDiscount(0);
-        setAppliedPromo(null);
-        return;
-      }
-      
-      let discount = 0;
-      const combinedSkus = (offer.target_skus || []).concat(offer.buy_skus || []).concat(offer.get_skus || []);
-      
-      if (offer.target_scope === 'skus' || offer.target_scope === 'items') {
-        items.forEach(item => {
-          if (combinedSkus.includes(item.variantName)) {
+  // Automatically evaluate and apply best eligible active offer
+  useEffect(() => {
+    const autoApplyOffers = async () => {
+      try {
+        const res = await api.get('/storefront/offers');
+        const offers = res.data || [];
+        
+        let bestOffer: any = null;
+        let bestDiscount = 0;
+        
+        for (const offer of offers) {
+          const status = offer.status || 'Active';
+          if (status.toLowerCase() !== 'active') continue;
+          
+          let discount = 0;
+          const combinedSkus = (offer.target_skus || []).concat(offer.buy_skus || []).concat(offer.get_skus || []);
+          
+          if (offer.target_scope === 'skus' || offer.target_scope === 'items') {
+            items.forEach(item => {
+              if (combinedSkus.includes(item.variantName)) {
+                if (offer.discount_percentage) {
+                  discount += (item.price * item.quantity) * (Number(offer.discount_percentage) / 100);
+                } else if (offer.flat_discount_amount) {
+                  discount += Number(offer.flat_discount_amount) * item.quantity;
+                }
+              }
+            });
+          } else {
             if (offer.discount_percentage) {
-              discount += (item.price * item.quantity) * (Number(offer.discount_percentage) / 100);
+              discount = totalPrice() * (Number(offer.discount_percentage) / 100);
             } else if (offer.flat_discount_amount) {
-              discount += Number(offer.flat_discount_amount) * item.quantity;
+              discount = Number(offer.flat_discount_amount);
             }
           }
-        });
-      } else {
-        if (offer.discount_percentage) {
-          discount = totalPrice() * (Number(offer.discount_percentage) / 100);
-        } else if (offer.flat_discount_amount) {
-          discount = Number(offer.flat_discount_amount);
+          
+          // Select the offer that yields the highest savings
+          if (discount > bestDiscount) {
+            bestDiscount = discount;
+            bestOffer = offer;
+          }
         }
+        
+        if (bestOffer && bestDiscount > 0) {
+          setPromoDiscount(Math.round(bestDiscount));
+          setAppliedPromo(bestOffer);
+        } else {
+          setPromoDiscount(0);
+          setAppliedPromo(null);
+        }
+      } catch (err) {
+        console.warn('Failed to auto-evaluate active campaigns', err);
       }
-      
-      if (discount === 0) {
-        setPromoError('This promo code is not applicable to items in your cart.');
-        setPromoDiscount(0);
-        setAppliedPromo(null);
-        return;
-      }
-      
-      setPromoDiscount(Math.round(discount));
-      setAppliedPromo(offer);
-    } catch (err) {
-      setPromoError('Failed to validate promo code.');
+    };
+    
+    if (items.length > 0) {
+      autoApplyOffers();
     }
-  };
-
-  const handleRemovePromo = () => {
-    setAppliedPromo(null);
-    setPromoDiscount(0);
-    setPromoCode('');
-    setPromoError(null);
-  };
+  }, [items, totalPrice]);
 
   useEffect(() => {
     if (customer) {
@@ -784,47 +785,24 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Promo Code Coupon Input */}
-            <div className="mb-6 p-4 bg-white border border-neutral-100 animate-in fade-in duration-500">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black tracking-widest uppercase text-neutral-400">Promotional Coupon</span>
-              </div>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  placeholder="ENTER PROMO CODE" 
-                  value={promoCode} 
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  disabled={!!appliedPromo}
-                  className="flex-1 border border-neutral-200 px-3 py-2 text-xs font-semibold focus:border-black outline-none uppercase placeholder:text-neutral-300 bg-white text-black"
-                />
-                {appliedPromo ? (
-                  <button 
-                    type="button" 
-                    onClick={handleRemovePromo}
-                    className="bg-red-50 text-red-500 border border-red-200 px-4 py-2 text-[10px] font-black tracking-widest uppercase hover:bg-red-100 transition-all font-bold shrink-0"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button 
-                    type="button" 
-                    onClick={handleApplyPromo}
-                    className="bg-black text-white px-4 py-2 text-[10px] font-black tracking-widest uppercase hover:bg-neutral-800 transition-all font-bold shrink-0"
-                  >
-                    Apply
-                  </button>
-                )}
-              </div>
-              {promoError && (
-                <p className="text-[10px] text-red-500 font-bold mt-2 uppercase tracking-wide">{promoError}</p>
-              )}
-              {appliedPromo && (
-                <p className="text-[10px] text-green-600 font-bold mt-2 uppercase tracking-wide">
-                  🎉 Saved ₹{promoDiscount.toLocaleString('en-IN')} with code {appliedPromo.code}
+            {/* Automatically Applied Offer Badge */}
+            {appliedPromo && promoDiscount > 0 && (
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 animate-in fade-in duration-500 rounded-sm">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[9px] font-black tracking-widest uppercase text-emerald-800 flex items-center gap-1">
+                    <Sparkles size={10} className="fill-emerald-600 text-emerald-600 animate-pulse" />
+                    Special Offer Applied
+                  </span>
+                  <span className="text-[8px] font-black text-white bg-emerald-600 px-1.5 py-0.5 rounded tracking-widest uppercase font-mono">
+                    {appliedPromo.code}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-neutral-900 leading-snug">{appliedPromo.title}</p>
+                <p className="text-[9.5px] text-emerald-700 font-bold uppercase tracking-wide mt-1.5">
+                  🎉 Auto-saved ₹{promoDiscount.toLocaleString('en-IN')} on items
                 </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Display Items */}
             <div className="max-h-60 overflow-y-auto mb-6 pr-2 space-y-4">
