@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: str = "placeholder_secret"
     RAZORPAY_WEBHOOK_SECRET: str = "placeholder_webhook_secret"
 
+    # Delhivery Settings
+    DELHIVERY_API_TOKEN: str = "placeholder_delhivery_token"
+    DELHIVERY_SANDBOX: bool = True
+    DELHIVERY_PICKUP_LOCATION: str = "Kozmocart Warehouse"
+
     # SMTP Settings
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
