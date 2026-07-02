@@ -380,6 +380,9 @@ export default function Checkout() {
           theme: {
             color: '#000000'
           },
+          upi: {
+            flow: 'intent'
+          },
           modal: {
             ondismiss: function () {
               setPlacingOrder(false);
