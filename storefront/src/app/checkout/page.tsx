@@ -375,7 +375,8 @@ export default function Checkout() {
           prefill: {
             name: customer?.full_name || 'Valued Client',
             email: customer?.email || 'client@kozmocart.com',
-            contact: customer?.phone || '9999999999'
+            contact: customer?.phone || '9999999999',
+            method: paymentMethod
           },
           theme: {
             color: '#000000'
