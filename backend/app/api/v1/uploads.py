@@ -1,8 +1,9 @@
 import os
 import uuid
-import shutil
+import io
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from app.core.deps import get_current_user
+from PIL import Image
 
 router = APIRouter(prefix="/uploads", tags=["System Uploads"])
 
@@ -18,23 +19,34 @@ async def upload_asset(
     file: UploadFile = File(...),
     current_user = Depends(get_current_user)
 ):
-    """Secured binary conduit to save rich dynamic media assets."""
+    """Secured binary conduit to save rich dynamic media assets with auto-compression."""
     # Verify mime types
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only rich media images allowed")
         
-    ext = os.path.splitext(file.filename)[1]
+    ext = os.path.splitext(file.filename)[1].lower()
+    if not ext:
+        ext = ".jpg"
     unique_name = f"{uuid.uuid4()}{ext}"
     save_to = os.path.join(UPLOAD_PATH, unique_name)
     
     try:
-        with open(save_to, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        file_content = await file.read()
+        img = Image.open(io.BytesIO(file_content))
+        
+        # Resize to max 1200px for web optimized layouts
+        max_size = 1200
+        if img.width > max_size or img.height > max_size:
+            img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+            
+        fmt = 'JPEG' if ext in ('.jpg', '.jpeg') else 'PNG'
+        if fmt == 'JPEG' and img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+            
+        img.save(save_to, fmt, quality=75)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to commit file stream: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process and compress file stream: {str(e)}")
     finally:
         file.file.close()
         
-    # We mount /static_uploads at backend root in main.py. 
-    # Assuming user runs port 8000, this returns absolute-relative path 
     return {"url": f"/static_uploads/{unique_name}"}
