@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Logo row — includes close button on mobile */}
       <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <img src="/kozmocart/admin/logo.png" alt="Kozmocart Logo" style={{ height: '32px', objectFit: 'contain', display: 'block' }} />
+          <img src="/admin/logo.png" alt="Kozmocart Logo" style={{ height: '32px', objectFit: 'contain', display: 'block' }} />
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', display: 'block', marginTop: 6 }}>
             Admin ERP
           </span>

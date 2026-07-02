@@ -19,7 +19,7 @@ api.interceptors.response.use(
     if ((err.response?.status === 401 || err.response?.status === 403) && !isLoginRequest) {
       useAuthStore.getState().logout()
       // Use replace to prevent navigation loops in history
-      window.location.replace('/kozmocart/admin/login')
+      window.location.replace('/admin/login')
     }
     return Promise.reject(err)
   }
