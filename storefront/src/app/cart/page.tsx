@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Shield, Truck, Sparkles, ChevronRight } from 'lucide-react';
+import api from '@/services/api';
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCartStore();
@@ -11,7 +12,7 @@ export default function Cart() {
   const [removing, setRemoving] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    import('@/services/api').then(m => m.default.get('/settings/storefront_layout'))
+    api.get('/settings/storefront_layout')
       .then(res => setCmsLayout(res.data))
       .catch(err => console.warn('Cart failed to fetch layout', err));
   }, []);

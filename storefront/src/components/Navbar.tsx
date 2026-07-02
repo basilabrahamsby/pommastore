@@ -8,6 +8,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { getMediaUrl } from '@/services/media';
+import api from '@/services/api';
 
 const SocialFB = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>);
 const SocialIG = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>);
@@ -44,15 +45,13 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     
     // Fetch layout for global settings (like free shipping limit)
-    import('@/services/api').then(m => m.default.get('/settings/storefront_layout'))
+    api.get('/settings/storefront_layout')
       .then(res => setCmsLayout(res.data))
       .catch(err => console.warn('Navbar failed to fetch global layout', err));
 
     // Fetch products and brands for live suggestions
-    import('@/services/api').then(m => {
-      m.default.get('/products?limit=80').then(res => setProducts(res.data)).catch(() => {});
-      m.default.get('/brands').then(res => setBrands(res.data)).catch(() => {});
-    });
+    api.get('/products?limit=80').then(res => setProducts(res.data)).catch(() => {});
+    api.get('/brands').then(res => setBrands(res.data)).catch(() => {});
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
