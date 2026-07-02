@@ -781,25 +781,6 @@ export default function Checkout() {
                 <CreditCard size={20} className="text-neutral-400" />
               </label>
 
-              {paymentMethod === 'card' && (
-                <div className="p-6 bg-neutral-50 border border-neutral-100 space-y-4 animate-in slide-in-from-top-2 duration-200 ml-6">
-                  <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Card Number</label>
-                    <input type="text" placeholder="4111 2222 3333 4444" className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Expiry Date</label>
-                      <input type="text" placeholder="MM/YY" className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">CVV</label>
-                      <input type="text" placeholder="123" className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <label 
                 className={`border p-5 flex items-center justify-between cursor-pointer transition-all duration-200 ${
                   paymentMethod === 'upi' ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-400'
@@ -820,13 +801,6 @@ export default function Checkout() {
                 </div>
                 <Smartphone size={20} className="text-neutral-400" />
               </label>
-
-              {paymentMethod === 'upi' && (
-                <div className="p-6 bg-neutral-50 border border-neutral-100 space-y-4 animate-in slide-in-from-top-2 duration-200 ml-6">
-                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Virtual Payment Address (VPA)</label>
-                  <input type="text" placeholder="username@bank" className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none" />
-                </div>
-              )}
 
 
             </div>
