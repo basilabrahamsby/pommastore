@@ -18,10 +18,14 @@ from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderStatusUp
 from app.services.email import (
     send_order_confirmation_email,
     send_order_processing_email,
+    send_order_packed_email,
     send_order_shipped_email,
     send_out_for_delivery_email,
     send_order_delivered_email,
+    send_order_completed_email,
     send_order_cancelled_email,
+    send_return_requested_email,
+    send_order_returned_email,
     order_items_to_email_list,
 )
 from app.services.sms import sendsms_status
@@ -334,7 +338,9 @@ async def update_order_status(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    if order.status != body.status:
+    status_actually_changed = (order.status != body.status)
+
+    if status_actually_changed:
         order.status = body.status
         # Record status change
         history = OrderStatusHistory(
@@ -360,11 +366,15 @@ async def update_order_status(
     # Send status-specific email notification
     to_email = enriched.customer_email
     customer_name = enriched.customer_name or "Valued Customer"
-    if to_email and order.status != body.status:  # only if status actually changed
+    if to_email and status_actually_changed:
         status = body.status
         items_list = order_items_to_email_list(order.items)
         if status == OrderStatus.confirmed:
             background_tasks.add_task(send_order_processing_email, to_email, customer_name, enriched.order_number)
+        elif status == OrderStatus.processing:
+            background_tasks.add_task(send_order_processing_email, to_email, customer_name, enriched.order_number)
+        elif status == OrderStatus.packed:
+            background_tasks.add_task(send_order_packed_email, to_email, customer_name, enriched.order_number)
         elif status == OrderStatus.shipped:
             background_tasks.add_task(
                 send_order_shipped_email,
@@ -381,6 +391,8 @@ async def update_order_status(
             )
         elif status == OrderStatus.delivered:
             background_tasks.add_task(send_order_delivered_email, to_email, customer_name, enriched.order_number, items_list)
+        elif status == OrderStatus.completed:
+            background_tasks.add_task(send_order_completed_email, to_email, customer_name, enriched.order_number)
         elif status == OrderStatus.cancelled:
             background_tasks.add_task(
                 send_order_cancelled_email,
@@ -388,28 +400,55 @@ async def update_order_status(
                 reason=body.notes or "",
                 total=float(enriched.total_amount),
             )
+        elif status == OrderStatus.return_requested:
+            background_tasks.add_task(
+                send_return_requested_email,
+                to_email, customer_name, enriched.order_number,
+                reason=body.notes or "",
+            )
+        elif status == OrderStatus.returned:
+            background_tasks.add_task(
+                send_order_returned_email,
+                to_email, customer_name, enriched.order_number,
+                total=float(enriched.total_amount),
+            )
 
     # Send status-specific SMS notification
     to_phone = enriched.customer_phone
-    if to_phone and order.status != body.status:
+    if to_phone and status_actually_changed:
         status = body.status
         if status == OrderStatus.confirmed:
-            msg = f"Your order #{enriched.order_number} has been confirmed. We are preparing it for shipping."
+            msg = f"Your order #{enriched.order_number} has been confirmed at KOZMOCART. We are preparing it for shipping."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.processing:
+            msg = f"Your order #{enriched.order_number} is now being processed and packed at KOZMOCART warehouse."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.packed:
+            msg = f"Your order #{enriched.order_number} is packed and ready for courier pickup at KOZMOCART. Shipping soon!"
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.shipped:
             carrier = body.carrier or enriched.carrier or "Delhivery"
             tracking_number = body.tracking_number or enriched.tracking_number or ""
-            msg = f"Good news! Your order #{enriched.order_number} has been shipped via {carrier}. Tracking AWB: {tracking_number}. Track it: https://kozmocart.com/track-order?order={enriched.order_number}&contact={to_phone}"
+            msg = f"Good news! Your order #{enriched.order_number} has been shipped via {carrier}. AWB: {tracking_number}. Track: https://kozmocart.com/track-order?order={enriched.order_number}&contact={to_phone}"
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.out_for_delivery:
-            msg = f"Your order #{enriched.order_number} is out for delivery today! Our Delhivery delivery executive will arrive soon."
+            msg = f"Your order #{enriched.order_number} is out for delivery today! Our delivery executive will arrive soon."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.delivered:
-            msg = f"Success! Your order #{enriched.order_number} has been delivered. Thank you for shopping with KOZMOCART!"
+            msg = f"Delivered! Your order #{enriched.order_number} has arrived. Thank you for shopping with KOZMOCART!"
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.completed:
+            msg = f"Your order #{enriched.order_number} is now complete. Thank you for shopping at KOZMOCART! Loyalty points updated."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.cancelled:
             reason = body.notes or "No reason specified"
-            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact support for help."
+            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact: support@kozmocart.com."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.return_requested:
+            msg = f"Return request received for order #{enriched.order_number}. Our team will review in 24-48 hours and contact you."
+            background_tasks.add_task(sendsms_status, to_phone, msg)
+        elif status == OrderStatus.returned:
+            msg = f"Return confirmed for order #{enriched.order_number}. Refund of INR {float(enriched.total_amount):.2f} will be processed in 5-7 business days."
             background_tasks.add_task(sendsms_status, to_phone, msg)
 
     return enriched

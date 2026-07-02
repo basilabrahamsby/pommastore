@@ -432,7 +432,112 @@ def send_order_cancelled_email(
     </p>"""
 
     html = _base_template(f"Order Cancelled — {order_number}", "We're Sorry", content,
-                          cta_url="https://pommaholidays.com/kozmocart/shop",
+                          cta_url="https://kozmocart.com/shop",
+                          cta_label="Continue Shopping")
+    return send_smtp_email(to_email, subject, html, body_text)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Order Packed
+# ─────────────────────────────────────────────────────────────────────────────
+
+def send_order_packed_email(to_email: str, customer_name: str, order_number: str) -> bool:
+    subject = f"Your Order is Packed & Ready — {order_number}"
+    body_text = f"Dear {customer_name}, your order {order_number} is packed and ready for pickup by courier."
+
+    content = f"""
+    <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Packed & Ready</p>
+    <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Your order is packed.</h2>
+    <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
+      Dear <strong>{customer_name}</strong>, your order <strong>{order_number}</strong> has been carefully packed and is awaiting pickup by our courier partner. It will be shipped very soon.
+    </p>
+    <div style="background:#FAF8F5;border:1px solid #EAE6DF;border-radius:3px;padding:16px 20px;margin:20px 0;text-align:center;">
+      <p style="margin:0 0 4px;font-size:9px;color:#888;letter-spacing:0.2em;text-transform:uppercase;font-weight:700;">Order Number</p>
+      <p style="margin:0;font-size:22px;font-weight:800;color:#0A0A0A;letter-spacing:0.1em;">{order_number}</p>
+    </div>
+    <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
+      You will receive another notification once your order is shipped with tracking details.
+    </p>"""
+
+    html = _base_template(f"Packed — {order_number}", "Luxury Fragrance House", content)
+    return send_smtp_email(to_email, subject, html, body_text)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. Order Completed
+# ─────────────────────────────────────────────────────────────────────────────
+
+def send_order_completed_email(to_email: str, customer_name: str, order_number: str) -> bool:
+    subject = f"Order Complete — Thank You, {customer_name}!"
+    body_text = f"Dear {customer_name}, your order {order_number} is now complete. Thank you for shopping with Kozmocart!"
+
+    content = f"""
+    <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Order Complete</p>
+    <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Thank you for choosing Kozmocart.</h2>
+    <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
+      Dear <strong>{customer_name}</strong>, your order <strong>{order_number}</strong> is now marked as complete. We hope you're enjoying your fragrance. Your loyalty points have been updated.
+    </p>
+    <div style="background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;padding:14px 18px;margin:20px 0;">
+      <p style="margin:0;font-size:12px;color:#D2168D;font-weight:700;line-height:1.6;">We'd love to hear your thoughts — write to us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;">info@kozmocart.com</a></p>
+    </div>"""
+
+    html = _base_template(f"Order Complete — {order_number}", "Luxury Fragrance House", content,
+                          cta_url="https://kozmocart.com/shop",
+                          cta_label="Shop Again")
+    return send_smtp_email(to_email, subject, html, body_text)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10. Return Requested
+# ─────────────────────────────────────────────────────────────────────────────
+
+def send_return_requested_email(to_email: str, customer_name: str, order_number: str, reason: str = "") -> bool:
+    subject = f"Return Request Received — {order_number}"
+    body_text = f"Dear {customer_name}, we have received your return request for order {order_number}."
+
+    reason_block = f'<p style="margin:12px 0 0;font-size:12px;color:#666;">Reason: <em>{reason}</em></p>' if reason else ""
+
+    content = f"""
+    <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#888;text-transform:uppercase;">Return Requested</p>
+    <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Return request received.</h2>
+    <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
+      Dear <strong>{customer_name}</strong>, we have received your return request for order <strong>{order_number}</strong>. Our team will review it within 24–48 hours and contact you.
+    </p>
+    {reason_block}
+    <div style="background:#FAF8F5;border:1px solid #EAE6DF;border-radius:3px;padding:16px 20px;margin:20px 0;">
+      <p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Please keep the items in their original packaging until our team confirms the pickup.</p>
+    </div>
+    <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
+      For queries, contact us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+    </p>"""
+
+    html = _base_template(f"Return Request — {order_number}", "We're Here to Help", content)
+    return send_smtp_email(to_email, subject, html, body_text)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 11. Order Returned
+# ─────────────────────────────────────────────────────────────────────────────
+
+def send_order_returned_email(to_email: str, customer_name: str, order_number: str, total: float = 0) -> bool:
+    subject = f"Return Confirmed & Refund Initiated — {order_number}"
+    body_text = f"Dear {customer_name}, your return for order {order_number} has been confirmed and refund initiated."
+
+    refund_block = f'<div style="background:#FAF8F5;border-left:3px solid #D2168D;border-radius:2px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Refund of <strong>₹{total:,.2f}</strong> will be processed within 5–7 business days to your original payment method.</p></div>' if total > 0 else ""
+
+    content = f"""
+    <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Return Confirmed</p>
+    <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Your return is confirmed.</h2>
+    <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
+      Dear <strong>{customer_name}</strong>, we have confirmed the return for your order <strong>{order_number}</strong> and your refund has been initiated.
+    </p>
+    {refund_block}
+    <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
+      Thank you for your patience. If you have questions, reach us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+    </p>"""
+
+    html = _base_template(f"Return Confirmed — {order_number}", "Refund Initiated", content,
+                          cta_url="https://kozmocart.com/shop",
                           cta_label="Continue Shopping")
     return send_smtp_email(to_email, subject, html, body_text)
 

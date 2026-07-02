@@ -387,6 +387,38 @@ async def create_razorpay_order(
             detail="Mobile and email are compulsory to complete checkout."
         )
 
+    # Check inventory stock levels before initiating payment or reservation
+    for item_data in body.items:
+        variant_res = await db.execute(
+            select(ProductVariant)
+            .where(ProductVariant.id == item_data.variant_id)
+            .options(joinedload(ProductVariant.product))
+        )
+        variant = variant_res.scalar_one_or_none()
+        
+        batch_result = await db.execute(
+            select(InventoryBatch)
+            .where(
+                InventoryBatch.variant_id == item_data.variant_id,
+                InventoryBatch.current_quantity >= item_data.quantity,
+            )
+            .order_by(InventoryBatch.received_at)
+            .limit(1)
+        )
+        batch = batch_result.scalar_one_or_none()
+        if not batch:
+            variant_name = "Unknown Product"
+            if variant and variant.product:
+                size_str = f" ({variant.size_ml}ml)" if variant.size_ml else ""
+                variant_name = f"{variant.product.name}{size_str}"
+            else:
+                variant_name = f"Variant {item_data.variant_id}"
+                
+            raise HTTPException(
+                status_code=400, 
+                detail=f"We apologize, but there is insufficient stock for '{variant_name}'. Please adjust the quantity or check stock availability."
+            )
+
     subtotal = sum(item.unit_price * item.quantity - item.discount_amount for item in body.items)
     
     redemption_amount = 0.0
