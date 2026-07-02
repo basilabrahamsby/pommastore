@@ -1034,20 +1034,8 @@ export default function Orders() {
     }
     try {
       await api.patch(`/orders/${orderId}/status`, { status })
-      toast.success('Status updated')
+      toast.success('Status updated successfully')
       loadOrders()
-      // Open notification modal
-      const ord = order || orders.find(o => o.id === orderId)
-      if (ord) {
-        setNotifModal({
-          orderNumber: ord.order_number,
-          status,
-          customerName: ord.customer_name,
-          customerPhone: ord.customer_phone,
-          customerEmail: ord.customer_email,
-          message: (STATUS_MESSAGES[status] || (() => ''))(ord.customer_name, ord.order_number)
-        })
-      }
     } catch {
       toast.error('Update failed')
     }
@@ -1072,15 +1060,6 @@ export default function Orders() {
       })
       toast.success(`✅ Shipment dispatched via ${shipForm.carrier}`)
       loadOrders()
-      // Open notification modal for shipped status
-      setNotifModal({
-        orderNumber: shipModal.orderNumber,
-        status: 'shipped',
-        customerName: shipModal.customerName,
-        customerPhone: shipModal.customerPhone,
-        customerEmail: shipModal.customerEmail,
-        message: STATUS_MESSAGES.shipped(shipModal.customerName, shipModal.orderNumber, awb)
-      })
       setShipModal(null)
     } catch {
       toast.error('Dispatch failed. Please try again.')
