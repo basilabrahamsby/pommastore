@@ -4,23 +4,80 @@ const api = axios.create({
   baseURL: typeof window === 'undefined'
     ? 'http://api:8000/api/v1/storefront'
     : (process.env.NEXT_PUBLIC_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1/storefront' : '/kozmocart/api/v1/storefront')),
+  timeout: 15000, // 15 seconds timeout for slow connections
 });
 
 import { useAuthStore } from '@/store/authStore';
 
-// For client-side requests, we can inject the token from our auth store and handle errors
+// Cache key paths that contain mostly static layout or campaign configuration data
+const CACHE_KEYS = ['/settings/storefront_layout', '/offers', '/brands', '/categories'];
+
+// For client-side requests, inject token and handle caching / low-internet fallbacks
 if (typeof window !== 'undefined') {
   api.interceptors.request.use((config) => {
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Serve cached settings immediately if available and under 5 minutes old
+    if (config.method === 'get' && config.url && CACHE_KEYS.includes(config.url)) {
+      try {
+        const cached = sessionStorage.getItem(`cache:${config.url}`);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 300000) { // 5 minutes TTL
+            config.adapter = () => {
+              return Promise.resolve({
+                data,
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config,
+              });
+            };
+          }
+        }
+      } catch (_) {}
+    }
+
     return config;
   });
 
   api.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    (response) => {
+      // Store successful GET layout/config responses in cache
+      const url = response.config.url;
+      if (response.config.method === 'get' && url && CACHE_KEYS.includes(url)) {
+        try {
+          sessionStorage.setItem(`cache:${url}`, JSON.stringify({
+            data: response.data,
+            timestamp: Date.now()
+          }));
+        } catch (_) {}
+      }
+      return response;
+    },
+    async (error) => {
+      const config = error.config;
+      // Low-internet Recovery: Fallback to session cache on network error or timeout
+      if (config && config.method === 'get' && config.url && CACHE_KEYS.includes(config.url)) {
+        try {
+          const cached = sessionStorage.getItem(`cache:${config.url}`);
+          if (cached) {
+            const { data } = JSON.parse(cached);
+            console.warn(`Low internet recovery mode: served fallback cache for ${config.url}`);
+            return {
+              data,
+              status: 200,
+              statusText: 'OK',
+              headers: {},
+              config,
+            };
+          }
+        } catch (_) {}
+      }
+
       if (error.response?.status === 401) {
         useAuthStore.getState().logout();
         if (typeof window !== 'undefined') {
