@@ -185,11 +185,14 @@ export default function Checkout() {
         phone_otp: verifyPhoneNeeded ? phoneOtp.trim() : undefined,
         full_name: contactForm.full_name.trim()
       });
-      useAuthStore.setState({ customer: res.data });
+      useAuthStore.setState({ 
+        customer: res.data.customer,
+        token: res.data.access_token
+      });
       setShowVerifyModal(false);
       setEmailOtp('');
       setPhoneOtp('');
-      alert('Contact details verified and updated successfully!');
+      alert('Contact details verified and merged successfully!');
     } catch (err: any) {
       const detail = err.response?.data?.detail;
       alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Verification failed. Please try again.');

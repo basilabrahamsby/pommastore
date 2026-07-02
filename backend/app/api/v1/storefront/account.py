@@ -11,11 +11,12 @@ from app.core.deps import get_current_customer
 from app.models.customer import Customer, CustomerAddress
 from app.models.order import Order, OrderItem
 from app.models.product import ProductVariant, Product
-from app.schemas.customer import CustomerOut, CustomerAddressOut, CustomerAddressBase, CustomerUpdate
+from app.schemas.customer import CustomerOut, CustomerAddressOut, CustomerAddressBase, CustomerUpdate, CustomerTokenResponse
 from app.schemas.order import OrderOut
 from app.core.redis import redis_service
 from app.services.email import send_otp_email
 from app.services.sms import sendsms_otp
+from app.core.security import create_access_token
 
 router = APIRouter(prefix="/account", tags=["Storefront Account"])
 
@@ -45,13 +46,6 @@ async def send_verification(
 
     if body.email:
         email = body.email.strip().lower()
-        # Verify email is not already taken by another account
-        existing = await db.execute(
-            select(Customer).where(Customer.email == email, Customer.id != customer.id)
-        )
-        if existing.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Email address is already linked to another account")
-
         otp = str(random.randint(100000, 999999))
         await redis_service.redis.setex(f"verify_email_otp:{customer.id}", 300, otp)
         await redis_service.redis.setex(f"verify_email_val:{customer.id}", 300, email)
@@ -60,13 +54,6 @@ async def send_verification(
 
     if body.phone:
         phone = body.phone.strip()
-        # Verify phone is not already taken by another account
-        existing = await db.execute(
-            select(Customer).where(Customer.phone == phone, Customer.id != customer.id)
-        )
-        if existing.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Mobile number is already linked to another account")
-
         otp = str(random.randint(100000, 999999))
         await redis_service.redis.setex(f"verify_phone_otp:{customer.id}", 300, otp)
         await redis_service.redis.setex(f"verify_phone_val:{customer.id}", 300, phone)
@@ -76,13 +63,15 @@ async def send_verification(
     return {"message": "Verification code(s) sent successfully", **res_data}
 
 
-@router.post("/verify/confirm", response_model=CustomerOut)
+@router.post("/verify/confirm", response_model=CustomerTokenResponse)
 async def confirm_verification(
     body: VerifyConfirmRequest,
     customer: Customer = Depends(get_current_customer),
     db: AsyncSession = Depends(get_db)
 ):
     updated = False
+    new_customer = customer
+    access_token = None
 
     if body.email_otp:
         stored_otp = await redis_service.redis.get(f"verify_email_otp:{customer.id}")
@@ -92,19 +81,49 @@ async def confirm_verification(
         if not target_email:
             raise HTTPException(status_code=400, detail="Verification session expired. Please request a new code.")
         
-        # Verify not already taken by another account (race condition check)
-        existing = await db.execute(
+        # Check if target email belongs to another customer
+        existing_res = await db.execute(
             select(Customer).where(Customer.email == target_email, Customer.id != customer.id)
         )
-        if existing.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Email address is already linked to another account")
+        existing_customer = existing_res.scalar_one_or_none()
 
-        customer.email = target_email
-        updated = True
+        if existing_customer:
+            # Merge current phone-only profile into existing customer profile
+            cart_b = customer.cart_data or []
+            cart_a = existing_customer.cart_data or []
+            merged_cart = {item.get('variant_id'): item for item in cart_a}
+            for item in cart_b:
+                v_id = item.get('variant_id')
+                if v_id in merged_cart:
+                    merged_cart[v_id]['quantity'] += item.get('quantity', 1)
+                else:
+                    merged_cart[v_id] = item
+            existing_customer.cart_data = list(merged_cart.values())
+            existing_customer.loyalty_points += customer.loyalty_points
+
+            if customer.phone:
+                existing_customer.phone = customer.phone
+            if body.full_name:
+                existing_customer.full_name = body.full_name.strip()
+
+            db.add(existing_customer)
+            await db.delete(customer)  # Remove the temporary phone-only profile
+
+            new_customer = existing_customer
+            access_token = create_access_token(str(existing_customer.id))
+            updated = True
+        else:
+            customer.email = target_email
+            if body.full_name:
+                customer.full_name = body.full_name.strip()
+            db.add(customer)
+            new_customer = customer
+            updated = True
+
         await redis_service.redis.delete(f"verify_email_otp:{customer.id}")
         await redis_service.redis.delete(f"verify_email_val:{customer.id}")
 
-    if body.phone_otp:
+    elif body.phone_otp:
         stored_otp = await redis_service.redis.get(f"verify_phone_otp:{customer.id}")
         target_phone = await redis_service.redis.get(f"verify_phone_val:{customer.id}")
         if not stored_otp or stored_otp != body.phone_otp.strip():
@@ -112,28 +131,63 @@ async def confirm_verification(
         if not target_phone:
             raise HTTPException(status_code=400, detail="Verification session expired. Please request a new code.")
 
-        # Verify not already taken by another account (race condition check)
-        existing = await db.execute(
+        # Check if target phone belongs to another customer
+        existing_res = await db.execute(
             select(Customer).where(Customer.phone == target_phone, Customer.id != customer.id)
         )
-        if existing.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Mobile number is already linked to another account")
+        existing_customer = existing_res.scalar_one_or_none()
 
-        customer.phone = target_phone
-        updated = True
+        if existing_customer:
+            # Merge current email profile into existing customer profile
+            cart_b = customer.cart_data or []
+            cart_a = existing_customer.cart_data or []
+            merged_cart = {item.get('variant_id'): item for item in cart_a}
+            for item in cart_b:
+                v_id = item.get('variant_id')
+                if v_id in merged_cart:
+                    merged_cart[v_id]['quantity'] += item.get('quantity', 1)
+                else:
+                    merged_cart[v_id] = item
+            existing_customer.cart_data = list(merged_cart.values())
+            existing_customer.loyalty_points += customer.loyalty_points
+
+            if customer.email:
+                existing_customer.email = customer.email
+            if body.full_name:
+                existing_customer.full_name = body.full_name.strip()
+
+            db.add(existing_customer)
+            await db.delete(customer)
+
+            new_customer = existing_customer
+            access_token = create_access_token(str(existing_customer.id))
+            updated = True
+        else:
+            customer.phone = target_phone
+            if body.full_name:
+                customer.full_name = body.full_name.strip()
+            db.add(customer)
+            new_customer = customer
+            updated = True
+
         await redis_service.redis.delete(f"verify_phone_otp:{customer.id}")
         await redis_service.redis.delete(f"verify_phone_val:{customer.id}")
 
-    if body.full_name:
-        customer.full_name = body.full_name.strip()
-        updated = True
+    else:
+        if body.full_name:
+            customer.full_name = body.full_name.strip()
+            db.add(customer)
+            new_customer = customer
+            updated = True
 
     if updated:
-        db.add(customer)
         await db.commit()
-        await db.refresh(customer)
+        await db.refresh(new_customer)
 
-    return CustomerOut.model_validate(customer)
+    return CustomerTokenResponse(
+        access_token=access_token or create_access_token(str(new_customer.id)),
+        customer=CustomerOut.model_validate(new_customer)
+    )
 
 
 @router.get("/me", response_model=CustomerOut)
