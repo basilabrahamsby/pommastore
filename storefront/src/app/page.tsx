@@ -132,7 +132,7 @@ export default function Home() {
       return (
          <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center font-sans">
             <div className="relative mb-8 text-center">
-               <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
+               <img src="/logo.png" alt="Kozmocart Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
                <div className="absolute -bottom-4 left-0 w-full h-[1px] bg-neutral-100 overflow-hidden">
                   <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
                </div>

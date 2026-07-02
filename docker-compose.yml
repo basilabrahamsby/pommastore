@@ -50,8 +50,8 @@ services:
     build: ./frontend
     container_name: kozmocart_admin
     environment:
-      VITE_API_BASE_URL: /kozmocart/api/v1
-      VITE_STATIC_BASE_URL: /kozmocart
+      VITE_API_BASE_URL: /api/v1
+      VITE_STATIC_BASE_URL: ""
     ports:
       - "5173:5173"
     depends_on:

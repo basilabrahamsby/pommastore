@@ -106,7 +106,7 @@ const Navbar = () => {
             {/* Left Logo Area */}
             <div className="flex-shrink-0 flex items-center">
                <Link href="/" className="flex items-center">
-                 <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-6 sm:h-8 md:h-9 object-contain" />
+                 <img src="/logo.png" alt="Kozmocart Logo" className="h-6 sm:h-8 md:h-9 object-contain" />
                </Link>
             </div>
 
@@ -386,7 +386,7 @@ const Navbar = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-6 border-b border-gray-100">
-             <img src="/kozmocart/logo.png" alt="Kozmocart Logo" className="h-6 object-contain" />
+             <img src="/logo.png" alt="Kozmocart Logo" className="h-6 object-contain" />
              <button onClick={() => setIsMobileMenuOpen(false)}><X size={20} /></button>
           </div>
           <nav className="flex flex-col p-6 font-black tracking-[0.2em] uppercase text-xs space-y-6">
