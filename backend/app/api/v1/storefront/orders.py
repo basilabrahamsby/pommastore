@@ -499,7 +499,8 @@ async def create_razorpay_order(
         "razorpay_order_id": razorpay_order_id,
         "amount": amount_in_paise,
         "currency": "INR",
-        "order_number": order.order_number
+        "order_number": order.order_number,
+        "razorpay_key_id": settings.RAZORPAY_KEY_ID
     }
 
 

@@ -343,8 +343,7 @@ export default function Checkout() {
         }
 
         const options = {
-          // Note: In production, this can also be loaded via settings from the backend
-          key: 'rzp_test_demokey12345', 
+          key: rzpOrderData.razorpay_key_id || 'rzp_test_demokey12345', 
           amount: rzpOrderData.amount,
           currency: rzpOrderData.currency,
           name: 'Kozmocart',
