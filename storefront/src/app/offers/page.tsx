@@ -288,8 +288,8 @@ export default function OffersPage() {
     const fetchAllData = async () => {
       try {
         const [offersRes, rewardsRes] = await Promise.all([
-          api.get('/offers'),
-          api.get('/loyalty/rewards')
+          api.get('/storefront/offers'),
+          api.get('/storefront/loyalty/rewards')
         ]);
         setPromoCampaigns(offersRes.data);
         setLoyaltyRewards(rewardsRes.data);

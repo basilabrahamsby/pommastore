@@ -41,6 +41,67 @@ export default function Checkout() {
   const [updatingContact, setUpdatingContact] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  const [promoCode, setPromoCode] = useState<string>('');
+  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoDiscount, setPromoDiscount] = useState<number>(0);
+
+  const handleApplyPromo = async () => {
+    try {
+      setPromoError(null);
+      const res = await api.get('/storefront/offers');
+      const offers = res.data || [];
+      const offer = offers.find((o: any) => o.code.toUpperCase() === promoCode.trim().toUpperCase());
+      
+      if (!offer) {
+        setPromoError('Invalid promo code.');
+        setPromoDiscount(0);
+        setAppliedPromo(null);
+        return;
+      }
+      
+      let discount = 0;
+      const combinedSkus = (offer.target_skus || []).concat(offer.buy_skus || []).concat(offer.get_skus || []);
+      
+      if (offer.target_scope === 'skus' || offer.target_scope === 'items') {
+        items.forEach(item => {
+          if (combinedSkus.includes(item.variantName)) {
+            if (offer.discount_percentage) {
+              discount += (item.price * item.quantity) * (Number(offer.discount_percentage) / 100);
+            } else if (offer.flat_discount_amount) {
+              discount += Number(offer.flat_discount_amount) * item.quantity;
+            }
+          }
+        });
+      } else {
+        if (offer.discount_percentage) {
+          discount = totalPrice() * (Number(offer.discount_percentage) / 100);
+        } else if (offer.flat_discount_amount) {
+          discount = Number(offer.flat_discount_amount);
+        }
+      }
+      
+      if (discount === 0) {
+        setPromoError('This promo code is not applicable to items in your cart.');
+        setPromoDiscount(0);
+        setAppliedPromo(null);
+        return;
+      }
+      
+      setPromoDiscount(Math.round(discount));
+      setAppliedPromo(offer);
+    } catch (err) {
+      setPromoError('Failed to validate promo code.');
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoDiscount(0);
+    setPromoCode('');
+    setPromoError(null);
+  };
+
   useEffect(() => {
     if (customer) {
       setContactForm({
@@ -187,8 +248,8 @@ export default function Checkout() {
 
       const shippingLimit = cmsLayout?.free_shipping_limit || 999;
       const shippingFee = totalPrice() >= shippingLimit ? 0 : 150; 
-      const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice())) : 0;
-      const finalAmount = totalPrice() + shippingFee - pointsToRedeem;
+      const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
+      const finalAmount = Math.max(0, totalPrice() + shippingFee - pointsToRedeem - promoDiscount);
 
       // ================= RAZORPAY INTEGRATION =================
       if (paymentMethod === 'card' || paymentMethod === 'upi') {
@@ -202,7 +263,9 @@ export default function Checkout() {
             items: orderItems,
             loyalty_points_used: pointsToRedeem,
             shipping_amount: shippingFee,
-            tax_amount: 0.0
+            tax_amount: 0.0,
+            discount_amount: promoDiscount,
+            coupon_code: appliedPromo ? appliedPromo.code : null
           });
           rzpOrderData = createRes.data;
         } catch (err: any) {
@@ -721,6 +784,48 @@ export default function Checkout() {
               </div>
             )}
 
+            {/* Promo Code Coupon Input */}
+            <div className="mb-6 p-4 bg-white border border-neutral-100 animate-in fade-in duration-500">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black tracking-widest uppercase text-neutral-400">Promotional Coupon</span>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="ENTER PROMO CODE" 
+                  value={promoCode} 
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  disabled={!!appliedPromo}
+                  className="flex-1 border border-neutral-200 px-3 py-2 text-xs font-semibold focus:border-black outline-none uppercase placeholder:text-neutral-300 bg-white text-black"
+                />
+                {appliedPromo ? (
+                  <button 
+                    type="button" 
+                    onClick={handleRemovePromo}
+                    className="bg-red-50 text-red-500 border border-red-200 px-4 py-2 text-[10px] font-black tracking-widest uppercase hover:bg-red-100 transition-all font-bold shrink-0"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button 
+                    type="button" 
+                    onClick={handleApplyPromo}
+                    className="bg-black text-white px-4 py-2 text-[10px] font-black tracking-widest uppercase hover:bg-neutral-800 transition-all font-bold shrink-0"
+                  >
+                    Apply
+                  </button>
+                )}
+              </div>
+              {promoError && (
+                <p className="text-[10px] text-red-500 font-bold mt-2 uppercase tracking-wide">{promoError}</p>
+              )}
+              {appliedPromo && (
+                <p className="text-[10px] text-green-600 font-bold mt-2 uppercase tracking-wide">
+                  🎉 Saved ₹{promoDiscount.toLocaleString('en-IN')} with code {appliedPromo.code}
+                </p>
+              )}
+            </div>
+
             {/* Display Items */}
             <div className="max-h-60 overflow-y-auto mb-6 pr-2 space-y-4">
               {items.map((item) => (
@@ -750,16 +855,22 @@ export default function Checkout() {
                    {totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : `₹${150}`}
                  </span>
                </div>
+               {appliedPromo && promoDiscount > 0 && (
+                 <div className="flex justify-between text-green-600 animate-in slide-in-from-left-2 duration-300">
+                   <span>Promo Discount</span>
+                   <span>-₹{promoDiscount.toLocaleString('en-IN')}</span>
+                 </div>
+               )}
                {useLoyaltyPoints && (
                  <div className="flex justify-between text-yellow-600 animate-in slide-in-from-left-2 duration-300">
                    <span>Loyalty Redemption</span>
-                   <span>-₹{Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice())).toLocaleString('en-IN')}</span>
+                   <span>-₹{Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)).toLocaleString('en-IN')}</span>
                  </div>
                )}
                <div className="flex justify-between text-neutral-900 border-t border-neutral-200 pt-4 text-sm">
                  <span className="font-serif normal-case font-bold tracking-normal text-base">Grand Total</span>
                  <span className="font-bold text-lg font-serif normal-case tracking-normal">
-                   ₹{(totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : 150) - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice())) : 0)).toLocaleString('en-IN')}
+                   ₹{Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : 150) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-IN')}
                  </span>
                </div>
              </div>
