@@ -16,7 +16,8 @@ import {
   Plus, 
   Calendar, 
   Smartphone,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 
 export default function Checkout() {
