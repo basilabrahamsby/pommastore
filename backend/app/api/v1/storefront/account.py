@@ -104,8 +104,15 @@ async def confirm_verification(
             existing_customer.cart_data = list(merged_cart.values())
             existing_customer.loyalty_points += customer.loyalty_points
 
-            if customer.phone:
-                existing_customer.phone = customer.phone
+            # Safely capture phone to transfer, then nullify unique fields on the deleted record
+            phone_to_transfer = customer.phone
+            customer.phone = None
+            customer.email = None
+            db.add(customer)
+            await db.flush()
+
+            if phone_to_transfer:
+                existing_customer.phone = phone_to_transfer
             if body.full_name:
                 existing_customer.full_name = body.full_name.strip()
 
@@ -157,8 +164,15 @@ async def confirm_verification(
             existing_customer.cart_data = list(merged_cart.values())
             existing_customer.loyalty_points += customer.loyalty_points
 
-            if customer.email:
-                existing_customer.email = customer.email
+            # Safely capture email to transfer, then nullify unique fields on the deleted record
+            email_to_transfer = customer.email
+            customer.phone = None
+            customer.email = None
+            db.add(customer)
+            await db.flush()
+
+            if email_to_transfer:
+                existing_customer.email = email_to_transfer
             if body.full_name:
                 existing_customer.full_name = body.full_name.strip()
 
