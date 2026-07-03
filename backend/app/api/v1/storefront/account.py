@@ -74,8 +74,11 @@ async def confirm_verification(
     access_token = None
 
     if body.email_otp:
-        stored_otp = await redis_service.redis.get(f"verify_email_otp:{customer.id}")
-        target_email = await redis_service.redis.get(f"verify_email_val:{customer.id}")
+        stored_otp_bytes = await redis_service.redis.get(f"verify_email_otp:{customer.id}")
+        target_email_bytes = await redis_service.redis.get(f"verify_email_val:{customer.id}")
+        stored_otp = stored_otp_bytes.decode("utf-8") if stored_otp_bytes else None
+        target_email = target_email_bytes.decode("utf-8") if target_email_bytes else None
+
         if not stored_otp or stored_otp != body.email_otp.strip():
             raise HTTPException(status_code=400, detail="Invalid or expired Email verification code")
         if not target_email:
@@ -124,8 +127,11 @@ async def confirm_verification(
         await redis_service.redis.delete(f"verify_email_val:{customer.id}")
 
     elif body.phone_otp:
-        stored_otp = await redis_service.redis.get(f"verify_phone_otp:{customer.id}")
-        target_phone = await redis_service.redis.get(f"verify_phone_val:{customer.id}")
+        stored_otp_bytes = await redis_service.redis.get(f"verify_phone_otp:{customer.id}")
+        target_phone_bytes = await redis_service.redis.get(f"verify_phone_val:{customer.id}")
+        stored_otp = stored_otp_bytes.decode("utf-8") if stored_otp_bytes else None
+        target_phone = target_phone_bytes.decode("utf-8") if target_phone_bytes else None
+
         if not stored_otp or stored_otp != body.phone_otp.strip():
             raise HTTPException(status_code=400, detail="Invalid or expired Mobile verification code")
         if not target_phone:
