@@ -95,6 +95,7 @@ class OrderOut(BaseModel):
     payment_gateway: str | None = None
     payment_details: Dict[str, Any] | None = None
     notes: str | None
+    gift_message: str | None = None
     coupon_code: str | None
     tracking_number: str | None
     carrier: str | None
