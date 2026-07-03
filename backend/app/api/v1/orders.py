@@ -295,24 +295,23 @@ async def create_order(
 
     # Send order confirmation email
     to_email = enriched.customer_email
-    if to_email:
-        background_tasks.add_task(
-            send_order_confirmation_email,
-            to_email=to_email,
-            customer_name=enriched.customer_name or "Valued Customer",
-            order_number=enriched.order_number,
-            items=order_items_to_email_list(order.items),
-            total=float(enriched.total_amount),
-            subtotal=float(enriched.subtotal),
-            discount=float(enriched.discount_amount),
-            shipping=float(enriched.shipping_amount),
-            tax=float(enriched.tax_amount),
-            loyalty_used=enriched.loyalty_points_used or 0,
-            shipping_address=enriched.shipping_address,
-            payment_method=enriched.payment_method or "",
-            coupon_code=enriched.coupon_code or "",
-            gift_message=enriched.gift_message or "",
-        )
+    background_tasks.add_task(
+        send_order_confirmation_email,
+        to_email=to_email,
+        customer_name=enriched.customer_name or "Valued Customer",
+        order_number=enriched.order_number,
+        items=order_items_to_email_list(order.items),
+        total=float(enriched.total_amount),
+        subtotal=float(enriched.subtotal),
+        discount=float(enriched.discount_amount),
+        shipping=float(enriched.shipping_amount),
+        tax=float(enriched.tax_amount),
+        loyalty_used=enriched.loyalty_points_used or 0,
+        shipping_address=enriched.shipping_address,
+        payment_method=enriched.payment_method or "",
+        coupon_code=enriched.coupon_code or "",
+        gift_message=enriched.gift_message or "",
+    )
 
     # Notify admin/manager via SMS
     background_tasks.add_task(

@@ -210,7 +210,7 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def send_order_confirmation_email(
-    to_email: str,
+    to_email: Optional[str],
     customer_name: str,
     order_number: str,
     items: List[Dict[str, Any]],
@@ -256,7 +256,16 @@ def send_order_confirmation_email(
     html = _base_template(f"Order Confirmed — {order_number}", "Luxury Fragrance House", content,
                           cta_url="https://pommaholidays.com/kozmocart/orders",
                           cta_label="Track My Order")
-    return send_smtp_email(to_email, subject, html, body_text)
+    
+    # Always send invoice copy to info@kozmocart.com
+    invoice_subject = f"[INVOICE/ORDER] {order_number} - New Order Details"
+    invoice_body_text = f"New Order Details for {order_number}. Customer: {customer_name}. Total: ₹{total:,.2f}"
+    send_smtp_email("info@kozmocart.com", invoice_subject, html, invoice_body_text)
+
+    # Send to customer if email is provided
+    if to_email:
+        return send_smtp_email(to_email, subject, html, body_text)
+    return True
 
 
 # ─────────────────────────────────────────────────────────────────────────────

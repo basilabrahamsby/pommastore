@@ -12,14 +12,25 @@ CMERCURY_Q_TOKEN = "HZ64sJ5AMxVW5+kztGpl6Z1mZFqUVtvPciIYCSxGJaUMp6O4oHig2JmuT1bZ
 
 CMERCURY_STANDARD_TOKEN = "Aft6Wl5Yno9a7yRns8eLFa0ZdzyxvtOQehhMMi2jghTcvqPE8MM3xHp9J8pOLvQMza+VWxrPVRnrab1nuwcDxOGASagDvWGP0q7HEEuzvqhLf9Cx5NPn+wQxN/AO4Q9ZGb3Y7qtAcWeZGL/ejNfP2HyolGTATC/OsfhAW5s6D6dmFuI/7zH0lMKYTtP7IbilGLt7weTJ+WDIz4OCBOLemzSAMieUWDtC4HkMbaudA5FKQJVjFjUP5xWBopeHkFFy+/xH1DbNLdc8oZZ2rooa6o3MwRR6KTFF53iyTerqZkyECZDLA8xFkQ7lBfTH6G3nLjs7ioMgOZEvZwRLCuXaZw=="
 
+def clean_phone_number(phone: str) -> str:
+    """
+    Cleans a phone number by keeping only digits. 
+    If the number is 10 digits, prepends the Indian country code '91'.
+    """
+    digits = "".join([c for c in phone if c.isdigit()])
+    if len(digits) == 10:
+        return f"91{digits}"
+    return digits
+
 async def sendsms(phone: str, message: str, tid: str) -> Optional[str]:
     """
     Sends a general transactional SMS via SapTeleServices GET API.
     """
+    cleaned_phone = clean_phone_number(phone)
     url = "https://sapteleservices.com/SMS_API/sendsms.php"
     params = {
         "apikey": SAP_API_KEY,
-        "mobile": phone,
+        "mobile": cleaned_phone,
         "routetype": "1",
         "sendername": SAP_SENDER_NAME,
         "message": message,
@@ -47,6 +58,7 @@ async def _send_cmercury_sms(phone: str, message: str, token: str, trigger_id: i
     """
     Helper function to send a JSON POST request to cMercury SMS API.
     """
+    cleaned_phone = clean_phone_number(phone)
     url = "https://api.cmercury.com/api/sms/TriggerSMS"
     headers = {
         "Content-Type": "application/json",
@@ -54,7 +66,7 @@ async def _send_cmercury_sms(phone: str, message: str, token: str, trigger_id: i
         "X-Token": token
     }
     payload = {
-        "Mobile": int(phone) if phone.isdigit() else phone,
+        "Mobile": int(cleaned_phone) if cleaned_phone.isdigit() else cleaned_phone,
         "Message": message,
         "MessageType": "Trans",
         "TriggerSMSid": trigger_id,
