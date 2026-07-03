@@ -209,6 +209,66 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
 # 2. Order Placed Confirmation
 # ─────────────────────────────────────────────────────────────────────────────
 
+def send_admin_invoice_email(
+    customer_name: str,
+    customer_email: str,
+    customer_phone: str,
+    order_number: str,
+    items: List[Dict[str, Any]],
+    total: float,
+    subtotal: float,
+    discount: float,
+    shipping: float,
+    tax: float,
+    loyalty_used: int,
+    shipping_address: Optional[Dict[str, Any]] = None,
+    payment_method: str = "",
+    coupon_code: str = "",
+    gift_message: str = "",
+) -> bool:
+    subject = f"[INVOICE/ORDER] {order_number} - New Order Details"
+    body_text = f"New Order Details for {order_number}. Customer: {customer_name}. Total: ₹{total:,.2f}"
+
+    coupon_row = f'<p style="margin:8px 0 0;font-size:12px;color:#666;">Coupon Applied: <strong style="color:#D2168D;">{coupon_code}</strong></p>' if coupon_code else ""
+    gift_row = f'<div style="margin:12px 0;padding:12px 16px;background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;"><p style="margin:0;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#D2168D;font-weight:700;margin-bottom:4px;">Gift Message</p><p style="margin:0;font-size:13px;color:#444;font-style:italic;">"{gift_message}"</p></div>' if gift_message else ""
+    payment_row = f'<p style="margin:8px 0 0;font-size:12px;color:#666;">Payment Method: <strong style="color:#1A1A1A;">{payment_method.upper()}</strong></p>' if payment_method else ""
+
+    items_html = _order_items_table(items)
+    summary_html = _order_summary_block(order_number, total, subtotal, discount, shipping, tax, loyalty_used)
+    address_html = _address_block(shipping_address)
+
+    content = f"""
+    <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#0A0A0A;text-transform:uppercase;">Company Order Invoice Copy</p>
+    <h2 style="margin:0 0 8px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">New Order Received — {order_number}</h2>
+    
+    <div style="background:#FAF8F5;border:1px solid #EAE6DF;border-radius:3px;padding:16px 20px;margin:20px 0;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td valign="top" width="50%">
+            <p style="margin:0 0 4px;font-size:9px;color:#888;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;">Customer Details</p>
+            <p style="margin:0;font-size:13px;color:#1A1A1A;font-weight:700;">{customer_name}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#444;">Email: {customer_email or 'N/A'}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#444;">Phone: {customer_phone or 'N/A'}</p>
+          </td>
+          <td valign="top" width="50%" style="padding-left:20px;">
+            <p style="margin:0 0 4px;font-size:9px;color:#888;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;">Fulfillment Details</p>
+            {payment_row}
+            {coupon_row}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    {items_html}
+    {summary_html}
+    {address_html}
+    {gift_row}
+    """
+
+    html = _base_template(f"New Order — {order_number}", "Order Management System", content)
+    return send_smtp_email("info@kozmocart.com", subject, html, body_text)
+
+
 def send_order_confirmation_email(
     to_email: Optional[str],
     customer_name: str,
@@ -224,6 +284,8 @@ def send_order_confirmation_email(
     payment_method: str = "",
     coupon_code: str = "",
     gift_message: str = "",
+    customer_email: str = "",
+    customer_phone: str = "",
 ) -> bool:
     subject = f"Your Kozmocart Order is Confirmed — {order_number}"
     body_text = f"Dear {customer_name}, your order {order_number} has been confirmed. Total: ₹{total:,.2f}"
@@ -257,10 +319,24 @@ def send_order_confirmation_email(
                           cta_url="https://pommaholidays.com/kozmocart/orders",
                           cta_label="Track My Order")
     
-    # Always send invoice copy to info@kozmocart.com
-    invoice_subject = f"[INVOICE/ORDER] {order_number} - New Order Details"
-    invoice_body_text = f"New Order Details for {order_number}. Customer: {customer_name}. Total: ₹{total:,.2f}"
-    send_smtp_email("info@kozmocart.com", invoice_subject, html, invoice_body_text)
+    # Always send detailed invoice copy with full customer details to info@kozmocart.com
+    send_admin_invoice_email(
+        customer_name=customer_name,
+        customer_email=customer_email or to_email or "",
+        customer_phone=customer_phone,
+        order_number=order_number,
+        items=items,
+        total=total,
+        subtotal=subtotal,
+        discount=discount,
+        shipping=shipping,
+        tax=tax,
+        loyalty_used=loyalty_used,
+        shipping_address=shipping_address,
+        payment_method=payment_method,
+        coupon_code=coupon_code,
+        gift_message=gift_message
+    )
 
     # Send to customer if email is provided
     if to_email:

@@ -311,6 +311,8 @@ async def create_order(
         payment_method=enriched.payment_method or "",
         coupon_code=enriched.coupon_code or "",
         gift_message=enriched.gift_message or "",
+        customer_email=enriched.customer_email or "",
+        customer_phone=enriched.customer_phone or "",
     )
 
     # Notify admin/manager via SMS
