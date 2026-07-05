@@ -236,6 +236,8 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
 
     company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
     company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
+    # Derive short address (city, state, pin) for header display
+    short_address = "Kochi, Kerala - 682026"
     gstin = company_details.get("gstin") or "32ANKK3784H17F"
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
@@ -563,7 +565,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
         <img src="https://kozmocart.com/logo.png" alt="Kozmocart Logo">
         <div class="company-address">
           <strong>{company_name}</strong><br>
-          {company_address}<br>
+          {short_address}<br>
           {gstin_line}
           {pan_line}
           {state_line}
@@ -663,6 +665,8 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
     company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
+    # Short address for header (city/state only)
+    short_address = "Kochi, Kerala - 682026"
     gstin = company_details.get("gstin") or "32ANKK3784H17F"
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
@@ -772,7 +776,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         logo_flowable = Paragraph("KOZMOCART", title_style)
 
     # Left Header: Logo & Company Address info
-    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>"
+    left_header_text = f"<b>{company_name}</b><br/>{short_address}<br/>"
     if gstin: left_header_text += f"GSTIN: {gstin}<br/>"
     if pan: left_header_text += f"PAN: {pan}<br/>"
     if state_code: left_header_text += f"State Code: {state_code}<br/>"
