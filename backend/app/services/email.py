@@ -565,7 +565,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     </div>
 
     <div class="billed-to-section">
-      <h3>Billed To:</h3>
+      <h3>Bill To / Ship To:</h3>
       <strong>{order.customer_name}</strong><br>
       {shipping_address_str}<br>
       <strong>Phone:</strong> {order.customer_phone or 'N/A'}<br>
@@ -653,10 +653,10 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=36,
-        leftMargin=36,
-        topMargin=36,
-        bottomMargin=36
+        rightMargin=45,
+        leftMargin=45,
+        topMargin=45,
+        bottomMargin=45
     )
 
     styles = getSampleStyleSheet()
@@ -761,7 +761,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         [Spacer(1, 4)],
         [Paragraph(left_header_text, ParagraphStyle('LeftCompText', parent=body_style, fontSize=8, leading=11, textColor=colors.HexColor('#555555')))]
     ]
-    left_header_table = Table(left_header_data, colWidths=[3.6*inch])
+    left_header_table = Table(left_header_data, colWidths=[3.5*inch])
     left_header_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('LEFTPADDING', (0,0), (-1,-1), 0),
@@ -780,7 +780,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         [Spacer(1, 10)],
         [Paragraph(right_header_text, ParagraphStyle('InvMetaText', parent=body_style, fontSize=9, leading=12, alignment=2, textColor=colors.HexColor('#555555')))]
     ]
-    right_header_table = Table(right_header_data, colWidths=[3.67*inch])
+    right_header_table = Table(right_header_data, colWidths=[3.5*inch])
     right_header_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('LEFTPADDING', (0,0), (-1,-1), 0),
@@ -789,7 +789,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('TOPPADDING', (0,0), (-1,-1), 0),
     ]))
 
-    header_table = Table([[left_header_table, right_header_table]], colWidths=[3.6*inch, 3.67*inch])
+    header_table = Table([[left_header_table, right_header_table]], colWidths=[3.5*inch, 3.5*inch])
     header_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('LEFTPADDING', (0,0), (-1,-1), 0),
@@ -799,7 +799,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(header_table)
 
     # Hot Pink Accent Separator Line
-    divider = Table([[""]], colWidths=[7.27*inch], rowHeights=[2])
+    divider = Table([[""]], colWidths=[7.0*inch], rowHeights=[2])
     divider.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#D2168D')),
         ('BOTTOMPADDING', (0,0), (-1,-1), 0),
@@ -823,10 +823,10 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     buyer_details += f"Email: {order.customer_email or 'N/A'}"
 
     billed_to_data = [
-        [Paragraph("BILLED TO:", h3_style)],
+        [Paragraph("BILL TO / SHIP TO:", h3_style)],
         [Paragraph(buyer_details, body_style)]
     ]
-    billed_to_table = Table(billed_to_data, colWidths=[7.27*inch])
+    billed_to_table = Table(billed_to_data, colWidths=[7.0*inch])
     billed_to_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('LEFTPADDING', (0,0), (-1,-1), 0),
@@ -860,7 +860,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
             Paragraph(f"Rs. {float(item.unit_price * item.quantity):,.2f}", ParagraphStyle('TdRight3', parent=table_cell_bold_style, alignment=2))
         ])
 
-    items_table = Table(table_data, colWidths=[4.2*inch, 0.7*inch, 1.1*inch, 1.27*inch])
+    items_table = Table(table_data, colWidths=[4.0*inch, 0.7*inch, 1.1*inch, 1.2*inch])
     items_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#D2168D')),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -926,7 +926,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.white, alignment=2))
     ])
 
-    summary_table = Table(summary_data, colWidths=[2.2*inch, 1.27*inch])
+    summary_table = Table(summary_data, colWidths=[2.2*inch, 1.2*inch])
     summary_table.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -943,7 +943,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     bottom_grid_data = [
         [payment_info_para, summary_table]
     ]
-    bottom_grid_table = Table(bottom_grid_data, colWidths=[3.8*inch, 3.47*inch])
+    bottom_grid_table = Table(bottom_grid_data, colWidths=[3.6*inch, 3.4*inch])
     bottom_grid_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('LEFTPADDING', (0,0), (-1,-1), 0),
