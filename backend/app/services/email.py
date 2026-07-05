@@ -560,8 +560,9 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
 def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None):
     """Generates a beautiful printable tax invoice PDF for an order."""
     from io import BytesIO
+    import urllib.request
     from reportlab.lib.pagesizes import A4
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib import colors
     from reportlab.lib.units import inch
@@ -593,12 +594,13 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     styles = getSampleStyleSheet()
 
+    # Premium Typography & Colors
     title_style = ParagraphStyle(
         'InvoiceTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=22,
-        leading=26,
+        fontSize=20,
+        leading=24,
         textColor=colors.HexColor('#000000')
     )
 
@@ -606,8 +608,8 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         'InvoiceSubtitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=10,
-        leading=14,
+        fontSize=12,
+        leading=16,
         textColor=colors.HexColor('#D2168D'),
         alignment=2
     )
@@ -618,7 +620,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         fontName='Helvetica-Bold',
         fontSize=9,
         leading=12,
-        textColor=colors.HexColor('#888888')
+        textColor=colors.HexColor('#D2168D')
     )
 
     body_style = ParagraphStyle(
@@ -626,7 +628,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         parent=styles['Normal'],
         fontName='Helvetica',
         fontSize=9,
-        leading=13,
+        leading=14,
         textColor=colors.HexColor('#333333')
     )
 
@@ -635,7 +637,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
         fontSize=9,
-        leading=13,
+        leading=14,
         textColor=colors.HexColor('#000000')
     )
 
@@ -653,7 +655,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         parent=styles['Normal'],
         fontName='Helvetica',
         fontSize=8,
-        leading=11,
+        leading=12,
         textColor=colors.HexColor('#333333')
     )
 
@@ -662,28 +664,52 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
         fontSize=8,
-        leading=11,
+        leading=12,
         textColor=colors.HexColor('#000000')
     )
 
     story = []
 
-    subtitle_para = Paragraph("Invoice Copy", subtitle_style)
+    # Dynamic Logo Download with Fallback
+    logo_flowable = None
+    try:
+        req = urllib.request.Request(
+            "https://kozmocart.com/logo.png",
+            headers={'User-Agent': 'Mozilla/5.0'}
+        )
+        logo_data = urllib.request.urlopen(req, timeout=3).read()
+        logo_flowable = Image(BytesIO(logo_data), width=1.8*inch, height=0.4*inch)
+    except Exception as img_err:
+        print(f"Skipping remote logo loading: {img_err}")
+        logo_flowable = Paragraph("KOZMOCART", title_style)
+
+    subtitle_para = Paragraph("TAX INVOICE<br/><font size=7 color='#888888'>Invoice Copy</font>", subtitle_style)
     header_data = [
-        [Paragraph("KOZMOCART", title_style), subtitle_para]
+        [logo_flowable, subtitle_para]
     ]
     header_table = Table(header_data, colWidths=[4*inch, 3.27*inch])
     header_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('ALIGN', (1,0), (1,0), 'RIGHT'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(header_table)
+
+    # Hot Pink Accent Separator Line
+    divider = Table([[""]], colWidths=[7.27*inch], rowHeights=[2])
+    divider.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#D2168D')),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(divider)
     story.append(Spacer(1, 15))
 
+    # Meta Grid (Invoice #, Date, Payment)
     meta_data = [
         [
             Paragraph("INVOICE NUMBER<br/><b>" + order.order_number + "</b>", body_style),
-            Paragraph("DATE ISSUED<br/><b>" + (order.created_at.strftime("%d/%m/%Y") if order.created_at else "N/A") + "</b>", body_style),
+            Paragraph("DATE ISSUED<br/><b>" + (order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A") + "</b>", body_style),
             Paragraph("PAYMENT METHOD<br/><b>" + ((order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A") + "</b>", body_style),
             Paragraph("PAYMENT STATUS<br/><b>" + ((order.payment_status.value if hasattr(order.payment_status, 'value') else str(order.payment_status)).upper() if order.payment_status else "PENDING") + "</b>", body_style)
         ]
@@ -693,22 +719,23 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#FAF8F5')),
         ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#EAE6DF')),
         ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#EAE6DF')),
-        ('TOPPADDING', (0,0), (-1,-1), 10),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
         ('LEFTPADDING', (0,0), (-1,-1), 10),
         ('RIGHTPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(meta_table)
     story.append(Spacer(1, 20))
 
+    # Seller & Buyer Address details
     seller_details = f"<b>{company_name}</b><br/>"
     seller_details += f"{company_address}<br/>"
     if gstin:
-        seller_details += f"GSTIN: {gstin}<br/>"
+        seller_details += f"<b>GSTIN:</b> {gstin}<br/>"
     if pan:
-        seller_details += f"PAN: {pan}<br/>"
+        seller_details += f"<b>PAN:</b> {pan}<br/>"
     if state_code:
-        seller_details += f"State Code: {state_code}"
+        seller_details += f"<b>State Code:</b> {state_code}"
 
     shipping_address_str = "No shipping details"
     if order.shipping_address:
@@ -735,8 +762,9 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('RIGHTPADDING', (0,0), (-1,-1), 20),
     ]))
     story.append(details_table)
-    story.append(Spacer(1, 25))
+    story.append(Spacer(1, 20))
 
+    # Product items table
     table_data = [
         [
             Paragraph("PRODUCT DESCRIPTION", table_header_style),
@@ -749,50 +777,51 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     for item in order.items:
         desc = f"<b>{item.product_name or 'Product'}</b>"
         if item.sku:
-            desc += f"<br/>SKU: {item.sku}"
+            desc += f"<br/><font size=6 color='#888888'>SKU: {item.sku}</font>"
         if item.size_ml:
-            desc += f" | Size: {item.size_ml} ml"
+            desc += f" | <font size=6 color='#666666'>Size: {item.size_ml} ml</font>"
 
         table_data.append([
             Paragraph(desc, table_cell_style),
             Paragraph(str(item.quantity), table_cell_style),
-            Paragraph(f"INR {float(item.unit_price):,.2f}", table_cell_style),
-            Paragraph(f"INR {float(item.unit_price * item.quantity):,.2f}", table_cell_bold_style)
+            Paragraph(f"Rs. {float(item.unit_price):,.2f}", table_cell_style),
+            Paragraph(f"Rs. {float(item.unit_price * item.quantity):,.2f}", table_cell_bold_style)
         ])
 
-    items_table = Table(table_data, colWidths=[4*inch, 0.8*inch, 1.2*inch, 1.27*inch])
+    items_table = Table(table_data, colWidths=[4.2*inch, 0.6*inch, 1.2*inch, 1.27*inch])
     items_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#000000')),
         ('ALIGN', (1,0), (-1,-1), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 10),
         ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#EAE6DF')),
         ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#EAE6DF')),
     ]))
     story.append(items_table)
     story.append(Spacer(1, 15))
 
+    # Pricing Breakdown Summary
     summary_data = [
-        [Paragraph("Subtotal", body_style), Paragraph(f"INR {float(order.subtotal):,.2f}", body_style)],
+        [Paragraph("Subtotal", body_style), Paragraph(f"Rs. {float(order.subtotal):,.2f}", body_style)],
     ]
     if order.discount_amount and float(order.discount_amount) > 0:
-        summary_data.append([Paragraph("Discount", body_style), Paragraph(f"-INR {float(order.discount_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Discount", body_style), Paragraph(f"-Rs. {float(order.discount_amount):,.2f}", body_style)])
     if order.shipping_amount and float(order.shipping_amount) > 0:
-        summary_data.append([Paragraph("Shipping", body_style), Paragraph(f"INR {float(order.shipping_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Shipping", body_style), Paragraph(f"Rs. {float(order.shipping_amount):,.2f}", body_style)])
     if order.tax_amount and float(order.tax_amount) > 0:
-        summary_data.append([Paragraph("Tax (GST)", body_style), Paragraph(f"INR {float(order.tax_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Tax (GST)", body_style), Paragraph(f"Rs. {float(order.tax_amount):,.2f}", body_style)])
 
     summary_data.append([
         Paragraph("<b>GRAND TOTAL</b>", bold_body_style),
-        Paragraph(f"<b>INR {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#D2168D'), alignment=2))
+        Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#D2168D'), alignment=2))
     ])
 
     summary_table = Table(summary_data, colWidths=[2.2*inch, 1.27*inch])
     summary_table.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING', (0,-1), (-1,-1), 6),
+        ('TOPPADDING', (0,-1), (-1,-1), 8),
         ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
 
@@ -805,8 +834,9 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('ALIGN', (1,0), (1,0), 'RIGHT'),
     ]))
     story.append(outer_table)
-    story.append(Spacer(1, 30))
+    story.append(Spacer(1, 20))
 
+    # Footer note & statutory compliance
     footer_text = "<para align=center>Thank you for shopping with Kozmocart Luxury Fragrances<br/><font size=7 color='#888888'>This is a computer generated statutory tax invoice record. No signature is required.</font></para>"
     story.append(Paragraph(footer_text, ParagraphStyle('FooterStyle', parent=body_style, alignment=1)))
 
