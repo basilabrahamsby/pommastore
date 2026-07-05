@@ -228,17 +228,17 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     if not company_details:
         company_details = {
             "companyName": "Kozmocart Luxury Innovations Pvt Ltd",
-            "registeredAddress": "Registered Corporate Office, New Delhi, India",
-            "gstin": "N/A",
+            "registeredAddress": "Registered Corporate Office, Kerala, India",
+            "gstin": "32AAAAA0000A1Z1",
             "pan": "N/A",
-            "stateCode": "07 (Delhi)"
+            "stateCode": "32 (Kerala)"
         }
 
     company_name = company_details.get("companyName") or "Kozmocart Luxury Innovations Pvt Ltd"
-    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, New Delhi, India"
-    gstin = company_details.get("gstin") or "07AAAAA0000A1Z1"
+    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, Kerala, India"
+    gstin = company_details.get("gstin") or "32AAAAA0000A1Z1"
     pan = company_details.get("pan") or "N/A"
-    state_code = company_details.get("stateCode") or "07 (Delhi)"
+    state_code = company_details.get("stateCode") or "32 (Kerala)"
 
     gstin_line = f'GSTIN: {gstin}<br>' if gstin else ""
     pan_line = f'PAN: {pan}<br>' if pan else ""
@@ -288,9 +288,9 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     total_gst = subtotal - taxable_val
     
     shipping_address_lower = shipping_address_str.lower()
-    is_delhi = "delhi" in shipping_address_lower or " dl" in shipping_address_lower or "07" in shipping_address_lower
+    is_kerala = "kerala" in shipping_address_lower or " kl" in shipping_address_lower or "32" in shipping_address_lower
     
-    if is_delhi:
+    if is_kerala:
         cgst_rate, cgst_val = 9.0, total_gst / 2.0
         sgst_rate, sgst_val = 9.0, total_gst / 2.0
         igst_rate, igst_val = 0.0, 0.0
@@ -305,7 +305,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       <td style="text-align: right; font-size: 11px; color: #555555;">₹{taxable_val:,.2f}</td>
     </tr>
     """
-    if is_delhi:
+    if is_kerala:
         gst_rows_html += f"""
         <tr>
           <td style="font-size: 11px; color: #555555; padding-left: 10px;">CGST (9.0%):</td>
@@ -378,7 +378,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     }}
     .bottom-bar {{
       height: 6px;
-      background: #000000;
+      background: #D2168D;
       position: absolute;
       bottom: 0;
       left: 0;
@@ -442,7 +442,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       font-size: 12px;
     }}
     .items-table th {{
-      background: #000000;
+      background: #D2168D;
       color: #FFFFFF;
       font-weight: 700;
       text-transform: uppercase;
@@ -495,7 +495,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       padding-top: 8px;
     }}
     .summary-table tr.total-row .total-box {{
-      background: #000000;
+      background: #D2168D;
       color: #FFFFFF;
       font-weight: 800;
       font-size: 15px;
@@ -637,17 +637,17 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     if not company_details:
         company_details = {
             "companyName": "Kozmocart Luxury Innovations Pvt Ltd",
-            "registeredAddress": "Registered Corporate Office, New Delhi, India",
-            "gstin": "07AAAAA0000A1Z1",
+            "registeredAddress": "Registered Corporate Office, Kerala, India",
+            "gstin": "32AAAAA0000A1Z1",
             "pan": "N/A",
-            "stateCode": "07 (Delhi)"
+            "stateCode": "32 (Kerala)"
         }
 
     company_name = company_details.get("companyName") or "Kozmocart Luxury Innovations Pvt Ltd"
-    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, New Delhi, India"
-    gstin = company_details.get("gstin") or "07AAAAA0000A1Z1"
+    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, Kerala, India"
+    gstin = company_details.get("gstin") or "32AAAAA0000A1Z1"
     pan = company_details.get("pan") or "N/A"
-    state_code = company_details.get("stateCode") or "07 (Delhi)"
+    state_code = company_details.get("stateCode") or "32 (Kerala)"
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -862,7 +862,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     items_table = Table(table_data, colWidths=[4.2*inch, 0.7*inch, 1.1*inch, 1.27*inch])
     items_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#000000')),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#D2168D')),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
         ('TOPPADDING', (0,0), (-1,-1), 10),
@@ -888,9 +888,9 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     total_gst = subtotal - taxable_val
 
     shipping_address_lower = shipping_address_str.lower()
-    is_delhi = "delhi" in shipping_address_lower or " dl" in shipping_address_lower or "07" in shipping_address_lower
+    is_kerala = "kerala" in shipping_address_lower or " kl" in shipping_address_lower or "32" in shipping_address_lower
 
-    if is_delhi:
+    if is_kerala:
         cgst_rate, cgst_val = 9.0, total_gst / 2.0
         sgst_rate, sgst_val = 9.0, total_gst / 2.0
         igst_rate, igst_val = 0.0, 0.0
@@ -906,7 +906,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         [Paragraph("Subtotal (GST Incl.):", body_style), Paragraph(f"Rs. {subtotal:,.2f}", body_style)],
         [Paragraph("Taxable Value:", gst_label_style), Paragraph(f"Rs. {taxable_val:,.2f}", gst_val_style)],
     ]
-    if is_delhi:
+    if is_kerala:
         summary_data.append([Paragraph("CGST (9.0%):", gst_label_style), Paragraph(f"Rs. {cgst_val:,.2f}", gst_val_style)])
         summary_data.append([Paragraph("SGST (9.0%):", gst_label_style), Paragraph(f"Rs. {sgst_val:,.2f}", gst_val_style)])
     else:
@@ -933,7 +933,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('TOPPADDING', (0,0), (-1,-2), 3),
         ('BOTTOMPADDING', (0,0), (-1,-2), 3),
         # Grand total solid box style!
-        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#000000')),
+        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#D2168D')),
         ('TOPPADDING', (0,-1), (-1,-1), 8),
         ('BOTTOMPADDING', (0,-1), (-1,-1), 8),
         ('LEFTPADDING', (0,-1), (-1,-1), 12),
