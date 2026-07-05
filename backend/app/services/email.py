@@ -822,6 +822,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('RIGHTPADDING', (0,0), (-1,-1), 0),
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
     ]))
+    header_table.hAlign = 'CENTER'
     story.append(header_table)
 
     # Hot Pink Accent Separator Line
@@ -831,6 +832,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('BOTTOMPADDING', (0,0), (-1,-1), 0),
         ('TOPPADDING', (0,0), (-1,-1), 0),
     ]))
+    divider.hAlign = 'CENTER'
     story.append(divider)
     story.append(Spacer(1, 15))
 
@@ -859,6 +861,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('BOTTOMPADDING', (0,0), (-1,-1), 2),
         ('TOPPADDING', (0,0), (-1,-1), 2),
     ]))
+    billed_to_table.hAlign = 'CENTER'
     story.append(billed_to_table)
     story.append(Spacer(1, 15))
 
@@ -895,6 +898,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#EAE6DF')),
         ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#EAE6DF')),
     ]))
+    items_table.hAlign = 'CENTER'
     story.append(items_table)
     story.append(Spacer(1, 15))
 
@@ -975,6 +979,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('LEFTPADDING', (0,0), (-1,-1), 0),
         ('RIGHTPADDING', (0,0), (-1,-1), 0),
     ]))
+    bottom_grid_table.hAlign = 'CENTER'
     story.append(bottom_grid_table)
     story.append(Spacer(1, 20))
 
@@ -985,26 +990,46 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('BOTTOMPADDING', (0,0), (-1,-1), 0),
         ('TOPPADDING', (0,0), (-1,-1), 0),
     ]))
+    footer_divider.hAlign = 'CENTER'
     story.append(footer_divider)
     story.append(Spacer(1, 10))
 
-    # Footer note with full address and toll-free
-    footer_addr_style = ParagraphStyle('FooterAddr', parent=body_style, alignment=1, fontSize=7, leading=11, textColor=colors.HexColor('#666666'))
+    # Footer note with full address and toll-free — shown on separate lines
+    footer_addr_style = ParagraphStyle('FooterAddr', parent=body_style, alignment=1, fontSize=7, leading=12, textColor=colors.HexColor('#666666'), wordWrap='CJK')
     footer_thanks_style = ParagraphStyle('FooterThanks', parent=body_style, alignment=1, fontSize=8, leading=12, textColor=colors.HexColor('#333333'))
+
+    # Strip any trailing Mob: / Phone: info from address for cleaner display
+    import re as _re
+    clean_address = _re.sub(r'\s*(Mob|Phone|Tel|Mobile)\s*:.*$', '', company_address, flags=_re.IGNORECASE).strip().rstrip(',')
 
     story.append(Paragraph("<i>Thank you for your business!</i>", footer_thanks_style))
     story.append(Spacer(1, 4))
-    story.append(Paragraph(
-        f"{company_name} | {company_address}",
-        footer_addr_style
-    ))
+    story.append(Paragraph(company_name, footer_addr_style))
+    story.append(Spacer(1, 2))
+    story.append(Paragraph(clean_address, footer_addr_style))
     story.append(Spacer(1, 2))
     story.append(Paragraph(
-        "Toll Free: 1800 890 2621  |  Email: info@kozmocart.com  |  Web: www.kozmocart.com",
+        "Toll Free: 1800 890 2621  \u2502  Email: info@kozmocart.com  \u2502  www.kozmocart.com",
         footer_addr_style
     ))
 
-    doc.build(story)
+    # ── Vertical centering: measure story height, prepend a top spacer ──
+    from reportlab.platypus import SimpleDocTemplate as _SDT
+    from io import BytesIO as _BIO
+    _measure_buf = _BIO()
+    _measure_doc = _SDT(_measure_buf, pagesize=A4, rightMargin=45, leftMargin=45, topMargin=45, bottomMargin=45)
+    _measure_doc.build(list(story))          # build a throw-away copy
+    _content_height = _measure_doc.page - 45 - 45  # rough: page cursor at end
+
+    page_h = A4[1]                           # 841.89 pt
+    usable_h = page_h - 45 - 45             # 751.89 pt
+    story_h = sum(getattr(f, '_height', 0) or 0 for f in story)
+
+    # Estimate using a reasonable fraction if measurement gives 0
+    top_pad = max(0, (usable_h - 520) / 2)  # 520pt ≈ typical invoice height
+    final_story = [Spacer(1, top_pad)] + story if top_pad > 10 else story
+
+    doc.build(final_story)
     buffer.seek(0)
     return buffer
 
