@@ -8,20 +8,37 @@ from app.core.config import settings
 # Core SMTP Dispatcher
 # ─────────────────────────────────────────────────────────────────────────────
 
-def send_smtp_email(to_email: str, subject: str, body_html: str, body_text: str = None) -> bool:
-    """Sends an email using standard SMTP configurations in settings."""
+def send_smtp_email(
+    to_email: str,
+    subject: str,
+    body_html: str,
+    body_text: str = None,
+    attachment_bytes: Optional[bytes] = None,
+    attachment_filename: Optional[str] = None
+) -> bool:
+    """Sends an email using standard SMTP configurations in settings, with optional file attachment."""
     if not settings.SMTP_HOST or not settings.SMTP_USER:
         print("SMTP settings are not configured. Skipping email transmission.")
         return False
 
-    msg = MIMEMultipart('alternative')
+    msg = MIMEMultipart('mixed')
     msg['Subject'] = subject
     msg['From'] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL or settings.SMTP_USER}>"
     msg['To'] = to_email
 
+    # Alternative section for text vs html bodies
+    alt_part = MIMEMultipart('alternative')
     if body_text:
-        msg.attach(MIMEText(body_text, 'plain', 'utf-8'))
-    msg.attach(MIMEText(body_html, 'html', 'utf-8'))
+        alt_part.attach(MIMEText(body_text, 'plain', 'utf-8'))
+    alt_part.attach(MIMEText(body_html, 'html', 'utf-8'))
+    msg.attach(alt_part)
+
+    # File attachment
+    if attachment_bytes and attachment_filename:
+        from email.mime.application import MIMEApplication
+        part = MIMEApplication(attachment_bytes, Name=attachment_filename)
+        part['Content-Disposition'] = f'attachment; filename="{attachment_filename}"'
+        msg.attach(part)
 
     try:
         if settings.SMTP_SSL:
@@ -76,8 +93,8 @@ def _base_template(title_line: str, tagline: str, content_html: str, cta_url: st
 
         <!-- Header -->
         <tr>
-          <td bgcolor="#0A0A0A" style="padding:28px 20px;text-align:center;">
-            <p style="margin:0;color:#FFFFFF;font-size:18px;font-weight:800;letter-spacing:0.35em;text-transform:uppercase;">KOZMOCART</p>
+          <td bgcolor="#FFFFFF" style="padding:28px 20px;text-align:center;border-bottom:1px solid #EAE6DF;">
+            <img src="https://kozmocart.com/logo.png" alt="KOZMOCART" style="height:42px;display:block;margin:0 auto;border:0;" />
             <p style="margin:6px 0 0;color:#D2168D;font-size:8px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;">{tagline}</p>
           </td>
         </tr>
@@ -205,6 +222,625 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
     return send_smtp_email(to_email, subject, html, body_text)
 
 
+def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = None) -> str:
+    """Generates a beautiful printable tax invoice HTML for an order."""
+    if not company_details:
+        company_details = {
+            "companyName": "Kozmocart Luxury Innovations Pvt Ltd",
+            "registeredAddress": "Registered Corporate Office, New Delhi, India",
+            "gstin": "N/A",
+            "pan": "N/A",
+            "stateCode": "07 (Delhi)"
+        }
+
+    company_name = company_details.get("companyName", "Kozmocart Luxury Innovations Pvt Ltd")
+    company_address = company_details.get("registeredAddress", "Registered Corporate Office, New Delhi, India")
+    gstin = company_details.get("gstin", "")
+    pan = company_details.get("pan", "")
+    state_code = company_details.get("stateCode", "")
+
+    gstin_line = f'<p style="margin:2px 0 0;"><strong>GSTIN:</strong> {gstin}</p>' if gstin else ""
+    pan_line = f'<p style="margin:2px 0 0;"><strong>PAN:</strong> {pan}</p>' if pan else ""
+    state_line = f'<p style="margin:2px 0 0;"><strong>State Code:</strong> {state_code}</p>' if state_code else ""
+
+    date_str = order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A"
+    payment_method = (order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A"
+    payment_status = (order.payment_status.value if hasattr(order.payment_status, 'value') else str(order.payment_status)).upper() if order.payment_status else "PENDING"
+
+    # Address block formatting
+    shipping_address_str = "No shipping details"
+    if order.shipping_address:
+        sa = order.shipping_address
+        if isinstance(sa, dict):
+            shipping_address_str = sa.get("full_address") or f"{sa.get('address_line1') or ''}, {sa.get('address_line2') or ''}, {sa.get('city') or ''}, {sa.get('state') or ''} - {sa.get('pincode') or ''}"
+        else:
+            shipping_address_str = str(sa)
+
+    items_rows = ""
+    for item in order.items:
+        prod_desc = f'<div style="font-weight:700;font-size:13px;margin-bottom:2px;">{item.product_name or "Product SKU"}</div>'
+        if item.sku:
+            prod_desc += f'<div style="font-size:10px;color:#888;font-family:monospace;">SKU: {item.sku}</div>'
+        if item.size_ml:
+            prod_desc += f'<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Size: {item.size_ml} ml</div>'
+            
+        unit_price = float(item.unit_price)
+        total_price = unit_price * item.quantity
+        items_rows += f"""
+        <tr>
+          <td>{prod_desc}</td>
+          <td style="text-align: center;font-weight:600;">{item.quantity}</td>
+          <td style="text-align: right;">₹{unit_price:,.2f}</td>
+          <td style="text-align: right;font-weight:700;">₹{total_price:,.2f}</td>
+        </tr>
+        """
+
+    discount = float(order.discount_amount or 0)
+    shipping = float(order.shipping_amount or 0)
+    tax = float(order.tax_amount or 0)
+    subtotal = float(order.subtotal or 0)
+    total = float(order.total_amount or 0)
+
+    discount_row = f'<tr><td>Discount</td><td style="text-align: right;color:#E11D48;">-₹{discount:,.2f}</td></tr>' if discount > 0 else ""
+    shipping_row = f'<tr><td>Logistics (Standard)</td><td style="text-align: right;">{"FREE" if shipping == 0 else f"₹{shipping:,.2f}"}</td></tr>'
+    tax_row = f'<tr><td>Statutory Taxes (GST)</td><td style="text-align: right;">₹{tax:,.2f}</td></tr>' if tax > 0 else ""
+
+    subtotal_str = f"{subtotal:,.2f}"
+    total_str = f"{total:,.2f}"
+
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice — {order.order_number}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  <style>
+    body {{
+      font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+      background: #FAF8F5;
+      color: #1A1A1A;
+      margin: 0;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+    }}
+    .invoice-container {{
+      max-width: 800px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid #EAE6DF;
+      border-radius: 4px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+      padding: 48px;
+      box-sizing: border-box;
+    }}
+    .invoice-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0A0A0A;
+      padding-bottom: 24px;
+      margin-bottom: 30px;
+    }}
+    .logo-container img {{
+      height: 48px;
+      display: block;
+    }}
+    .invoice-title {{
+      text-align: right;
+    }}
+    .invoice-title h1 {{
+      margin: 0;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }}
+    .invoice-title p {{
+      margin: 4px 0 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: #D2168D;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }}
+    .details-grid {{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+      font-size: 12px;
+      line-height: 1.6;
+    }}
+    .details-col h3 {{
+      margin: 0 0 8px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      color: #888888;
+      text-transform: uppercase;
+      border-bottom: 1px solid #EAE6DF;
+      padding-bottom: 4px;
+    }}
+    .details-col p {{
+      margin: 0;
+    }}
+    .invoice-meta {{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      background: #FAF8F5;
+      border: 1px solid #EAE6DF;
+      border-radius: 3px;
+      padding: 16px;
+      margin-bottom: 30px;
+      font-size: 11px;
+    }}
+    .meta-item span {{
+      display: block;
+      color: #888888;
+      text-transform: uppercase;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      margin-bottom: 2px;
+    }}
+    .meta-item strong {{
+      color: #1A1A1A;
+      font-weight: 700;
+    }}
+    .items-table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      font-size: 12px;
+    }}
+    .items-table th {{
+      background: #0A0A0A;
+      color: #FFFFFF;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 12px 16px;
+      text-align: left;
+    }}
+    .items-table td {{
+      padding: 16px;
+      border-bottom: 1px solid #EAE6DF;
+    }}
+    .items-table tr:nth-child(even) {{
+      background: #FAF8F5;
+    }}
+    .summary-section {{
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 30px;
+    }}
+    .summary-table {{
+      width: 300px;
+      font-size: 12px;
+      line-height: 2;
+    }}
+    .summary-table td {{
+      padding: 2px 0;
+    }}
+    .summary-table tr.grand-total td {{
+      border-top: 1px solid #0A0A0A;
+      font-size: 15px;
+      font-weight: 800;
+      color: #D2168D;
+      padding-top: 8px;
+    }}
+    .invoice-footer {{
+      border-top: 1px solid #EAE6DF;
+      padding-top: 24px;
+      text-align: center;
+      font-size: 10px;
+      color: #888888;
+      letter-spacing: 0.05em;
+      line-height: 1.6;
+    }}
+    .print-actions {{
+      max-width: 800px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: flex-end;
+    }}
+    @media print {{
+      body {{
+        background: #FFFFFF;
+        padding: 0;
+      }}
+      .invoice-container {{
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }}
+      .print-actions {{
+        display: none;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <div class="print-actions">
+    <button onclick="window.print()" style="padding: 10px 24px; background: #0A0A0A; color: #FFFFFF; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; border: none; border-radius: 2px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+      Print / Download PDF
+    </button>
+  </div>
+  <div class="invoice-container">
+    <div class="invoice-header">
+      <div class="logo-container">
+        <img src="https://kozmocart.com/logo.png" alt="Kozmocart Logo">
+      </div>
+      <div class="invoice-title">
+        <h1>TAX INVOICE</h1>
+        <p>Invoice Copy</p>
+      </div>
+    </div>
+    
+    <div class="invoice-meta">
+      <div class="meta-item">
+        <span>Invoice Number</span>
+        <strong>{order.order_number}</strong>
+      </div>
+      <div class="meta-item">
+        <span>Date Issued</span>
+        <strong>{date_str}</strong>
+      </div>
+      <div class="meta-item">
+        <span>Payment Method</span>
+        <strong>{payment_method}</strong>
+      </div>
+      <div class="meta-item">
+        <span>Payment Status</span>
+        <strong>{payment_status}</strong>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <div class="details-col">
+        <h3>Sold By (Seller)</h3>
+        <p style="font-weight:700;font-size:13px;margin-bottom:4px;">{company_name}</p>
+        <p>{company_address}</p>
+        {gstin_line}
+        {pan_line}
+        {state_line}
+      </div>
+      <div class="details-col">
+        <h3>Shipping Destination (Buyer)</h3>
+        <p style="font-weight:700;font-size:13px;margin-bottom:4px;">{order.customer_name}</p>
+        <p>{shipping_address_str}</p>
+        <p style="margin-top:6px;"><strong>Phone:</strong> {order.customer_phone or 'N/A'}</p>
+        <p><strong>Email:</strong> {order.customer_email or 'N/A'}</p>
+      </div>
+    </div>
+
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th width="50%">Product Description</th>
+          <th width="15%" style="text-align: center;">Qty</th>
+          <th width="15%" style="text-align: right;">Unit Price</th>
+          <th width="20%" style="text-align: right;">Total Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items_rows}
+      </tbody>
+    </table>
+
+    <div class="summary-section">
+      <table class="summary-table">
+        <tr>
+          <td>Subtotal</td>
+          <td style="text-align: right;">₹{subtotal_str}</td>
+        </tr>
+        {discount_row}
+        {shipping_row}
+        {tax_row}
+        <tr class="grand-total">
+          <td>Grand Total</td>
+          <td style="text-align: right;">₹{total_str}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="invoice-footer">
+      <p style="margin: 0 0 6px; font-weight: 700; text-transform: uppercase; color: #1A1A1A;">Thank you for your purchase with Kozmocart</p>
+      <p style="margin: 0;">This is a computer-generated statutory tax invoice record. No signature is required.</p>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+
+def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None):
+    """Generates a beautiful printable tax invoice PDF for an order."""
+    from io import BytesIO
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+
+    if not company_details:
+        company_details = {
+            "companyName": "Kozmocart Luxury Innovations Pvt Ltd",
+            "registeredAddress": "Registered Corporate Office, New Delhi, India",
+            "gstin": "07AAAAA0000A1Z1",
+            "pan": "N/A",
+            "stateCode": "07 (Delhi)"
+        }
+
+    company_name = company_details.get("companyName", "Kozmocart Luxury Innovations Pvt Ltd")
+    company_address = company_details.get("registeredAddress", "Registered Corporate Office, New Delhi, India")
+    gstin = company_details.get("gstin", "07AAAAA0000A1Z1")
+    pan = company_details.get("pan", "N/A")
+    state_code = company_details.get("stateCode", "07 (Delhi)")
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        'InvoiceTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=22,
+        leading=26,
+        textColor=colors.HexColor('#000000')
+    )
+
+    subtitle_style = ParagraphStyle(
+        'InvoiceSubtitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor('#D2168D'),
+        alignment=2
+    )
+
+    h3_style = ParagraphStyle(
+        'H3Style',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor('#888888')
+    )
+
+    body_style = ParagraphStyle(
+        'BodyStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=13,
+        textColor=colors.HexColor('#333333')
+    )
+
+    bold_body_style = ParagraphStyle(
+        'BoldBodyStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=13,
+        textColor=colors.HexColor('#000000')
+    )
+
+    table_header_style = ParagraphStyle(
+        'TableHeader',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#FFFFFF')
+    )
+
+    table_cell_style = ParagraphStyle(
+        'TableCell',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8,
+        leading=11,
+        textColor=colors.HexColor('#333333')
+    )
+
+    table_cell_bold_style = ParagraphStyle(
+        'TableCellBold',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=11,
+        textColor=colors.HexColor('#000000')
+    )
+
+    story = []
+
+    subtitle_para = Paragraph("Invoice Copy", subtitle_style)
+    header_data = [
+        [Paragraph("KOZMOCART", title_style), subtitle_para]
+    ]
+    header_table = Table(header_data, colWidths=[4*inch, 3.27*inch])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (1,0), (1,0), 'RIGHT'),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 15))
+
+    meta_data = [
+        [
+            Paragraph("INVOICE NUMBER<br/><b>" + order.order_number + "</b>", body_style),
+            Paragraph("DATE ISSUED<br/><b>" + (order.created_at.strftime("%d/%m/%Y") if order.created_at else "N/A") + "</b>", body_style),
+            Paragraph("PAYMENT METHOD<br/><b>" + ((order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A") + "</b>", body_style),
+            Paragraph("PAYMENT STATUS<br/><b>" + ((order.payment_status.value if hasattr(order.payment_status, 'value') else str(order.payment_status)).upper() if order.payment_status else "PENDING") + "</b>", body_style)
+        ]
+    ]
+    meta_table = Table(meta_data, colWidths=[1.8*inch, 1.8*inch, 1.8*inch, 1.87*inch])
+    meta_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#FAF8F5')),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#EAE6DF')),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#EAE6DF')),
+        ('TOPPADDING', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('LEFTPADDING', (0,0), (-1,-1), 10),
+        ('RIGHTPADDING', (0,0), (-1,-1), 10),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 20))
+
+    seller_details = f"<b>{company_name}</b><br/>"
+    seller_details += f"{company_address}<br/>"
+    if gstin:
+        seller_details += f"GSTIN: {gstin}<br/>"
+    if pan:
+        seller_details += f"PAN: {pan}<br/>"
+    if state_code:
+        seller_details += f"State Code: {state_code}"
+
+    shipping_address_str = "No shipping details"
+    if order.shipping_address:
+        sa = order.shipping_address
+        if isinstance(sa, dict):
+            shipping_address_str = sa.get("full_address") or f"{sa.get('address_line1') or ''}, {sa.get('city') or ''} - {sa.get('pincode') or ''}"
+        else:
+            shipping_address_str = str(sa)
+
+    buyer_details = f"<b>{order.customer_name}</b><br/>"
+    buyer_details += f"{shipping_address_str}<br/>"
+    buyer_details += f"Phone: {order.customer_phone or 'N/A'}<br/>"
+    buyer_details += f"Email: {order.customer_email or 'N/A'}"
+
+    details_data = [
+        [Paragraph("SOLD BY (SELLER)", h3_style), Paragraph("SHIPPING DESTINATION (BUYER)", h3_style)],
+        [Paragraph(seller_details, body_style), Paragraph(buyer_details, body_style)]
+    ]
+    details_table = Table(details_data, colWidths=[3.6*inch, 3.67*inch])
+    details_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,0), 6),
+        ('TOPPADDING', (0,1), (-1,1), 6),
+        ('RIGHTPADDING', (0,0), (-1,-1), 20),
+    ]))
+    story.append(details_table)
+    story.append(Spacer(1, 25))
+
+    table_data = [
+        [
+            Paragraph("PRODUCT DESCRIPTION", table_header_style),
+            Paragraph("QTY", table_header_style),
+            Paragraph("UNIT PRICE", table_header_style),
+            Paragraph("TOTAL PRICE", table_header_style)
+        ]
+    ]
+
+    for item in order.items:
+        desc = f"<b>{item.product_name or 'Product'}</b>"
+        if item.sku:
+            desc += f"<br/>SKU: {item.sku}"
+        if item.size_ml:
+            desc += f" | Size: {item.size_ml} ml"
+
+        table_data.append([
+            Paragraph(desc, table_cell_style),
+            Paragraph(str(item.quantity), table_cell_style),
+            Paragraph(f"INR {float(item.unit_price):,.2f}", table_cell_style),
+            Paragraph(f"INR {float(item.unit_price * item.quantity):,.2f}", table_cell_bold_style)
+        ])
+
+    items_table = Table(table_data, colWidths=[4*inch, 0.8*inch, 1.2*inch, 1.27*inch])
+    items_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#000000')),
+        ('ALIGN', (1,0), (-1,-1), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#EAE6DF')),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#EAE6DF')),
+    ]))
+    story.append(items_table)
+    story.append(Spacer(1, 15))
+
+    summary_data = [
+        [Paragraph("Subtotal", body_style), Paragraph(f"INR {float(order.subtotal):,.2f}", body_style)],
+    ]
+    if order.discount_amount and float(order.discount_amount) > 0:
+        summary_data.append([Paragraph("Discount", body_style), Paragraph(f"-INR {float(order.discount_amount):,.2f}", body_style)])
+    if order.shipping_amount and float(order.shipping_amount) > 0:
+        summary_data.append([Paragraph("Shipping", body_style), Paragraph(f"INR {float(order.shipping_amount):,.2f}", body_style)])
+    if order.tax_amount and float(order.tax_amount) > 0:
+        summary_data.append([Paragraph("Tax (GST)", body_style), Paragraph(f"INR {float(order.tax_amount):,.2f}", body_style)])
+
+    summary_data.append([
+        Paragraph("<b>GRAND TOTAL</b>", bold_body_style),
+        Paragraph(f"<b>INR {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#D2168D'), alignment=2))
+    ])
+
+    summary_table = Table(summary_data, colWidths=[2.2*inch, 1.27*inch])
+    summary_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,-1), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+    ]))
+
+    outer_table_data = [
+        ["", summary_table]
+    ]
+    outer_table = Table(outer_table_data, colWidths=[3.8*inch, 3.47*inch])
+    outer_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('ALIGN', (1,0), (1,0), 'RIGHT'),
+    ]))
+    story.append(outer_table)
+    story.append(Spacer(1, 30))
+
+    footer_text = "<para align=center>Thank you for shopping with Kozmocart Luxury Fragrances<br/><font size=7 color='#888888'>This is a computer generated statutory tax invoice record. No signature is required.</font></para>"
+    story.append(Paragraph(footer_text, ParagraphStyle('FooterStyle', parent=body_style, alignment=1)))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+class InvoiceOrderWrapper:
+    def __init__(self, data: Dict[str, Any], items: List[Dict[str, Any]]):
+        self.order_number = data.get("order_number")
+        self.created_at = data.get("created_at") or datetime.now()
+        self.payment_method = data.get("payment_method") or "COD"
+        self.payment_status = data.get("payment_status") or "PENDING"
+        self.shipping_address = data.get("shipping_address")
+        self.customer_name = data.get("customer_name") or "Customer"
+        self.customer_phone = data.get("customer_phone")
+        self.customer_email = data.get("customer_email")
+        self.discount_amount = data.get("discount_amount") or 0.0
+        self.shipping_amount = data.get("shipping_amount") or 0.0
+        self.tax_amount = data.get("tax_amount") or 0.0
+        self.subtotal = data.get("subtotal") or 0.0
+        self.total_amount = data.get("total_amount") or 0.0
+        self.items = [InvoiceOrderItemWrapper(i) for i in items]
+
+class InvoiceOrderItemWrapper:
+    def __init__(self, data: Dict[str, Any]):
+        self.product_name = data.get("product_name") or data.get("name") or "Product"
+        self.sku = data.get("sku") or "N/A"
+        self.size_ml = data.get("size_ml") or data.get("sizeMl")
+        self.quantity = data.get("quantity") or 1
+        self.unit_price = data.get("unit_price") or data.get("price") or 0.0
+        self.total_price = self.unit_price * self.quantity
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Order Placed Confirmation
 # ─────────────────────────────────────────────────────────────────────────────
@@ -266,7 +902,39 @@ def send_admin_invoice_email(
     """
 
     html = _base_template(f"New Order — {order_number}", "Order Management System", content)
-    return send_smtp_email("info@kozmocart.com", subject, html, body_text)
+    
+    # Compile PDF attachment
+    pdf_bytes = None
+    try:
+        order_data = {
+            "order_number": order_number,
+            "created_at": datetime.now(),
+            "payment_method": payment_method,
+            "payment_status": "PAID" if payment_method.lower() in ("card", "upi", "razorpay") else "PENDING",
+            "shipping_address": shipping_address,
+            "customer_name": customer_name,
+            "customer_phone": customer_phone,
+            "customer_email": customer_email,
+            "discount_amount": discount,
+            "shipping_amount": shipping,
+            "tax_amount": tax,
+            "subtotal": subtotal,
+            "total_amount": total
+        }
+        wrapper = InvoiceOrderWrapper(order_data, items)
+        pdf_buffer = generate_invoice_pdf(wrapper)
+        pdf_bytes = pdf_buffer.getvalue()
+    except Exception as e:
+        print(f"Failed to generate PDF for admin email: {e}")
+
+    return send_smtp_email(
+        "info@kozmocart.com", 
+        subject, 
+        html, 
+        body_text,
+        attachment_bytes=pdf_bytes,
+        attachment_filename=f"invoice_{order_number}.pdf"
+    )
 
 
 def send_order_confirmation_email(
@@ -312,11 +980,11 @@ def send_order_confirmation_email(
     {gift_row}
     <div style="width:40px;height:1px;background:#E2D9C8;margin:24px 0;"></div>
     <p style="margin:0;font-size:11px;color:#888;line-height:1.7;">
-      Track your order anytime at <a href="https://pommaholidays.com/kozmocart/orders" style="color:#D2168D;text-decoration:none;">kozmocart.com/orders</a> using your order number and email.
+      Track your order anytime at <a href="https://kozmocart.com/track-order" style="color:#D2168D;text-decoration:none;">kozmocart.com/track-order</a> using your order number and email.
     </p>"""
 
     html = _base_template(f"Order Confirmed — {order_number}", "Luxury Fragrance House", content,
-                          cta_url="https://pommaholidays.com/kozmocart/orders",
+                          cta_url="https://kozmocart.com/track-order",
                           cta_label="Track My Order")
     
     # Always send detailed invoice copy with full customer details to info@kozmocart.com
@@ -340,7 +1008,37 @@ def send_order_confirmation_email(
 
     # Send to customer if email is provided
     if to_email:
-        return send_smtp_email(to_email, subject, html, body_text)
+        pdf_bytes = None
+        try:
+            order_data = {
+                "order_number": order_number,
+                "created_at": datetime.now(),
+                "payment_method": payment_method,
+                "payment_status": "PAID" if payment_method.lower() in ("card", "upi", "razorpay") else "PENDING",
+                "shipping_address": shipping_address,
+                "customer_name": customer_name,
+                "customer_phone": customer_phone,
+                "customer_email": customer_email or to_email,
+                "discount_amount": discount,
+                "shipping_amount": shipping,
+                "tax_amount": tax,
+                "subtotal": subtotal,
+                "total_amount": total
+            }
+            wrapper = InvoiceOrderWrapper(order_data, items)
+            pdf_buffer = generate_invoice_pdf(wrapper)
+            pdf_bytes = pdf_buffer.getvalue()
+        except Exception as e:
+            print(f"Failed to generate PDF for customer email: {e}")
+
+        return send_smtp_email(
+            to_email, 
+            subject, 
+            html, 
+            body_text,
+            attachment_bytes=pdf_bytes,
+            attachment_filename=f"invoice_{order_number}.pdf"
+        )
     return True
 
 
