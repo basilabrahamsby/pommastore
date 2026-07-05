@@ -442,8 +442,8 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       font-size: 12px;
     }}
     .items-table th {{
-      background: #D2168D;
-      color: #FFFFFF;
+      background: #F3F4F6;
+      color: #1A1A1A;
       font-weight: 700;
       text-transform: uppercase;
       font-size: 9px;
@@ -495,8 +495,8 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       padding-top: 8px;
     }}
     .summary-table tr.total-row .total-box {{
-      background: #D2168D;
-      color: #FFFFFF;
+      background: #F3F4F6;
+      color: #1A1A1A;
       font-weight: 800;
       font-size: 15px;
       padding: 8px 16px;
@@ -725,7 +725,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         fontName='Helvetica-Bold',
         fontSize=8,
         leading=10,
-        textColor=colors.HexColor('#FFFFFF')
+        textColor=colors.HexColor('#1A1A1A')
     )
 
     table_cell_style = ParagraphStyle(
@@ -873,7 +873,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     items_table = Table(table_data, colWidths=[4.0*inch, 0.7*inch, 1.1*inch, 1.2*inch])
     items_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#D2168D')),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#F3F4F6')),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
         ('TOPPADDING', (0,0), (-1,-1), 10),
@@ -933,8 +933,8 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         summary_data.append([Paragraph("Shipping:", body_style), Paragraph("FREE", body_style)])
 
     summary_data.append([
-        Paragraph("<b>Total:</b>", ParagraphStyle('TotalLabel', parent=bold_body_style, textColor=colors.white)),
-        Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.white, alignment=2))
+        Paragraph("<b>Total:</b>", ParagraphStyle('TotalLabel', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'))),
+        Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'), alignment=2))
     ])
 
     summary_table = Table(summary_data, colWidths=[2.2*inch, 1.2*inch])
@@ -944,7 +944,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         ('TOPPADDING', (0,0), (-1,-2), 3),
         ('BOTTOMPADDING', (0,0), (-1,-2), 3),
         # Grand total solid box style!
-        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#D2168D')),
+        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#F3F4F6')),
         ('TOPPADDING', (0,-1), (-1,-1), 8),
         ('BOTTOMPADDING', (0,-1), (-1,-1), 8),
         ('LEFTPADDING', (0,-1), (-1,-1), 12),
