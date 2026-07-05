@@ -243,6 +243,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     gstin_line = f'GSTIN: {gstin}<br>' if gstin else ""
     pan_line = f'PAN: {pan}<br>' if pan else ""
     state_line = f'State Code: {state_code}<br>' if state_code else ""
+    toll_free_line = 'Toll Free: 1800 890 2621<br>'
 
     date_str = order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A"
     payment_method = (order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A"
@@ -563,6 +564,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
           {gstin_line}
           {pan_line}
           {state_line}
+          {toll_free_line}
         </div>
       </div>
       <div class="invoice-title-block">
@@ -765,7 +767,8 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>"
     if gstin: left_header_text += f"GSTIN: {gstin}<br/>"
     if pan: left_header_text += f"PAN: {pan}<br/>"
-    if state_code: left_header_text += f"State Code: {state_code}"
+    if state_code: left_header_text += f"State Code: {state_code}<br/>"
+    left_header_text += "Toll Free: 1800 890 2621"
     
     left_header_data = [
         [logo_flowable],
