@@ -275,17 +275,35 @@ async def cancel_delhivery_shipment(waybill: str) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             res = await client.post(url, headers=headers, json=payload, timeout=10.0)
             if res.status_code == 200:
-                res_data = res.json()
-                # Delhivery response format typically contains status or success info
-                if res_data.get("status") or res_data.get("success") or "cancellation" in str(res_data).lower():
-                    return {
-                        "success": True,
-                        "message": "Shipment cancellation request sent successfully"
-                    }
-                else:
+                try:
+                    import xml.etree.ElementTree as ET
+                    root = ET.fromstring(res.text)
+                    status_node = root.find("status")
+                    remark_node = root.find("remark")
+                    
+                    status_val = status_node.text if status_node is not None else ""
+                    remark_val = remark_node.text if remark_node is not None else ""
+                    
+                    if status_val.strip().lower() in ("true", "success") or "cancelled" in remark_val.lower():
+                        return {
+                            "success": True,
+                            "message": f"Delhivery cancellation successful: {remark_val}"
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "message": f"Delhivery cancellation failed with remark: {remark_val}"
+                        }
+                except Exception as parse_err:
+                    logger.error(f"Delhivery XML parsing error: {str(parse_err)}")
+                    if "true" in res.text.lower() or "cancelled" in res.text.lower():
+                        return {
+                            "success": True,
+                            "message": "Shipment cancellation request sent successfully (parsed via fallback)"
+                        }
                     return {
                         "success": False,
-                        "message": f"Delhivery edit status response: {res_data}"
+                        "message": f"Failed to parse Delhivery cancellation response: {res.text}"
                     }
     except Exception as e:
         logger.error(f"Delhivery shipment cancellation error: {str(e)}")
