@@ -240,9 +240,9 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "07 (Delhi)"
 
-    gstin_line = f'<p style="margin:2px 0 0;"><strong>GSTIN:</strong> {gstin}</p>' if gstin else ""
-    pan_line = f'<p style="margin:2px 0 0;"><strong>PAN:</strong> {pan}</p>' if pan else ""
-    state_line = f'<p style="margin:2px 0 0;"><strong>State Code:</strong> {state_code}</p>' if state_code else ""
+    gstin_line = f'GSTIN: {gstin}<br>' if gstin else ""
+    pan_line = f'PAN: {pan}<br>' if pan else ""
+    state_line = f'State Code: {state_code}<br>' if state_code else ""
 
     date_str = order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A"
     payment_method = (order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A"
@@ -282,22 +282,25 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     subtotal = float(order.subtotal or 0)
     total = float(order.total_amount or 0)
 
-    discount_row = f'<tr><td>Discount</td><td style="text-align: right;color:#E11D48;">-₹{discount:,.2f}</td></tr>' if discount > 0 else ""
-    shipping_row = f'<tr><td>Logistics (Standard)</td><td style="text-align: right;">{"FREE" if shipping == 0 else f"₹{shipping:,.2f}"}</td></tr>'
-    tax_row = f'<tr><td>Statutory Taxes (GST)</td><td style="text-align: right;">₹{tax:,.2f}</td></tr>' if tax > 0 else ""
+    discount_row = f'<tr><td>Discount:</td><td style="text-align: right;color:#E11D48;">-₹{discount:,.2f}</td></tr>' if discount > 0 else ""
+    shipping_row = f'<tr><td>Logistics (Standard):</td><td style="text-align: right;">{"FREE" if shipping == 0 else f"₹{shipping:,.2f}"}</td></tr>'
+    tax_row = f'<tr><td>Statutory Taxes (GST):</td><td style="text-align: right;">₹{tax:,.2f}</td></tr>' if tax > 0 else ""
 
     subtotal_str = f"{subtotal:,.2f}"
     total_str = f"{total:,.2f}"
+
+    tracking_line = f'<p style="margin:0 0 4px;"><strong>Tracking Number:</strong> {order.tracking_number}</p>' if order.tracking_number else ""
+    carrier_line = f'<p style="margin:0 0 4px;"><strong>Carrier:</strong> {order.carrier}</p>' if order.carrier else ""
 
     return f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Invoice — {order.order_number}</title>
+  <title>Tax Invoice — {order.order_number}</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
   <style>
     body {{
-      font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Montserrat', Arial, sans-serif;
       background: #FAF8F5;
       color: #1A1A1A;
       margin: 0;
@@ -313,90 +316,84 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       box-shadow: 0 4px 24px rgba(0,0,0,0.04);
       padding: 48px;
       box-sizing: border-box;
+      position: relative;
+    }}
+    .top-bar {{
+      height: 6px;
+      background: #D2168D;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      border-radius: 4px 4px 0 0;
+    }}
+    .bottom-bar {{
+      height: 6px;
+      background: #000000;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-radius: 0 0 4px 4px;
     }}
     .invoice-header {{
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 2px solid #0A0A0A;
-      padding-bottom: 24px;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
     }}
-    .logo-container img {{
+    .logo-block img {{
       height: 48px;
       display: block;
+      margin-bottom: 12px;
     }}
-    .invoice-title {{
+    .company-address {{
+      font-size: 11px;
+      line-height: 1.5;
+      color: #555555;
+    }}
+    .invoice-title-block {{
       text-align: right;
     }}
-    .invoice-title h1 {{
+    .invoice-title-block h1 {{
       margin: 0;
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 28px;
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
       font-weight: 700;
+      color: #000000;
       letter-spacing: 0.05em;
     }}
-    .invoice-title p {{
-      margin: 4px 0 0;
+    .invoice-meta-info {{
+      margin-top: 15px;
       font-size: 11px;
-      font-weight: 700;
-      color: #D2168D;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
+      line-height: 1.6;
+      color: #555555;
+      text-align: right;
     }}
-    .details-grid {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin-bottom: 40px;
+    .invoice-meta-info strong {{
+      color: #000000;
+    }}
+    .billed-to-section {{
+      margin-bottom: 35px;
       font-size: 12px;
       line-height: 1.6;
     }}
-    .details-col h3 {{
-      margin: 0 0 8px;
+    .billed-to-section h3 {{
+      margin: 0 0 6px;
       font-size: 10px;
       font-weight: 800;
       letter-spacing: 0.15em;
-      color: #888888;
+      color: #D2168D;
       text-transform: uppercase;
-      border-bottom: 1px solid #EAE6DF;
-      padding-bottom: 4px;
-    }}
-    .details-col p {{
-      margin: 0;
-    }}
-    .invoice-meta {{
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      background: #FAF8F5;
-      border: 1px solid #EAE6DF;
-      border-radius: 3px;
-      padding: 16px;
-      margin-bottom: 30px;
-      font-size: 11px;
-    }}
-    .meta-item span {{
-      display: block;
-      color: #888888;
-      text-transform: uppercase;
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      margin-bottom: 2px;
-    }}
-    .meta-item strong {{
-      color: #1A1A1A;
-      font-weight: 700;
     }}
     .items-table {{
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 35px;
       font-size: 12px;
     }}
     .items-table th {{
-      background: #0A0A0A;
+      background: #000000;
       color: #FFFFFF;
       font-weight: 700;
       text-transform: uppercase;
@@ -412,25 +409,52 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     .items-table tr:nth-child(even) {{
       background: #FAF8F5;
     }}
-    .summary-section {{
+    .summary-payment-grid {{
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+      font-size: 12px;
+      line-height: 1.6;
+    }}
+    .payment-info-col h4 {{
+      margin: 0 0 8px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      color: #D2168D;
+      text-transform: uppercase;
+    }}
+    .payment-info-col p {{
+      margin: 0 0 4px;
+      color: #555555;
+    }}
+    .summary-col {{
       display: flex;
-      justify-content: flex-end;
-      margin-bottom: 30px;
+      flex-direction: column;
+      align-items: flex-end;
     }}
     .summary-table {{
-      width: 300px;
-      font-size: 12px;
-      line-height: 2;
+      width: 100%;
+      line-height: 1.8;
     }}
     .summary-table td {{
       padding: 2px 0;
     }}
-    .summary-table tr.grand-total td {{
-      border-top: 1px solid #0A0A0A;
-      font-size: 15px;
-      font-weight: 800;
-      color: #D2168D;
+    .summary-table tr.total-row td {{
+      border-top: 1px solid #EAE6DF;
       padding-top: 8px;
+    }}
+    .summary-table tr.total-row .total-box {{
+      background: #000000;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 8px 16px;
+      text-align: right;
+      display: inline-block;
+      min-width: 180px;
+      box-sizing: border-box;
     }}
     .invoice-footer {{
       border-top: 1px solid #EAE6DF;
@@ -438,7 +462,6 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       text-align: center;
       font-size: 10px;
       color: #888888;
-      letter-spacing: 0.05em;
       line-height: 1.6;
     }}
     .print-actions {{
@@ -465,65 +488,48 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
 </head>
 <body>
   <div class="print-actions">
-    <button onclick="window.print()" style="padding: 10px 24px; background: #0A0A0A; color: #FFFFFF; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; border: none; border-radius: 2px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+    <button onclick="window.print()" style="padding: 10px 24px; background: #D2168D; color: #FFFFFF; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; border: none; border-radius: 2px; cursor: pointer;">
       Print / Download PDF
     </button>
   </div>
   <div class="invoice-container">
+    <div class="top-bar"></div>
     <div class="invoice-header">
-      <div class="logo-container">
+      <div class="logo-block">
         <img src="https://kozmocart.com/logo.png" alt="Kozmocart Logo">
+        <div class="company-address">
+          <strong>{company_name}</strong><br>
+          {company_address}<br>
+          {gstin_line}
+          {pan_line}
+          {state_line}
+        </div>
       </div>
-      <div class="invoice-title">
-        <h1>TAX INVOICE</h1>
-        <p>Invoice Copy</p>
-      </div>
-    </div>
-    
-    <div class="invoice-meta">
-      <div class="meta-item">
-        <span>Invoice Number</span>
-        <strong>{order.order_number}</strong>
-      </div>
-      <div class="meta-item">
-        <span>Date Issued</span>
-        <strong>{date_str}</strong>
-      </div>
-      <div class="meta-item">
-        <span>Payment Method</span>
-        <strong>{payment_method}</strong>
-      </div>
-      <div class="meta-item">
-        <span>Payment Status</span>
-        <strong>{payment_status}</strong>
+      <div class="invoice-title-block">
+        <h1>INVOICE</h1>
+        <div class="invoice-meta-info">
+          <strong>Invoice No:</strong> {order.order_number}<br>
+          <strong>Date:</strong> {date_str}<br>
+          <strong>Status:</strong> {payment_status}
+        </div>
       </div>
     </div>
 
-    <div class="details-grid">
-      <div class="details-col">
-        <h3>Sold By (Seller)</h3>
-        <p style="font-weight:700;font-size:13px;margin-bottom:4px;">{company_name}</p>
-        <p>{company_address}</p>
-        {gstin_line}
-        {pan_line}
-        {state_line}
-      </div>
-      <div class="details-col">
-        <h3>Shipping Destination (Buyer)</h3>
-        <p style="font-weight:700;font-size:13px;margin-bottom:4px;">{order.customer_name}</p>
-        <p>{shipping_address_str}</p>
-        <p style="margin-top:6px;"><strong>Phone:</strong> {order.customer_phone or 'N/A'}</p>
-        <p><strong>Email:</strong> {order.customer_email or 'N/A'}</p>
-      </div>
+    <div class="billed-to-section">
+      <h3>Billed To:</h3>
+      <strong>{order.customer_name}</strong><br>
+      {shipping_address_str}<br>
+      <strong>Phone:</strong> {order.customer_phone or 'N/A'}<br>
+      <strong>Email:</strong> {order.customer_email or 'N/A'}
     </div>
 
     <table class="items-table">
       <thead>
         <tr>
-          <th width="50%">Product Description</th>
-          <th width="15%" style="text-align: center;">Qty</th>
+          <th width="50%">Description</th>
+          <th width="15%" style="text-align: center;">Quantity</th>
           <th width="15%" style="text-align: right;">Unit Price</th>
-          <th width="20%" style="text-align: right;">Total Price</th>
+          <th width="20%" style="text-align: right;">Total</th>
         </tr>
       </thead>
       <tbody>
@@ -531,26 +537,38 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       </tbody>
     </table>
 
-    <div class="summary-section">
-      <table class="summary-table">
-        <tr>
-          <td>Subtotal</td>
-          <td style="text-align: right;">₹{subtotal_str}</td>
-        </tr>
-        {discount_row}
-        {shipping_row}
-        {tax_row}
-        <tr class="grand-total">
-          <td>Grand Total</td>
-          <td style="text-align: right;">₹{total_str}</td>
-        </tr>
-      </table>
+    <div class="summary-payment-grid">
+      <div class="payment-info-col">
+        <h4>Payment & Shipping Info:</h4>
+        <p><strong>Payment Method:</strong> {payment_method}</p>
+        {tracking_line}
+        {carrier_line}
+      </div>
+      <div class="summary-col">
+        <table class="summary-table">
+          <tr>
+            <td>Subtotal:</td>
+            <td style="text-align: right;">₹{subtotal_str}</td>
+          </tr>
+          {discount_row}
+          {shipping_row}
+          {tax_row}
+          <tr class="total-row">
+            <td colspan="2" style="text-align: right; padding-top: 10px;">
+              <div class="total-box">
+                Total: ₹{total_str}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
 
     <div class="invoice-footer">
-      <p style="margin: 0 0 6px; font-weight: 700; text-transform: uppercase; color: #1A1A1A;">Thank you for your purchase with Kozmocart</p>
-      <p style="margin: 0;">This is a computer-generated statutory tax invoice record. No signature is required.</p>
+      <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
+      <p style="margin: 0;">If you have any questions about this invoice, please contact <a href="mailto:info@kozmocart.com" style="color: #D2168D; text-decoration: none;">info@kozmocart.com</a></p>
     </div>
+    <div class="bottom-bar"></div>
   </div>
 </body>
 </html>
@@ -683,14 +701,50 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         print(f"Skipping remote logo loading: {img_err}")
         logo_flowable = Paragraph("KOZMOCART", title_style)
 
-    subtitle_para = Paragraph("TAX INVOICE<br/><font size=7 color='#888888'>Invoice Copy</font>", subtitle_style)
-    header_data = [
-        [logo_flowable, subtitle_para]
+    # Left Header: Logo & Company Address info
+    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>"
+    if gstin: left_header_text += f"GSTIN: {gstin}<br/>"
+    if pan: left_header_text += f"PAN: {pan}<br/>"
+    if state_code: left_header_text += f"State Code: {state_code}"
+    
+    left_header_data = [
+        [logo_flowable],
+        [Spacer(1, 4)],
+        [Paragraph(left_header_text, ParagraphStyle('LeftCompText', parent=body_style, fontSize=8, leading=11, textColor=colors.HexColor('#555555')))]
     ]
-    header_table = Table(header_data, colWidths=[4*inch, 3.27*inch])
+    left_header_table = Table(left_header_data, colWidths=[3.6*inch])
+    left_header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+    ]))
+
+    # Right Header: INVOICE title & Meta details
+    right_header_text = f"<b>Invoice No:</b> {order.order_number}<br/>"
+    right_header_text += f"<b>Date:</b> {(order.created_at.strftime('%d/%m/%Y, %H:%M') if order.created_at else 'N/A')}<br/>"
+    right_header_text += f"<b>Status:</b> {((order.payment_status.value if hasattr(order.payment_status, 'value') else str(order.payment_status)).upper() if order.payment_status else 'PENDING')}"
+
+    right_header_data = [
+        [Paragraph("INVOICE", ParagraphStyle('InvTitle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=28, leading=30, alignment=2))],
+        [Spacer(1, 10)],
+        [Paragraph(right_header_text, ParagraphStyle('InvMetaText', parent=body_style, fontSize=9, leading=12, alignment=2, textColor=colors.HexColor('#555555')))]
+    ]
+    right_header_table = Table(right_header_data, colWidths=[3.67*inch])
+    right_header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+    ]))
+
+    header_table = Table([[left_header_table, right_header_table]], colWidths=[3.6*inch, 3.67*inch])
     header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('ALIGN', (1,0), (1,0), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(header_table)
@@ -705,38 +759,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(divider)
     story.append(Spacer(1, 15))
 
-    # Meta Grid (Invoice #, Date, Payment)
-    meta_data = [
-        [
-            Paragraph("INVOICE NUMBER<br/><b>" + order.order_number + "</b>", body_style),
-            Paragraph("DATE ISSUED<br/><b>" + (order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A") + "</b>", body_style),
-            Paragraph("PAYMENT METHOD<br/><b>" + ((order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A") + "</b>", body_style),
-            Paragraph("PAYMENT STATUS<br/><b>" + ((order.payment_status.value if hasattr(order.payment_status, 'value') else str(order.payment_status)).upper() if order.payment_status else "PENDING") + "</b>", body_style)
-        ]
-    ]
-    meta_table = Table(meta_data, colWidths=[1.8*inch, 1.8*inch, 1.8*inch, 1.87*inch])
-    meta_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#FAF8F5')),
-        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#EAE6DF')),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#EAE6DF')),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-        ('LEFTPADDING', (0,0), (-1,-1), 10),
-        ('RIGHTPADDING', (0,0), (-1,-1), 10),
-    ]))
-    story.append(meta_table)
-    story.append(Spacer(1, 20))
-
-    # Seller & Buyer Address details
-    seller_details = f"<b>{company_name}</b><br/>"
-    seller_details += f"{company_address}<br/>"
-    if gstin:
-        seller_details += f"<b>GSTIN:</b> {gstin}<br/>"
-    if pan:
-        seller_details += f"<b>PAN:</b> {pan}<br/>"
-    if state_code:
-        seller_details += f"<b>State Code:</b> {state_code}"
-
+    # Billed To Section
     shipping_address_str = "No shipping details"
     if order.shipping_address:
         sa = order.shipping_address
@@ -750,27 +773,27 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     buyer_details += f"Phone: {order.customer_phone or 'N/A'}<br/>"
     buyer_details += f"Email: {order.customer_email or 'N/A'}"
 
-    details_data = [
-        [Paragraph("SOLD BY (SELLER)", h3_style), Paragraph("SHIPPING DESTINATION (BUYER)", h3_style)],
-        [Paragraph(seller_details, body_style), Paragraph(buyer_details, body_style)]
+    billed_to_data = [
+        [Paragraph("BILLED TO:", h3_style)],
+        [Paragraph(buyer_details, body_style)]
     ]
-    details_table = Table(details_data, colWidths=[3.6*inch, 3.67*inch])
-    details_table.setStyle(TableStyle([
+    billed_to_table = Table(billed_to_data, colWidths=[7.27*inch])
+    billed_to_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 6),
-        ('TOPPADDING', (0,1), (-1,1), 6),
-        ('RIGHTPADDING', (0,0), (-1,-1), 20),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('TOPPADDING', (0,0), (-1,-1), 2),
     ]))
-    story.append(details_table)
-    story.append(Spacer(1, 20))
+    story.append(billed_to_table)
+    story.append(Spacer(1, 15))
 
-    # Product items table
+    # Items table (Description, Quantity, Unit Price, Total)
     table_data = [
         [
-            Paragraph("PRODUCT DESCRIPTION", table_header_style),
-            Paragraph("QTY", table_header_style),
-            Paragraph("UNIT PRICE", table_header_style),
-            Paragraph("TOTAL PRICE", table_header_style)
+            Paragraph("DESCRIPTION", table_header_style),
+            Paragraph("QUANTITY", ParagraphStyle('ThRight', parent=table_header_style, alignment=1)),
+            Paragraph("UNIT PRICE", ParagraphStyle('ThRight2', parent=table_header_style, alignment=2)),
+            Paragraph("TOTAL", ParagraphStyle('ThRight3', parent=table_header_style, alignment=2))
         ]
     ]
 
@@ -783,15 +806,14 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
         table_data.append([
             Paragraph(desc, table_cell_style),
-            Paragraph(str(item.quantity), table_cell_style),
-            Paragraph(f"Rs. {float(item.unit_price):,.2f}", table_cell_style),
-            Paragraph(f"Rs. {float(item.unit_price * item.quantity):,.2f}", table_cell_bold_style)
+            Paragraph(str(item.quantity), ParagraphStyle('TdRight', parent=table_cell_style, alignment=1)),
+            Paragraph(f"Rs. {float(item.unit_price):,.2f}", ParagraphStyle('TdRight2', parent=table_cell_style, alignment=2)),
+            Paragraph(f"Rs. {float(item.unit_price * item.quantity):,.2f}", ParagraphStyle('TdRight3', parent=table_cell_bold_style, alignment=2))
         ])
 
-    items_table = Table(table_data, colWidths=[4.2*inch, 0.6*inch, 1.2*inch, 1.27*inch])
+    items_table = Table(table_data, colWidths=[4.2*inch, 0.7*inch, 1.1*inch, 1.27*inch])
     items_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#000000')),
-        ('ALIGN', (1,0), (-1,-1), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
         ('TOPPADDING', (0,0), (-1,-1), 10),
@@ -801,43 +823,57 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(items_table)
     story.append(Spacer(1, 15))
 
-    # Pricing Breakdown Summary
+    # Payment & Shipping Info (Left) vs Totals (Right)
+    tracking_text = f"Tracking Number: {order.tracking_number}<br/>" if order.tracking_number else ""
+    carrier_text = f"Carrier: {order.carrier}<br/>" if order.carrier else ""
+    pm_text = f"Payment Method: {((order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else 'N/A')}"
+    
+    payment_info_text = f"<b>Payment & Shipping Info:</b><br/>{pm_text}<br/>{tracking_text}{carrier_text}"
+    payment_info_para = Paragraph(payment_info_text, ParagraphStyle('PayInfoText', parent=body_style, fontSize=8, leading=12, textColor=colors.HexColor('#555555')))
+
     summary_data = [
-        [Paragraph("Subtotal", body_style), Paragraph(f"Rs. {float(order.subtotal):,.2f}", body_style)],
+        [Paragraph("Subtotal:", body_style), Paragraph(f"Rs. {float(order.subtotal):,.2f}", body_style)],
     ]
     if order.discount_amount and float(order.discount_amount) > 0:
-        summary_data.append([Paragraph("Discount", body_style), Paragraph(f"-Rs. {float(order.discount_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Discount:", body_style), Paragraph(f"-Rs. {float(order.discount_amount):,.2f}", body_style)])
     if order.shipping_amount and float(order.shipping_amount) > 0:
-        summary_data.append([Paragraph("Shipping", body_style), Paragraph(f"Rs. {float(order.shipping_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Shipping:", body_style), Paragraph(f"Rs. {float(order.shipping_amount):,.2f}", body_style)])
     if order.tax_amount and float(order.tax_amount) > 0:
-        summary_data.append([Paragraph("Tax (GST)", body_style), Paragraph(f"Rs. {float(order.tax_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Tax (GST):", body_style), Paragraph(f"Rs. {float(order.tax_amount):,.2f}", body_style)])
 
     summary_data.append([
-        Paragraph("<b>GRAND TOTAL</b>", bold_body_style),
-        Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#D2168D'), alignment=2))
+        Paragraph("<b>Total:</b>", ParagraphStyle('TotalLabel', parent=bold_body_style, textColor=colors.white)),
+        Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.white, alignment=2))
     ])
 
     summary_table = Table(summary_data, colWidths=[2.2*inch, 1.27*inch])
     summary_table.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-2), 3),
+        ('BOTTOMPADDING', (0,0), (-1,-2), 3),
+        # Grand total solid box style!
+        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#000000')),
         ('TOPPADDING', (0,-1), (-1,-1), 8),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,-1), (-1,-1), 8),
+        ('LEFTPADDING', (0,-1), (-1,-1), 12),
+        ('RIGHTPADDING', (0,-1), (-1,-1), 12),
     ]))
 
-    outer_table_data = [
-        ["", summary_table]
+    bottom_grid_data = [
+        [payment_info_para, summary_table]
     ]
-    outer_table = Table(outer_table_data, colWidths=[3.8*inch, 3.47*inch])
-    outer_table.setStyle(TableStyle([
+    bottom_grid_table = Table(bottom_grid_data, colWidths=[3.8*inch, 3.47*inch])
+    bottom_grid_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (1,0), (1,0), 'RIGHT'),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
     ]))
-    story.append(outer_table)
+    story.append(bottom_grid_table)
     story.append(Spacer(1, 20))
 
-    # Footer note & statutory compliance
-    footer_text = "<para align=center>Thank you for shopping with Kozmocart Luxury Fragrances<br/><font size=7 color='#888888'>This is a computer generated statutory tax invoice record. No signature is required.</font></para>"
+    # Footer note
+    footer_text = "<para align=center><i>Thank you for your business!</i><br/><font size=7 color='#888888'>If you have any questions about this invoice, please contact info@kozmocart.com</font></para>"
     story.append(Paragraph(footer_text, ParagraphStyle('FooterStyle', parent=body_style, alignment=1)))
 
     doc.build(story)
