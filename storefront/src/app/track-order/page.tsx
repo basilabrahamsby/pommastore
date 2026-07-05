@@ -391,6 +391,14 @@ function TrackOrderContent() {
                         {formatStatus(orderData.status)}
                       </span>
                       <span className="text-xs font-black tracking-[0.15em] text-neutral-900">#{orderData.order_number}</span>
+                      <a 
+                        href={`${api.defaults.baseURL || '/api/v1'}/orders/${orderData.id}/invoice`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[9px] font-black tracking-widest text-black border border-black px-3 py-1 hover:bg-black hover:text-white transition-all uppercase inline-block"
+                      >
+                        📄 View Invoice
+                      </a>
                     </div>
                     <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest flex items-center mt-2">
                       <Clock className="inline mr-1 h-3 w-3" />

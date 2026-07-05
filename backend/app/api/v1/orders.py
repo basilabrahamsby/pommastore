@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
@@ -14,6 +15,7 @@ from app.models.product import ProductVariant, Product
 from app.models.inventory import InventoryBatch, InventoryMovement
 from app.models.offer import Offer
 from app.models.user import User
+from app.models.system import SystemSettings
 from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderStatusUpdate, OrderContactUpdate, CustomerCreate, CustomerOut
 from app.services.email import (
     send_order_confirmation_email,
@@ -87,6 +89,72 @@ async def get_order(order_id: str, db: AsyncSession = Depends(get_db), _: User =
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return _enrich_order(order)
+
+
+@router.get("/{order_id}/invoice", response_class=HTMLResponse)
+async def get_order_invoice(
+    order_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        order_uuid = uuid.UUID(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order ID format")
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_uuid)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            joinedload(Order.customer),
+        )
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Query company details
+    comp_res = await db.execute(select(SystemSettings).where(SystemSettings.key == "company"))
+    comp_setting = comp_res.scalar_one_or_none()
+    company_details = comp_setting.value if comp_setting else None
+
+    html_content = generate_invoice_html(order, company_details)
+    return HTMLResponse(content=html_content)
+
+
+@router.get("/{order_id}/invoice/pdf")
+async def get_order_invoice_pdf(
+    order_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        order_uuid = uuid.UUID(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order ID format")
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_uuid)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            joinedload(Order.customer),
+        )
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Query company details
+    comp_res = await db.execute(select(SystemSettings).where(SystemSettings.key == "company"))
+    comp_setting = comp_res.scalar_one_or_none()
+    company_details = comp_setting.value if comp_setting else None
+
+    pdf_buffer = generate_invoice_pdf(order, company_details)
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=invoice_{order.order_number}.pdf"}
+    )
 
 
 @router.post("", response_model=OrderOut, status_code=201)

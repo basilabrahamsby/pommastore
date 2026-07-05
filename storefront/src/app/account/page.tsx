@@ -371,7 +371,17 @@ export default function Account() {
           <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
               <h3 className="font-serif text-2xl">Order #{selectedOrder.order_number}</h3>
-              <button type="button" onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-black">✕</button>
+              <div className="flex items-center space-x-4">
+                <a 
+                  href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/invoice`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold tracking-widest text-black border border-black px-4 py-2 hover:bg-black hover:text-white transition-all uppercase inline-block"
+                >
+                  📄 View Invoice
+                </a>
+                <button type="button" onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-black">✕</button>
+              </div>
             </div>
             <div className="p-6 space-y-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm border-b border-gray-50 pb-8">

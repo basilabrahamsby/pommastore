@@ -1932,7 +1932,27 @@ export default function Orders() {
             </div>
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSelectedOrder(null)}>Close Panel</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <a 
+                  href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/invoice`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-primary btn-sm" 
+                  style={{ background: 'var(--gold)', color: '#000', borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block' }}
+                >
+                  📄 HTML Invoice
+                </a>
+                <a 
+                  href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/invoice/pdf`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary btn-sm" 
+                  style={{ borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block' }}
+                >
+                  📥 Download PDF
+                </a>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSelectedOrder(null)}>Close Panel</button>
+              </div>
             </div>
           </div>
         </div>
