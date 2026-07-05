@@ -147,7 +147,7 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
         }
     }
 
-    url = f"{get_base_url(sandbox)}/api/v1/packages/json/"
+    url = f"{get_base_url(sandbox)}/api/cmu/create.json"
     headers = get_headers(api_token)
 
     try:
