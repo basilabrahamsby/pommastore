@@ -239,3 +239,50 @@ async def get_delhivery_tracking_status(waybill: str) -> Dict[str, Any]:
         "status": None,
         "remarks": "Failed to fetch status"
     }
+
+
+async def cancel_delhivery_shipment(waybill: str) -> Dict[str, Any]:
+    """
+    Cancels a shipment booking in Delhivery system.
+    """
+    config = await get_delhivery_config()
+    api_token = config["api_token"]
+    sandbox = config["sandbox"]
+
+    if api_token == "placeholder_delhivery_token":
+        # Mock successful cancellation in staging
+        return {
+            "success": True,
+            "message": "Mock shipment cancelled successfully"
+        }
+
+    url = f"{get_base_url(sandbox)}/api/p/edit"
+    headers = get_headers(api_token)
+    payload = {
+        "waybill": waybill,
+        "cancellation": "true"
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, headers=headers, json=payload, timeout=10.0)
+            if res.status_code == 200:
+                res_data = res.json()
+                # Delhivery response format typically contains status or success info
+                if res_data.get("status") or res_data.get("success") or "cancellation" in str(res_data).lower():
+                    return {
+                        "success": True,
+                        "message": "Shipment cancellation request sent successfully"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"Delhivery edit status response: {res_data}"
+                    }
+    except Exception as e:
+        logger.error(f"Delhivery shipment cancellation error: {str(e)}")
+
+    return {
+        "success": False,
+        "message": "Failed to cancel shipment with Delhivery"
+    }

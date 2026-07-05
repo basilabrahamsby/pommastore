@@ -325,6 +325,28 @@ async def create_order(
     return enriched
 
 
+async def cancel_delhivery_shipment_task(order_id: uuid.UUID):
+    from app.services.delhivery import cancel_delhivery_shipment
+    from app.core.database import AsyncSessionLocal
+    
+    async with AsyncSessionLocal() as db:
+        q = select(Order).where(Order.id == order_id)
+        res = await db.execute(q)
+        order = res.scalar_one_or_none()
+        if not order or not order.tracking_number:
+            return
+            
+        result = await cancel_delhivery_shipment(order.tracking_number)
+        if result.get("success"):
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=order.status,
+                notes=f"Delhivery shipment cancelled. Waybill: {order.tracking_number}. Response: {result['message']}"
+            )
+            db.add(history)
+            await db.commit()
+
+
 @router.patch("/{order_id}/status", response_model=OrderOut)
 async def update_order_status(
     order_id: str,
@@ -357,6 +379,10 @@ async def update_order_status(
             notes=body.notes or f"Status changed to {body.status}"
         )
         db.add(history)
+        
+        # Cancel Delhivery delivery in background if order is cancelled
+        if body.status == OrderStatus.cancelled and order.tracking_number and order.carrier == "Delhivery":
+            background_tasks.add_task(cancel_delhivery_shipment_task, order.id)
 
     if body.tracking_number:
         order.tracking_number = body.tracking_number
