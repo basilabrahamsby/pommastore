@@ -236,9 +236,12 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
 
     company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
     company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
-    gstin = company_details.get("gstin") or "32AAAAA0000A1Z1"
+    gstin = company_details.get("gstin") or "32ANKK3784H17F"
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
+    # Override incorrect state code if admin saved wrong value
+    if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
+        state_code = "32 (Kerala)"
 
     gstin_line = f'GSTIN: {gstin}<br>' if gstin else ""
     pan_line = f'PAN: {pan}<br>' if pan else ""
@@ -628,7 +631,9 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
 
     <div class="invoice-footer">
       <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
-      <p style="margin: 0;">If you have any questions about this invoice, please contact <a href="mailto:info@kozmocart.com" style="color: #D2168D; text-decoration: none;">info@kozmocart.com</a></p>
+      <p style="margin: 0 0 8px; font-size: 10px; color: #555555;">{company_name}</p>
+      <p style="margin: 0 0 4px; font-size: 10px; color: #555555;">{company_address}</p>
+      <p style="margin: 0; font-size: 10px; color: #555555;">Toll Free: 1800 890 2621 &nbsp;|&nbsp; <a href="mailto:info@kozmocart.com" style="color: #D2168D; text-decoration: none;">info@kozmocart.com</a> &nbsp;|&nbsp; www.kozmocart.com</p>
     </div>
     <div class="bottom-bar"></div>
   </div>
@@ -658,9 +663,12 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
     company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
-    gstin = company_details.get("gstin") or "32AAAAA0000A1Z1"
+    gstin = company_details.get("gstin") or "32ANKK3784H17F"
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
+    # Override incorrect state code if admin saved wrong value
+    if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
+        state_code = "32 (Kerala)"
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
