@@ -680,7 +680,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         pagesize=A4,
         rightMargin=45,
         leftMargin=45,
-        topMargin=45,
+        topMargin=80,
         bottomMargin=45
     )
 
