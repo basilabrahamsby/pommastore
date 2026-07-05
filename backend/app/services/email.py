@@ -234,11 +234,11 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
             "stateCode": "07 (Delhi)"
         }
 
-    company_name = company_details.get("companyName", "Kozmocart Luxury Innovations Pvt Ltd")
-    company_address = company_details.get("registeredAddress", "Registered Corporate Office, New Delhi, India")
-    gstin = company_details.get("gstin", "")
-    pan = company_details.get("pan", "")
-    state_code = company_details.get("stateCode", "")
+    company_name = company_details.get("companyName") or "Kozmocart Luxury Innovations Pvt Ltd"
+    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, New Delhi, India"
+    gstin = company_details.get("gstin") or "07AAAAA0000A1Z1"
+    pan = company_details.get("pan") or "N/A"
+    state_code = company_details.get("stateCode") or "07 (Delhi)"
 
     gstin_line = f'<p style="margin:2px 0 0;"><strong>GSTIN:</strong> {gstin}</p>' if gstin else ""
     pan_line = f'<p style="margin:2px 0 0;"><strong>PAN:</strong> {pan}</p>' if pan else ""
@@ -575,11 +575,11 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
             "stateCode": "07 (Delhi)"
         }
 
-    company_name = company_details.get("companyName", "Kozmocart Luxury Innovations Pvt Ltd")
-    company_address = company_details.get("registeredAddress", "Registered Corporate Office, New Delhi, India")
-    gstin = company_details.get("gstin", "07AAAAA0000A1Z1")
-    pan = company_details.get("pan", "N/A")
-    state_code = company_details.get("stateCode", "07 (Delhi)")
+    company_name = company_details.get("companyName") or "Kozmocart Luxury Innovations Pvt Ltd"
+    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, New Delhi, India"
+    gstin = company_details.get("gstin") or "07AAAAA0000A1Z1"
+    pan = company_details.get("pan") or "N/A"
+    state_code = company_details.get("stateCode") or "07 (Delhi)"
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
