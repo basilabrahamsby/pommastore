@@ -179,6 +179,14 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
                             "carrier": "Delhivery",
                             "message": f"Delhivery packaging error: {package.get('remarks')}"
                         }
+            else:
+                logger.error(f"Delhivery HTTP Error {res.status_code}: {res.text}")
+                return {
+                    "success": False,
+                    "waybill": None,
+                    "carrier": "Delhivery",
+                    "message": f"Delhivery API responded with status {res.status_code}: {res.text}"
+                }
     except Exception as e:
         logger.error(f"Delhivery shipment booking error: {str(e)}")
 
