@@ -289,8 +289,10 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     subtotal_str = f"{subtotal:,.2f}"
     total_str = f"{total:,.2f}"
 
-    tracking_line = f'<p style="margin:0 0 4px;"><strong>Tracking Number:</strong> {order.tracking_number}</p>' if order.tracking_number else ""
-    carrier_line = f'<p style="margin:0 0 4px;"><strong>Carrier:</strong> {order.carrier}</p>' if order.carrier else ""
+    tracking_number = getattr(order, 'tracking_number', None)
+    carrier = getattr(order, 'carrier', None)
+    tracking_line = f'<p style="margin:0 0 4px;"><strong>Tracking Number:</strong> {tracking_number}</p>' if tracking_number else ""
+    carrier_line = f'<p style="margin:0 0 4px;"><strong>Carrier:</strong> {carrier}</p>' if carrier else ""
 
     return f"""<!DOCTYPE html>
 <html>
@@ -824,8 +826,10 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(Spacer(1, 15))
 
     # Payment & Shipping Info (Left) vs Totals (Right)
-    tracking_text = f"Tracking Number: {order.tracking_number}<br/>" if order.tracking_number else ""
-    carrier_text = f"Carrier: {order.carrier}<br/>" if order.carrier else ""
+    tracking_num_pdf = getattr(order, 'tracking_number', None)
+    carrier_pdf = getattr(order, 'carrier', None)
+    tracking_text = f"Tracking Number: {tracking_num_pdf}<br/>" if tracking_num_pdf else ""
+    carrier_text = f"Carrier: {carrier_pdf}<br/>" if carrier_pdf else ""
     pm_text = f"Payment Method: {((order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else 'N/A')}"
     
     payment_info_text = f"<b>Payment & Shipping Info:</b><br/>{pm_text}<br/>{tracking_text}{carrier_text}"
