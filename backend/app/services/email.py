@@ -227,15 +227,15 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     """Generates a beautiful printable tax invoice HTML for an order."""
     if not company_details:
         company_details = {
-            "companyName": "Kozmocart Luxury Innovations Pvt Ltd",
-            "registeredAddress": "Registered Corporate Office, Kerala, India",
-            "gstin": "32AAAAA0000A1Z1",
+            "companyName": "Kozmocart Commodities Private Limited",
+            "registeredAddress": "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
+            "gstin": "32ANKK3784H17F",
             "pan": "N/A",
             "stateCode": "32 (Kerala)"
         }
 
-    company_name = company_details.get("companyName") or "Kozmocart Luxury Innovations Pvt Ltd"
-    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, Kerala, India"
+    company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
+    company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
     gstin = company_details.get("gstin") or "32AAAAA0000A1Z1"
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
@@ -649,15 +649,15 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     if not company_details:
         company_details = {
-            "companyName": "Kozmocart Luxury Innovations Pvt Ltd",
-            "registeredAddress": "Registered Corporate Office, Kerala, India",
-            "gstin": "32AAAAA0000A1Z1",
+            "companyName": "Kozmocart Commodities Private Limited",
+            "registeredAddress": "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
+            "gstin": "32ANKK3784H17F",
             "pan": "N/A",
             "stateCode": "32 (Kerala)"
         }
 
-    company_name = company_details.get("companyName") or "Kozmocart Luxury Innovations Pvt Ltd"
-    company_address = company_details.get("registeredAddress") or "Registered Corporate Office, Kerala, India"
+    company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
+    company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
     gstin = company_details.get("gstin") or "32AAAAA0000A1Z1"
     pan = company_details.get("pan") or "N/A"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
