@@ -966,9 +966,31 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(bottom_grid_table)
     story.append(Spacer(1, 20))
 
-    # Footer note
-    footer_text = "<para align=center><i>Thank you for your business!</i><br/><font size=7 color='#888888'>If you have any questions about this invoice, please contact info@kozmocart.com</font></para>"
-    story.append(Paragraph(footer_text, ParagraphStyle('FooterStyle', parent=body_style, alignment=1)))
+    # Footer divider
+    footer_divider = Table([[""]], colWidths=[7.0*inch], rowHeights=[1])
+    footer_divider.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#E0E0E0')),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(footer_divider)
+    story.append(Spacer(1, 10))
+
+    # Footer note with full address and toll-free
+    footer_addr_style = ParagraphStyle('FooterAddr', parent=body_style, alignment=1, fontSize=7, leading=11, textColor=colors.HexColor('#666666'))
+    footer_thanks_style = ParagraphStyle('FooterThanks', parent=body_style, alignment=1, fontSize=8, leading=12, textColor=colors.HexColor('#333333'))
+
+    story.append(Paragraph("<i>Thank you for your business!</i>", footer_thanks_style))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph(
+        f"{company_name} | {company_address}",
+        footer_addr_style
+    ))
+    story.append(Spacer(1, 2))
+    story.append(Paragraph(
+        "Toll Free: 1800 890 2621  |  Email: info@kozmocart.com  |  Web: www.kozmocart.com",
+        footer_addr_style
+    ))
 
     doc.build(story)
     buffer.seek(0)
