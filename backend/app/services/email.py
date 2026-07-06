@@ -227,19 +227,19 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     """Generates a beautiful printable tax invoice HTML for an order."""
     if not company_details:
         company_details = {
-            "companyName": "Kozmocart Commodities Private Limited",
-            "registeredAddress": "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
-            "gstin": "32ANKK3784H17F",
-            "pan": "N/A",
+            "companyName": "KOZMOCART COMMODITIES PRIVATE LIMITED",
+            "registeredAddress": "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
+            "gstin": "32AAHCK3784H1ZF",
+            "pan": "AAHCK3784H",
             "stateCode": "32 (Kerala)"
         }
 
-    company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
-    company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
+    company_name = company_details.get("companyName") or "KOZMOCART COMMODITIES PRIVATE LIMITED"
+    company_address = company_details.get("registeredAddress") or "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
     # Derive short address (city, state, pin) for header display
     short_address = "Kochi, Kerala - 682026"
-    gstin = company_details.get("gstin") or "32ANKK3784H17F"
-    pan = company_details.get("pan") or "N/A"
+    gstin = company_details.get("gstin") or "32AAHCK3784H1ZF"
+    pan = company_details.get("pan") or "AAHCK3784H"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
     # Override incorrect state code if admin saved wrong value
     if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
@@ -259,7 +259,16 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     if order.shipping_address:
         sa = order.shipping_address
         if isinstance(sa, dict):
-            shipping_address_str = sa.get("full_address") or f"{sa.get('address_line1') or ''}, {sa.get('address_line2') or ''}, {sa.get('city') or ''}, {sa.get('state') or ''} - {sa.get('pincode') or ''}"
+            parts = [
+                sa.get("address_line1"),
+                sa.get("address_line2"),
+                sa.get("city"),
+                sa.get("state")
+            ]
+            parts = [p.strip() for p in parts if p and p.strip()]
+            addr_base = ", ".join(parts)
+            pincode = sa.get("pincode")
+            shipping_address_str = sa.get("full_address") or (f"{addr_base} - {pincode}" if pincode else addr_base)
         else:
             shipping_address_str = str(sa)
 
@@ -656,19 +665,19 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     if not company_details:
         company_details = {
-            "companyName": "Kozmocart Commodities Private Limited",
-            "registeredAddress": "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
-            "gstin": "32ANKK3784H17F",
-            "pan": "N/A",
+            "companyName": "KOZMOCART COMMODITIES PRIVATE LIMITED",
+            "registeredAddress": "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
+            "gstin": "32AAHCK3784H1ZF",
+            "pan": "AAHCK3784H",
             "stateCode": "32 (Kerala)"
         }
 
-    company_name = company_details.get("companyName") or "Kozmocart Commodities Private Limited"
-    company_address = company_details.get("registeredAddress") or "7/1526, BTS RRA-283, BTS Road, Koorthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
+    company_name = company_details.get("companyName") or "KOZMOCART COMMODITIES PRIVATE LIMITED"
+    company_address = company_details.get("registeredAddress") or "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
     # Short address for header (city/state only)
     short_address = "Kochi, Kerala - 682026"
-    gstin = company_details.get("gstin") or "32ANKK3784H17F"
-    pan = company_details.get("pan") or "N/A"
+    gstin = company_details.get("gstin") or "32AAHCK3784H1ZF"
+    pan = company_details.get("pan") or "AAHCK3784H"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
     # Override incorrect state code if admin saved wrong value
     if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
@@ -841,7 +850,16 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     if order.shipping_address:
         sa = order.shipping_address
         if isinstance(sa, dict):
-            shipping_address_str = sa.get("full_address") or f"{sa.get('address_line1') or ''}, {sa.get('city') or ''} - {sa.get('pincode') or ''}"
+            parts = [
+                sa.get("address_line1"),
+                sa.get("address_line2"),
+                sa.get("city"),
+                sa.get("state")
+            ]
+            parts = [p.strip() for p in parts if p and p.strip()]
+            addr_base = ", ".join(parts)
+            pincode = sa.get("pincode")
+            shipping_address_str = sa.get("full_address") or (f"{addr_base} - {pincode}" if pincode else addr_base)
         else:
             shipping_address_str = str(sa)
 
