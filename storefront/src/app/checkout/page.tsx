@@ -209,6 +209,17 @@ export default function Checkout() {
       .catch(err => console.warn('Checkout failed to fetch layout', err));
   }, []);
 
+  const [addressForm, setAddressForm] = useState({
+    label: 'Delivery Address',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    phone: '',
+    country: 'India'
+  });
+
   const [shippingFee, setShippingFee] = useState(150);
 
   useEffect(() => {
@@ -244,17 +255,6 @@ export default function Checkout() {
 
     updateShippingRate();
   }, [selectedAddressId, addressForm.pincode, addresses]);
-
-  const [addressForm, setAddressForm] = useState({
-    label: 'Delivery Address',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    pincode: '',
-    phone: '',
-    country: 'India'
-  });
 
   useEffect(() => {
     setIsHydrated(true);
