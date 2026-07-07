@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { useAuthStore } from '@/store/authStore';
 import { getMediaUrl } from '@/services/media';
 import ProductCard from '@/components/ProductCard';
 import { 
@@ -43,6 +44,7 @@ export default function ProductClient({
   initialOffers: any[]; 
 }) {
   const router = useRouter();
+  const { customer } = useAuthStore();
   const [product, setProduct] = useState<any>(initialProduct);
   const [selectedVariant, setSelectedVariant] = useState<any>(initialProduct?.variants?.[0] || null);
   const [activeImage, setActiveImage] = useState<string>(initialProduct?.images?.[0] || '');
@@ -53,6 +55,33 @@ export default function ProductClient({
   const [pincode, setPincode] = useState('');
   const [pinStatus, setPinStatus] = useState<'idle' | 'checking' | 'serviceable' | 'unserviceable' | 'error'>('idle');
   const [pinResult, setPinResult] = useState<any>(null);
+
+  useEffect(() => {
+    const checkSavedAddressPincode = async () => {
+      if (!customer) return;
+      try {
+        const res = await api.get('/account/addresses');
+        const addresses = res.data || [];
+        const defaultAddr = addresses.find((a: any) => a.is_default) || addresses[0];
+        if (defaultAddr && defaultAddr.pincode) {
+          const pinStr = String(defaultAddr.pincode).trim();
+          setPincode(pinStr);
+          setPinStatus('checking');
+          const verifyRes = await api.get(`/orders/shipping/verify-pincode?pincode=${pinStr}`);
+          if (verifyRes.data && verifyRes.data.serviceable) {
+            setPinResult(verifyRes.data);
+            setPinStatus('serviceable');
+          } else {
+            setPinStatus('unserviceable');
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to auto-check default pincode', err);
+      }
+    };
+
+    checkSavedAddressPincode();
+  }, [customer]);
 
   const handleCheckPincode = async (e: React.FormEvent) => {
     e.preventDefault();
