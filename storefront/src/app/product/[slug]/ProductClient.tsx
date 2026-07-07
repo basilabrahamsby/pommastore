@@ -719,9 +719,6 @@ export default function ProductClient({
                     <p className="text-[11px] text-green-800 mt-1">
                       • Shipping Fee: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : '₹150 (FREE on orders over ₹' + (cmsLayout?.free_shipping_limit || 999) + ')'}
                     </p>
-                    {pinResult.cod_available && (
-                      <p className="text-[11px] text-green-800 mt-0.5">• Cash on Delivery is available</p>
-                    )}
                   </div>
                 </div>
               )}
