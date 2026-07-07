@@ -3,19 +3,50 @@
 import React from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Shield, Truck, Sparkles, ChevronRight } from 'lucide-react';
 import api from '@/services/api';
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCartStore();
+  const { customer } = useAuthStore();
   const [cmsLayout, setCmsLayout] = React.useState<any>(null);
   const [removing, setRemoving] = React.useState<string | null>(null);
+  const [shippingFee, setShippingFee] = React.useState(150);
 
   React.useEffect(() => {
     api.get('/settings/storefront_layout')
       .then(res => setCmsLayout(res.data))
       .catch(err => console.warn('Cart failed to fetch layout', err));
   }, []);
+
+  React.useEffect(() => {
+    const fetchDefaultAddressShipping = async () => {
+      if (!customer) {
+        setShippingFee(150);
+        return;
+      }
+      try {
+        const res = await api.get('/account/addresses');
+        const addresses = res.data || [];
+        const defaultAddr = addresses.find((a: any) => a.is_default) || addresses[0];
+        if (defaultAddr && defaultAddr.pincode) {
+          const verifyRes = await api.get(`/orders/shipping/verify-pincode?pincode=${defaultAddr.pincode}`);
+          if (verifyRes.data && verifyRes.data.serviceable) {
+            setShippingFee(verifyRes.data.shipping_fee || 150);
+          } else {
+            setShippingFee(150);
+          }
+        } else {
+          setShippingFee(150);
+        }
+      } catch (err) {
+        console.warn('Failed to verify cart shipping fee', err);
+        setShippingFee(150);
+      }
+    };
+    fetchDefaultAddressShipping();
+  }, [customer]);
 
   const shippingLimit = cmsLayout?.free_shipping_limit || 999;
   const isFreeShipping = totalPrice() >= shippingLimit;
@@ -272,7 +303,7 @@ export default function Cart() {
                       <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-500">Shipping</span>
                     </div>
                     <span className={`text-[10px] font-black ${isFreeShipping ? 'text-emerald-600' : 'text-black'}`}>
-                      {isFreeShipping ? 'FREE' : `₹150`}
+                      {isFreeShipping ? 'FREE' : `₹${shippingFee}`}
                     </span>
                   </div>
                   <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden mb-2">
@@ -305,7 +336,7 @@ export default function Cart() {
                 <div className="flex justify-between items-center">
                   <span className="text-[11px] font-black tracking-widest uppercase text-black">Total</span>
                   <span className="text-xl font-black text-black">
-                    ₹{(totalPrice() + (isFreeShipping ? 0 : 150)).toLocaleString('en-IN')}
+                    ₹{(totalPrice() + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN')}
                   </span>
                 </div>
 
