@@ -717,7 +717,7 @@ export default function ProductClient({
                       Destination: {pinResult.district}, {pinResult.state || 'India'}
                     </p>
                     <p className="text-[11px] text-green-800 mt-1">
-                      • Shipping Fee: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : '₹150 (FREE on orders over ₹' + (cmsLayout?.free_shipping_limit || 999) + ')'}
+                      • Shipping Fee: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : '₹' + (pinResult.shipping_fee || 150) + ' (FREE on orders over ₹' + (cmsLayout?.free_shipping_limit || 999) + ')'}
                     </p>
                   </div>
                 </div>

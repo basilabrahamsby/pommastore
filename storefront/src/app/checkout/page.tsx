@@ -209,6 +209,42 @@ export default function Checkout() {
       .catch(err => console.warn('Checkout failed to fetch layout', err));
   }, []);
 
+  const [shippingFee, setShippingFee] = useState(150);
+
+  useEffect(() => {
+    const updateShippingRate = async () => {
+      let pinToCheck = '';
+      if (selectedAddressId === 'new') {
+        if (addressForm.pincode.length === 6 && /^\d+$/.test(addressForm.pincode)) {
+          pinToCheck = addressForm.pincode;
+        }
+      } else {
+        const addr = addresses.find(a => a.id === selectedAddressId);
+        if (addr && addr.pincode) {
+          pinToCheck = addr.pincode;
+        }
+      }
+
+      if (pinToCheck) {
+        try {
+          const res = await api.get(`/orders/shipping/verify-pincode?pincode=${pinToCheck}`);
+          if (res.data && res.data.serviceable) {
+            setShippingFee(res.data.shipping_fee || 150);
+          } else {
+            setShippingFee(150);
+          }
+        } catch (err) {
+          console.warn('Failed to verify shipping fee for pincode', err);
+          setShippingFee(150);
+        }
+      } else {
+        setShippingFee(150);
+      }
+    };
+
+    updateShippingRate();
+  }, [selectedAddressId, addressForm.pincode, addresses]);
+
   const [addressForm, setAddressForm] = useState({
     label: 'Delivery Address',
     address_line1: '',
@@ -313,9 +349,9 @@ export default function Checkout() {
       }));
 
       const shippingLimit = cmsLayout?.free_shipping_limit || 999;
-      const shippingFee = totalPrice() >= shippingLimit ? 0 : 150; 
+      const finalShippingFee = totalPrice() >= shippingLimit ? 0 : shippingFee; 
       const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
-      const finalAmount = Math.max(0, totalPrice() + shippingFee - pointsToRedeem - promoDiscount);
+      const finalAmount = Math.max(0, totalPrice() + finalShippingFee - pointsToRedeem - promoDiscount);
 
       // ================= RAZORPAY INTEGRATION =================
       if (paymentMethod === 'card' || paymentMethod === 'upi') {
@@ -328,7 +364,7 @@ export default function Checkout() {
             payment_status: 'pending',
             items: orderItems,
             loyalty_points_used: pointsToRedeem,
-            shipping_amount: shippingFee,
+            shipping_amount: finalShippingFee,
             tax_amount: 0.0,
             discount_amount: promoDiscount,
             coupon_code: appliedPromo ? appliedPromo.code : null
@@ -895,7 +931,7 @@ export default function Checkout() {
                <div className="flex justify-between text-neutral-500">
                  <span>Logistics (Standard)</span>
                  <span className={totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? "text-green-600 font-bold" : "text-neutral-900 font-bold"}>
-                   {totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : `₹${150}`}
+                   {totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : `₹${shippingFee}`}
                  </span>
                </div>
                {appliedPromo && promoDiscount > 0 && (
@@ -913,7 +949,7 @@ export default function Checkout() {
                <div className="flex justify-between text-neutral-900 border-t border-neutral-200 pt-4 text-sm">
                  <span className="font-serif normal-case font-bold tracking-normal text-base">Grand Total</span>
                  <span className="font-bold text-lg font-serif normal-case tracking-normal">
-                   ₹{Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : 150) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-IN')}
+                   ₹{Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-IN')}
                  </span>
                </div>
              </div>

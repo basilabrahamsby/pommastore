@@ -60,6 +60,7 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
             "prepaid_available": True,
             "district": "Mumbai",
             "state": "Maharashtra",
+            "shipping_fee": 120.0,
             "message": "Mock Serviceable"
         }
 
@@ -76,12 +77,28 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
                     postal_code = delivery_codes[0].get("postal_code", {})
                     is_cod = postal_code.get("is_cod") == "Y" or postal_code.get("cash") == "Y"
                     pre_paid = postal_code.get("pre_paid") == "Y"
+                    
+                    # Calculate dynamic shipping rate based on Delhivery guidelines
+                    state_code = (postal_code.get("state_code") or "").upper().strip()
+                    district = (postal_code.get("district") or "").lower().strip()
+                    
+                    if state_code == "KL": # Kerala
+                        if "ernakulam" in district or "kochi" in district:
+                            shipping_fee = 60.0 # Local
+                        else:
+                            shipping_fee = 85.0 # Regional
+                    elif state_code in ["DL", "KA", "MH", "TN", "TS", "WB"] or district in ["bengaluru", "chennai", "mumbai", "hyderabad", "kolkata"]:
+                        shipping_fee = 120.0 # Metro / Near National
+                    else:
+                        shipping_fee = 150.0 # Rest of India / Far National
+                        
                     return {
                         "serviceable": True,
                         "cod_available": is_cod,
                         "prepaid_available": pre_paid,
                         "district": postal_code.get("district", ""),
                         "state": postal_code.get("state_code", ""),
+                        "shipping_fee": shipping_fee,
                         "message": "Serviceable"
                     }
     except Exception as e:
@@ -93,6 +110,7 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
         "prepaid_available": False,
         "district": "",
         "state": "",
+        "shipping_fee": 150.0,
         "message": "Not serviceable or API error"
     }
 
