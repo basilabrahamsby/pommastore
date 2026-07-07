@@ -28,7 +28,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  ExternalLink
+  ExternalLink,
+  MapPin
 } from 'lucide-react';
 
 
@@ -47,6 +48,32 @@ export default function ProductClient({
   const [activeImage, setActiveImage] = useState<string>(initialProduct?.images?.[0] || '');
   const [loading, setLoading] = useState(!initialProduct);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  // Delhivery Pincode Checker State
+  const [pincode, setPincode] = useState('');
+  const [pinStatus, setPinStatus] = useState<'idle' | 'checking' | 'serviceable' | 'unserviceable' | 'error'>('idle');
+  const [pinResult, setPinResult] = useState<any>(null);
+
+  const handleCheckPincode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pincode || pincode.trim().length !== 6 || !/^\d+$/.test(pincode.trim())) {
+      alert('Please enter a valid 6-digit pincode.');
+      return;
+    }
+    setPinStatus('checking');
+    try {
+      const res = await api.get(`/orders/shipping/verify-pincode?pincode=${pincode.trim()}`);
+      if (res.data && res.data.serviceable) {
+        setPinResult(res.data);
+        setPinStatus('serviceable');
+      } else {
+        setPinStatus('unserviceable');
+      }
+    } catch (err) {
+      console.error(err);
+      setPinStatus('error');
+    }
+  };
 
   // Gallery Lightbox State
   const [activeLightboxIndex, setActiveLightboxIndex] = useState<number | null>(null);
@@ -653,8 +680,69 @@ export default function ProductClient({
               </button>
             </div>
 
+            {/* PINCODE CHECKER WIDGET */}
+            <div className="border-t border-neutral-100 pt-6 mt-6">
+              <div className="flex items-center space-x-2 text-neutral-900 font-serif text-sm mb-1.5">
+                <MapPin size={16} className="text-neutral-500" />
+                <span>DELIVERY DETAILS</span>
+              </div>
+              <p className="text-[10px] text-neutral-400 font-medium tracking-wide uppercase mb-3">
+                Enter pin to get correct delivery charge or know delivery details
+              </p>
+              
+              <form onSubmit={handleCheckPincode} className="flex space-x-2 max-w-xs">
+                <input 
+                  type="text"
+                  maxLength={6}
+                  placeholder="Enter 6-digit Pincode"
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                  className="flex-1 border border-neutral-200 px-3 py-2 text-xs focus:border-black outline-none rounded bg-white text-black"
+                />
+                <button 
+                  type="submit"
+                  disabled={pinStatus === 'checking'}
+                  className="bg-black text-white px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-800 transition-colors rounded"
+                >
+                  {pinStatus === 'checking' ? 'CHECKING...' : 'CHECK'}
+                </button>
+              </form>
+
+              {pinStatus === 'serviceable' && pinResult && (
+                <div className="mt-3 text-xs text-green-700 bg-green-50/80 p-3 rounded border border-green-100 flex items-start space-x-2 animate-in fade-in duration-300">
+                  <div className="font-semibold">✓</div>
+                  <div>
+                    <p className="font-bold">Serviceable by Delhivery</p>
+                    <p className="text-[11px] text-green-800 mt-0.5">
+                      Destination: {pinResult.district}, {pinResult.state || 'India'}
+                    </p>
+                    <p className="text-[11px] text-green-800 mt-1">
+                      • Shipping Fee: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : '₹150 (FREE on orders over ₹' + (cmsLayout?.free_shipping_limit || 999) + ')'}
+                    </p>
+                    {pinResult.cod_available && (
+                      <p className="text-[11px] text-green-800 mt-0.5">• Cash on Delivery is available</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {pinStatus === 'unserviceable' && (
+                <div className="mt-3 text-xs text-red-700 bg-red-50/80 p-3 rounded border border-red-100 flex items-start space-x-2 animate-in fade-in duration-300">
+                  <div className="font-semibold">✗</div>
+                  <div>
+                    <p className="font-bold">Not Serviceable</p>
+                    <p className="text-[11px] text-red-800 mt-0.5">We do not ship to this pincode via Delhivery.</p>
+                  </div>
+                </div>
+              )}
+
+              {pinStatus === 'error' && (
+                <p className="text-xs text-amber-600 mt-2">Could not verify pincode. Please try again later.</p>
+              )}
+            </div>
+
             {/* TRUST BADGES SECTION */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-neutral-100 pt-8 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-neutral-100 pt-8 mt-6">
               <div className="flex items-center space-x-3">
                 <ShieldCheck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
