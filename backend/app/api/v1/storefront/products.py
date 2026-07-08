@@ -115,3 +115,17 @@ async def get_product_by_slug(slug: str, db: AsyncSession = Depends(get_db)):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return await enrich_product(product, db, detail=True)
+
+from typing import Dict
+@router.post("/sync-prices", response_model=Dict[str, float])
+async def sync_prices(variant_ids: list[str], db: AsyncSession = Depends(get_db)):
+    """
+    Returns the latest selling_price for each variant ID.
+    """
+    if not variant_ids:
+        return {}
+    result = await db.execute(
+        select(ProductVariant.id, ProductVariant.selling_price)
+        .where(ProductVariant.id.in_(variant_ids))
+    )
+    return {row[0]: float(row[1]) for row in result.all()}

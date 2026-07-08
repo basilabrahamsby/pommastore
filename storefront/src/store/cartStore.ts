@@ -100,6 +100,33 @@ export const syncCartWithServer = async () => {
   }
 };
 
+export const syncCartItemPrices = async () => {
+  const items = useCartStore.getState().items;
+  if (items.length === 0) return;
+  
+  try {
+    const variantIds = items.map(i => i.id);
+    const res = await api.post('/products/sync-prices', variantIds);
+    const priceMap = res.data || {};
+    
+    let changed = false;
+    const updated = items.map(item => {
+      const serverPrice = priceMap[item.id];
+      if (serverPrice !== undefined && serverPrice !== item.price) {
+        changed = true;
+        return { ...item, price: serverPrice };
+      }
+      return item;
+    });
+    
+    if (changed) {
+      useCartStore.setState({ items: updated });
+    }
+  } catch (err) {
+    console.warn("Failed to sync cart item prices with server", err);
+  }
+};
+
 // Global subscriber to push changes to backend whenever local cart changes
 if (typeof window !== 'undefined') {
   useCartStore.subscribe((state, prevState) => {

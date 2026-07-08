@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/services/api';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore, syncCartItemPrices } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { 
   CreditCard, 
@@ -203,6 +203,7 @@ export default function Checkout() {
 
   useEffect(() => {
     setIsHydrated(true);
+    syncCartItemPrices();
     // Fetch global layout for shipping limit
     api.get('/settings/storefront_layout')
       .then(res => setCmsLayout(res.data))
