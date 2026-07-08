@@ -44,6 +44,42 @@ def get_headers(api_token: str) -> Dict[str, str]:
         "Content-Type": "application/json"
     }
 
+async def get_delhivery_shipping_rate(origin_pin: str, dest_pin: str, weight_grams: int = 500) -> float:
+    """
+    Queries Delhivery live invoice calculation API for exact shipping charges.
+    """
+    config = await get_delhivery_config()
+    api_token = config["api_token"]
+    sandbox = config["sandbox"]
+
+    if api_token == "placeholder_delhivery_token":
+        return None
+
+    # Delhivery invoice charges estimation endpoint
+    url = f"{get_base_url(sandbox)}/api/kinko/v1/invoice/charges/.json"
+    headers = {"Authorization": f"Token {api_token}", "Content-Type": "application/json"}
+    params = {
+        "md": "E", # Express mode
+        "cgm": weight_grams, # weight in grams
+        "o_pin": origin_pin,
+        "d_pin": dest_pin,
+        "ss": "Delivered"
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, params=params, timeout=8.0)
+            if res.status_code == 200:
+                data = res.json()
+                if isinstance(data, list) and len(data) > 0:
+                    total_amount = data[0].get("total_amount")
+                    if total_amount is not None:
+                        return float(total_amount)
+    except Exception as e:
+        logger.error(f"Delhivery live shipping rate check failed: {e}")
+        
+    return None
+
 async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
     """
     Checks if Delhivery delivers to the given pincode.
@@ -78,7 +114,7 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
                     is_cod = postal_code.get("is_cod") == "Y" or postal_code.get("cash") == "Y"
                     pre_paid = postal_code.get("pre_paid") == "Y"
                     
-                    # Calculate dynamic shipping rate based on Delhivery guidelines
+                    # Calculate dynamic shipping rate based on Delhivery guidelines as fallback
                     state_code = (postal_code.get("state_code") or "").upper().strip()
                     district = (postal_code.get("district") or "").lower().strip()
                     
@@ -91,6 +127,23 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
                         shipping_fee = 120.0 # Metro / Near National
                     else:
                         shipping_fee = 150.0 # Rest of India / Far National
+                        
+                    # Fetch origin pincode from settings or db
+                    origin_pin = 682026
+                    try:
+                        async with AsyncSessionLocal() as db:
+                            q = select(SystemSettings).where(SystemSettings.key == "delhivery")
+                            db_res = await db.execute(q)
+                            setting = db_res.scalar_one_or_none()
+                            if setting and setting.value:
+                                origin_pin = setting.value.get("origin_pincode") or setting.value.get("pickup_pincode") or 682026
+                    except Exception:
+                        pass
+                        
+                    # Query Delhivery invoice charges estimation API for exact rate
+                    exact_rate = await get_delhivery_shipping_rate(str(origin_pin), str(pincode))
+                    if exact_rate is not None:
+                        shipping_fee = exact_rate
                         
                     return {
                         "serviceable": True,
