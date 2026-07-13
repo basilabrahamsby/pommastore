@@ -223,6 +223,114 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ── Full-Width Ad Banner (for grid_ads_2) ──────────────────────────────────
+  Widget _buildFullWidthAdBanner(Map<String, dynamic> slide) {
+    final imgUrl = _getMediaUrl((slide['image_mobile'] ?? slide['image'])?.toString());
+    final title = slide['title']?.toString() ?? '';
+    final subtitle = slide['subtitle']?.toString() ?? '';
+    final desc = slide['desc']?.toString() ?? '';
+
+    if (title.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        height: 180,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: const Color(0xFF1B3B22), // green bg matching web
+        ),
+        child: Row(
+          children: [
+            // Left: Text half
+            Expanded(
+              flex: 5,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle.toUpperCase(),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2.0,
+                          color: Colors.white70,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 6),
+                    Text(
+                      title.toUpperCase(),
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (desc.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        desc,
+                        style: GoogleFonts.poppins(
+                          fontSize: 9,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Text(
+                        'BUY NOW',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Right: Image half
+            Expanded(
+              flex: 4,
+              child: imgUrl.isNotEmpty
+                  ? Image.network(
+                      imgUrl,
+                      fit: BoxFit.cover,
+                      height: 180,
+                      errorBuilder: (context, error, stack) =>
+                          Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
+                    )
+                  : Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── Product Grid ──────────────────────────────────────────────────────────
   Widget _buildProductGrid(List<Map<String, dynamic>> products) {
     return GridView.builder(
@@ -669,12 +777,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               backgroundColor: Colors.white,
               elevation: 0,
               centerTitle: true,
-              title: Text('KOZMOCART',
-                  style: GoogleFonts.montserrat(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 3.0,
-                      color: Colors.black)),
+              title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.black, size: 20),
@@ -954,19 +1057,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
 
-                  // ── New Arrivals ──────────────────────────────────────────
+                   // ── New Arrivals (Part 1: Products 1-10) ──────────────────
                   if (newArrivals.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     _buildSectionHeader('New Arrivals'),
                     const SizedBox(height: 16),
                     _buildProductGrid(
-                        newArrivals.cast<Map<String, dynamic>>()),
+                        newArrivals.take(10).cast<Map<String, dynamic>>().toList()),
                   ],
 
-                  // ── Ad Banner Block 1 (after new arrivals) ────────────────
-                  if (ad1 != null) ...[
+                  // ── Ad Banner Block 1 (after new arrivals 1-10) ───────────
+                  if (ad1 != null && newArrivals.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     _buildAdBanner(ad1),
+                  ],
+
+                  // ── New Arrivals (Part 2: Products 11-20) ─────────────────
+                  if (newArrivals.length > 10) ...[
+                    const SizedBox(height: 24),
+                    _buildProductGrid(
+                        newArrivals.skip(10).take(10).cast<Map<String, dynamic>>().toList()),
+                  ],
+
+                  // ── Ad Banner Block 2 (after new arrivals 11-20 - Full Width)
+                  if (ad2 != null && newArrivals.length > 10) ...[
+                    const SizedBox(height: 24),
+                    _buildFullWidthAdBanner(ad2),
+                  ],
+
+                  // ── New Arrivals (Part 3: Products 21+) ───────────────────
+                  if (newArrivals.length > 20) ...[
+                    const SizedBox(height: 24),
+                    _buildProductGrid(
+                        newArrivals.skip(20).cast<Map<String, dynamic>>().toList()),
                   ],
 
                   // ── Featured Bestsellers ──────────────────────────────────
@@ -975,16 +1098,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _buildSectionHeader('Featured Bestsellers'),
                     const SizedBox(height: 16),
                     _buildProductGrid(
-                        bestsellers.cast<Map<String, dynamic>>()),
+                        bestsellers.cast<Map<String, dynamic>>().toList()),
                   ],
 
-                  // ── Ad Banner Block 2 (after bestsellers) ─────────────────
-                  if (ad2 != null) ...[
-                    const SizedBox(height: 24),
-                    _buildAdBanner(ad2),
-                  ],
-
-                  // ── Ad Banner Block 3 ─────────────────────────────────────
+                  // ── Ad Banner Block 3 (after Featured Bestsellers) ────────
                   if (ad3 != null) ...[
                     const SizedBox(height: 24),
                     _buildAdBanner(ad3),

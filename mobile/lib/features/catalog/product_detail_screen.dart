@@ -76,7 +76,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final notes = widget.product['scent_notes'] as List<dynamic>? ?? ['Saffron', 'Amberwood', 'Fir Resin', 'Cedar'];
 
     return Scaffold(
-      appBar: AppBar(title: Text(name.toUpperCase())),
+      appBar: AppBar(title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain)),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

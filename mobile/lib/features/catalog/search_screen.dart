@@ -55,7 +55,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('SEARCH')),
+      appBar: AppBar(title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain)),
       body: SafeArea(
         child: Column(
           children: [

@@ -8,7 +8,7 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MY ACCOUNT')),
+      appBar: AppBar(title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain)),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

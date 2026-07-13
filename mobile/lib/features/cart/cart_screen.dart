@@ -79,7 +79,7 @@ class _CartScreenState extends State<CartScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SHOPPING BAG'),
+        title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
         actions: [
           IconButton(
             icon: _isSyncing
