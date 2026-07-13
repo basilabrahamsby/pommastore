@@ -151,97 +151,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? rightDescRaw 
         : 'We offer the best niche fragrances on the market selected by our team of experts.';
 
-    Widget halfBanner(
+    Widget bannerCard(
         String imgUrl, String subtitle, String title, String desc, Color bg) {
-      return Expanded(
-        child: Container(
-          height: 180,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
-          child: Row(
-            children: [
-              // Image half
-              Expanded(
-                flex: 4,
-                child: imgUrl.isNotEmpty
-                    ? Image.network(imgUrl,
-                        fit: BoxFit.cover,
-                        height: 180,
-                        errorBuilder: (context, error, stack) =>
-                            Container(color: bg.withValues(alpha: 0.3)))
-                    : Container(color: bg.withValues(alpha: 0.3)),
-              ),
-              // Text half
-              Expanded(
-                flex: 5,
-                child: Container(
-                  color: bg,
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (subtitle.isNotEmpty)
-                        Text(
-                          subtitle.toUpperCase(),
-                          style: GoogleFonts.montserrat(
-                            fontSize: 7,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2.0,
-                            color: Colors.white70,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+      return Container(
+        height: 140,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: bg,
+        ),
+        child: Row(
+          children: [
+            // Image half
+            Expanded(
+              flex: 4,
+              child: imgUrl.isNotEmpty
+                  ? Image.network(imgUrl,
+                      fit: BoxFit.cover,
+                      height: 140,
+                      errorBuilder: (context, error, stack) =>
+                          Container(color: bg.withValues(alpha: 0.3)))
+                  : Container(color: bg.withValues(alpha: 0.3)),
+            ),
+            // Text half
+            Expanded(
+              flex: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle.toUpperCase(),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2.0,
+                          color: Colors.white70,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title.toUpperCase(),
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (desc.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
-                        title.toUpperCase(),
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 13,
-                          color: Colors.white,
-                          letterSpacing: 0.8,
-                          height: 1.2,
+                        desc,
+                        style: GoogleFonts.poppins(
+                          fontSize: 9,
+                          color: Colors.white70,
+                          height: 1.4,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (desc.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          desc,
-                          style: GoogleFonts.poppins(
-                            fontSize: 9,
-                            color: Colors.white70,
-                            height: 1.4,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                        child: Text(
-                          'BUY NOW',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 7,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: Colors.white,
-                          ),
+                    ],
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Text(
+                        'BUY NOW',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: Colors.white,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -252,16 +253,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
           if (leftTitle.isNotEmpty)
-            halfBanner(leftImg, leftSubtitle, leftTitle, leftDesc,
+            bannerCard(leftImg, leftSubtitle, leftTitle, leftDesc,
                 const Color(0xFFa5682a)),
           if (leftTitle.isNotEmpty && rightTitle.isNotEmpty)
-            const SizedBox(width: 8),
+            const SizedBox(height: 12),
           if (rightTitle.isNotEmpty)
-            halfBanner(rightImg, rightSubtitle, rightTitle, rightDesc,
+            bannerCard(rightImg, rightSubtitle, rightTitle, rightDesc,
                 const Color(0xFF5c4033)),
         ],
       ),
