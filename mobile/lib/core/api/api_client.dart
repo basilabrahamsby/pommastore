@@ -5,15 +5,22 @@ import 'token_manager.dart';
 class ApiClient {
   late final Dio dio;
 
-  /// On Flutter Web: use a relative base URL (same-origin, no CORS issues)
-  /// - same as how storefront api.ts uses relative /api/v1/storefront in production
-  /// On native Android/iOS: use absolute production URL
+  /// URL strategy matching the storefront api.ts approach:
+  /// - Flutter Web on production domain (kozmocart.com): relative /api/v1 → Nginx proxies it
+  /// - Flutter Web on localhost (dev): absolute https://kozmocart.com/api/v1 (same as native)
+  /// - Native Android/iOS: absolute https://kozmocart.com/api/v1 (no CORS restrictions)
   static String get baseUrl {
     if (kIsWeb) {
-      // Use relative URL so the browser sends request to the same host
-      // Works for both local dev (via --disable-web-security) and production (kozmocart.com)
-      return '/api/v1';
+      // On web, check if we are running on the production domain
+      // Uri.base.host will be 'kozmocart.com' in production, 'localhost' in dev
+      final host = Uri.base.host;
+      final isLocalhost = host == 'localhost' || host == '127.0.0.1';
+      if (!isLocalhost) {
+        // Deployed on kozmocart.com — use relative path (no CORS, same origin as storefront)
+        return '/api/v1';
+      }
     }
+    // Local dev web OR native mobile — use absolute production URL
     return 'https://kozmocart.com/api/v1';
   }
 
@@ -35,7 +42,6 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          // Can hook custom centralized telemetry logging here
           return handler.next(e);
         },
       ),
