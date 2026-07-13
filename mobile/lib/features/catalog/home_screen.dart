@@ -71,40 +71,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // ── Section Header ────────────────────────────────────────────────────────
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, String subtitle) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title.toUpperCase(),
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 22,
-              fontWeight: FontWeight.normal,
-              color: Colors.black,
-              letterSpacing: 1.5,
+            subtitle.toUpperCase(),
+            style: GoogleFonts.montserrat(
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF8E8E93), // textMuted
+              letterSpacing: 2.0,
             ),
           ),
-          const SizedBox(width: 12),
-          const Expanded(child: Divider(color: Color(0xFFE5E5EA), thickness: 1)),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 22,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.black,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                  child: Divider(color: Color(0xFFE5E5EA), thickness: 1)),
+            ],
+          ),
         ],
       ),
     );
   }
 
   // ── In-Between Ad Banner (left+right split card) ──────────────────────────
-  Widget _buildAdBanner(Map<String, dynamic> slide) {
-    final leftImg = _getMediaUrl(
-        (slide['left_image_mobile'] ?? slide['left_image'])?.toString());
-    final rightImg = _getMediaUrl(
-        (slide['right_image_mobile'] ?? slide['right_image'])?.toString());
-    final leftTitle = slide['left_title']?.toString() ?? '';
-    final leftSubtitle = slide['left_subtitle']?.toString() ?? '';
-    final leftDesc = slide['left_desc']?.toString() ?? '';
-    final rightTitle = slide['right_title']?.toString() ?? '';
-    final rightSubtitle = slide['right_subtitle']?.toString() ?? '';
-    final rightDesc = slide['right_desc']?.toString() ?? '';
+  Widget _buildAdBanner(Map<String, dynamic> slide, {bool isAd3 = false}) {
+    final leftImgRaw = (slide['left_image_mobile'] ?? slide['left_image'])?.toString();
+    final leftImg = _getMediaUrl(leftImgRaw != null && leftImgRaw.isNotEmpty 
+        ? leftImgRaw 
+        : '/model-banner-1.png');
+
+    final rightImgRaw = (slide['right_image_mobile'] ?? slide['right_image'])?.toString();
+    final rightImg = _getMediaUrl(rightImgRaw != null && rightImgRaw.isNotEmpty 
+        ? rightImgRaw 
+        : (isAd3 ? '/model-banner-3.png' : '/model-banner-2.png'));
+
+    final leftTitleRaw = slide['left_title']?.toString();
+    final leftTitle = leftTitleRaw != null && leftTitleRaw.isNotEmpty 
+        ? leftTitleRaw 
+        : (isAd3 ? 'Top Curated Fragrances' : 'Exclusive Fragrance');
+
+    final leftSubtitleRaw = slide['left_subtitle']?.toString();
+    final leftSubtitle = leftSubtitleRaw != null && leftSubtitleRaw.isNotEmpty 
+        ? leftSubtitleRaw 
+        : 'Exquisite Collection';
+
+    final leftDescRaw = slide['left_desc']?.toString();
+    final leftDesc = leftDescRaw != null && leftDescRaw.isNotEmpty 
+        ? leftDescRaw 
+        : 'We offer the best niche fragrances on the market selected by our team of experts.';
+
+    final rightTitleRaw = slide['right_title']?.toString();
+    final rightTitle = rightTitleRaw != null && rightTitleRaw.isNotEmpty 
+        ? rightTitleRaw 
+        : (isAd3 ? 'Top Curated Fragrances' : 'Premium Fragrances');
+
+    final rightSubtitleRaw = slide['right_subtitle']?.toString();
+    final rightSubtitle = rightSubtitleRaw != null && rightSubtitleRaw.isNotEmpty 
+        ? rightSubtitleRaw 
+        : (isAd3 ? 'Prestige Selection' : 'Prestige Selection');
+
+    final rightDescRaw = slide['right_desc']?.toString();
+    final rightDesc = rightDescRaw != null && rightDescRaw.isNotEmpty 
+        ? rightDescRaw 
+        : 'We offer the best niche fragrances on the market selected by our team of experts.';
 
     Widget halfBanner(
         String imgUrl, String subtitle, String title, String desc, Color bg) {
@@ -225,10 +270,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Full-Width Ad Banner (for grid_ads_2) ──────────────────────────────────
   Widget _buildFullWidthAdBanner(Map<String, dynamic> slide) {
-    final imgUrl = _getMediaUrl((slide['image_mobile'] ?? slide['image'])?.toString());
-    final title = slide['title']?.toString() ?? '';
-    final subtitle = slide['subtitle']?.toString() ?? '';
-    final desc = slide['desc']?.toString() ?? '';
+    final imgRaw = (slide['image_mobile'] ?? slide['image'])?.toString();
+    final imgUrl = _getMediaUrl(imgRaw != null && imgRaw.isNotEmpty ? imgRaw : '/model-banner-3.png');
+
+    final titleRaw = slide['title']?.toString();
+    final title = titleRaw != null && titleRaw.isNotEmpty ? titleRaw : 'Top Curated Fragrances';
+
+    final subtitleRaw = slide['subtitle']?.toString();
+    final subtitle = subtitleRaw != null && subtitleRaw.isNotEmpty ? subtitleRaw : 'Prestige Selection';
+
+    final descRaw = slide['desc']?.toString();
+    final desc = descRaw != null && descRaw.isNotEmpty 
+        ? descRaw 
+        : 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.';
 
     if (title.isEmpty) return const SizedBox.shrink();
 
@@ -1093,7 +1147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                    // ── New Arrivals (Part 1: Products 1-10) ──────────────────
                   if (newArrivals.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    _buildSectionHeader('New Arrivals'),
+                    _buildSectionHeader('New Arrivals', 'Just Arrived'),
                     const SizedBox(height: 16),
                     _buildProductGrid(
                         newArrivals.take(10).cast<Map<String, dynamic>>().toList()),
@@ -1128,7 +1182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // ── Featured Bestsellers ──────────────────────────────────
                   if (bestsellers.isNotEmpty) ...[
                     const SizedBox(height: 28),
-                    _buildSectionHeader('Featured Bestsellers'),
+                    _buildSectionHeader('Popular Picks', 'Store Favorites'),
                     const SizedBox(height: 16),
                     _buildProductGrid(
                         bestsellers.cast<Map<String, dynamic>>().toList()),
@@ -1137,13 +1191,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // ── Ad Banner Block 3 (after Featured Bestsellers) ────────
                   if (newArrivals.isNotEmpty || bestsellers.isNotEmpty) ...[
                     const SizedBox(height: 24),
-                    _buildAdBanner(ad3),
+                    _buildAdBanner(ad3, isAd3: true),
                   ],
 
                   // ── Promotional Offers ────────────────────────────────────
                   if (offers.isNotEmpty) ...[
                     const SizedBox(height: 28),
-                    _buildSectionHeader('Promotional Offers'),
+                    _buildSectionHeader('Promotional Offers', 'Exclusive Deals'),
                     const SizedBox(height: 12),
                     ListView.builder(
                       shrinkWrap: true,
