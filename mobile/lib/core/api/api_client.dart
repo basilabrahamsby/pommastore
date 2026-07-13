@@ -1,17 +1,27 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'token_manager.dart';
 
 class ApiClient {
   late final Dio dio;
-  
-  // Set target URL of the VM backend
-  static const String baseUrl = 'https://kozmocart.com/api/v1';
+
+  /// On Flutter Web: use a relative base URL (same-origin, no CORS issues)
+  /// - same as how storefront api.ts uses relative /api/v1/storefront in production
+  /// On native Android/iOS: use absolute production URL
+  static String get baseUrl {
+    if (kIsWeb) {
+      // Use relative URL so the browser sends request to the same host
+      // Works for both local dev (via --disable-web-security) and production (kozmocart.com)
+      return '/api/v1';
+    }
+    return 'https://kozmocart.com/api/v1';
+  }
 
   ApiClient() {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 12),
-      receiveTimeout: const Duration(seconds: 12),
+      connectTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 20),
     ));
 
     dio.interceptors.add(
