@@ -29,6 +29,8 @@ from app.services.email import (
     send_return_requested_email,
     send_order_returned_email,
     order_items_to_email_list,
+    generate_invoice_html,
+    generate_invoice_pdf,
 )
 from app.services.sms import sendsms_status, sendsms_orderadmin
 
