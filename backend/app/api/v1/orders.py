@@ -167,8 +167,7 @@ class DelhiveryPickupRequest(BaseModel):
 @router.get("/{order_id}/delhivery-label", response_class=HTMLResponse)
 async def get_delhivery_label(
     order_id: str,
-    db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         order_uuid = uuid.UUID(order_id)
