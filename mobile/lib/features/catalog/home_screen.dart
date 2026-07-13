@@ -154,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Widget bannerCard(
         String imgUrl, String subtitle, String title, String desc, Color bg) {
       return Container(
-        height: 140,
+        height: 170,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
@@ -168,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: imgUrl.isNotEmpty
                   ? Image.network(imgUrl,
                       fit: BoxFit.cover,
-                      height: 140,
+                      height: 170,
                       errorBuilder: (context, error, stack) =>
                           Container(color: bg.withValues(alpha: 0.3)))
                   : Container(color: bg.withValues(alpha: 0.3)),
@@ -289,7 +289,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        height: 180,
+        height: 200,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
@@ -373,7 +373,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ? Image.network(
                       imgUrl,
                       fit: BoxFit.cover,
-                      height: 180,
+                      height: 200,
                       errorBuilder: (context, error, stack) =>
                           Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
                     )
