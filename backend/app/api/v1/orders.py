@@ -156,6 +156,65 @@ async def get_order_invoice_pdf(
         headers={"Content-Disposition": f"attachment; filename=invoice_{order.order_number}.pdf"}
     )
 
+from pydantic import BaseModel
+
+class DelhiveryPickupRequest(BaseModel):
+    pickup_date: str  # YYYY-MM-DD
+    pickup_time: str  # HH:MM:SS or slot
+    pickup_location: str
+    expected_package_count: int = 1
+
+@router.get("/{order_id}/delhivery-label", response_class=HTMLResponse)
+async def get_delhivery_label(
+    order_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user)
+):
+    try:
+        order_uuid = uuid.UUID(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order ID format")
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_uuid)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            joinedload(Order.customer),
+        )
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    from app.services.delhivery import fetch_delhivery_packing_slip, generate_delhivery_label_html
+    
+    pkg = None
+    if order.tracking_number:
+        pkg = await fetch_delhivery_packing_slip(order.tracking_number)
+        
+    html_content = generate_delhivery_label_html(order, pkg)
+    return HTMLResponse(content=html_content)
+
+@router.post("/delhivery-pickup")
+async def create_delhivery_pickup(
+    body: DelhiveryPickupRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user)
+):
+    from app.services.delhivery import schedule_delhivery_pickup
+    
+    res = await schedule_delhivery_pickup(
+        pickup_date=body.pickup_date,
+        pickup_time=body.pickup_time,
+        pickup_location=body.pickup_location,
+        expected_count=body.expected_package_count
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message"))
+        
+    return res
+
 
 @router.post("", response_model=OrderOut, status_code=201)
 async def create_order(

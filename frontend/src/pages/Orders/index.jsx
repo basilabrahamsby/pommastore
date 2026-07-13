@@ -949,6 +949,8 @@ export default function Orders() {
   const [isEditingContact, setIsEditingContact] = useState(false)
   const [contactEditForm, setContactEditForm] = useState({ name: '', phone: '', email: '' })
   const [savingContact, setSavingContact] = useState(false)
+  const [pickupModal, setPickupModal] = useState(null)
+  const [pickupLoading, setPickupLoading] = useState(false)
 
   const loadVariants = () => {
     api.get('/inventory/stock')
@@ -1065,6 +1067,27 @@ export default function Orders() {
       toast.error('Dispatch failed. Please try again.')
     } finally {
       setShipLoading(false)
+    }
+  }
+
+  const handleSchedulePickup = async () => {
+    setPickupLoading(true)
+    try {
+      const payload = {
+        pickup_date: pickupModal.pickupDate,
+        pickup_time: pickupModal.pickupTimeSlot.split(' ')[0], // send start time
+        pickup_location: pickupModal.pickupLocation,
+        expected_package_count: Number(pickupModal.expectedCount || 1)
+      }
+      await api.post('/orders/delhivery-pickup', payload)
+      toast.success('🚚 Delhivery pickup request scheduled successfully!')
+      setPickupModal(null)
+      loadOrders()
+    } catch (err) {
+      const errMsg = err.response?.data?.detail || 'Pickup scheduling failed'
+      toast.error(errMsg)
+    } finally {
+      setPickupLoading(false)
     }
   }
 
@@ -1932,7 +1955,37 @@ export default function Orders() {
             </div>
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {selectedOrder.tracking_number && (
+                  <a 
+                    href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/delhivery-label`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary btn-sm" 
+                    style={{ borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border)' }}
+                  >
+                    🏷️ Print Label
+                  </a>
+                )}
+                {selectedOrder.tracking_number && (
+                  <button 
+                    type="button"
+                    className="btn btn-secondary btn-sm" 
+                    style={{ borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)' }}
+                    onClick={() => {
+                      setPickupModal({
+                        orderId: selectedOrder.id,
+                        waybill: selectedOrder.tracking_number,
+                        pickupLocation: 'Kozmocart Commodities Pvt Ltd',
+                        pickupDate: new Date().toISOString().split('T')[0],
+                        pickupTimeSlot: '14:00:00 - 18:00:00',
+                        expectedCount: 1
+                      })
+                    }}
+                  >
+                    📅 Add to Pickup
+                  </button>
+                )}
                 <a 
                   href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/invoice`} 
                   target="_blank" 
@@ -1957,6 +2010,75 @@ export default function Orders() {
           </div>
         </div>
 
+      )}
+
+      {pickupModal && (
+        <div className="modal-overlay" onClick={() => setPickupModal(null)}>
+          <div className="modal" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">📅 Add to Pickup</span>
+              <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => setPickupModal(null)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ gap: 14 }}>
+              
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', fontSize: '0.8rem' }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Selected Pickup Location</div>
+                <strong style={{ color: '#fff', display: 'block', marginTop: 4 }}>{pickupModal.pickupLocation}</strong>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Pickup Date</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={pickupModal.pickupDate} 
+                  onChange={e => setPickupModal(p => ({ ...p, pickupDate: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Pickup Slot</label>
+                <select 
+                  className="select" 
+                  value={pickupModal.pickupTimeSlot} 
+                  onChange={e => setPickupModal(p => ({ ...p, pickupTimeSlot: e.target.value }))}
+                >
+                  <option value="14:00:00 - 18:00:00">Evening 14:00:00 - 18:00:00</option>
+                  <option value="09:00:00 - 12:00:00">Morning 09:00:00 - 12:00:00</option>
+                  <option value="12:00:00 - 14:00:00">Afternoon 12:00:00 - 14:00:00</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Expected Package Count</label>
+                <input 
+                  type="number" 
+                  className="input" 
+                  min="1"
+                  value={pickupModal.expectedCount} 
+                  onChange={e => setPickupModal(p => ({ ...p, expectedCount: Number(e.target.value || 1) }))}
+                />
+              </div>
+
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: 4 }}>
+                Keep the shipment ready with the label pasted before the courier agent arrives.
+              </div>
+
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPickupModal(null)}>Cancel</button>
+              <button 
+                type="button" 
+                className="btn btn-primary btn-sm" 
+                style={{ background: 'var(--gold)', color: '#000' }}
+                disabled={pickupLoading}
+                onClick={handleSchedulePickup}
+              >
+                {pickupLoading ? 'Scheduling...' : 'Add to Pickup'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 👥 PREMIUM CUSTOMER PROFILE DETAILS MODAL */}
