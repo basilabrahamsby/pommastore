@@ -879,9 +879,9 @@ class _SearchScreenState extends State<SearchScreen> {
                               padding: const EdgeInsets.all(16),
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
-                                crossAxisSpacing: 14,
-                                mainAxisSpacing: 18,
-                                childAspectRatio: 0.61,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.55,
                               ),
                               itemCount: _products.length,
                               itemBuilder: (context, index) {
@@ -889,13 +889,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                 final id = product['id']?.toString() ?? '';
                                 final name = product['name']?.toString() ?? '';
                                 final brand = product['brand_name']?.toString() ?? '';
+                                final desc = (product['description'] ?? product['short_description'] ?? '').toString();
                                 final images = product['images'] as List? ?? [];
                                 final resolvedImg = images.isNotEmpty ? _getMediaUrl(images[0]?.toString()) : '';
                                 final variants = product['variants'] as List? ?? [];
                                 final price = variants.isNotEmpty ? (variants[0]['selling_price'] ?? 0.0) : 0.0;
                                 final oldPrice = variants.isNotEmpty ? variants[0]['compare_at_price'] : null;
 
-                                // Deterministic rating based on ID hash (matching storefront)
+                                // Deterministic rating based on ID hash
                                 int hash = 0;
                                 for (int i = 0; i < id.length; i++) {
                                   hash = id.codeUnitAt(i) + ((hash << 5) - hash);
@@ -903,7 +904,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                 final rating = (4.0 + (hash.abs() % 10) / 10).toStringAsFixed(1);
                                 final reviews = (5 + (hash.abs() % 95)).toString();
 
-                                // Discount percentage
                                 final discountPercentage = (oldPrice != null && oldPrice > price)
                                     ? ((oldPrice - price) / oldPrice * 100).round()
                                     : 0;
@@ -913,129 +913,361 @@ class _SearchScreenState extends State<SearchScreen> {
                                   allImages.add(resolvedImg);
                                 }
 
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => ProductDetailScreen(product: product),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: [
-                                        // Product Image
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(4),
-                                            child: Stack(
-                                              fit: StackFit.expand,
-                                              children: [
-                                                AutoCycleImage(
-                                                  imageUrls: allImages,
-                                                  id: id,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                                // Star Rating Overlay (matching storefront)
-                                                Positioned(
-                                                  bottom: 8,
-                                                  left: 8,
-                                                  child: Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white.withValues(alpha: 0.85),
-                                                      borderRadius: BorderRadius.circular(2),
+                                final notes = _getScentNotes(product);
+
+                                final detailProduct = {
+                                  'id': id,
+                                  'name': name,
+                                  'brand_name': brand,
+                                  'price': price,
+                                  'mrp': oldPrice ?? price,
+                                  'image_url': resolvedImg,
+                                  'description': desc,
+                                  'scent_notes': notes,
+                                  'rating': rating,
+                                  'reviews': reviews,
+                                  'images': allImages,
+                                };
+
+                                bool isWishlisted = false;
+                                int cartQty = 0;
+
+                                return StatefulBuilder(
+                                  builder: (context, setCardState) {
+                                    return GestureDetector(
+                                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                                          builder: (_) => ProductDetailScreen(product: detailProduct))),
+                                      child: Card(
+                                        elevation: 0,
+                                        clipBehavior: Clip.antiAlias,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(6),
+                                          side: const BorderSide(color: AppTheme.borderLight),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            // Product Image
+                                            Expanded(
+                                              child: Stack(
+                                                fit: StackFit.expand,
+                                                children: [
+                                                  AutoCycleImage(
+                                                    imageUrls: allImages,
+                                                    id: id,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                  // Discount badge
+                                                  if (discountPercentage > 0)
+                                                    Positioned(
+                                                      top: 8,
+                                                      left: 8,
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(
+                                                            horizontal: 6, vertical: 3),
+                                                        decoration: BoxDecoration(
+                                                          color: AppTheme.primaryRose,
+                                                          borderRadius: BorderRadius.circular(3),
+                                                        ),
+                                                        child: Text('$discountPercentage% OFF',
+                                                            style: GoogleFonts.montserrat(
+                                                                color: Colors.white,
+                                                                fontSize: 8,
+                                                                fontWeight: FontWeight.w700,
+                                                                letterSpacing: 0.5)),
+                                                      ),
                                                     ),
-                                                    child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
+                                                  // Favorite button
+                                                  Positioned(
+                                                    top: 6,
+                                                    right: 6,
+                                                    child: GestureDetector(
+                                                      onTap: () => setCardState(
+                                                          () => isWishlisted = !isWishlisted),
+                                                      child: Container(
+                                                        width: 28,
+                                                        height: 28,
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white.withValues(alpha: 0.85),
+                                                          shape: BoxShape.circle,
+                                                          border: Border.all(
+                                                              color: const Color(0xFFE5E5EA),
+                                                              width: 0.8),
+                                                        ),
+                                                        child: Icon(
+                                                          isWishlisted
+                                                              ? Icons.favorite
+                                                              : Icons.favorite_border,
+                                                          size: 14,
+                                                          color: isWishlisted
+                                                              ? AppTheme.primaryRose
+                                                              : const Color(0xFFA3A3A3),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  // Rating chip
+                                                  Positioned(
+                                                    bottom: 8,
+                                                    left: 8,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(
+                                                          horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(0xF2FFFFFF),
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        border:
+                                                            Border.all(color: AppTheme.borderLight),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Text(rating,
+                                                              style: GoogleFonts.poppins(
+                                                                  fontSize: 8,
+                                                                  fontWeight: FontWeight.w600,
+                                                                  color: Colors.black)),
+                                                          const SizedBox(width: 2),
+                                                          const Icon(Icons.star,
+                                                              size: 8, color: Color(0xFFFFA41C)),
+                                                          const SizedBox(width: 2),
+                                                          Text('($reviews)',
+                                                              style: GoogleFonts.poppins(
+                                                                  fontSize: 8, color: Colors.black54)),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Product Info
+                                            Padding(
+                                              padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  // Product name
+                                                  Text(
+                                                    name.toUpperCase(),
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w500,
+                                                      letterSpacing: 0.6,
+                                                      color: const Color(0xFF525252),
+                                                      height: 1.2,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  // Brand name
+                                                  if (brand.isNotEmpty)
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(top: 1),
+                                                      child: Text(
+                                                        brand.toUpperCase(),
+                                                        style: GoogleFonts.poppins(
+                                                          fontSize: 10,
+                                                          fontWeight: FontWeight.w900,
+                                                          letterSpacing: 1.0,
+                                                          color: Colors.black,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                  const SizedBox(height: 3),
+                                                  // Scent notes
+                                                  Text(notes.join(' · '),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: GoogleFonts.poppins(
+                                                          color: AppTheme.textMuted, fontSize: 9)),
+                                                  const SizedBox(height: 6),
+                                                  // Price row
+                                                  Wrap(
+                                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                                    spacing: 5,
+                                                    children: [
+                                                      Text('₹$price',
+                                                          style: GoogleFonts.poppins(
+                                                              color: Colors.black,
+                                                              fontWeight: FontWeight.w700,
+                                                              fontSize: 13)),
+                                                      if (discountPercentage > 0 && oldPrice != null) ...[
+                                                        Text('₹$oldPrice',
+                                                            style: GoogleFonts.poppins(
+                                                                color: const Color(0xFFA3A3A3),
+                                                                fontSize: 10,
+                                                                decoration: TextDecoration.lineThrough,
+                                                                decorationColor:
+                                                                    const Color(0xFFA3A3A3))),
+                                                        Text('$discountPercentage% off',
+                                                            style: GoogleFonts.poppins(
+                                                                color: AppTheme.primaryRose,
+                                                                fontSize: 10,
+                                                                fontWeight: FontWeight.w700)),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Action Buttons
+                                            Padding(
+                                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                              child: cartQty > 0
+                                                  ? Row(
                                                       children: [
-                                                        const Icon(Icons.star, color: Color(0xFFF1C40F), size: 10),
-                                                        const SizedBox(width: 2),
-                                                        Text(
-                                                          '$rating  $reviews',
-                                                          style: GoogleFonts.montserrat(
-                                                            fontSize: 8,
-                                                            fontWeight: FontWeight.w700,
-                                                            color: Colors.black87,
+                                                        Expanded(
+                                                          child: Container(
+                                                            height: 34,
+                                                            decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                  color: const Color(0xFFE5E5EA)),
+                                                              borderRadius: BorderRadius.circular(4),
+                                                              color: const Color(0xFFF9F9F9),
+                                                            ),
+                                                            child: Row(
+                                                              children: [
+                                                                Expanded(
+                                                                  child: GestureDetector(
+                                                                    onTap: () => setCardState(() {
+                                                                      if (cartQty > 0) cartQty--;
+                                                                    }),
+                                                                    child: Container(
+                                                                      alignment: Alignment.center,
+                                                                      child: Text('-',
+                                                                          style: GoogleFonts.poppins(
+                                                                              fontSize: 14,
+                                                                              fontWeight:
+                                                                                  FontWeight.w700,
+                                                                              color: Colors.black)),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 2,
+                                                                  child: Container(
+                                                                    alignment: Alignment.center,
+                                                                    child: Text('$cartQty IN BAG',
+                                                                        style: GoogleFonts.poppins(
+                                                                            fontSize: 7,
+                                                                            fontWeight: FontWeight.w800,
+                                                                            letterSpacing: 0.5,
+                                                                            color: Colors.black)),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  child: GestureDetector(
+                                                                    onTap: () => setCardState(
+                                                                        () => cartQty++),
+                                                                    child: Container(
+                                                                      alignment: Alignment.center,
+                                                                      child: Text('+',
+                                                                          style: GoogleFonts.poppins(
+                                                                              fontSize: 14,
+                                                                              fontWeight:
+                                                                                  FontWeight.w700,
+                                                                              color: Colors.black)),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 6),
+                                                        Expanded(
+                                                          child: GestureDetector(
+                                                            onTap: () {
+                                                              Navigator.of(context).push(
+                                                                MaterialPageRoute(
+                                                                    builder: (_) =>
+                                                                        ProductDetailScreen(
+                                                                            product: detailProduct)),
+                                                              );
+                                                            },
+                                                            child: Container(
+                                                              height: 34,
+                                                              alignment: Alignment.center,
+                                                              decoration: BoxDecoration(
+                                                                color: AppTheme.primaryRose,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(4),
+                                                              ),
+                                                              child: Text('BUY NOW',
+                                                                  style: GoogleFonts.poppins(
+                                                                      color: Colors.white,
+                                                                      fontSize: 8,
+                                                                      fontWeight: FontWeight.w800,
+                                                                      letterSpacing: 1.5)),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: GestureDetector(
+                                                            onTap: () =>
+                                                                setCardState(() => cartQty = 1),
+                                                            child: Container(
+                                                              height: 34,
+                                                              alignment: Alignment.center,
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(
+                                                                    color: Colors.black, width: 1),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(4),
+                                                                color: Colors.white,
+                                                              ),
+                                                              child: Text('ADD TO BAG',
+                                                                  style: GoogleFonts.poppins(
+                                                                      color: Colors.black,
+                                                                      fontSize: 8,
+                                                                      fontWeight: FontWeight.w800,
+                                                                      letterSpacing: 1.5)),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 6),
+                                                        Expanded(
+                                                          child: GestureDetector(
+                                                            onTap: () {
+                                                              Navigator.of(context).push(
+                                                                MaterialPageRoute(
+                                                                    builder: (_) =>
+                                                                        ProductDetailScreen(
+                                                                            product: detailProduct)),
+                                                              );
+                                                            },
+                                                            child: Container(
+                                                              height: 34,
+                                                              alignment: Alignment.center,
+                                                              decoration: BoxDecoration(
+                                                                color: Colors.black,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(4),
+                                                              ),
+                                                              child: Text('BUY NOW',
+                                                                  style: GoogleFonts.poppins(
+                                                                      color: Colors.white,
+                                                                      fontSize: 8,
+                                                                      fontWeight: FontWeight.w800,
+                                                                      letterSpacing: 1.5)),
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
-                                                ),
-                                              ],
                                             ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        // Product Name (First)
-                                        Text(
-                                          name.toUpperCase(),
-                                          style: GoogleFonts.montserrat(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                            letterSpacing: 0.5,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 2),
-                                        // Brand Name (Second)
-                                        Text(
-                                          brand.toUpperCase(),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w500,
-                                            color: const Color(0xFF8E8E93),
-                                            letterSpacing: 0.3,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        // Price details
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              '₹$price',
-                                              style: GoogleFonts.montserrat(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppTheme.primaryRose,
-                                              ),
-                                            ),
-                                            if (oldPrice != null && oldPrice > price) ...[
-                                              const SizedBox(width: 5),
-                                              Text(
-                                                '₹$oldPrice',
-                                                style: GoogleFonts.montserrat(
-                                                  fontSize: 8,
-                                                  color: Colors.black38,
-                                                  decoration: TextDecoration.lineThrough,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '($discountPercentage% OFF)',
-                                                style: GoogleFonts.montserrat(
-                                                  fontSize: 8,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: AppTheme.primaryRose,
-                                                ),
-                                              ),
-                                            ],
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             ),
@@ -1044,5 +1276,22 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
     );
+  }
+
+  List<String> _getScentNotes(Map<String, dynamic> product) {
+    final catName = (product['category_name'] ?? product['category'] ?? '').toString();
+    final desc = (product['description'] ?? product['short_description'] ?? '').toString().toLowerCase();
+    
+    final List<String> families = [];
+    if (catName.toLowerCase().contains('floral') || desc.contains('floral')) families.add('Floral');
+    if (catName.toLowerCase().contains('woody') || desc.contains('woody')) families.add('Woody');
+    if (catName.toLowerCase().contains('oriental') || desc.contains('oriental') || desc.contains('oudh')) families.add('Oriental');
+    if (catName.toLowerCase().contains('fresh') || desc.contains('fresh')) families.add('Fresh');
+    if (catName.toLowerCase().contains('citrus') || desc.contains('citrus')) families.add('Citrus');
+    
+    if (families.isEmpty) {
+      families.add('Fresh');
+    }
+    return families;
   }
 }
