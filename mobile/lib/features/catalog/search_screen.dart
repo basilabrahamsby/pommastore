@@ -1195,6 +1195,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                                                 color: AppTheme.primaryRose,
                                                                 borderRadius:
                                                                     BorderRadius.circular(4),
+                                                                boxShadow: [
+                                                                  BoxShadow(
+                                                                    color: AppTheme.primaryRose
+                                                                        .withValues(alpha: 0.3),
+                                                                    blurRadius: 8,
+                                                                    offset: const Offset(0, 2),
+                                                                  )
+                                                                ],
                                                               ),
                                                               child: Text('BUY NOW',
                                                                   style: GoogleFonts.poppins(
@@ -1247,9 +1255,17 @@ class _SearchScreenState extends State<SearchScreen> {
                                                               height: 34,
                                                               alignment: Alignment.center,
                                                               decoration: BoxDecoration(
-                                                                color: Colors.black,
+                                                                color: AppTheme.primaryRose,
                                                                 borderRadius:
                                                                     BorderRadius.circular(4),
+                                                                boxShadow: [
+                                                                  BoxShadow(
+                                                                    color: AppTheme.primaryRose
+                                                                        .withValues(alpha: 0.3),
+                                                                    blurRadius: 8,
+                                                                    offset: const Offset(0, 2),
+                                                                  )
+                                                                ],
                                                               ),
                                                               child: Text('BUY NOW',
                                                                   style: GoogleFonts.poppins(
