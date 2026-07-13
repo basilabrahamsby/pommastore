@@ -233,7 +233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.60,
+        childAspectRatio: 0.55,
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
@@ -280,154 +280,373 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               [resolvedImg],
         };
 
-        return GestureDetector(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => ProductDetailScreen(product: detailProduct))),
-          child: Card(
-            elevation: 0,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-              side: const BorderSide(color: AppTheme.borderLight),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      resolvedImg.isNotEmpty
-                          ? Image.network(resolvedImg, fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) => Container(
-                                  color: const Color(0xFFF5F5F5),
-                                  child: const Icon(Icons.image_not_supported,
-                                      color: Colors.black26)))
-                          : Container(color: const Color(0xFFF5F5F5)),
-                      if (hasDiscount)
-                        Positioned(
-                          top: 8, left: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryRose,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                            child: Text('$discountPct% OFF',
-                                style: GoogleFonts.montserrat(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5)),
-                          ),
-                        ),
-                      Positioned(
-                        bottom: 8, left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xF2FFFFFF),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppTheme.borderLight),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(ratingMeta['rating']!,
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black)),
-                              const SizedBox(width: 2),
-                              const Icon(Icons.star, size: 8, color: Color(0xFFFFA41C)),
-                              const SizedBox(width: 2),
-                              Text('(${ratingMeta['reviews']})',
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 8, color: Colors.black54)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+        // Local state for wishlist and cart quantity
+        bool isWishlisted = false;
+        int cartQty = 0;
+
+        return StatefulBuilder(
+          builder: (context, setCardState) {
+            return GestureDetector(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ProductDetailScreen(product: detailProduct))),
+              child: Card(
+                elevation: 0,
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  side: const BorderSide(color: AppTheme.borderLight),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Brand name — Poppins 10px black weight uppercase (font-nelphim)
-                      if ((product['brand_name'] ?? product['brand'] ?? '').toString().isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text(
-                            (product['brand_name'] ?? product['brand'] ?? '').toString().toUpperCase(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Product Image with overlays ────────────────────────
+                    Expanded(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          resolvedImg.isNotEmpty
+                              ? Image.network(resolvedImg, fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stack) => Container(
+                                      color: const Color(0xFFF5F5F5),
+                                      child: const Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.black26)))
+                              : Container(color: const Color(0xFFF5F5F5)),
+                          // Discount badge — top left
+                          if (hasDiscount)
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryRose,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text('$discountPct% OFF',
+                                    style: GoogleFonts.montserrat(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5)),
+                              ),
+                            ),
+                          // Favorite (heart) button — top right
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: () => setCardState(
+                                  () => isWishlisted = !isWishlisted),
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: const Color(0xFFE5E5EA),
+                                      width: 0.8),
+                                ),
+                                child: Icon(
+                                  isWishlisted
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 14,
+                                  color: isWishlisted
+                                      ? AppTheme.primaryRose
+                                      : const Color(0xFFA3A3A3),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Rating chip — bottom left
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xF2FFFFFF),
+                                borderRadius: BorderRadius.circular(10),
+                                border:
+                                    Border.all(color: AppTheme.borderLight),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(ratingMeta['rating']!,
+                                      style: GoogleFonts.poppins(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black)),
+                                  const SizedBox(width: 2),
+                                  const Icon(Icons.star,
+                                      size: 8, color: Color(0xFFFFA41C)),
+                                  const SizedBox(width: 2),
+                                  Text('(${ratingMeta['reviews']})',
+                                      style: GoogleFonts.poppins(
+                                          fontSize: 8, color: Colors.black54)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // ── Product Info ───────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Brand name
+                          if ((product['brand_name'] ??
+                                      product['brand'] ??
+                                      '')
+                                  .toString()
+                                  .isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                (product['brand_name'] ??
+                                        product['brand'] ??
+                                        '')
+                                    .toString()
+                                    .toUpperCase(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
+                                  color: Colors.black,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          // Product name
+                          Text(
+                            name.toString().toUpperCase(),
                             style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                              color: Colors.black,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.6,
+                              color: const Color(0xFF525252),
+                              height: 1.2,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      // Product name — Poppins 11px medium neutral-600 uppercase tracking-wide
-                      Text(
-                        name.toString().toUpperCase(),
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.6,
-                          color: const Color(0xFF525252), // neutral-600
-                          height: 1.2,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      // Scent notes — Poppins 9px muted
-                      Text(notes.join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
-                              color: AppTheme.textMuted, fontSize: 9)),
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Selling price — Poppins 13px bold black (matches web text-black)
-                          Text('₹$sellingPrice',
+                          const SizedBox(height: 3),
+                          // Scent notes
+                          Text(notes.join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.poppins(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13)),
-                          if (hasDiscount) ...[
-                            const SizedBox(width: 5),
-                            Text('₹$mrp',
-                                style: GoogleFonts.poppins(
-                                    color: const Color(0xFFA3A3A3), // neutral-400
-                                    fontSize: 10,
-                                    decoration: TextDecoration.lineThrough,
-                                    decorationColor: const Color(0xFFA3A3A3))),
-                            const SizedBox(width: 4),
-                            Text('$discountPct% off',
-                                style: GoogleFonts.poppins(
-                                    color: AppTheme.primaryRose,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700)),
-                          ],
-                          const Spacer(),
-                          const Icon(Icons.shopping_bag_outlined,
-                              size: 16, color: AppTheme.primaryRose),
+                                  color: AppTheme.textMuted, fontSize: 9)),
+                          const SizedBox(height: 6),
+                          // Price row
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 5,
+                            children: [
+                              Text('₹$sellingPrice',
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13)),
+                              if (hasDiscount) ...[
+                                Text('₹$mrp',
+                                    style: GoogleFonts.poppins(
+                                        color: const Color(0xFFA3A3A3),
+                                        fontSize: 10,
+                                        decoration: TextDecoration.lineThrough,
+                                        decorationColor:
+                                            const Color(0xFFA3A3A3))),
+                                Text('$discountPct% off',
+                                    style: GoogleFonts.poppins(
+                                        color: AppTheme.primaryRose,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700)),
+                              ],
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    // ── Action Buttons ─────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                      child: cartQty > 0
+                          // In-bag state: qty stepper + Buy Now
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: const Color(0xFFE5E5EA)),
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: const Color(0xFFF9F9F9),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Minus
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: () => setCardState(() {
+                                              if (cartQty > 0) cartQty--;
+                                            }),
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              child: Text('-',
+                                                  style: GoogleFonts.poppins(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Colors.black)),
+                                            ),
+                                          ),
+                                        ),
+                                        // Qty label
+                                        Expanded(
+                                          flex: 2,
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Text('$cartQty IN BAG',
+                                                style: GoogleFonts.poppins(
+                                                    fontSize: 7,
+                                                    fontWeight: FontWeight.w800,
+                                                    letterSpacing: 0.5,
+                                                    color: Colors.black)),
+                                          ),
+                                        ),
+                                        // Plus
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: () => setCardState(
+                                                () => cartQty++),
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              child: Text('+',
+                                                  style: GoogleFonts.poppins(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Colors.black)),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                // Buy Now
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                ProductDetailScreen(
+                                                    product: detailProduct)),
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 34,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primaryRose,
+                                        borderRadius:
+                                            BorderRadius.circular(4),
+                                      ),
+                                      child: Text('BUY NOW',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.white,
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1.5)),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          // Default state: Add to Bag + Buy Now
+                          : Row(
+                              children: [
+                                // Add to Bag
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        setCardState(() => cartQty = 1),
+                                    child: Container(
+                                      height: 34,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.black, width: 1),
+                                        borderRadius:
+                                            BorderRadius.circular(4),
+                                        color: Colors.white,
+                                      ),
+                                      child: Text('ADD TO BAG',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1.5)),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                // Buy Now
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                ProductDetailScreen(
+                                                    product: detailProduct)),
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 34,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primaryRose,
+                                        borderRadius:
+                                            BorderRadius.circular(4),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppTheme.primaryRose
+                                                .withValues(alpha: 0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          )
+                                        ],
+                                      ),
+                                      child: Text('BUY NOW',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.white,
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1.5)),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
