@@ -33,6 +33,7 @@ from app.services.email import (
 from app.services.sms import sendsms_status, sendsms_orderadmin
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
+public_router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
 def generate_order_number() -> str:
@@ -91,7 +92,7 @@ async def get_order(order_id: str, db: AsyncSession = Depends(get_db), _: User =
     return _enrich_order(order)
 
 
-@router.get("/{order_id}/invoice", response_class=HTMLResponse)
+@public_router.get("/{order_id}/invoice", response_class=HTMLResponse)
 async def get_order_invoice(
     order_id: str,
     db: AsyncSession = Depends(get_db)
@@ -122,7 +123,7 @@ async def get_order_invoice(
     return HTMLResponse(content=html_content)
 
 
-@router.get("/{order_id}/invoice/pdf")
+@public_router.get("/{order_id}/invoice/pdf")
 async def get_order_invoice_pdf(
     order_id: str,
     db: AsyncSession = Depends(get_db)
@@ -164,7 +165,7 @@ class DelhiveryPickupRequest(BaseModel):
     pickup_location: str
     expected_package_count: int = 1
 
-@router.get("/{order_id}/delhivery-label", response_class=HTMLResponse)
+@public_router.get("/{order_id}/delhivery-label", response_class=HTMLResponse)
 async def get_delhivery_label(
     order_id: str,
     db: AsyncSession = Depends(get_db)
