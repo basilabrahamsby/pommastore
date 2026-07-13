@@ -749,22 +749,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ── House Favorites Section (Arched Grid/Stack Layout) ──────────────────────
-  Widget _buildSpotlightCard(Map<String, dynamic> item) {
+  // ── House Favorites Section (Vertical Arches without cropping) ──────────────
+  Widget _buildVerticalArchedCard(Map<String, dynamic> item, double width, double height) {
     final name = item['name']?.toString() ?? '';
     final imgUrl = _getMediaUrl(item['img']?.toString() ?? '');
 
     return Container(
-      height: 180,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(55)),
         border: Border.all(color: AppTheme.borderLight),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           )
         ],
       ),
@@ -773,78 +774,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         fit: StackFit.expand,
         children: [
           if (imgUrl.isNotEmpty)
-            CachedImage(imageUrl: imgUrl, fit: BoxFit.cover)
-          else
-            Container(color: const Color(0xFFF5F8F6)),
-          // Gradient overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.black.withValues(alpha: 0.1),
-                  Colors.black.withValues(alpha: 0.7),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'FEATURED FAVORITE',
-                  style: GoogleFonts.montserrat(
-                    color: AppTheme.accentGold,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  name.toUpperCase(),
-                  style: GoogleFonts.playfairDisplay(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.normal,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmallArchedCard(Map<String, dynamic> item) {
-    final name = item['name']?.toString() ?? '';
-    final imgUrl = _getMediaUrl(item['img']?.toString() ?? '');
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(60)),
-        border: Border.all(color: AppTheme.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          )
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (imgUrl.isNotEmpty)
-            CachedImage(imageUrl: imgUrl, fit: BoxFit.cover)
+            CachedImage(
+              imageUrl: imgUrl, 
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter, // keeps the top of the bottle visible
+            )
           else
             Container(color: const Color(0xFFF5F8F6)),
           // Gradient bottom overlay
@@ -853,26 +787,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             left: 0,
             right: 0,
             child: Container(
-              height: 60,
+              height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Colors.black.withValues(alpha: 0.0),
-                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withValues(alpha: 0.85),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
               alignment: Alignment.bottomCenter,
               child: Text(
                 name.toUpperCase(),
                 style: GoogleFonts.montserrat(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 8,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
+                  letterSpacing: 1.0,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
@@ -888,70 +822,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildHouseFavorites(List<dynamic> houseFavorites) {
     if (houseFavorites.isEmpty) return const SizedBox.shrink();
 
-    Widget content;
-    if (houseFavorites.length == 1) {
-      content = _buildSpotlightCard(houseFavorites[0] as Map<String, dynamic>);
-    } else if (houseFavorites.length == 2) {
-      content = Row(
-        children: [
-          Expanded(child: _buildSmallArchedCard(houseFavorites[0] as Map<String, dynamic>)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildSmallArchedCard(houseFavorites[1] as Map<String, dynamic>)),
-        ],
-      );
-    } else if (houseFavorites.length == 3) {
-      content = Column(
-        children: [
-          _buildSpotlightCard(houseFavorites[0] as Map<String, dynamic>),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 160,
-            child: Row(
-              children: [
-                Expanded(child: _buildSmallArchedCard(houseFavorites[1] as Map<String, dynamic>)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildSmallArchedCard(houseFavorites[2] as Map<String, dynamic>)),
-              ],
-            ),
-          ),
-        ],
-      );
-    } else {
-      // 4 or more: 1 Spotlight + Grid of up to 4 remaining items
-      final remaining = houseFavorites.skip(1).take(4).toList();
-      content = Column(
-        children: [
-          _buildSpotlightCard(houseFavorites[0] as Map<String, dynamic>),
-          const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.85,
-            ),
-            itemCount: remaining.length,
-            itemBuilder: (context, idx) {
-              return _buildSmallArchedCard(remaining[idx] as Map<String, dynamic>);
-            },
-          ),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        // 3 columns layout: 16px horizontal screen padding, 12px gap between items
+        final cardWidth = (screenWidth - 32 - 24) / 3;
+        final cardHeight = cardWidth * 1.8; // tall aspect ratio to fit full perfume bottles
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 32),
-        _buildSectionHeader('House Favorites', 'The Elite List'),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: content,
-        ),
-      ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 32),
+            _buildSectionHeader('House Favorites', 'The Elite List'),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: houseFavorites.map((item) {
+                  return _buildVerticalArchedCard(
+                    item as Map<String, dynamic>,
+                    cardWidth,
+                    cardHeight,
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
