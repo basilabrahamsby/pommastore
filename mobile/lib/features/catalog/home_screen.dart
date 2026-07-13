@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import 'homepage_provider.dart';
 import 'product_detail_screen.dart';
+import '../../core/widgets/cached_image.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -165,13 +166,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Image half
             Expanded(
               flex: 4,
-              child: imgUrl.isNotEmpty
-                  ? Image.network(imgUrl,
-                      fit: BoxFit.cover,
-                      height: 170,
-                      errorBuilder: (context, error, stack) =>
-                          Container(color: bg.withValues(alpha: 0.3)))
-                  : Container(color: bg.withValues(alpha: 0.3)),
+              child: CachedImage(
+                imageUrl: imgUrl,
+                fit: BoxFit.cover,
+                height: 170,
+                errorWidget: Container(color: bg.withValues(alpha: 0.3)),
+              ),
             ),
             // Text half
             Expanded(
@@ -265,6 +265,594 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const Color(0xFF5c4033)),
         ],
       ),
+    );
+  }
+
+  // ── Elite Brand Houses Section ─────────────────────────────────────────────
+  Widget _buildBrandsSection(List<dynamic> brands) {
+    if (brands.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 32),
+        _buildSectionHeader('Elite Perfumery', 'The Global Houses'),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 310,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: brands.length,
+            itemBuilder: (context, index) {
+              final brand = brands[index] as Map<String, dynamic>;
+              final name = brand['name'] ?? '';
+              final logoUrl = _getMediaUrl(brand['logo_url']?.toString());
+              final bannerUrl = _getMediaUrl((brand['brand_banner'] ?? brand['banner_url'])?.toString());
+              final desc = brand['description'] ?? 'Discover the signature collections and exclusive raw extractions crafted by the luxury house of $name.';
+
+              return Container(
+                width: 250,
+                margin: const EdgeInsets.only(right: 16, bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.borderLight),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Banner Image
+                      Container(
+                        height: 100,
+                        color: const Color(0xFFF5F5F5),
+                        child: CachedImage(
+                          imageUrl: bannerUrl,
+                          fit: BoxFit.cover,
+                          errorWidget: const Icon(Icons.image_outlined, color: Colors.black12, size: 30),
+                        ),
+                      ),
+                      // Content details
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Small logo circle (floating style)
+                              Transform.translate(
+                                offset: const Offset(0, -32),
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 4,
+                                      )
+                                    ],
+                                  ),
+                                  child: ClipOval(
+                                    child: CachedImage(
+                                      imageUrl: logoUrl,
+                                      fit: BoxFit.contain,
+                                      errorWidget: Center(
+                                        child: Text(
+                                          name.isNotEmpty ? name[0] : '✦',
+                                          style: GoogleFonts.playfairDisplay(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.accentGold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Transform.translate(
+                                offset: const Offset(0, -20),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'SIGNATURE HOUSE',
+                                      style: GoogleFonts.montserrat(
+                                        color: AppTheme.accentGold,
+                                        fontSize: 7,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      name.toString().toUpperCase(),
+                                      style: GoogleFonts.playfairDisplay(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.normal,
+                                        color: Colors.black,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      desc,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 9,
+                                        color: AppTheme.textMuted,
+                                        height: 1.4,
+                                      ),
+                                      maxLines: 2,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              // Explore House Button
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xFFE5E5EA)),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'EXPLORE HOUSE',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 7,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.0,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.chevron_right, size: 10, color: Colors.black54),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Editorial (For Him, Privilege Collection, For Her) Section ─────────────
+  Widget _buildEditorialSection(List<dynamic> loyaltyRewards, Map<String, dynamic> layout) {
+    final splitBanners = layout['split_banners'] as Map<String, dynamic>? ?? {};
+    final menImg = _getMediaUrl((splitBanners['men_mobile'] ?? splitBanners['men'])?.toString() ?? '/banner-men.png');
+    final womenImg = _getMediaUrl((splitBanners['women_mobile'] ?? splitBanners['women'])?.toString() ?? '/banner-women.png');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 32),
+        // 1. Column 1: For Him
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            height: 240,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: Colors.grey.shade900,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CachedImage(
+                  imageUrl: menImg,
+                  fit: BoxFit.cover,
+                  errorWidget: Container(color: Colors.black26),
+                ),
+                Container(color: Colors.black38),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'REFINED & BOLD',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white70,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'FOR HIM',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 28,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'SHOP MEN',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 2.0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // 2. Column 2: The Privilege Collection (Loyalty Rewards Card)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceLight,
+              border: Border.all(color: AppTheme.borderLight),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'KOZMO REWARDS',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textMuted,
+                    letterSpacing: 2.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'THE PRIVILEGE COLLECTION.',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: 32,
+                  height: 1.5,
+                  color: AppTheme.primaryRose,
+                ),
+                const SizedBox(height: 20),
+
+                // Central Reward card (if rewards are available)
+                if (loyaltyRewards.isNotEmpty) ...[
+                  Builder(builder: (context) {
+                    final reward = loyaltyRewards[0] as Map<String, dynamic>;
+                    final rewardImg = _getMediaUrl(reward['image_url']?.toString() ?? '');
+                    final rewardName = reward['name']?.toString() ?? 'Exclusive Reward';
+                    final rewardType = reward['reward_type']?.toString() ?? 'MEMBERSHIP';
+                    final rewardDesc = reward['description']?.toString() ?? '';
+                    final pointCost = reward['point_cost']?.toString() ?? '';
+
+                    return Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade900,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CachedImage(
+                            imageUrl: rewardImg,
+                            fit: BoxFit.cover,
+                            opacity: 0.5,
+                            errorWidget: Container(color: Colors.black26),
+                          ),
+                          Container(color: Colors.black38),
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  rewardType.toUpperCase(),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFFC9A84C), // accentGold
+                                    letterSpacing: 2.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  rewardName,
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 14,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (rewardDesc.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    rewardDesc,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9,
+                                      color: Colors.white70,
+                                      height: 1.4,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  decoration: const BoxDecoration(
+                                    border: Border(top: BorderSide(color: Colors.white10)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        pointCost.isNotEmpty ? '$pointCost POINTS' : 'EXPLORE',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.arrow_forward, size: 8, color: Colors.white),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+
+                const SizedBox(height: 20),
+                Text(
+                  'VIEW FULL GALLERY',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // 3. Column 3: For Her
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            height: 240,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: Colors.grey.shade900,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CachedImage(
+                  imageUrl: womenImg,
+                  fit: BoxFit.cover,
+                  errorWidget: Container(color: Colors.black26),
+                ),
+                Container(color: Colors.black38),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'ELEGANT & SWEET',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white70,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'FOR HER',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 28,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'SHOP WOMEN',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 2.0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── House Favorites Section (Arches) ───────────────────────────────────────
+  Widget _buildHouseFavorites(List<dynamic> houseFavorites) {
+    if (houseFavorites.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 32),
+        _buildSectionHeader('House Favorites', 'The Elite List'),
+        const SizedBox(height: 16),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Background mix text "LEGENDARY"
+            Opacity(
+              opacity: 0.05,
+              child: Text(
+                'LEGENDARY',
+                style: GoogleFonts.montserrat(
+                  fontSize: 54,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  letterSpacing: 6,
+                ),
+              ),
+            ),
+            // Horizontally scrolling list of arches
+            SizedBox(
+              height: 360,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: houseFavorites.length,
+                itemBuilder: (context, index) {
+                  final item = houseFavorites[index] as Map<String, dynamic>;
+                  final name = item['name']?.toString() ?? '';
+                  final imgUrl = _getMediaUrl(item['img']?.toString() ?? '');
+
+                  return Container(
+                    width: 180,
+                    margin: const EdgeInsets.only(right: 16, bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(90)),
+                      border: Border.all(color: AppTheme.borderLight),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (imgUrl.isNotEmpty)
+                          CachedImage(imageUrl: imgUrl, fit: BoxFit.cover)
+                        else
+                          Container(color: const Color(0xFFF5F8F6)),
+                        // Bottom text overlay with gradient
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 70,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.0),
+                                  Colors.black.withValues(alpha: 0.8),
+                                  Colors.black,
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            alignment: Alignment.bottomCenter,
+                            child: Text(
+                              name.toUpperCase(),
+                              style: GoogleFonts.montserrat(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2.0,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -369,15 +957,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Right: Image half
             Expanded(
               flex: 4,
-              child: imgUrl.isNotEmpty
-                  ? Image.network(
-                      imgUrl,
-                      fit: BoxFit.cover,
-                      height: 200,
-                      errorBuilder: (context, error, stack) =>
-                          Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
-                    )
-                  : Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
+              child: CachedImage(
+                imageUrl: imgUrl,
+                fit: BoxFit.cover,
+                height: 200,
+                errorWidget: Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
+              ),
             ),
           ],
         ),
@@ -466,14 +1051,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          resolvedImg.isNotEmpty
-                              ? Image.network(resolvedImg, fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stack) => Container(
-                                      color: const Color(0xFFF5F5F5),
-                                      child: const Icon(
-                                          Icons.image_not_supported,
-                                          color: Colors.black26)))
-                              : Container(color: const Color(0xFFF5F5F5)),
+                          CachedImage(
+                            imageUrl: resolvedImg,
+                            fit: BoxFit.cover,
+                            errorWidget: Container(
+                                color: const Color(0xFFF5F5F5),
+                                child: const Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.black26)),
+                          ),
                           // Discount badge — top left
                           if (hasDiscount)
                             Positioned(
@@ -843,8 +1429,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       body: homepageAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primaryRose)),
+        loading: () => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/logo.png',
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 20),
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  color: AppTheme.primaryRose,
+                  strokeWidth: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
         error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -871,6 +1476,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final newArrivals = (data['new_arrivals'] as List?) ?? [];
           final bestsellers = (data['bestsellers'] as List?) ?? [];
           final offers = (data['offers'] as List?) ?? [];
+          final brands = (data['brands'] as List?) ?? [];
+          final rewards = (data['rewards'] as List?) ?? [];
+          final houseFavorites = (layout['house_favorites'] as List?) ?? [];
 
           // Between-product ad banners from CMS layout (with web fallbacks)
           final gridAds1Raw = layout['grid_ads_1'];
@@ -960,11 +1568,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               return Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  if (imageResolved.isNotEmpty)
-                                    Image.network(imageResolved,
-                                        fit: BoxFit.cover)
-                                  else
-                                    Container(color: Colors.black54),
+                                  CachedImage(
+                                    imageUrl: imageResolved,
+                                    fit: BoxFit.cover,
+                                    errorWidget: Container(color: Colors.black54),
+                                  ),
                                   Container(
                                       color: const Color(0x66000000)),
                                   SafeArea(
@@ -1193,6 +1801,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 24),
                     _buildAdBanner(ad3, isAd3: true),
                   ],
+
+                  // ── Elite Brand Houses Section ─────────────────────────────
+                  _buildBrandsSection(brands),
+
+                  // ── Editorial (For Him, Privilege Collection, For Her) Section 
+                  _buildEditorialSection(rewards, layout),
+
+                  // ── House Favorites Section (Arches) ───────────────────────
+                  _buildHouseFavorites(houseFavorites),
 
                   // ── Promotional Offers ────────────────────────────────────
                   if (offers.isNotEmpty) ...[
