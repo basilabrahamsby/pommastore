@@ -402,14 +402,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Brand name
+                          // Product name — first (matches storefront ProductCard line 297)
+                          Text(
+                            name.toString().toUpperCase(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.6,
+                              color: const Color(0xFF525252),
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // Brand name — below (matches storefront ProductCard line 300)
                           if ((product['brand_name'] ??
                                       product['brand'] ??
                                       '')
                                   .toString()
                                   .isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 2),
+                              padding: const EdgeInsets.only(top: 1),
                               child: Text(
                                 (product['brand_name'] ??
                                         product['brand'] ??
@@ -426,19 +439,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          // Product name
-                          Text(
-                            name.toString().toUpperCase(),
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.6,
-                              color: const Color(0xFF525252),
-                              height: 1.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
                           const SizedBox(height: 3),
                           // Scent notes
                           Text(notes.join(' · '),
