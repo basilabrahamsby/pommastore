@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
@@ -32,22 +34,37 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _searchController = TextEditingController();
   final ApiClient _apiClient = ApiClient();
+  List<dynamic> _allProducts = [];
   List<dynamic> _products = [];
   List<dynamic> _categories = [];
+  List<dynamic> _brands = [];
   bool _isLoading = true;
   String _error = '';
   String _query = '';
-  String? _selectedGender;
   String _selectedSort = 'Recommended';
+
+  // Active filter selections (mirroring Next.js storefront shop page)
+  final List<String> _selectedGenders = [];
+  final List<String> _selectedCategories = [];
+  final List<String> _selectedBrands = [];
+  final List<String> _selectedPrices = [];
+  final List<String> _selectedFamilies = [];
+  final List<String> _selectedConcentrations = [];
 
   @override
   void initState() {
     super.initState();
     _query = widget.initialQuery ?? '';
-    _selectedGender = widget.gender;
     _searchController.text = _query;
+    if (widget.gender != null) {
+      final formatted = widget.gender!.toLowerCase();
+      if (formatted == 'men') _selectedGenders.add('Men');
+      if (formatted == 'women') _selectedGenders.add('Women');
+      if (formatted == 'unisex') _selectedGenders.add('Unisex');
+    }
     _loadProducts();
     _loadCategories();
+    _loadBrands();
   }
 
   @override
@@ -70,6 +87,33 @@ class _SearchScreenState extends State<SearchScreen> {
       final res = await _apiClient.dio.get('/storefront/categories');
       setState(() {
         _categories = res.data as List? ?? [];
+        if (widget.categoryId != null) {
+          final match = _categories.firstWhere(
+            (c) => c['id']?.toString() == widget.categoryId,
+            orElse: () => null,
+          );
+          if (match != null) {
+            _selectedCategories.add(match['name']?.toString() ?? '');
+          }
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _loadBrands() async {
+    try {
+      final res = await _apiClient.dio.get('/storefront/brands');
+      setState(() {
+        _brands = res.data as List? ?? [];
+        if (widget.brandId != null) {
+          final match = _brands.firstWhere(
+            (b) => b['id']?.toString() == widget.brandId,
+            orElse: () => null,
+          );
+          if (match != null) {
+            _selectedBrands.add(match['name']?.toString() ?? '');
+          }
+        }
       });
     } catch (_) {}
   }
@@ -83,20 +127,13 @@ class _SearchScreenState extends State<SearchScreen> {
       final Map<String, dynamic> params = {
         'limit': 100,
       };
-      if (_query.isNotEmpty) params['search'] = _query;
-      if (widget.categoryId != null) params['category_id'] = widget.categoryId;
-      if (widget.brandId != null) params['brand_id'] = widget.brandId;
-      
-      final activeGender = _selectedGender;
-      if (activeGender != null) params['gender'] = activeGender;
-      
       if (widget.isFeatured != null) params['is_featured'] = widget.isFeatured;
       if (widget.isNewArrival != null) params['is_new_arrival'] = widget.isNewArrival;
 
       final res = await _apiClient.dio.get('/storefront/products', queryParameters: params);
       setState(() {
-        _products = res.data as List? ?? [];
-        _applySortInternal();
+        _allProducts = res.data as List? ?? [];
+        _applyFilters();
         _isLoading = false;
       });
     } catch (e) {
@@ -105,6 +142,91 @@ class _SearchScreenState extends State<SearchScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _applyFilters() {
+    List<dynamic> results = List.from(_allProducts);
+
+    // 0. Discovery Search Check
+    if (_query.isNotEmpty) {
+      final q = _query.toLowerCase();
+      results = results.where((p) {
+        final name = (p['name']?.toString() ?? '').toLowerCase();
+        final brand = (p['brand_name']?.toString() ?? '').toLowerCase();
+        final desc = (p['short_description']?.toString() ?? '').toLowerCase();
+        return name.contains(q) || brand.contains(q) || desc.contains(q);
+      }).toList();
+    }
+
+    // 1. Gender Check
+    if (_selectedGenders.isNotEmpty) {
+      results = results.where((p) {
+        final pg = p['gender']?.toString().toLowerCase() ?? '';
+        return _selectedGenders.any((g) => g.toLowerCase() == pg);
+      }).toList();
+    }
+
+    // 2. Category Check
+    if (_selectedCategories.isNotEmpty) {
+      results = results.where((p) {
+        final pc = p['category_name']?.toString() ?? '';
+        return _selectedCategories.contains(pc);
+      }).toList();
+    }
+
+    // 3. Brand Check
+    if (_selectedBrands.isNotEmpty) {
+      results = results.where((p) {
+        final pb = p['brand_name']?.toString() ?? '';
+        return _selectedBrands.contains(pb);
+      }).toList();
+    }
+
+    // 4. Price Threshold Check
+    if (_selectedPrices.isNotEmpty) {
+      results = results.where((p) {
+        final variants = p['variants'] as List? ?? [];
+        if (variants.isEmpty) return false;
+        final basePrice = variants
+            .map((v) => (v['selling_price'] ?? 0.0) as num)
+            .map((n) => n.toDouble())
+            .reduce(math.min);
+        
+        return _selectedPrices.any((range) {
+          if (range == "Under ₹1,000") return basePrice < 1000;
+          if (range == "₹1,000 - ₹5,000") return basePrice >= 1000 && basePrice <= 5000;
+          if (range == "₹5,000 - ₹10,000") return basePrice > 5000 && basePrice <= 10000;
+          if (range == "Over ₹10,000") return basePrice > 10000;
+          return false;
+        });
+      }).toList();
+    }
+
+    // 5. Scent Palette Consistency
+    if (_selectedFamilies.isNotEmpty) {
+      results = results.where((p) {
+        final catName = (p['category_name']?.toString() ?? '').toLowerCase();
+        final desc = (p['short_description']?.toString() ?? '').toLowerCase();
+        return _selectedFamilies.any((family) {
+          final f = family.toLowerCase();
+          return catName.contains(f) || desc.contains(f);
+        });
+      }).toList();
+    }
+
+    // 6. Material Concentration Mapping
+    if (_selectedConcentrations.isNotEmpty) {
+      results = results.where((p) {
+        final variants = p['variants'] as List? ?? [];
+        final concentrations = variants.map((v) => (v['concentration']?.toString() ?? '').toLowerCase()).toList();
+        return _selectedConcentrations.any((c) => concentrations.contains(c.toLowerCase()));
+      }).toList();
+    }
+
+    setState(() {
+      _products = results;
+      _applySortInternal();
+    });
   }
 
   void _applySortInternal() {
@@ -200,36 +322,218 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildGenderChip(String label, String? val) {
-    final active = _selectedGender == val;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedGender = val;
-        });
-        _loadProducts();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        decoration: BoxDecoration(
-          color: active ? AppTheme.primaryRose : Colors.white,
-          border: Border.all(
-            color: active ? AppTheme.primaryRose : const Color(0xFFE5E5EA),
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
+  Widget _buildFilterCategorySection({
+    required String title,
+    required List<String> options,
+    required List<String> selectedList,
+    required StateSetter setFilterState,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
-            label,
+            title.toUpperCase(),
             style: GoogleFonts.montserrat(
-              fontSize: 9,
-              fontWeight: active ? FontWeight.bold : FontWeight.w500,
-              color: active ? Colors.white : Colors.black87,
-              letterSpacing: 0.5,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
             ),
           ),
         ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((opt) {
+            final isChecked = selectedList.contains(opt);
+            return InkWell(
+              onTap: () {
+                setFilterState(() {
+                  if (isChecked) {
+                    selectedList.remove(opt);
+                  } else {
+                    selectedList.add(opt);
+                  }
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isChecked ? Colors.black : const Color(0xFFF5F5F7),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  opt.toUpperCase(),
+                  style: GoogleFonts.poppins(
+                    fontSize: 8,
+                    fontWeight: isChecked ? FontWeight.bold : FontWeight.w500,
+                    color: isChecked ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  void _showFilterEngineBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return StatefulBuilder(
+              builder: (context, setFilterState) {
+                return Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'FILTER ENGINE',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setFilterState(() {
+                                _selectedGenders.clear();
+                                _selectedCategories.clear();
+                                _selectedBrands.clear();
+                                _selectedPrices.clear();
+                                _selectedFamilies.clear();
+                                _selectedConcentrations.clear();
+                              });
+                              setState(() {
+                                _applyFilters();
+                              });
+                            },
+                            child: Text(
+                              'CLEAR ALL',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                color: AppTheme.primaryRose,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    
+                    // Filter options list
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          // 1. Gender
+                          _buildFilterCategorySection(
+                            title: 'Gender',
+                            options: ['Men', 'Women', 'Unisex'],
+                            selectedList: _selectedGenders,
+                            setFilterState: setFilterState,
+                          ),
+                          // 2. Category
+                          if (_categories.isNotEmpty)
+                            _buildFilterCategorySection(
+                              title: 'Category',
+                              options: _categories.map((c) => c['name']?.toString() ?? '').toList(),
+                              selectedList: _selectedCategories,
+                              setFilterState: setFilterState,
+                            ),
+                          // 3. Brand
+                          if (_brands.isNotEmpty)
+                            _buildFilterCategorySection(
+                              title: 'Brand',
+                              options: _brands.map((b) => b['name']?.toString() ?? '').toList(),
+                              selectedList: _selectedBrands,
+                              setFilterState: setFilterState,
+                            ),
+                          // 4. Price Range
+                          _buildFilterCategorySection(
+                            title: 'Price Range',
+                            options: ["Under ₹1,000", "₹1,000 - ₹5,000", "₹5,000 - ₹10,000", "Over ₹10,000"],
+                            selectedList: _selectedPrices,
+                            setFilterState: setFilterState,
+                          ),
+                          // 5. Scent Family
+                          _buildFilterCategorySection(
+                            title: 'Scent Family',
+                            options: ["Floral", "Woody", "Oriental", "Fresh", "Citrus"],
+                            selectedList: _selectedFamilies,
+                            setFilterState: setFilterState,
+                          ),
+                          // 6. Concentration
+                          _buildFilterCategorySection(
+                            title: 'Concentration',
+                            options: ["EDP", "EDT", "Parfum", "Cologne"],
+                            selectedList: _selectedConcentrations,
+                            setFilterState: setFilterState,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    
+                    // Apply button
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _applyFilters();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero,
+                            ),
+                          ),
+                          child: Text(
+                            'APPLY FILTERS',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -273,8 +577,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   onSubmitted: (val) {
                     setState(() {
                       _query = val;
+                      _applyFilters();
                     });
-                    _loadProducts();
                   },
                   decoration: InputDecoration(
                     hintText: 'Search for scent families, notes, or titles...',
@@ -286,8 +590,8 @@ class _SearchScreenState extends State<SearchScreen> {
                               setState(() {
                                 _searchController.clear();
                                 _query = '';
+                                _applyFilters();
                               });
-                              _loadProducts();
                             },
                           )
                         : null,
@@ -306,7 +610,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
 
-            // Filter and Sort Bar
+            // Sorting Trigger Bar
             Container(
               height: 48,
               decoration: const BoxDecoration(
@@ -344,18 +648,6 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(width: 1, height: 16, color: const Color(0xFFE5E5EA)),
-                  const SizedBox(width: 8),
-
-                  // Gender Filter Chips
-                  _buildGenderChip('ALL', null),
-                  const SizedBox(width: 8),
-                  _buildGenderChip('FOR HIM', 'MEN'),
-                  const SizedBox(width: 8),
-                  _buildGenderChip('FOR HER', 'WOMEN'),
-                  const SizedBox(width: 8),
-                  _buildGenderChip('UNISEX', 'UNISEX'),
                 ],
               ),
             ),
@@ -448,27 +740,20 @@ class _SearchScreenState extends State<SearchScreen> {
                             ? cat['images'][0]
                             : cat['banner_url']);
                     final imageResolved = _getMediaUrl(catImg?.toString());
-                    final isSelected = widget.categoryId == catId;
+                    final isSelected = widget.categoryId == catId || _selectedCategories.contains(name.toString());
 
                     return GestureDetector(
                       onTap: () {
                         if (isSelected) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SearchScreen(),
-                            ),
-                          );
+                          setState(() {
+                            _selectedCategories.remove(name.toString());
+                            _applyFilters();
+                          });
                         } else {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SearchScreen(
-                                categoryId: catId,
-                                title: name.toString(),
-                              ),
-                            ),
-                          );
+                          setState(() {
+                            _selectedCategories.add(name.toString());
+                            _applyFilters();
+                          });
                         }
                       },
                       child: Padding(
@@ -538,7 +823,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: OutlinedButton.icon(
-                onPressed: _showSortBottomSheet,
+                onPressed: _showFilterEngineBottomSheet,
                 icon: const Icon(Icons.tune_outlined, size: 14, color: Colors.black87),
                 label: Text(
                   'INTERACTIVE FILTER ENGINE',
@@ -586,7 +871,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       : _products.isEmpty
                           ? const Center(
                               child: Text(
-                                'No fragrances found matching your search.',
+                                'No fragrances found matching filters.',
                                 style: TextStyle(color: AppTheme.textMuted),
                               ),
                             )
@@ -606,10 +891,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                 final brand = product['brand_name']?.toString() ?? '';
                                 final images = product['images'] as List? ?? [];
                                 final resolvedImg = images.isNotEmpty ? _getMediaUrl(images[0]?.toString()) : '';
-                                final List<String> allImages = images.map((e) => _getMediaUrl(e?.toString())).toList();
-                                if (allImages.isEmpty && resolvedImg.isNotEmpty) {
-                                  allImages.add(resolvedImg);
-                                }
                                 final variants = product['variants'] as List? ?? [];
                                 final price = variants.isNotEmpty ? (variants[0]['selling_price'] ?? 0.0) : 0.0;
                                 final oldPrice = variants.isNotEmpty ? variants[0]['compare_at_price'] : null;
@@ -626,6 +907,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                 final discountPercentage = (oldPrice != null && oldPrice > price)
                                     ? ((oldPrice - price) / oldPrice * 100).round()
                                     : 0;
+
+                                final List<String> allImages = images.map((e) => _getMediaUrl(e?.toString())).toList();
+                                if (allImages.isEmpty && resolvedImg.isNotEmpty) {
+                                  allImages.add(resolvedImg);
+                                }
 
                                 return GestureDetector(
                                   onTap: () {
