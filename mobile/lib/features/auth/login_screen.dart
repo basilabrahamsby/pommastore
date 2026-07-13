@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _requestOtp,
                         child: const Text(
                           'RESEND CODE',
-                          style: TextStyle(color: AppTheme.primaryGold, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: AppTheme.primaryRose, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ),
                 ),

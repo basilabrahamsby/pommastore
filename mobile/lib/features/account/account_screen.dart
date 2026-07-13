@@ -16,14 +16,14 @@ class AccountScreen extends StatelessWidget {
             children: [
               // User Profile Section
               Container(
-                color: AppTheme.surfaceDark,
+                color: AppTheme.surfaceLight,
                 padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
                 child: Column(
                   children: [
                     const CircleAvatar(
                       radius: 36,
-                      backgroundColor: AppTheme.primaryGold,
-                      child: Icon(Icons.person, size: 40, color: Colors.black),
+                      backgroundColor: AppTheme.primaryRose,
+                      child: Icon(Icons.person, size: 40, color: Colors.white),
                     ),
                     const SizedBox(height: 14),
                     const Text(
@@ -60,31 +60,31 @@ class AccountScreen extends StatelessWidget {
               ),
               
               ListTile(
-                leading: const Icon(Icons.shopping_bag_outlined, color: AppTheme.primaryGold),
+                leading: const Icon(Icons.shopping_bag_outlined, color: AppTheme.primaryRose),
                 title: const Text('My Orders', style: TextStyle(fontSize: 14)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.textMuted),
                 onTap: () {},
               ),
-              const Divider(color: AppTheme.borderDark, height: 1),
+              const Divider(color: AppTheme.borderLight, height: 1),
               
               ListTile(
-                leading: const Icon(Icons.location_on_outlined, color: AppTheme.primaryGold),
+                leading: const Icon(Icons.location_on_outlined, color: AppTheme.primaryRose),
                 title: const Text('Shipping Addresses', style: TextStyle(fontSize: 14)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.textMuted),
                 onTap: () {},
               ),
-              const Divider(color: AppTheme.borderDark, height: 1),
+              const Divider(color: AppTheme.borderLight, height: 1),
 
               ListTile(
-                leading: const Icon(Icons.credit_card_outlined, color: AppTheme.primaryGold),
+                leading: const Icon(Icons.credit_card_outlined, color: AppTheme.primaryRose),
                 title: const Text('Saved Payments', style: TextStyle(fontSize: 14)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.textMuted),
                 onTap: () {},
               ),
-              const Divider(color: AppTheme.borderDark, height: 1),
+              const Divider(color: AppTheme.borderLight, height: 1),
               
               ListTile(
-                leading: const Icon(Icons.help_outline, color: AppTheme.primaryGold),
+                leading: const Icon(Icons.help_outline, color: AppTheme.primaryRose),
                 title: const Text('Customer Support', style: TextStyle(fontSize: 14)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.textMuted),
                 onTap: () {},

@@ -107,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             product['name'].toUpperCase(),
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
                           ),
-                          subtitle: Text('₹${product['price']}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                          subtitle: Text('₹${product['price']}', style: const TextStyle(color: AppTheme.primaryRose, fontSize: 12)),
                           trailing: const Icon(Icons.chevron_right, color: AppTheme.textMuted),
                           onTap: () {
                             Navigator.of(context).push(

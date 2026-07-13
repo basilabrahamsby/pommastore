@@ -121,8 +121,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: _selectedImageIndex == index
-                                  ? AppTheme.primaryGold
-                                  : Colors.white24,
+                                  ? AppTheme.primaryRose
+                                  : Colors.black26,
                             ),
                           );
                         }),
@@ -145,14 +145,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     '₹${price.toString()}',
-                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: AppTheme.primaryRose, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 18),
                   
                   // Description
                   const Text('DESCRIPTION', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: AppTheme.textMuted)),
                   const SizedBox(height: 6),
-                  Text(description, style: const TextStyle(fontSize: 13, height: 1.5, color: Colors.white70)),
+                  Text(description, style: const TextStyle(fontSize: 13, height: 1.5, color: Colors.black87)),
                   const SizedBox(height: 20),
 
                   // Scent Notes Chips
@@ -163,9 +163,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     runSpacing: 8,
                     children: notes.map((note) {
                       return Chip(
-                        label: Text(note.toString(), style: const TextStyle(fontSize: 11, color: Colors.white)),
-                        backgroundColor: AppTheme.surfaceDark,
-                        side: const BorderSide(color: AppTheme.borderDark),
+                        label: Text(note.toString(), style: const TextStyle(fontSize: 11, color: Colors.black87)),
+                        backgroundColor: AppTheme.surfaceLight,
+                        side: const BorderSide(color: AppTheme.borderLight),
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                       );
                     }).toList(),
@@ -176,14 +176,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceDark,
-                      border: Border.all(color: AppTheme.borderDark),
+                      color: AppTheme.surfaceLight,
+                      border: Border.all(color: AppTheme.borderLight),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('🚚 CHECK DELIVERY DETAILS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.primaryGold)),
+                        const Text('🚚 CHECK DELIVERY DETAILS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.primaryRose)),
                         const SizedBox(height: 12),
                         Row(
                           children: [
@@ -194,7 +194,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   controller: _pincodeController,
                                   decoration: const InputDecoration(
                                     labelText: 'PINCODE',
-                                    fillColor: AppTheme.backgroundDark,
+                                    fillColor: AppTheme.backgroundLight,
                                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                   ),
                                   keyboardType: TextInputType.number,
@@ -210,7 +210,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                 ),
                                 child: _isCheckingPincode
-                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 1.5))
+                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 1.5))
                                     : const Text('CHECK', style: TextStyle(fontSize: 12)),
                               ),
                             ),

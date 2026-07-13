@@ -18,13 +18,13 @@ class NavigationShell extends StatelessWidget {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(
-            top: BorderSide(color: AppTheme.borderDark, width: 1),
+            top: BorderSide(color: AppTheme.borderLight, width: 1),
           ),
         ),
         child: BottomNavigationBar(
           currentIndex: navigationShell.currentIndex,
-          backgroundColor: AppTheme.backgroundDark,
-          selectedItemColor: AppTheme.primaryGold,
+          backgroundColor: AppTheme.backgroundLight,
+          selectedItemColor: AppTheme.primaryRose,
           unselectedItemColor: AppTheme.textMuted,
           selectedFontSize: 11,
           unselectedFontSize: 11,

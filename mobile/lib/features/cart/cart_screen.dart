@@ -83,7 +83,7 @@ class _CartScreenState extends State<CartScreen> {
         actions: [
           IconButton(
             icon: _isSyncing
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 1.5, color: AppTheme.primaryGold))
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 1.5, color: AppTheme.primaryRose))
                 : const Icon(Icons.sync),
             onPressed: _syncCartItemPrices,
           )
@@ -131,7 +131,7 @@ class _CartScreenState extends State<CartScreen> {
                                       const SizedBox(height: 6),
                                       Text(
                                         '₹${item['price']}',
-                                        style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(color: AppTheme.primaryRose, fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
@@ -155,8 +155,8 @@ class _CartScreenState extends State<CartScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: const BoxDecoration(
-                  color: AppTheme.surfaceDark,
-                  border: Border(top: BorderSide(color: AppTheme.borderDark)),
+                  color: AppTheme.surfaceLight,
+                  border: Border(top: BorderSide(color: AppTheme.borderLight)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -165,7 +165,7 @@ class _CartScreenState extends State<CartScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Bag Subtotal', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
-                        Text('₹${subtotal.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        Text('₹${subtotal.toInt()}', style: const TextStyle(color: Colors.black, fontSize: 13)),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -173,15 +173,15 @@ class _CartScreenState extends State<CartScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Standard Shipping', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
-                        Text('₹${delivery.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        Text('₹${delivery.toInt()}', style: const TextStyle(color: Colors.black, fontSize: 13)),
                       ],
                     ),
-                    const Divider(color: AppTheme.borderDark, height: 24),
+                    const Divider(color: AppTheme.borderLight, height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('TOTAL EST.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        Text('₹${total.toInt()}', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('₹${total.toInt()}', style: const TextStyle(color: AppTheme.primaryRose, fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
                     ),
                     const SizedBox(height: 20),
