@@ -1746,48 +1746,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           final imageResolved =
                               _getMediaUrl(catImg?.toString());
 
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(2.5),
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFFFFB300),
-                                        Color(0xFFE91E63),
-                                        AppTheme.primaryRose
-                                      ],
-                                      begin: Alignment.bottomLeft,
-                                      end: Alignment.topRight,
-                                    ),
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white),
-                                    child: CircleAvatar(
-                                      radius: 34,
-                                      backgroundImage: imageResolved.isNotEmpty
-                                          ? NetworkImage(imageResolved)
-                                          : null,
-                                      backgroundColor:
-                                          const Color(0xFFF5F5F5),
-                                    ),
+                          return GestureDetector(
+                            onTap: () {
+                              final catId = cat['id']?.toString();
+                              final catName = cat['name']?.toString() ?? 'Category';
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => SearchScreen(
+                                    categoryId: catId,
+                                    title: catName,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(name.toString().toUpperCase(),
-                                    style: GoogleFonts.montserrat(
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black87,
-                                        letterSpacing: 0.5)),
-                              ],
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(2.5),
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFFFFB300),
+                                          Color(0xFFE91E63),
+                                          AppTheme.primaryRose
+                                        ],
+                                        begin: Alignment.bottomLeft,
+                                        end: Alignment.topRight,
+                                      ),
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white),
+                                      child: ClipOval(
+                                        child: SizedBox(
+                                          width: 68,
+                                          height: 68,
+                                          child: CachedImage(
+                                            imageUrl: imageResolved,
+                                            fit: BoxFit.cover,
+                                            errorWidget: Container(
+                                              color: const Color(0xFFF5F5F5),
+                                              child: const Icon(Icons.image_outlined, color: Colors.black12, size: 20),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(name.toString().toUpperCase(),
+                                      style: GoogleFonts.montserrat(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.black87,
+                                          letterSpacing: 0.5)),
+                                ],
+                              ),
                             ),
                           );
                         },
