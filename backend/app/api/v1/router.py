@@ -8,6 +8,7 @@ api_router = APIRouter(prefix="/api/v1")
 # Public routes
 api_router.include_router(auth.router)
 api_router.include_router(seo.router, prefix="/seo", tags=["SEO"])
+api_router.include_router(orders.public_router)
 api_router.include_router(storefront_router.router)
 
 # Protected routes (require JWT)
