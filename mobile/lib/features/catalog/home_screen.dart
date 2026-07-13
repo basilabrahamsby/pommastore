@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import 'homepage_provider.dart';
 import 'product_detail_screen.dart';
+import 'search_screen.dart';
 import '../../core/widgets/cached_image.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -72,7 +73,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // ── Section Header ────────────────────────────────────────────────────────
-  Widget _buildSectionHeader(String title, String subtitle) {
+  Widget _buildSectionHeader(String title, String subtitle, {VoidCallback? onViewAll}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
@@ -103,7 +104,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(width: 12),
               const Expanded(
                   child: Divider(color: Color(0xFFE5E5EA), thickness: 1)),
+              if (onViewAll != null) ...[
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: onViewAll,
+                  child: Text(
+                    'VIEW ALL',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryRose,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              ],
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCenteredSectionHeader(String title, String subtitle) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            subtitle.toUpperCase(),
+            style: GoogleFonts.montserrat(
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF8E8E93),
+              letterSpacing: 2.0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title.toUpperCase(),
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 22,
+              fontWeight: FontWeight.normal,
+              color: Colors.black,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 32,
+            height: 2,
+            color: AppTheme.accentGold,
           ),
         ],
       ),
@@ -1674,16 +1725,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ── Categories ────────────────────────────────────────────
                   if (categories.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Text('SIGNATURE CATEGORIES',
-                          style: GoogleFonts.montserrat(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 2.5,
-                              color: Colors.black54)),
-                    ),
-                    const SizedBox(height: 12),
+                    _buildCenteredSectionHeader('Signature Categories', 'Discover More'),
+                    const SizedBox(height: 20),
                     SizedBox(
                       height: 120,
                       child: ListView.builder(
@@ -1755,7 +1798,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                    // ── New Arrivals (Part 1: Products 1-10) ──────────────────
                   if (newArrivals.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    _buildSectionHeader('New Arrivals', 'Just Arrived'),
+                    _buildSectionHeader(
+                      'New Arrivals', 
+                      'Just Arrived',
+                      onViewAll: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SearchScreen(
+                              isNewArrival: true,
+                              title: 'New Arrivals',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 16),
                     _buildProductGrid(
                         newArrivals.take(10).cast<Map<String, dynamic>>().toList()),
@@ -1790,7 +1846,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // ── Featured Bestsellers ──────────────────────────────────
                   if (bestsellers.isNotEmpty) ...[
                     const SizedBox(height: 28),
-                    _buildSectionHeader('Popular Picks', 'Store Favorites'),
+                    _buildSectionHeader(
+                      'Popular Picks', 
+                      'Store Favorites',
+                      onViewAll: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SearchScreen(
+                              isFeatured: true,
+                              title: 'Popular Picks',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 16),
                     _buildProductGrid(
                         bestsellers.cast<Map<String, dynamic>>().toList()),
