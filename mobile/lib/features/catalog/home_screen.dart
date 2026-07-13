@@ -818,19 +818,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final bestsellers = (data['bestsellers'] as List?) ?? [];
           final offers = (data['offers'] as List?) ?? [];
 
-          // Between-product ad banners from CMS layout
-          final gridAds1 = (layout['grid_ads_1'] as List?) ?? [];
-          final gridAds2 = (layout['grid_ads_2'] as List?) ?? [];
-          final gridAds3 = (layout['grid_ads_3'] as List?) ?? [];
-          final ad1 = gridAds1.isNotEmpty
+          // Between-product ad banners from CMS layout (with web fallbacks)
+          final gridAds1Raw = layout['grid_ads_1'];
+          final List<dynamic> gridAds1 = gridAds1Raw is List ? gridAds1Raw : [];
+          final Map<String, dynamic> ad1 = gridAds1.isNotEmpty
               ? gridAds1[0] as Map<String, dynamic>
-              : null;
-          final ad2 = gridAds2.isNotEmpty
+              : {
+                  'left_image': '/model-banner-1.png',
+                  'left_title': 'Exclusive Fragrance',
+                  'left_subtitle': 'Exquisite Collection',
+                  'left_desc': 'We offer the best niche fragrances on the market selected by our team of experts.',
+                  'left_product_id': '',
+                  'right_image': '/model-banner-2.png',
+                  'right_title': 'Premium Fragrances',
+                  'right_subtitle': 'Prestige Selection',
+                  'right_desc': 'We offer the best niche fragrances on the market selected by our team of experts.',
+                  'right_product_id': '',
+                };
+
+          final gridAds2Raw = layout['grid_ads_2'];
+          final List<dynamic> gridAds2 = gridAds2Raw is List ? gridAds2Raw : [];
+          final Map<String, dynamic> ad2 = gridAds2.isNotEmpty
               ? gridAds2[0] as Map<String, dynamic>
-              : null;
-          final ad3 = gridAds3.isNotEmpty
+              : {
+                  'image': '/model-banner-3.png',
+                  'title': 'Top Curated Fragrances',
+                  'subtitle': 'Prestige Selection',
+                  'desc': 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+                  'product_id': '',
+                };
+
+          final gridAds3Raw = layout['grid_ads_3'];
+          final List<dynamic> gridAds3 = gridAds3Raw is List ? gridAds3Raw : [];
+          final Map<String, dynamic> ad3 = gridAds3.isNotEmpty
               ? gridAds3[0] as Map<String, dynamic>
-              : null;
+              : {
+                  'left_image': '/model-banner-1.png',
+                  'left_title': 'Top Curated Fragrances',
+                  'left_subtitle': 'Exquisite Collection',
+                  'left_desc': 'We offer the best niche fragrances on the market selected by our team of experts.',
+                  'left_product_id': '',
+                  'right_image': '/model-banner-3.png',
+                  'right_title': 'Top Curated Fragrances',
+                  'right_subtitle': 'Prestige Selection',
+                  'right_desc': 'We offer the best niche fragrances on the market selected by our team of experts.',
+                  'right_product_id': '',
+                };
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -1067,7 +1100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
 
                   // ── Ad Banner Block 1 (after new arrivals 1-10) ───────────
-                  if (ad1 != null && newArrivals.isNotEmpty) ...[
+                  if (newArrivals.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     _buildAdBanner(ad1),
                   ],
@@ -1080,7 +1113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
 
                   // ── Ad Banner Block 2 (after new arrivals 11-20 - Full Width)
-                  if (ad2 != null && newArrivals.length > 10) ...[
+                  if (newArrivals.length > 10) ...[
                     const SizedBox(height: 24),
                     _buildFullWidthAdBanner(ad2),
                   ],
@@ -1102,7 +1135,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
 
                   // ── Ad Banner Block 3 (after Featured Bestsellers) ────────
-                  if (ad3 != null) ...[
+                  if (newArrivals.isNotEmpty || bestsellers.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     _buildAdBanner(ad3),
                   ],
