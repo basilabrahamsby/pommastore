@@ -1961,10 +1961,10 @@ export default function Orders() {
                     href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/delhivery-label`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="btn btn-secondary btn-sm" 
-                    style={{ borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border)' }}
+                    className="btn btn-primary btn-sm" 
+                    style={{ background: 'var(--gold)', color: '#000', borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
                   >
-                    🏷️ Print Label
+                    🏷️ Print/Download Label
                   </a>
                 )}
                 {selectedOrder.tracking_number && (
