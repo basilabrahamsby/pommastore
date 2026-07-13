@@ -749,9 +749,197 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ── House Favorites Section (Arches) ───────────────────────────────────────
+  // ── House Favorites Section (Arched Grid/Stack Layout) ──────────────────────
+  Widget _buildSpotlightCard(Map<String, dynamic> item) {
+    final name = item['name']?.toString() ?? '';
+    final imgUrl = _getMediaUrl(item['img']?.toString() ?? '');
+
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (imgUrl.isNotEmpty)
+            CachedImage(imageUrl: imgUrl, fit: BoxFit.cover)
+          else
+            Container(color: const Color(0xFFF5F8F6)),
+          // Gradient overlay
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withValues(alpha: 0.1),
+                  Colors.black.withValues(alpha: 0.7),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'FEATURED FAVORITE',
+                  style: GoogleFonts.montserrat(
+                    color: AppTheme.accentGold,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  name.toUpperCase(),
+                  style: GoogleFonts.playfairDisplay(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallArchedCard(Map<String, dynamic> item) {
+    final name = item['name']?.toString() ?? '';
+    final imgUrl = _getMediaUrl(item['img']?.toString() ?? '');
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(60)),
+        border: Border.all(color: AppTheme.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (imgUrl.isNotEmpty)
+            CachedImage(imageUrl: imgUrl, fit: BoxFit.cover)
+          else
+            Container(color: const Color(0xFFF5F8F6)),
+          // Gradient bottom overlay
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.0),
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              alignment: Alignment.bottomCenter,
+              child: Text(
+                name.toUpperCase(),
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHouseFavorites(List<dynamic> houseFavorites) {
     if (houseFavorites.isEmpty) return const SizedBox.shrink();
+
+    Widget content;
+    if (houseFavorites.length == 1) {
+      content = _buildSpotlightCard(houseFavorites[0] as Map<String, dynamic>);
+    } else if (houseFavorites.length == 2) {
+      content = Row(
+        children: [
+          Expanded(child: _buildSmallArchedCard(houseFavorites[0] as Map<String, dynamic>)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildSmallArchedCard(houseFavorites[1] as Map<String, dynamic>)),
+        ],
+      );
+    } else if (houseFavorites.length == 3) {
+      content = Column(
+        children: [
+          _buildSpotlightCard(houseFavorites[0] as Map<String, dynamic>),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 160,
+            child: Row(
+              children: [
+                Expanded(child: _buildSmallArchedCard(houseFavorites[1] as Map<String, dynamic>)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildSmallArchedCard(houseFavorites[2] as Map<String, dynamic>)),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      // 4 or more: 1 Spotlight + Grid of up to 4 remaining items
+      final remaining = houseFavorites.skip(1).take(4).toList();
+      content = Column(
+        children: [
+          _buildSpotlightCard(houseFavorites[0] as Map<String, dynamic>),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.85,
+            ),
+            itemCount: remaining.length,
+            itemBuilder: (context, idx) {
+              return _buildSmallArchedCard(remaining[idx] as Map<String, dynamic>);
+            },
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -759,98 +947,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 32),
         _buildSectionHeader('House Favorites', 'The Elite List'),
         const SizedBox(height: 16),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            // Background mix text "LEGENDARY"
-            Opacity(
-              opacity: 0.05,
-              child: Text(
-                'LEGENDARY',
-                style: GoogleFonts.montserrat(
-                  fontSize: 54,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: 6,
-                ),
-              ),
-            ),
-            // Horizontally scrolling list of arches
-            SizedBox(
-              height: 360,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: houseFavorites.length,
-                itemBuilder: (context, index) {
-                  final item = houseFavorites[index] as Map<String, dynamic>;
-                  final name = item['name']?.toString() ?? '';
-                  final imgUrl = _getMediaUrl(item['img']?.toString() ?? '');
-
-                  return Container(
-                    width: 180,
-                    margin: const EdgeInsets.only(right: 16, bottom: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(90)),
-                      border: Border.all(color: AppTheme.borderLight),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (imgUrl.isNotEmpty)
-                          CachedImage(imageUrl: imgUrl, fit: BoxFit.cover)
-                        else
-                          Container(color: const Color(0xFFF5F8F6)),
-                        // Bottom text overlay with gradient
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 70,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.0),
-                                  Colors.black.withValues(alpha: 0.8),
-                                  Colors.black,
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                            alignment: Alignment.bottomCenter,
-                            child: Text(
-                              name.toUpperCase(),
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 2.0,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: content,
         ),
       ],
     );
