@@ -268,6 +268,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final detailProduct = {
           'id': id,
           'name': name,
+          'brand_name': (product['brand_name'] ?? product['brand'] ?? '').toString(),
           'price': sellingPrice,
           'mrp': mrp,
           'image_url': resolvedImg,
@@ -351,19 +352,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name.toString().toUpperCase(),
-                          style: GoogleFonts.playfairDisplay(
-                              fontSize: 12,
-                              fontWeight: FontWeight.normal,
-                              letterSpacing: 0.8,
-                              height: 1.2),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 3),
+                      // Brand name — Poppins 10px black weight uppercase (font-nelphim)
+                      if ((product['brand_name'] ?? product['brand'] ?? '').toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text(
+                            (product['brand_name'] ?? product['brand'] ?? '').toString().toUpperCase(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                              color: Colors.black,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      // Product name — Poppins 11px medium neutral-600 uppercase tracking-wide
+                      Text(
+                        name.toString().toUpperCase(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.6,
+                          color: const Color(0xFF525252), // neutral-600
+                          height: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      // Scent notes — Poppins 9px muted
                       Text(notes.join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -373,19 +396,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Selling price — Poppins 13px bold black (matches web text-black)
                           Text('₹$sellingPrice',
                               style: GoogleFonts.poppins(
-                                  color: AppTheme.primaryRose,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13)),
                           if (hasDiscount) ...[
                             const SizedBox(width: 5),
                             Text('₹$mrp',
                                 style: GoogleFonts.poppins(
-                                    color: AppTheme.textMuted,
+                                    color: const Color(0xFFA3A3A3), // neutral-400
                                     fontSize: 10,
                                     decoration: TextDecoration.lineThrough,
-                                    decorationColor: AppTheme.textMuted)),
+                                    decorationColor: const Color(0xFFA3A3A3))),
+                            const SizedBox(width: 4),
+                            Text('$discountPct% off',
+                                style: GoogleFonts.poppins(
+                                    color: AppTheme.primaryRose,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700)),
                           ],
                           const Spacer(),
                           const Icon(Icons.shopping_bag_outlined,
