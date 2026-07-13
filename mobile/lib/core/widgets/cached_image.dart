@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -55,6 +56,91 @@ class CachedImage extends StatelessWidget {
       memCacheHeight: height != null ? (height! * 2).toInt() : null,
       errorWidget: (context, url, error) =>
           errorWidget ?? Container(color: Colors.grey.shade200),
+    );
+  }
+}
+
+class AutoCycleImage extends StatefulWidget {
+  final List<String> imageUrls;
+  final String id;
+  final BoxFit fit;
+  final Alignment alignment;
+
+  const AutoCycleImage({
+    super.key,
+    required this.imageUrls,
+    required this.id,
+    this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
+  });
+
+  @override
+  State<AutoCycleImage> createState() => _AutoCycleImageState();
+}
+
+class _AutoCycleImageState extends State<AutoCycleImage> {
+  int _currentIndex = 0;
+  Timer? _timer;
+  Timer? _staggerTimeout;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCycling();
+  }
+
+  @override
+  void dispose() {
+    _staggerTimeout?.cancel();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startCycling() {
+    if (widget.imageUrls.length <= 1) return;
+
+    int hash = 0;
+    for (int i = 0; i < widget.id.length; i++) {
+      hash = widget.id.codeUnitAt(i) + ((hash << 5) - hash);
+    }
+    final staggerDelayMs = (hash.abs() % 1500);
+
+    _staggerTimeout = Timer(Duration(milliseconds: staggerDelayMs), () {
+      if (!mounted) return;
+      _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+        if (mounted) {
+          setState(() {
+            _currentIndex = (_currentIndex + 1) % widget.imageUrls.length;
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.imageUrls.isEmpty) {
+      return Container(
+        color: const Color(0xFFF5F5F5),
+        child: const Icon(Icons.image_not_supported, color: Colors.black12),
+      );
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      child: CachedImage(
+        key: ValueKey<int>(_currentIndex),
+        imageUrl: widget.imageUrls[_currentIndex],
+        fit: widget.fit,
+        alignment: widget.alignment,
+        errorWidget: Container(
+          color: const Color(0xFFF5F5F5),
+          child: const Icon(Icons.image_not_supported, color: Colors.black12),
+        ),
+      ),
     );
   }
 }

@@ -1102,14 +1102,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          CachedImage(
-                            imageUrl: resolvedImg,
+                          AutoCycleImage(
+                            imageUrls: (detailProduct['images'] as List? ?? []).cast<String>(),
+                            id: id,
                             fit: BoxFit.cover,
-                            errorWidget: Container(
-                                color: const Color(0xFFF5F5F5),
-                                child: const Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.black26)),
                           ),
                           // Discount badge — top left
                           if (hasDiscount)

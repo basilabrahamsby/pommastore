@@ -432,9 +432,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
             // Horizontal Categories Scroll View
             if (_categories.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 95,
+                height: 110,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -472,16 +472,26 @@ class _SearchScreenState extends State<SearchScreen> {
                         }
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: Column(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(2.0),
+                              padding: const EdgeInsets.all(2.5),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected ? AppTheme.primaryRose : Colors.transparent,
-                                  width: 2,
+                                gradient: LinearGradient(
+                                  colors: isSelected
+                                      ? const [
+                                          Color(0xFFFFB300),
+                                          Color(0xFFE91E63),
+                                          AppTheme.primaryRose
+                                        ]
+                                      : const [
+                                          Color(0xFFE5E5EA),
+                                          Color(0xFFE5E5EA),
+                                        ],
+                                  begin: Alignment.bottomLeft,
+                                  end: Alignment.topRight,
                                 ),
                               ),
                               child: Container(
@@ -491,28 +501,28 @@ class _SearchScreenState extends State<SearchScreen> {
                                     color: Colors.white),
                                 child: ClipOval(
                                   child: SizedBox(
-                                    width: 52,
-                                    height: 52,
+                                    width: 60,
+                                    height: 60,
                                     child: CachedImage(
                                       imageUrl: imageResolved,
                                       fit: BoxFit.cover,
                                       errorWidget: Container(
                                         color: const Color(0xFFF5F5F5),
-                                        child: const Icon(Icons.image_outlined, color: Colors.black12, size: 16),
+                                        child: const Icon(Icons.image_outlined, color: Colors.black12, size: 20),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Text(
                               name.toString().toUpperCase(),
                               style: GoogleFonts.montserrat(
-                                fontSize: 7,
+                                fontSize: 8,
                                 fontWeight: FontWeight.w700,
                                 color: isSelected ? AppTheme.primaryRose : Colors.black87,
-                                letterSpacing: 0.3,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ],
@@ -596,6 +606,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                 final brand = product['brand_name']?.toString() ?? '';
                                 final images = product['images'] as List? ?? [];
                                 final resolvedImg = images.isNotEmpty ? _getMediaUrl(images[0]?.toString()) : '';
+                                final List<String> allImages = images.map((e) => _getMediaUrl(e?.toString())).toList();
+                                if (allImages.isEmpty && resolvedImg.isNotEmpty) {
+                                  allImages.add(resolvedImg);
+                                }
                                 final variants = product['variants'] as List? ?? [];
                                 final price = variants.isNotEmpty ? (variants[0]['selling_price'] ?? 0.0) : 0.0;
                                 final oldPrice = variants.isNotEmpty ? variants[0]['compare_at_price'] : null;
@@ -636,13 +650,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                             child: Stack(
                                               fit: StackFit.expand,
                                               children: [
-                                                CachedImage(
-                                                  imageUrl: resolvedImg,
+                                                AutoCycleImage(
+                                                  imageUrls: allImages,
+                                                  id: id,
                                                   fit: BoxFit.cover,
-                                                  errorWidget: Container(
-                                                    color: const Color(0xFFF5F5F5),
-                                                    child: const Icon(Icons.image_not_supported, color: Colors.black12),
-                                                  ),
                                                 ),
                                                 // Star Rating Overlay (matching storefront)
                                                 Positioned(
