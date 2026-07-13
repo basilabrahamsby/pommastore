@@ -33,6 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final _searchController = TextEditingController();
   final ApiClient _apiClient = ApiClient();
   List<dynamic> _products = [];
+  List<dynamic> _categories = [];
   bool _isLoading = true;
   String _error = '';
   String _query = '';
@@ -46,6 +47,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _selectedGender = widget.gender;
     _searchController.text = _query;
     _loadProducts();
+    _loadCategories();
   }
 
   @override
@@ -61,6 +63,15 @@ class _SearchScreenState extends State<SearchScreen> {
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
     return 'https://kozmocart.com$cleanPath';
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final res = await _apiClient.dio.get('/storefront/categories');
+      setState(() {
+        _categories = res.data as List? ?? [];
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadProducts() async {
@@ -224,9 +235,18 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final titleText = widget.title ?? 
-        (widget.isNewArrival == true ? 'NEW ARRIVALS' : 
-         widget.isFeatured == true ? 'POPULAR PICKS' : 'EXPLORE COLLECTION');
+    // Find category name if active
+    String? activeCategoryName;
+    if (widget.categoryId != null && _categories.isNotEmpty) {
+      final match = _categories.firstWhere(
+        (c) => c['id']?.toString() == widget.categoryId,
+        orElse: () => null,
+      );
+      if (match != null) {
+        activeCategoryName = match['name']?.toString();
+      }
+    }
+    activeCategoryName ??= widget.title;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -340,28 +360,192 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
 
-            // Section Subheader/Title
+            // Breadcrumbs & Title block
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'HOME',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF8E8E93),
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'SHOP',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF8E8E93),
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      if (activeCategoryName != null) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
+                        const SizedBox(width: 4),
+                        Text(
+                          activeCategoryName.toUpperCase(),
+                          style: GoogleFonts.montserrat(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryRose,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Text(
-                    titleText.toUpperCase(),
+                    'EXPLORE SCENT VAULT',
                     style: GoogleFonts.playfairDisplay(
-                      fontSize: 16,
-                      fontWeight: FontWeight.normal,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                       color: Colors.black,
                       letterSpacing: 1.0,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Container(
-                    width: 32,
-                    height: 1.5,
-                    color: AppTheme.primaryRose,
+                  Text(
+                    '${_products.length} FRAGRANCES MATCH FILTERS',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8E8E93),
+                      letterSpacing: 1.5,
+                    ),
                   ),
                 ],
+              ),
+            ),
+
+            // Horizontal Categories Scroll View
+            if (_categories.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 95,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = _categories[index] as Map<String, dynamic>;
+                    final catId = cat['id']?.toString();
+                    final name = cat['name'] ?? '';
+                    final catImg = cat['image_url'] ??
+                        (cat['images'] is List && (cat['images'] as List).isNotEmpty
+                            ? cat['images'][0]
+                            : cat['banner_url']);
+                    final imageResolved = _getMediaUrl(catImg?.toString());
+                    final isSelected = widget.categoryId == catId;
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (isSelected) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SearchScreen(),
+                            ),
+                          );
+                        } else {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SearchScreen(
+                                categoryId: catId,
+                                title: name.toString(),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2.0),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSelected ? AppTheme.primaryRose : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white),
+                                child: ClipOval(
+                                  child: SizedBox(
+                                    width: 52,
+                                    height: 52,
+                                    child: CachedImage(
+                                      imageUrl: imageResolved,
+                                      fit: BoxFit.cover,
+                                      errorWidget: Container(
+                                        color: const Color(0xFFF5F5F5),
+                                        child: const Icon(Icons.image_outlined, color: Colors.black12, size: 16),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              name.toString().toUpperCase(),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 7,
+                                fontWeight: FontWeight.w700,
+                                color: isSelected ? AppTheme.primaryRose : Colors.black87,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+
+            // Interactive Filter Engine Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: OutlinedButton.icon(
+                onPressed: _showSortBottomSheet,
+                icon: const Icon(Icons.tune_outlined, size: 14, color: Colors.black87),
+                label: Text(
+                  'INTERACTIVE FILTER ENGINE',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(color: Colors.black12),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
+                  ),
+                ),
               ),
             ),
 
@@ -402,11 +586,12 @@ class _SearchScreenState extends State<SearchScreen> {
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 14,
                                 mainAxisSpacing: 18,
-                                childAspectRatio: 0.64,
+                                childAspectRatio: 0.61,
                               ),
                               itemCount: _products.length,
                               itemBuilder: (context, index) {
                                 final product = _products[index] as Map<String, dynamic>;
+                                final id = product['id']?.toString() ?? '';
                                 final name = product['name']?.toString() ?? '';
                                 final brand = product['brand_name']?.toString() ?? '';
                                 final images = product['images'] as List? ?? [];
@@ -414,6 +599,19 @@ class _SearchScreenState extends State<SearchScreen> {
                                 final variants = product['variants'] as List? ?? [];
                                 final price = variants.isNotEmpty ? (variants[0]['selling_price'] ?? 0.0) : 0.0;
                                 final oldPrice = variants.isNotEmpty ? variants[0]['compare_at_price'] : null;
+
+                                // Deterministic rating based on ID hash (matching storefront)
+                                int hash = 0;
+                                for (int i = 0; i < id.length; i++) {
+                                  hash = id.codeUnitAt(i) + ((hash << 5) - hash);
+                                }
+                                final rating = (4.0 + (hash.abs() % 10) / 10).toStringAsFixed(1);
+                                final reviews = (5 + (hash.abs() % 95)).toString();
+
+                                // Discount percentage
+                                final discountPercentage = (oldPrice != null && oldPrice > price)
+                                    ? ((oldPrice - price) / oldPrice * 100).round()
+                                    : 0;
 
                                 return GestureDetector(
                                   onTap: () {
@@ -444,6 +642,33 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   errorWidget: Container(
                                                     color: const Color(0xFFF5F5F5),
                                                     child: const Icon(Icons.image_not_supported, color: Colors.black12),
+                                                  ),
+                                                ),
+                                                // Star Rating Overlay (matching storefront)
+                                                Positioned(
+                                                  bottom: 8,
+                                                  left: 8,
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white.withValues(alpha: 0.85),
+                                                      borderRadius: BorderRadius.circular(2),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        const Icon(Icons.star, color: Color(0xFFF1C40F), size: 10),
+                                                        const SizedBox(width: 2),
+                                                        Text(
+                                                          '$rating  $reviews',
+                                                          style: GoogleFonts.montserrat(
+                                                            fontSize: 8,
+                                                            fontWeight: FontWeight.w700,
+                                                            color: Colors.black87,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -477,19 +702,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                                        // Scent description snippets
-                                        Text(
-                                          product['short_description']?.toString() ?? '',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 8,
-                                            color: Colors.black54,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 6),
                                         // Price details
                                         Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
                                             Text(
                                               '₹$price',
@@ -500,13 +715,22 @@ class _SearchScreenState extends State<SearchScreen> {
                                               ),
                                             ),
                                             if (oldPrice != null && oldPrice > price) ...[
-                                              const SizedBox(width: 6),
+                                              const SizedBox(width: 5),
                                               Text(
                                                 '₹$oldPrice',
                                                 style: GoogleFonts.montserrat(
-                                                  fontSize: 9,
+                                                  fontSize: 8,
                                                   color: Colors.black38,
                                                   decoration: TextDecoration.lineThrough,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '($discountPercentage% OFF)',
+                                                style: GoogleFonts.montserrat(
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppTheme.primaryRose,
                                                 ),
                                               ),
                                             ],
