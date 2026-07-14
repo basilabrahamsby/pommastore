@@ -535,6 +535,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],
@@ -542,7 +543,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 290,
+                      height: 315,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -550,7 +551,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         itemBuilder: (context, index) {
                           final p = _sameCategoryProducts[index];
                           return SizedBox(
-                            width: 150,
+                            width: 175,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                               child: ProductCard(product: p),
@@ -585,6 +586,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],
@@ -592,7 +594,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 290,
+                      height: 315,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -600,7 +602,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         itemBuilder: (context, index) {
                           final p = _sameBrandProducts[index];
                           return SizedBox(
-                            width: 150,
+                            width: 175,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                               child: ProductCard(product: p),
@@ -635,6 +637,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],
@@ -642,7 +645,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 290,
+                      height: 315,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -650,7 +653,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         itemBuilder: (context, index) {
                           final p = _samePriceProducts[index];
                           return SizedBox(
-                            width: 150,
+                            width: 175,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                               child: ProductCard(product: p),
