@@ -175,12 +175,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final activeProd = _enrichedProduct ?? widget.product;
 
-    final List<dynamic> rawImages = activeProd['images'] as List<dynamic>? ?? [activeProd['image_url'] ?? ''];
-    final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
+    final rawImages = activeProd['images'];
+    final List<dynamic> rawImagesList = rawImages is List ? rawImages : [activeProd['image_url'] ?? ''];
+    final List<String> images = rawImagesList.map((e) => _getMediaUrl(e?.toString())).toList();
     
     final name = activeProd['name'] ?? 'Luxury Fragrance';
     final price = activeProd['price'] ?? 999;
-    final notes = activeProd['scent_notes'] as List<dynamic>? ?? ['Saffron', 'Amberwood', 'Fir Resin', 'Cedar'];
+    List<dynamic> notes = ['Saffron', 'Amberwood', 'Fir Resin', 'Cedar'];
+    final rawNotes = activeProd['scent_notes'];
+    if (rawNotes is Map) {
+      final List<dynamic> extracted = [];
+      rawNotes.forEach((key, val) {
+        if (val is List) {
+          extracted.addAll(val);
+        }
+      });
+      if (extracted.isNotEmpty) {
+        notes = extracted;
+      }
+    } else if (rawNotes is List) {
+      notes = rawNotes;
+    }
 
     final shortDescription = activeProd['short_description']?.toString().isNotEmpty == true
         ? activeProd['short_description']?.toString()
