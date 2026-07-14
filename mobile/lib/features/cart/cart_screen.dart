@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/api/api_client.dart';
 
@@ -121,17 +122,17 @@ class _CartScreenState extends State<CartScreen> {
                                     children: [
                                       Text(
                                         item['name'].toUpperCase(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         'Quantity: ${item['quantity']}',
-                                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+                                        style: GoogleFonts.poppins(color: AppTheme.textMuted, fontSize: 10),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         '₹${item['price']}',
-                                        style: const TextStyle(color: AppTheme.primaryRose, fontWeight: FontWeight.bold),
+                                        style: GoogleFonts.montserrat(color: AppTheme.primaryRose, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ],
                                   ),
@@ -164,24 +165,24 @@ class _CartScreenState extends State<CartScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Bag Subtotal', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
-                        Text('₹${subtotal.toInt()}', style: const TextStyle(color: Colors.black, fontSize: 13)),
+                        Text('Bag Subtotal', style: GoogleFonts.poppins(color: AppTheme.textMuted, fontSize: 12)),
+                        Text('₹${subtotal.toInt()}', style: GoogleFonts.montserrat(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Standard Shipping', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
-                        Text('₹${delivery.toInt()}', style: const TextStyle(color: Colors.black, fontSize: 13)),
+                        Text('Standard Shipping', style: GoogleFonts.poppins(color: AppTheme.textMuted, fontSize: 12)),
+                        Text('₹${delivery.toInt()}', style: GoogleFonts.montserrat(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const Divider(color: AppTheme.borderLight, height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('TOTAL EST.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        Text('₹${total.toInt()}', style: const TextStyle(color: AppTheme.primaryRose, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('TOTAL EST.', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.0)),
+                        Text('₹${total.toInt()}', style: GoogleFonts.montserrat(color: AppTheme.primaryRose, fontWeight: FontWeight.bold, fontSize: 15)),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -191,7 +192,20 @@ class _CartScreenState extends State<CartScreen> {
                           const SnackBar(content: Text('Checkout processing...')),
                         );
                       },
-                      child: const Text('PROCEED TO PAYMENT'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'PROCEED TO PAYMENT',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
                     ),
                   ],
                 ),

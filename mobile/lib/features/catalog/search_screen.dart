@@ -917,12 +917,17 @@ class _SearchScreenState extends State<SearchScreen> {
 
                                 final detailProduct = {
                                   'id': id,
+                                  'slug': product['slug']?.toString() ?? id,
+                                  'brand_id': product['brand_id']?.toString() ?? '',
+                                  'category_id': product['category_id']?.toString() ?? '',
                                   'name': name,
                                   'brand_name': brand,
                                   'price': price,
                                   'mrp': oldPrice ?? price,
                                   'image_url': resolvedImg,
                                   'description': desc,
+                                  'short_description': product['short_description']?.toString() ?? desc,
+                                  'full_description': product['full_description']?.toString() ?? '',
                                   'scent_notes': notes,
                                   'rating': rating,
                                   'reviews': reviews,
