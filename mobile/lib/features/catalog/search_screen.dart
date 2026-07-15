@@ -17,6 +17,7 @@ class SearchScreen extends ConsumerStatefulWidget {
   final bool? isFeatured;
   final bool? isNewArrival;
   final String? title;
+  final bool autoFocus;
 
   const SearchScreen({
     super.key,
@@ -27,6 +28,7 @@ class SearchScreen extends ConsumerStatefulWidget {
     this.isFeatured,
     this.isNewArrival,
     this.title,
+    this.autoFocus = false,
   });
 
   @override
@@ -890,6 +892,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 12.0),
                 child: TextField(
                   controller: _searchController,
+                  autofocus: widget.autoFocus,
                   textInputAction: TextInputAction.search,
                   onChanged: (val) {
                     setState(() {});
