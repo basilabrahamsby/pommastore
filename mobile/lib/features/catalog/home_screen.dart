@@ -20,6 +20,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   int _currentBannerIndex = 0;
   bool _appBarVisible = false;
+  final GlobalKey _brandsKey = GlobalKey();
+  final GlobalKey _offersKey = GlobalKey();
 
   @override
   void initState() {
@@ -126,6 +128,121 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const SearchScreen(),
+      ),
+    );
+  }
+
+  void _scrollToSection(GlobalKey key) {
+    final context = key.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  Widget _buildTopCategoryNavBar() {
+    final navItems = [
+      {
+        'name': 'HOME',
+        'action': () {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      },
+      {
+        'name': 'MEN',
+        'action': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+            ),
+          );
+        }
+      },
+      {
+        'name': 'WOMEN',
+        'action': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+            ),
+          );
+        }
+      },
+      {
+        'name': 'UNISEX',
+        'action': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+            ),
+          );
+        }
+      },
+      {
+        'name': 'BRANDS',
+        'action': () {
+          _scrollToSection(_brandsKey);
+        }
+      },
+      {
+        'name': 'OFFERS',
+        'action': () {
+          _scrollToSection(_offersKey);
+        }
+      },
+      {
+        'name': 'PRODUCTS',
+        'action': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+            ),
+          );
+        }
+      },
+    ];
+
+    return Container(
+      height: 48,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
+        ),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: navItems.length,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        itemBuilder: (context, index) {
+          final item = navItems[index];
+          final isHome = item['name'] == 'HOME';
+          return GestureDetector(
+            onTap: item['action'] as VoidCallback,
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              margin: const EdgeInsets.only(right: 8),
+              child: Text(
+                item['name'].toString(),
+                style: GoogleFonts.montserrat(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2.0,
+                  color: isHome ? AppTheme.primaryRose : Colors.black87,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1868,6 +1985,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
 
+                  _buildTopCategoryNavBar(),
                   const SizedBox(height: 24),
 
                   // ── Categories ────────────────────────────────────────────
@@ -2039,7 +2157,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
 
                   // ── Elite Brand Houses Section ─────────────────────────────
-                  _buildBrandsSection(brands),
+                  Container(
+                    key: _brandsKey,
+                    child: _buildBrandsSection(brands),
+                  ),
 
                   // ── Editorial (For Him, Privilege Collection, For Her) Section 
                   _buildEditorialSection(rewards, layout),
@@ -2048,68 +2169,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _buildHouseFavorites(houseFavorites),
 
                   // ── Promotional Offers ────────────────────────────────────
-                  if (offers.isNotEmpty) ...[
-                    const SizedBox(height: 28),
-                    _buildSectionHeader('Promotional Offers', 'Exclusive Deals'),
-                    const SizedBox(height: 12),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: offers.length,
-                      itemBuilder: (context, index) {
-                        final offer =
-                            offers[index] as Map<String, dynamic>;
-                        final title = offer['title'] ?? 'Exclusive Deal';
-                        final code = offer['code'] ?? '';
-                        final discountVal = offer['discount_value'] ?? '';
-                        final type = offer['discount_type'] ?? '';
+                  if (offers.isNotEmpty)
+                    Container(
+                      key: _offersKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 28),
+                          _buildSectionHeader('Promotional Offers', 'Exclusive Deals'),
+                          const SizedBox(height: 12),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: offers.length,
+                            itemBuilder: (context, index) {
+                              final offer =
+                                  offers[index] as Map<String, dynamic>;
+                              final title = offer['title'] ?? 'Exclusive Deal';
+                              final code = offer['code'] ?? '';
+                              final discountVal = offer['discount_value'] ?? '';
+                              final type = offer['discount_type'] ?? '';
 
-                        return Card(
-                          margin:
-                              const EdgeInsets.symmetric(vertical: 6),
-                          color: AppTheme.surfaceLight,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            title: Text(title.toString().toUpperCase(),
-                                style: GoogleFonts.montserrat(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                    letterSpacing: 1.0)),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 6.0),
-                              child: Text(
-                                type.toString().isNotEmpty
-                                    ? '$type Discount • Code: $code'
-                                    : 'Promo Code: $code',
-                                style: GoogleFonts.poppins(
-                                    color: AppTheme.textMuted,
-                                    fontSize: 11),
-                              ),
-                            ),
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryRose,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                discountVal.toString().isNotEmpty
-                                    ? '$discountVal OFF'
-                                    : 'CLAIM',
-                                style: GoogleFonts.montserrat(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ),
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                color: AppTheme.surfaceLight,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16),
+                                  title: Text(title.toString().toUpperCase(),
+                                      style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                          letterSpacing: 1.0)),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 6.0),
+                                    child: Text(
+                                      type.toString().isNotEmpty
+                                          ? '$type Discount • Code: $code'
+                                          : 'Promo Code: $code',
+                                      style: GoogleFonts.poppins(
+                                          color: AppTheme.textMuted,
+                                          fontSize: 11),
+                                    ),
+                                  ),
+                                  trailing: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryRose,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      discountVal.toString().isNotEmpty
+                                          ? '$discountVal OFF'
+                                          : 'CLAIM',
+                                      style: GoogleFonts.montserrat(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     ),
-                  ],
 
                   // ── Footer ────────────────────────────────────────────────
                   const _HomeFooter(),
