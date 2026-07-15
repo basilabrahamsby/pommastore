@@ -122,7 +122,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _enrichedProduct = widget.product;
         _isLoadingProduct = false;
       });
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Failed to load recommendations: $e');
+      debugPrint('$stack');
       setState(() {
         _enrichedProduct = widget.product;
         _isLoadingProduct = false;
@@ -171,31 +173,175 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  Widget _buildSpecificationCard({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9F9FB),
+          border: Border.all(color: const Color(0xFFE5E5EA)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 14, color: AppTheme.textMuted),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    title.toUpperCase(),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMuted,
+                      letterSpacing: 0.5,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value.toUpperCase(),
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+                letterSpacing: 0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOlfactoryNoteCard({
+    required IconData icon,
+    required String title,
+    required String notes,
+    required String description,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9F9FB),
+        border: Border.all(color: const Color(0xFFE5E5EA)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFEFEFEF),
+            ),
+            child: Icon(icon, size: 18, color: Colors.black87),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textMuted,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  notes,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: Colors.black38,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeProd = _enrichedProduct ?? widget.product;
 
-    final rawImages = activeProd['images'];
-    final List<dynamic> rawImagesList = rawImages is List ? rawImages : [activeProd['image_url'] ?? ''];
-    final List<String> images = rawImagesList.map((e) => _getMediaUrl(e?.toString())).toList();
+    final List<dynamic> rawImages = activeProd['images'] as List<dynamic>? ?? [activeProd['image_url'] ?? ''];
+    final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
     
     final name = activeProd['name'] ?? 'Luxury Fragrance';
     final price = activeProd['price'] ?? 999;
-    List<dynamic> notes = ['Saffron', 'Amberwood', 'Fir Resin', 'Cedar'];
-    final rawNotes = activeProd['scent_notes'];
-    if (rawNotes is Map) {
-      final List<dynamic> extracted = [];
-      rawNotes.forEach((key, val) {
-        if (val is List) {
-          extracted.addAll(val);
-        }
-      });
-      if (extracted.isNotEmpty) {
-        notes = extracted;
+
+    // Scent notes parsing
+    final rawScentNotes = activeProd['scent_notes'];
+    String topNotesStr = 'Saffron, Jasmine';
+    String heartNotesStr = 'Amberwood, Ambergris';
+    String baseNotesStr = 'Fir Resin, Cedar';
+    
+    if (rawScentNotes is Map) {
+      if (rawScentNotes['top'] is List) {
+        final List<dynamic> t = rawScentNotes['top'];
+        if (t.isNotEmpty) topNotesStr = t.join(', ');
       }
-    } else if (rawNotes is List) {
-      notes = rawNotes;
+      if (rawScentNotes['heart'] is List) {
+        final List<dynamic> h = rawScentNotes['heart'];
+        if (h.isNotEmpty) heartNotesStr = h.join(', ');
+      }
+      if (rawScentNotes['base'] is List) {
+        final List<dynamic> b = rawScentNotes['base'];
+        if (b.isNotEmpty) baseNotesStr = b.join(', ');
+      }
     }
+
+    // Specifications Parsing
+    final occasionTags = activeProd['occasion_tags'] as List? ?? [];
+    final familyTag = occasionTags.firstWhere((t) => t.toString().startsWith('family:'), orElse: () => null);
+    final olfactoryFamily = familyTag != null 
+        ? familyTag.toString().replaceFirst('family:', '') 
+        : (activeProd['olfactory_family']?.toString() ?? 'Woody Fresh Spice');
+
+    final sillageMap = {
+      1: 'Intimate Projection',
+      2: 'Moderate Projection',
+      3: 'Strong Projection',
+      4: 'Enormous Projection'
+    };
+    final sillageRating = activeProd['sillage_rating'];
+    final sillageText = sillageRating != null 
+        ? sillageMap[int.tryParse(sillageRating.toString())] ?? '$sillageRating/4 Projection'
+        : 'Intense / Room-filling';
+
+    final targetGender = activeProd['gender']?.toString() ?? 'Unisex';
+
+    // Gallery images parsing
+    final List<dynamic> galleryList = activeProd['gallery_images'] as List? ?? [];
 
     final shortDescription = activeProd['short_description']?.toString().isNotEmpty == true
         ? activeProd['short_description']?.toString()
@@ -211,6 +357,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
         title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
+        shape: const Border(
+          bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
+        ),
       ),
       body: _isLoadingProduct
           ? const Center(
@@ -360,11 +509,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         if (fullDescription.isNotEmpty)
                           CreationNarrativeAccordion(fullDescription: fullDescription),
 
-                        const SizedBox(height: 20),
-
-                        // Scent Notes Chips
+                        // ── 1. Sensory Profile & Features ───────────────────
+                        const SizedBox(height: 24),
                         Text(
-                          'FRAGRANCE FAMILY NOTES',
+                          'SPECIFICATIONS',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -372,28 +520,132 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             color: AppTheme.textMuted,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: notes.map((note) {
-                            return Chip(
-                              label: Text(
-                                note.toString().toUpperCase(),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              backgroundColor: const Color(0xFFF9F9F9),
-                              side: const BorderSide(color: Color(0xFFE5E5EA)),
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            );
-                          }).toList(),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Sensory Profile & Features',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black,
+                          ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _buildSpecificationCard(
+                              icon: Icons.opacity,
+                              title: 'Olfactory Family',
+                              value: olfactoryFamily,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildSpecificationCard(
+                              icon: Icons.air,
+                              title: 'Sillage',
+                              value: sillageText,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildSpecificationCard(
+                              icon: Icons.person_outline,
+                              title: 'Gender',
+                              value: targetGender,
+                            ),
+                          ],
+                        ),
+
+                        // ── 2. Olfactory Journey (Composition) ───────────────
+                        const SizedBox(height: 32),
+                        Text(
+                          'COMPOSITION',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                            color: AppTheme.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Olfactory Journey',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildOlfactoryNoteCard(
+                          icon: Icons.local_fire_department_outlined,
+                          title: 'Top Notes (Opening)',
+                          notes: topNotesStr,
+                          description: 'First 15-30 minutes of initial impression.',
+                        ),
+                        const SizedBox(height: 10),
+                        _buildOlfactoryNoteCard(
+                          icon: Icons.favorite_border,
+                          title: 'Heart Notes (Core Profile)',
+                          notes: heartNotesStr,
+                          description: 'Main olfactory signature lasting 2-4 hours.',
+                        ),
+                        const SizedBox(height: 10),
+                        _buildOlfactoryNoteCard(
+                          icon: Icons.auto_awesome_outlined,
+                          title: 'Base Notes (Dry Down)',
+                          notes: baseNotesStr,
+                          description: 'Deep, rich foundational notes lasting 8+ hours.',
+                        ),
+
+                        // ── 3. The Visual Gallery ────────────────────────────
+                        if (galleryList.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          Text(
+                            'OLFACTORY VIGNETTES',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                              color: AppTheme.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'The Visual Gallery',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 120,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: galleryList.length,
+                              itemBuilder: (context, index) {
+                                final item = galleryList[index] as Map<String, dynamic>? ?? {};
+                                final imgUrl = _getMediaUrl(item['image']?.toString());
+                                return Container(
+                                  width: 120,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppTheme.borderLight),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: CachedImage(
+                                    imageUrl: imgUrl,
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 32),
 
                         // Delhivery Pincode Checker Widget
                         Container(
@@ -548,7 +800,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   // Dynamic recommendations — Section 1: Same Category Products (SENSORY SIBLING CURATIONS)
                   if (_sameCategoryProducts.isNotEmpty) ...[
-                    const Divider(height: 40),
+                    const SizedBox(height: 36),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Column(
@@ -599,7 +851,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   // Dynamic recommendations — Section 2: Same Brand Products (SENSORY LINEAGE)
                   if (_sameBrandProducts.isNotEmpty) ...[
-                    const Divider(height: 40),
+                    const SizedBox(height: 36),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Column(
@@ -650,7 +902,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   // Dynamic recommendations — Section 3: Same Price Level Items (AFFORDABLE LUXURIES)
                   if (_samePriceProducts.isNotEmpty) ...[
-                    const Divider(height: 40),
+                    const SizedBox(height: 36),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Column(

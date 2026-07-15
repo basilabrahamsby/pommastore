@@ -1470,6 +1470,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               elevation: 0,
               centerTitle: true,
               title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
+              shape: const Border(
+                bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
+              ),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.black, size: 20),
