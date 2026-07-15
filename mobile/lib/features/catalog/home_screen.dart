@@ -48,6 +48,88 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return 'https://kozmocart.com$cleanPath';
   }
 
+  void _handleSlideNavigation(Map<String, dynamic> slide) {
+    final prodSlug = slide['product_slug']?.toString();
+    final prodId = slide['product_id']?.toString();
+    final customLink = slide['custom_link']?.toString() ?? slide['link']?.toString() ?? '';
+
+    if (prodSlug != null && prodSlug.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ProductDetailScreen(
+            product: {
+              'slug': prodSlug,
+              'id': prodId ?? prodSlug,
+            },
+          ),
+        ),
+      );
+      return;
+    } else if (prodId != null && prodId.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ProductDetailScreen(
+            product: {
+              'slug': prodId,
+              'id': prodId,
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (customLink.isNotEmpty) {
+      final cleanLink = customLink.replaceAll('https://kozmocart.com', '');
+      final uri = Uri.tryParse(cleanLink);
+      if (uri != null) {
+        if (uri.path.contains('/product/')) {
+          final slug = uri.pathSegments.last;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ProductDetailScreen(
+                product: {
+                  'slug': slug,
+                  'id': slug,
+                },
+              ),
+            ),
+          );
+          return;
+        } else if (uri.queryParameters.containsKey('category')) {
+          final catId = uri.queryParameters['category'];
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SearchScreen(
+                categoryId: catId,
+                title: 'Category',
+              ),
+            ),
+          );
+          return;
+        } else if (uri.queryParameters.containsKey('brand')) {
+          final brandId = uri.queryParameters['brand'];
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SearchScreen(
+                brandId: brandId,
+                title: 'Brand',
+              ),
+            ),
+          );
+          return;
+        }
+      }
+    }
+
+    // Default fallback to all-products search screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SearchScreen(),
+      ),
+    );
+  }
+
   List<String> _getScentNotes(Map<String, dynamic> product) {
     final notesData = product['scent_notes'];
     if (notesData is Map) {
@@ -205,7 +287,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : 'We offer the best niche fragrances on the market selected by our team of experts.';
 
     Widget bannerCard(
-        String imgUrl, String subtitle, String title, String desc, Color bg) {
+        String imgUrl, String subtitle, String title, String desc, Color bg, String linkTarget) {
       return Container(
         height: 170,
         clipBehavior: Clip.antiAlias,
@@ -285,20 +367,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ],
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      child: Text(
-                        'BUY NOW',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 7,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.5,
-                          color: Colors.white,
+                    GestureDetector(
+                      onTap: () {
+                        _handleSlideNavigation({'custom_link': linkTarget});
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: Text(
+                          'BUY NOW',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 7,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -321,12 +408,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           if (leftTitle.isNotEmpty)
             bannerCard(leftImg, leftSubtitle, leftTitle, leftDesc,
-                const Color(0xFFa5682a)),
+                const Color(0xFFa5682a), slide['left_link']?.toString() ?? ''),
           if (leftTitle.isNotEmpty && rightTitle.isNotEmpty)
             const SizedBox(height: 12),
           if (rightTitle.isNotEmpty)
             bannerCard(rightImg, rightSubtitle, rightTitle, rightDesc,
-                const Color(0xFF5c4033)),
+                const Color(0xFF5c4033), slide['right_link']?.toString() ?? ''),
         ],
       ),
     );
@@ -997,20 +1084,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ],
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      child: Text(
-                        'BUY NOW',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.5,
-                          color: Colors.white,
+                    GestureDetector(
+                      onTap: () {
+                        final linkTarget = slide['link']?.toString() ?? slide['custom_link']?.toString() ?? '';
+                        _handleSlideNavigation({'custom_link': linkTarget});
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: Text(
+                          'BUY NOW',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -1719,7 +1812,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ],
                                           const SizedBox(height: 16),
                                           OutlinedButton(
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              _handleSlideNavigation(slide);
+                                            },
                                             style: OutlinedButton.styleFrom(
                                               foregroundColor: Colors.white,
                                               side: const BorderSide(
