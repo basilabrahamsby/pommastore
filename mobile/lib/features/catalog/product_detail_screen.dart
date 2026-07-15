@@ -279,13 +279,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Product Headers
+                        // Breadcrumb / Brand Tagline (Next.js alignment)
+                        Row(
+                          children: [
+                            Text(
+                              (activeProd['brand_name'] ?? activeProd['brand'] ?? 'EXQUISITE HOUSE').toString().toUpperCase(),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.textMuted,
+                                letterSpacing: 2.0,
+                              ),
+                            ),
+                            if (activeProd['category_name'] != null || activeProd['category'] != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.black26,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                (activeProd['category_name'] ?? activeProd['category'] ?? '').toString().toUpperCase(),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.textMuted,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         Text(
                           name.toUpperCase(),
-                          style: GoogleFonts.montserrat(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0,
+                          style: GoogleFonts.poppins(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
                             color: Colors.black,
                           ),
                         ),
