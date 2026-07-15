@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
@@ -1927,10 +1928,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                       );
                                     },
-                                    child: CachedImage(
-                                      imageUrl: imageResolved,
-                                      fit: BoxFit.cover,
-                                      errorWidget: Container(color: Colors.black54),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        // 1. Blurred background fill
+                                        ImageFiltered(
+                                          imageFilter: ui.ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0),
+                                          child: CachedImage(
+                                            imageUrl: imageResolved,
+                                            fit: BoxFit.cover,
+                                            errorWidget: Container(color: Colors.black54),
+                                          ),
+                                        ),
+                                        // 2. Extra dark tint overlay for background blur readability
+                                        Container(color: Colors.black26),
+                                        // 3. Fully visible centered banner
+                                        Center(
+                                          child: CachedImage(
+                                            imageUrl: imageResolved,
+                                            fit: BoxFit.contain,
+                                            errorWidget: const SizedBox.shrink(),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   Container(
