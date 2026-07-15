@@ -6,6 +6,7 @@ import 'homepage_provider.dart';
 import 'product_detail_screen.dart';
 import 'search_screen.dart';
 import '../../core/widgets/cached_image.dart';
+import '../../core/widgets/image_lightbox.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -217,11 +218,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Image half
             Expanded(
               flex: 4,
-              child: CachedImage(
-                imageUrl: imgUrl,
-                fit: BoxFit.cover,
-                height: 170,
-                errorWidget: Container(color: bg.withValues(alpha: 0.3)),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ImageLightboxScreen(
+                        imageUrls: [imgUrl],
+                        initialIndex: 0,
+                      ),
+                    ),
+                  );
+                },
+                child: CachedImage(
+                  imageUrl: imgUrl,
+                  fit: BoxFit.cover,
+                  height: 170,
+                  errorWidget: Container(color: bg.withValues(alpha: 0.3)),
+                ),
               ),
             ),
             // Text half
@@ -1008,11 +1021,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Right: Image half
             Expanded(
               flex: 4,
-              child: CachedImage(
-                imageUrl: imgUrl,
-                fit: BoxFit.cover,
-                height: 200,
-                errorWidget: Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ImageLightboxScreen(
+                        imageUrls: [imgUrl],
+                        initialIndex: 0,
+                      ),
+                    ),
+                  );
+                },
+                child: CachedImage(
+                  imageUrl: imgUrl,
+                  fit: BoxFit.cover,
+                  height: 200,
+                  errorWidget: Container(color: const Color(0xFF1B3B22).withValues(alpha: 0.3)),
+                ),
               ),
             ),
           ],
@@ -1602,8 +1627,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         children: [
                           PageView.builder(
                             controller: _bannerController,
-                            onPageChanged: (i) =>
-                                setState(() => _currentBannerIndex = i),
+                                      onPageChanged: (i) =>
+                                        setState(() => _currentBannerIndex = i),
                             itemCount: heroSlides.length,
                             itemBuilder: (context, index) {
                               final slide =
@@ -1623,10 +1648,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               return Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  CachedImage(
-                                    imageUrl: imageResolved,
-                                    fit: BoxFit.cover,
-                                    errorWidget: Container(color: Colors.black54),
+                                  GestureDetector(
+                                    onTap: () {
+                                      final List<String> allSlideUrls = [];
+                                      for (final s in heroSlides) {
+                                        if (s is Map) {
+                                          allSlideUrls.add(_getMediaUrl(
+                                            (s['image_mobile'] ??
+                                             s['banner_url_mobile'] ??
+                                             s['banner_url'] ??
+                                             s['image'])?.toString()
+                                          ));
+                                        }
+                                      }
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => ImageLightboxScreen(
+                                            imageUrls: allSlideUrls,
+                                            initialIndex: index,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: CachedImage(
+                                      imageUrl: imageResolved,
+                                      fit: BoxFit.cover,
+                                      errorWidget: Container(color: Colors.black54),
+                                    ),
                                   ),
                                   Container(
                                       color: const Color(0x66000000)),

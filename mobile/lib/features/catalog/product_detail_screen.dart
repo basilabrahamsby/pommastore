@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/api/api_client.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/product_card.dart';
+import '../../core/widgets/image_lightbox.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -384,14 +385,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             });
                           },
                           itemBuilder: (context, index) {
-                            return InteractiveViewer(
-                              panEnabled: true,
-                              minScale: 1.0,
-                              maxScale: 3.0,
-                              child: Center(
-                                child: CachedImage(
-                                  imageUrl: images[index],
-                                  fit: BoxFit.contain,
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ImageLightboxScreen(
+                                      imageUrls: images,
+                                      initialIndex: index,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: InteractiveViewer(
+                                panEnabled: true,
+                                minScale: 1.0,
+                                maxScale: 3.0,
+                                child: Center(
+                                  child: CachedImage(
+                                    imageUrl: images[index],
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
                               ),
                             );
@@ -619,29 +632,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          SizedBox(
-                            height: 120,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: galleryList.length,
-                              itemBuilder: (context, index) {
-                                final item = galleryList[index] as Map<String, dynamic>? ?? {};
-                                final imgUrl = _getMediaUrl(item['image']?.toString());
-                                return Container(
-                                  width: 120,
-                                  margin: const EdgeInsets.only(right: 12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: AppTheme.borderLight),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: CachedImage(
-                                    imageUrl: imgUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                );
-                              },
-                            ),
+                          Builder(
+                            builder: (context) {
+                              final galleryUrls = galleryList
+                                  .map((item) => _getMediaUrl((item as Map<String, dynamic>? ?? {})['image']?.toString()))
+                                  .toList();
+                              return SizedBox(
+                                height: 120,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: galleryList.length,
+                                  itemBuilder: (context, index) {
+                                    final item = galleryList[index] as Map<String, dynamic>? ?? {};
+                                    final imgUrl = _getMediaUrl(item['image']?.toString());
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => ImageLightboxScreen(
+                                              imageUrls: galleryUrls,
+                                              initialIndex: index,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        width: 120,
+                                        margin: const EdgeInsets.only(right: 12),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: AppTheme.borderLight),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: CachedImage(
+                                          imageUrl: imgUrl,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
                           ),
                         ],
 
