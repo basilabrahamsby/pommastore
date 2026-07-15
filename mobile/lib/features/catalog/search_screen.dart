@@ -539,6 +539,202 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  List<Map<String, String>> _getSearchSuggestions(String text) {
+    if (text.isEmpty || text.length < 2) return [];
+    final q = text.toLowerCase();
+    final List<Map<String, String>> suggestions = [];
+
+    // 1. Check matching Brands
+    for (final b in _brands) {
+      if (b is Map) {
+        final bName = b['name']?.toString() ?? '';
+        if (bName.toLowerCase().contains(q)) {
+          suggestions.add({
+            'type': 'Brand',
+            'value': bName,
+          });
+        }
+      }
+    }
+
+    // 2. Check matching Categories
+    for (final c in _categories) {
+      if (c is Map) {
+        final cName = c['name']?.toString() ?? '';
+        if (cName.toLowerCase().contains(q)) {
+          suggestions.add({
+            'type': 'Category',
+            'value': cName,
+          });
+        }
+      }
+    }
+
+    // 3. Check matching Products
+    for (final p in _allProducts) {
+      if (p is Map) {
+        final pName = p['name']?.toString() ?? '';
+        if (pName.toLowerCase().contains(q)) {
+          suggestions.add({
+            'type': 'Product',
+            'value': pName,
+          });
+        }
+      }
+    }
+
+    // 4. Check matching Scent Notes / Families
+    final Set<String> matchingNotes = {};
+    for (final p in _allProducts) {
+      if (p is Map) {
+        final notesData = p['scent_notes'];
+        List<String> notes = [];
+        if (notesData is Map) {
+          final top = notesData['top'] as List? ?? [];
+          final heart = notesData['heart'] as List? ?? [];
+          final base = notesData['base'] as List? ?? [];
+          notes = [...top, ...heart, ...base].map((e) => e.toString()).toList();
+        } else if (notesData is List) {
+          notes = notesData.map((e) => e.toString()).toList();
+        }
+        for (final note in notes) {
+          if (note.toLowerCase().contains(q)) {
+            matchingNotes.add(note);
+          }
+        }
+      }
+    }
+    for (final note in matchingNotes) {
+      suggestions.add({
+        'type': 'Scent Note',
+        'value': note,
+      });
+    }
+
+    return suggestions.take(8).toList();
+  }
+
+  void _onSuggestionTap(Map<String, String> sug) {
+    final value = sug['value'] ?? '';
+    final type = sug['type'] ?? '';
+
+    setState(() {
+      _searchController.text = value;
+      _query = value;
+      
+      _selectedBrands.clear();
+      _selectedCategories.clear();
+      _selectedGenders.clear();
+
+      if (type == 'Brand') {
+        _selectedBrands.add(value);
+      } else if (type == 'Category') {
+        _selectedCategories.add(value);
+      }
+      
+      _applyFilters();
+    });
+
+    FocusScope.of(context).unfocus();
+  }
+
+  Widget _buildSuggestionsOverlay() {
+    final text = _searchController.text;
+    final suggestions = _getSearchSuggestions(text);
+
+    return Container(
+      color: Colors.white,
+      width: double.infinity,
+      height: double.infinity,
+      child: suggestions.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.search_off_outlined, size: 48, color: Colors.black26),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No suggestions for "$text"',
+                      style: GoogleFonts.poppins(color: Colors.black54, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Press search to look for this query',
+                      style: GoogleFonts.poppins(color: Colors.black38, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : ListView.builder(
+              itemCount: suggestions.length + 1,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return ListTile(
+                    leading: const Icon(Icons.search, color: AppTheme.primaryRose, size: 20),
+                    title: Text(
+                      'Search for "$text"',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryRose,
+                        fontSize: 13,
+                      ),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _query = text;
+                        _applyFilters();
+                      });
+                      FocusScope.of(context).unfocus();
+                    },
+                  );
+                }
+
+                final sug = suggestions[index - 1];
+                final value = sug['value'] ?? '';
+                final type = sug['type'] ?? '';
+
+                IconData icon;
+                Color iconColor;
+                if (type == 'Brand') {
+                  icon = Icons.domain_outlined;
+                  iconColor = const Color(0xFFE91E63);
+                } else if (type == 'Category') {
+                  icon = Icons.grid_view_outlined;
+                  iconColor = const Color(0xFF007AFF);
+                } else if (type == 'Scent Note') {
+                  icon = Icons.spa_outlined;
+                  iconColor = const Color(0xFF4CD964);
+                } else {
+                  icon = Icons.local_mall_outlined;
+                  iconColor = Colors.black54;
+                }
+
+                return ListTile(
+                  leading: Icon(icon, color: iconColor, size: 18),
+                  title: RichText(
+                    text: TextSpan(
+                      style: GoogleFonts.poppins(color: Colors.black87, fontSize: 13),
+                      children: [
+                        TextSpan(text: value),
+                        TextSpan(
+                          text: '  ($type)',
+                          style: GoogleFonts.poppins(color: Colors.black38, fontSize: 10, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                  trailing: const Icon(Icons.north_west, size: 14, color: Colors.black26),
+                  onTap: () => _onSuggestionTap(sug),
+                );
+              },
+            ),
+    );
+  }
+
   Widget _buildTopCategoryNavBar() {
     final navItems = [
       {
@@ -695,6 +891,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: TextField(
                   controller: _searchController,
                   textInputAction: TextInputAction.search,
+                  onChanged: (val) {
+                    setState(() {});
+                  },
                   onSubmitted: (val) {
                     setState(() {
                       _query = val;
@@ -731,8 +930,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               ),
 
-            // Sorting Trigger Bar
-            Container(
+            Expanded(
+              child: Stack(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Sorting Trigger Bar
+                      Container(
               height: 48,
               decoration: const BoxDecoration(
                 border: Border(
@@ -1402,6 +1607,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 );
                               },
                             ),
+                      ),
+                    ],
+                  ),
+                  if (_searchController.text.isNotEmpty && _searchController.text != _query)
+                    _buildSuggestionsOverlay(),
+                ],
+              ),
             ),
           ],
         ),
