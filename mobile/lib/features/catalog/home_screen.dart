@@ -7,6 +7,7 @@ import 'product_detail_screen.dart';
 import 'search_screen.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/image_lightbox.dart';
+final homeScrollTargetProvider = StateProvider<String?>((ref) => null);
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -1689,6 +1690,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String?>(homeScrollTargetProvider, (previous, next) {
+      if (next == 'brands') {
+        _scrollToSection(_brandsKey);
+        ref.read(homeScrollTargetProvider.notifier).state = null;
+      } else if (next == 'offers') {
+        _scrollToSection(_offersKey);
+        ref.read(homeScrollTargetProvider.notifier).state = null;
+      }
+    });
+
     final homepageAsync = ref.watch(homepageDataProvider);
 
     return Scaffold(

@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'home_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/api/api_client.dart';
 import 'product_detail_screen.dart';
 
-class SearchScreen extends StatefulWidget {
+class SearchScreen extends ConsumerStatefulWidget {
   final String? initialQuery;
   final String? categoryId;
   final String? brandId;
@@ -28,10 +30,10 @@ class SearchScreen extends StatefulWidget {
   });
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchController = TextEditingController();
   final ApiClient _apiClient = ApiClient();
   List<dynamic> _allProducts = [];
@@ -537,6 +539,124 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  Widget _buildTopCategoryNavBar() {
+    final navItems = [
+      {
+        'name': 'HOME',
+        'action': () {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      },
+      {
+        'name': 'MEN',
+        'action': () {
+          if (widget.gender == 'Men') return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+            ),
+          );
+        }
+      },
+      {
+        'name': 'WOMEN',
+        'action': () {
+          if (widget.gender == 'Women') return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+            ),
+          );
+        }
+      },
+      {
+        'name': 'UNISEX',
+        'action': () {
+          if (widget.gender == 'Unisex') return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+            ),
+          );
+        }
+      },
+      {
+        'name': 'BRANDS',
+        'action': () {
+          ref.read(homeScrollTargetProvider.notifier).state = 'brands';
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      },
+      {
+        'name': 'OFFERS',
+        'action': () {
+          ref.read(homeScrollTargetProvider.notifier).state = 'offers';
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      },
+      {
+        'name': 'PRODUCTS',
+        'action': () {
+          if (widget.title == 'ALL PRODUCTS' && widget.gender == null && widget.categoryId == null && widget.brandId == null) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+            ),
+          );
+        }
+      },
+    ];
+
+    return Container(
+      height: 44,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
+        ),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: navItems.length,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        itemBuilder: (context, index) {
+          final item = navItems[index];
+          
+          bool isActive = false;
+          final name = item['name'].toString();
+          if (name == 'MEN' && widget.gender == 'Men') {
+            isActive = true;
+          } else if (name == 'WOMEN' && widget.gender == 'Women') {
+            isActive = true;
+          } else if (name == 'UNISEX' && widget.gender == 'Unisex') {
+            isActive = true;
+          } else if (name == 'PRODUCTS' && widget.title == 'ALL PRODUCTS' && widget.gender == null && widget.categoryId == null && widget.brandId == null) {
+            isActive = true;
+          }
+
+          return GestureDetector(
+            onTap: item['action'] as VoidCallback,
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              margin: const EdgeInsets.only(right: 8),
+              child: Text(
+                name,
+                style: GoogleFonts.montserrat(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2.0,
+                  color: isActive ? AppTheme.primaryRose : Colors.black87,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Find category name if active
@@ -567,6 +687,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _buildTopCategoryNavBar(),
             // Search Input Header
             if (widget.categoryId == null && widget.brandId == null)
               Padding(
