@@ -1876,10 +1876,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                  // ── Hero Banner ─────────────────────────────────────────────
                   if (heroSlides.isNotEmpty)
-                    SizedBox(
-                      height: 320,
+                    AspectRatio(
+                      aspectRatio: 3 / 4,
                       child: Stack(
                         children: [
                           PageView.builder(
