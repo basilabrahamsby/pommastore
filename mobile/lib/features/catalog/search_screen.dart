@@ -773,11 +773,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
 
-            // Breadcrumbs & Title block
+            // Breadcrumbs & Item Count block (Compacted to maximize product grid space)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -819,16 +818,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'EXPLORE SCENT VAULT',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
                   const SizedBox(height: 4),
                   Text(
                     '${_products.length} FRAGRANCES MATCH FILTERS',
@@ -836,7 +825,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       fontSize: 8,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF8E8E93),
-                      letterSpacing: 1.5,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ],
@@ -845,9 +834,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
             // Horizontal Categories Scroll View
             if (_categories.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 6),
               SizedBox(
-                height: 110,
+                height: 92,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
