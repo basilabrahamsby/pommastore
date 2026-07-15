@@ -540,7 +540,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   List<Map<String, String>> _getSearchSuggestions(String text) {
-    if (text.isEmpty || text.length < 2) return [];
+    if (text.isEmpty) return [];
     final q = text.toLowerCase();
     final List<Map<String, String>> suggestions = [];
 
@@ -1610,7 +1610,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       ),
                     ],
                   ),
-                  if (_searchController.text.isNotEmpty && _searchController.text != _query)
+                  if (_searchController.text.isNotEmpty &&
+                      _searchController.text != _query &&
+                      (_searchController.text.length >= 2 || _getSearchSuggestions(_searchController.text).isNotEmpty))
                     _buildSuggestionsOverlay(),
                 ],
               ),
