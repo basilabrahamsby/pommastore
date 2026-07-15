@@ -1840,41 +1840,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildTopCategoryNavBar(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 12.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const SearchScreen(autoFocus: true),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTopCategoryNavBar(),
+                      ),
+                      Container(
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
                           ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9F9FB),
-                          border: Border.all(color: const Color(0xFFE5E5EA)),
-                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.search, color: AppTheme.textMuted, size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Search for scent families, notes, or titles...',
-                                style: GoogleFonts.poppins(
-                                  color: AppTheme.textMuted,
-                                  fontSize: 13,
-                                ),
+                        child: IconButton(
+                          icon: const Icon(Icons.search, color: Colors.black87, size: 22),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const SearchScreen(autoFocus: true),
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
-                    ),
+                    ],
                   ),
                   if (heroSlides.isNotEmpty)
                     AspectRatio(
