@@ -1877,16 +1877,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   if (heroSlides.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Center(
-                        child: SizedBox(
-                          height: 300,
-                          child: AspectRatio(
-                            aspectRatio: 3 / 4,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Stack(
+                    SizedBox(
+                      height: 240,
+                      width: double.infinity,
+                      child: Stack(
                         children: [
                           PageView.builder(
                             controller: _bannerController,
@@ -2037,10 +2031,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
                     ),
-                  ),
-                ),
-              ),
-            ),
 
 
 
