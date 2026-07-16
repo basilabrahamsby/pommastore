@@ -7,6 +7,7 @@ import 'product_detail_screen.dart';
 import 'search_screen.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/image_lightbox.dart';
+import '../../core/widgets/product_card.dart';
 final homeScrollTargetProvider = StateProvider<String?>((ref) => null);
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -1259,6 +1260,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Product Grid ──────────────────────────────────────────────────────────
   Widget _buildProductGrid(List<Map<String, dynamic>> products) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.55,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) => ProductCard(product: products[index]),
+    );
+  }
+
+  Widget _buildProductGridUnused(List<Map<String, dynamic>> products) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

@@ -54,7 +54,7 @@ final GoRouter appRouter = GoRouter(
           navigatorKey: _shellNavigatorCartKey,
           routes: <RouteBase>[
             GoRoute(
-              path: '/cart',
+              path: '/bag',
               builder: (BuildContext context, GoRouterState state) => const CartScreen(),
             ),
           ],

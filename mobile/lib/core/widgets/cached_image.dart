@@ -127,9 +127,14 @@ class _AutoCycleImageState extends State<AutoCycleImage> {
     }
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 900),
       transitionBuilder: (child, animation) {
-        return FadeTransition(opacity: animation, child: child);
+        final childKey = child.key as ValueKey<int>?;
+        final isIncoming = childKey != null && childKey.value == _currentIndex;
+        return FadeTransition(
+          opacity: isIncoming ? animation : const AlwaysStoppedAnimation(1.0),
+          child: child,
+        );
       },
       child: CachedImage(
         key: ValueKey<int>(_currentIndex),

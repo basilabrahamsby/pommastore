@@ -1,22 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_responsive.dart';
 import '../../core/api/api_client.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/product_card.dart';
 import '../../core/widgets/image_lightbox.dart';
+import '../cart/cart_provider.dart';
 
-class ProductDetailScreen extends StatefulWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
 
   const ProductDetailScreen({super.key, required this.product});
 
   @override
-  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   final _pincodeController = TextEditingController();
   final ApiClient _apiClient = ApiClient();
   bool _isCheckingPincode = false;
@@ -149,7 +153,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     });
 
     try {
-      final res = await _apiClient.dio.get('/storefront/shipping/verify-pincode', queryParameters: {
+      final res = await _apiClient.dio.get('/storefront/orders/shipping/verify-pincode', queryParameters: {
         'pincode': pin,
       });
 
@@ -368,10 +372,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 color: AppTheme.primaryRose,
               ),
             )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          : Center(
+              child: ConstrainedBox(
+                constraints: R.maxContent(context),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                   // Interactive Horizontal Zoom Gallery
                   SizedBox(
                     height: 320,
@@ -778,35 +785,163 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Added to Shopping Bag')),
-                                  );
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder: (Widget child, Animation<double> animation) {
+                                  return ScaleTransition(scale: animation, child: child);
                                 },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.black),
-                                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: Text(
-                                  'ADD TO BAG',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                    letterSpacing: 1.5,
-                                  ),
-                                ),
+                                child: () {
+                                  final product = _enrichedProduct ?? widget.product;
+                                  final variantId = (product['default_variant']?['id'] ??
+                                          product['variants']?[0]?['id'] ??
+                                          product['id'])
+                                      ?.toString() ?? '';
+                                  final cartQty = ref
+                                      .watch(cartProvider)
+                                      .where((i) => i.id == variantId)
+                                      .fold(0, (sum, i) => sum + i.quantity);
+                                  return cartQty > 0
+                                      ? Container(
+                                          key: const ValueKey('stepper'),
+                                          height: 45,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: Colors.black, width: 1.5),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              IconButton(
+                                                padding: EdgeInsets.zero,
+                                                icon: const Icon(Icons.remove, size: 16, color: Colors.black),
+                                                onPressed: () {
+                                                  ref.read(cartProvider.notifier).updateQuantity(
+                                                      variantId, cartQty - 1);
+                                                },
+                                              ),
+                                              Text(
+                                                '$cartQty',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                padding: EdgeInsets.zero,
+                                                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                                                onPressed: () {
+                                                  ref.read(cartProvider.notifier).updateQuantity(
+                                                      variantId, cartQty + 1);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : SizedBox(
+                                          key: const ValueKey('add_to_bag'),
+                                          width: double.infinity,
+                                          child: OutlinedButton(
+                                            onPressed: () {
+                                              final p = _enrichedProduct ?? widget.product;
+                                              final vId = (p['default_variant']?['id'] ??
+                                                      p['variants']?[0]?['id'] ??
+                                                      p['id'])
+                                                  ?.toString() ?? '';
+                                              final vName = (p['default_variant']?['name'] ??
+                                                  p['variants']?[0]?['name'] ??
+                                                  '100ml').toString();
+                                              final price = double.tryParse(
+                                                      p['default_variant']?['price']?.toString() ??
+                                                      p['variants']?[0]?['price']?.toString() ??
+                                                      p['price']?.toString() ?? '0') ??
+                                                  0.0;
+                                              final imageUrl = (p['images'] != null &&
+                                                      (p['images'] as List).isNotEmpty
+                                                  ? p['images'][0]
+                                                  : p['image_url'] ?? '')
+                                                  .toString();
+                                              final slug = (p['slug'] ?? '').toString();
+                                              final loyalty = int.tryParse(
+                                                      p['loyalty_points']?.toString() ??
+                                                      p['default_variant']?['loyalty_points']?.toString() ?? '0') ??
+                                                  0;
+                                              ref.read(cartProvider.notifier).addItem(
+                                                    id: vId,
+                                                    name: (p['name'] ?? '').toString(),
+                                                    price: price,
+                                                    imageUrl: imageUrl,
+                                                    variantName: vName,
+                                                    loyaltyPoints: loyalty,
+                                                    slug: slug,
+                                                  );
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Added to Shopping Bag'),
+                                                  duration: Duration(seconds: 1),
+                                                ),
+                                              );
+                                            },
+                                            style: OutlinedButton.styleFrom(
+                                              side: const BorderSide(
+                                                  color: Colors.black, width: 1.5),
+                                              shape: const RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.zero),
+                                              padding:
+                                                  const EdgeInsets.symmetric(vertical: 14),
+                                            ),
+                                            child: Text(
+                                              'ADD TO BAG',
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                                letterSpacing: 1.5,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                }(),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Proceeding to Checkout')),
-                                  );
+                                  final p = _enrichedProduct ?? widget.product;
+                                  final vId = (p['default_variant']?['id'] ??
+                                          p['variants']?[0]?['id'] ??
+                                          p['id'])
+                                      ?.toString() ?? '';
+                                  final cartQty = ref
+                                      .read(cartProvider)
+                                      .where((i) => i.id == vId)
+                                      .fold(0, (sum, i) => sum + i.quantity);
+                                  if (cartQty == 0) {
+                                    final vName = (p['default_variant']?['name'] ??
+                                        p['variants']?[0]?['name'] ?? '100ml').toString();
+                                    final price = double.tryParse(
+                                            p['default_variant']?['price']?.toString() ??
+                                            p['variants']?[0]?['price']?.toString() ??
+                                            p['price']?.toString() ?? '0') ?? 0.0;
+                                    final imageUrl = (p['images'] != null &&
+                                            (p['images'] as List).isNotEmpty
+                                        ? p['images'][0]
+                                        : p['image_url'] ?? '').toString();
+                                    final slug = (p['slug'] ?? '').toString();
+                                    final loyalty = int.tryParse(
+                                            p['loyalty_points']?.toString() ??
+                                            p['default_variant']?['loyalty_points']?.toString() ?? '0') ?? 0;
+                                    ref.read(cartProvider.notifier).addItem(
+                                          id: vId,
+                                          name: (p['name'] ?? '').toString(),
+                                          price: price,
+                                          imageUrl: imageUrl,
+                                          variantName: vName,
+                                          loyaltyPoints: loyalty,
+                                          slug: slug,
+                                        );
+                                  }
+                                  context.go('/bag');
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppTheme.primaryRose,
@@ -862,15 +997,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 315,
+                      height: R.val(context, xs: 280.0, sm: 315.0, md: 340.0, lg: 370.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: R.pad(context, 16)),
                         itemCount: _sameCategoryProducts.length,
                         itemBuilder: (context, index) {
                           final p = _sameCategoryProducts[index];
                           return SizedBox(
-                            width: 175,
+                            width: R.val(context, xs: 155.0, sm: 175.0, md: 195.0, lg: 215.0),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                               child: ProductCard(product: p),
@@ -913,15 +1048,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 315,
+                      height: R.val(context, xs: 280.0, sm: 315.0, md: 340.0, lg: 370.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: R.pad(context, 16)),
                         itemCount: _sameBrandProducts.length,
                         itemBuilder: (context, index) {
                           final p = _sameBrandProducts[index];
                           return SizedBox(
-                            width: 175,
+                            width: R.val(context, xs: 155.0, sm: 175.0, md: 195.0, lg: 215.0),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                               child: ProductCard(product: p),
@@ -964,15 +1099,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 315,
+                      height: R.val(context, xs: 280.0, sm: 315.0, md: 340.0, lg: 370.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: R.pad(context, 16)),
                         itemCount: _samePriceProducts.length,
                         itemBuilder: (context, index) {
                           final p = _samePriceProducts[index];
                           return SizedBox(
-                            width: 175,
+                            width: R.val(context, xs: 155.0, sm: 175.0, md: 195.0, lg: 215.0),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                               child: ProductCard(product: p),
@@ -987,6 +1122,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
             ),
+          ),
+        ),
     );
   }
 }
