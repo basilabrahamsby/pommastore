@@ -4,7 +4,7 @@ const isServer = typeof window === 'undefined';
 // work on localhost. On live server, nginx proxies /static_uploads/ so no prefix needed.
 const getBackendUrl = (): string => {
   if (isServer) return 'http://api:8000';
-  if (window.location.hostname === 'localhost') return 'http://localhost:8020';
+  if (window.location.hostname === 'localhost') return 'http://localhost:8030';
   return ''; // live server: nginx handles /static_uploads/ at root
 };
 

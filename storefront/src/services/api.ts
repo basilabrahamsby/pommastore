@@ -3,7 +3,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: typeof window === 'undefined'
     ? 'http://api:8000/api/v1/storefront'
-    : (process.env.NEXT_PUBLIC_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8020/api/v1/storefront' : '/api/v1/storefront')),
+    : (process.env.NEXT_PUBLIC_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8030/api/v1/storefront' : '/api/v1/storefront')),
   timeout: 15000, // 15 seconds timeout for slow connections
 });
 
