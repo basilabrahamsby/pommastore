@@ -69,17 +69,21 @@ class VariantOut(BaseModel):
 
 class ProductCreate(BaseModel):
     name: str
+    name_ar: str | None = None
     slug: str | None = None
     brand_id: UUID
     category_id: UUID | None = None
     gender: GenderType | None = None
     scent_notes: ScentNotes = ScentNotes()
+    scent_notes_ar: ScentNotes = ScentNotes()
     longevity_hours: int | None = None
     sillage_rating: int | None = None
     occasion_tags: List[str] = []
     season_tags: List[str] = []
     short_description: str | None = None
+    short_description_ar: str | None = None
     full_description: str | None = None
+    full_description_ar: str | None = None
     meta_title: str | None = None
     meta_description: str | None = None
     is_active: bool = True
@@ -101,17 +105,21 @@ class ProductCreate(BaseModel):
 
 class ProductUpdate(BaseModel):
     name: str | None = None
+    name_ar: str | None = None
     slug: str | None = None
     brand_id: UUID | None = None
     category_id: UUID | None = None
     gender: GenderType | None = None
     scent_notes: ScentNotes | None = None
+    scent_notes_ar: ScentNotes | None = None
     longevity_hours: int | None = None
     sillage_rating: int | None = None
     occasion_tags: List[str] | None = None
     season_tags: List[str] | None = None
     short_description: str | None = None
+    short_description_ar: str | None = None
     full_description: str | None = None
+    full_description_ar: str | None = None
     meta_title: str | None = None
     images: List[str] | None = None
     meta_description: str | None = None
@@ -126,19 +134,25 @@ class ProductUpdate(BaseModel):
 class ProductOut(BaseModel):
     id: UUID
     name: str
+    name_ar: str | None = None
     slug: str
     brand_id: UUID
     brand_name: str = ""
+    brand_name_ar: str | None = None
     category_id: UUID | None
     category_name: str | None = None
+    category_name_ar: str | None = None
     gender: GenderType | None
     scent_notes: dict
+    scent_notes_ar: dict | None = None
     longevity_hours: int | None
     sillage_rating: int | None
     occasion_tags: list
     season_tags: list
     short_description: str | None
+    short_description_ar: str | None = None
     full_description: str | None = None
+    full_description_ar: str | None = None
     is_active: bool
     is_featured: bool
     is_new_arrival: bool
@@ -162,7 +176,7 @@ class ProductOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-    @field_validator("scent_notes", mode="before")
+    @field_validator("scent_notes", "scent_notes_ar", mode="before")
     @classmethod
     def validate_scent_notes(cls, v):
         if v is None:

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -289,7 +289,7 @@ function TrackOrderContent() {
             <div className="bg-neutral-50 p-8 md:p-12 border border-neutral-100">
               <h2 className="text-xs font-black tracking-[0.25em] text-black uppercase mb-8 flex items-center">
                 <Package className="mr-2 h-4 w-4 text-neutral-400" />
-                Track Kozmocart Order
+                Track Pommastore Order
               </h2>
               
               {error && (
@@ -528,21 +528,21 @@ function TrackOrderContent() {
                       <div className="space-y-3">
                         <div className="flex justify-between text-[11px] font-medium tracking-wide">
                           <span className="text-neutral-500 uppercase">Subtotal</span>
-                          <span className="text-black">₹{Number(orderData.subtotal || 0).toLocaleString('en-IN')}</span>
+                          <span className="text-black">AED {Number(orderData.subtotal || 0).toLocaleString('en-IN')}</span>
                         </div>
                         {orderData.discount_amount > 0 && (
                           <div className="flex justify-between text-[11px] font-medium tracking-wide">
                             <span className="text-red-500 uppercase">Discount</span>
-                            <span className="text-red-500">-₹{Number(orderData.discount_amount).toLocaleString('en-IN')}</span>
+                            <span className="text-red-500">-AED {Number(orderData.discount_amount).toLocaleString('en-IN')}</span>
                           </div>
                         )}
                         <div className="flex justify-between text-[11px] font-medium tracking-wide">
                           <span className="text-neutral-500 uppercase">Shipping</span>
-                          <span className="text-black">₹{Number(orderData.shipping_amount || 0).toLocaleString('en-IN')}</span>
+                          <span className="text-black">AED {Number(orderData.shipping_amount || 0).toLocaleString('en-IN')}</span>
                         </div>
                         <div className="flex justify-between text-sm font-black pt-3 border-t border-neutral-100">
                           <span className="uppercase tracking-widest text-[10px]">Grand Total</span>
-                          <span className="text-black">₹{Number(orderData.total_amount).toLocaleString('en-IN')}</span>
+                          <span className="text-black">AED {Number(orderData.total_amount).toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     </div>
@@ -570,7 +570,7 @@ function TrackOrderContent() {
                                 {item.size_ml ? `${item.size_ml}ML` : 'Standard'} • QTY: {item.quantity}
                               </p>
                             </div>
-                            <p className="text-xs font-black text-black">₹{item.total_price.toLocaleString('en-IN')}</p>
+                            <p className="text-xs font-black text-black">AED {item.total_price.toLocaleString('en-IN')}</p>
                           </div>
                         </div>
                       </div>
@@ -650,7 +650,7 @@ function TrackOrderContent() {
               </div>
 
               <h3 className="text-xl text-gray-900 font-normal tracking-tight mb-2">Sign in</h3>
-              <p className="text-[13px] text-gray-600 font-normal mb-8">to continue to <strong className="text-black">Kozmocart</strong></p>
+              <p className="text-[13px] text-gray-600 font-normal mb-8">to continue to <strong className="text-black">Pommastore</strong></p>
 
               <form onSubmit={handleGoogleAuth} className="text-left space-y-6">
                 <div className="relative group border border-gray-300 rounded p-1 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600 transition-all">

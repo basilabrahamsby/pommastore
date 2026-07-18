@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ArrowUpRight
 } from 'lucide-react';
+import { useTranslation } from '@/locales/i18nContext';
 
 const getSkuProductName = (sku: string, products: any[]) => {
    for (const prod of products) {
@@ -28,6 +29,7 @@ const getSkuProductName = (sku: string, products: any[]) => {
 };
 
 export default function Home() {
+   const { t, locale } = useTranslation();
    const [newArrivals, setNewArrivals] = useState([]);
    const [bestsellers, setBestsellers] = useState([]);
    const [favoriteProducts, setFavoriteProducts] = useState([]);
@@ -108,7 +110,7 @@ export default function Home() {
    useEffect(() => {
       const fetchHomeData = async () => {
          try {
-            const res = await api.get('/homepage');
+            const res = await api.get(`/homepage?lang=${locale}`, { headers: { 'Accept-Language': locale } });
             const data = res.data || {};
             
             setNewArrivals(data.new_arrivals || []);
@@ -126,13 +128,13 @@ export default function Home() {
          }
       };
       fetchHomeData();
-   }, []);
+   }, [locale]);
 
    if (loading) {
       return (
          <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center font-sans">
             <div className="relative mb-8 text-center">
-               <img src="/logo.png" alt="Kozmocart Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
+               <img src="/logo.png" alt="Pommastore Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
                <div className="absolute -bottom-4 left-0 w-full h-[1px] bg-neutral-100 overflow-hidden">
                   <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
                </div>
@@ -156,6 +158,19 @@ export default function Home() {
        return `/shop?product_id=${productId}`;
     };
 
+    const isAr = locale === 'ar';
+    const defaultExquisite = isAr ? 'طھط´ظƒظٹظ„ط© ط±ط§ط¦ط¹ط©' : 'Exquisite Collection';
+    const defaultPrestige = isAr ? 'ظ…ط¬ظ…ظˆط¹ط© ط§ظ„ظ†ط®ط¨ط©' : 'Prestige Selection';
+    const defaultExclusiveTitle = isAr ? 'ط¹ط·ظˆط± ط­طµط±ظٹط©' : 'Exclusive Fragrance';
+    const defaultPremiumTitle = isAr ? 'ط¹ط·ظˆط± ظپط§ط®ط±ط©' : 'Premium Fragrances';
+    const defaultCuratedTitle = isAr ? 'ط¹ط·ظˆط± ظ…ظ†ط³ظ‚ط© ط¨ط¯ظ‚ط©' : 'Top Curated Fragrances';
+    const defaultDescShort = isAr 
+       ? 'ظ†ط­ظ† ظ†ظ‚ط¯ظ… ط£ظپط¶ظ„ ط¹ط·ظˆط± ط§ظ„ظ†ظٹط´ ط§ظ„ظ…طھط§ط­ط© ظپظٹ ط§ظ„ط³ظˆظ‚ ظˆط§ظ„ظ…ط®طھط§ط±ط© ط¨ط¹ظ†ط§ظٹط© ظ…ظ† ظ‚ط¨ظ„ ظپط±ظٹظ‚ ط§ظ„ط®ط¨ط±ط§ط، ظ„ط¯ظٹظ†ط§.' 
+       : 'We offer the best niche fragrances on the market selected by our team of experts.';
+    const defaultDescLong = isAr
+        ? 'نحن نقدم أفضل عطور النيش المتاحة في السوق والمختارة بعناية من قبل فريق الخبراء لدينا. عش تجربة مجموعة عطور النخبة الفاخرة المنسقة ببراعة والمختارة بعناية لتناسب جميع الأذواق والمناسبات.'
+        : 'We offer the best niche fragrances on the market selected by our team of experts. Live the experience of the prestige elite collection masterfully curated and selected to suit all tastes and occasions.';
+    
     // Resolve array layout for Grid Ads 1
     const gridAds1Raw = cmsLayout?.grid_ads_1;
     const gridAds1List: any[] = Array.isArray(gridAds1Raw) 
@@ -166,25 +181,25 @@ export default function Home() {
     
     const gridAds1ToUse = gridAds1List.length > 0 ? gridAds1List.map((item: any) => ({
        left_image: item.left_image || '/model-banner-1.png',
-       left_title: item.left_title || 'Exclusive Fragrance',
-       left_subtitle: item.left_subtitle || 'Exquisite Collection',
-       left_desc: item.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_title: isAr ? (item.left_title_ar || item.left_title || defaultExclusiveTitle) : (item.left_title || defaultExclusiveTitle),
+       left_subtitle: isAr ? (item.left_subtitle_ar || item.left_subtitle || defaultExquisite) : (item.left_subtitle || defaultExquisite),
+       left_desc: isAr ? (item.left_desc_ar || item.left_desc || defaultDescShort) : (item.left_desc || defaultDescShort),
        left_product_id: item.left_product_id || '',
        right_image: item.right_image || '/model-banner-2.png',
-       right_title: item.right_title || 'Premium Fragrances',
-       right_subtitle: item.right_subtitle || 'Prestige Selection',
-       right_desc: item.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_title: isAr ? (item.right_title_ar || item.right_title || defaultPremiumTitle) : (item.right_title || defaultPremiumTitle),
+       right_subtitle: isAr ? (item.right_subtitle_ar || item.right_subtitle || defaultPrestige) : (item.right_subtitle || defaultPrestige),
+       right_desc: isAr ? (item.right_desc_ar || item.right_desc || defaultDescShort) : (item.right_desc || defaultDescShort),
        right_product_id: item.right_product_id || ''
     })) : [{
        left_image: '/model-banner-1.png',
-       left_title: 'Exclusive Fragrance',
-       left_subtitle: 'Exquisite Collection',
-       left_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_title: defaultExclusiveTitle,
+       left_subtitle: defaultExquisite,
+       left_desc: defaultDescShort,
        left_product_id: '',
        right_image: '/model-banner-2.png',
-       right_title: 'Premium Fragrances',
-       right_subtitle: 'Prestige Selection',
-       right_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_title: defaultPremiumTitle,
+       right_subtitle: defaultPrestige,
+       right_desc: defaultDescShort,
        right_product_id: ''
     }];
 
@@ -198,15 +213,15 @@ export default function Home() {
 
     const gridAds2ToUse = gridAds2List.length > 0 ? gridAds2List.map((item: any) => ({
        image: item.image || '/model-banner-3.png',
-       title: item.title || 'Top Curated Fragrances',
-       subtitle: item.subtitle || 'Prestige Selection',
-       desc: item.desc || 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+       title: isAr ? (item.title_ar || item.title || defaultCuratedTitle) : (item.title || defaultCuratedTitle),
+       subtitle: isAr ? (item.subtitle_ar || item.subtitle || defaultPrestige) : (item.subtitle || defaultPrestige),
+       desc: isAr ? (item.desc_ar || item.desc || defaultDescLong) : (item.desc || defaultDescLong),
        product_id: item.product_id || ''
     })) : [{
        image: '/model-banner-3.png',
-       title: 'Top Curated Fragrances',
-       subtitle: 'Prestige Selection',
-       desc: 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.',
+       title: defaultCuratedTitle,
+       subtitle: defaultPrestige,
+       desc: defaultDescLong,
        product_id: ''
     }];
 
@@ -220,25 +235,25 @@ export default function Home() {
 
     const gridAds3ToUse = gridAds3List.length > 0 ? gridAds3List.map((item: any) => ({
        left_image: item.left_image || '/model-banner-1.png',
-       left_title: item.left_title || 'Top Curated Fragrances',
-       left_subtitle: item.left_subtitle || 'Exquisite Collection',
-       left_desc: item.left_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_title: isAr ? (item.left_title_ar || item.left_title || defaultCuratedTitle) : (item.left_title || defaultCuratedTitle),
+       left_subtitle: isAr ? (item.left_subtitle_ar || item.left_subtitle || defaultExquisite) : (item.left_subtitle || defaultExquisite),
+       left_desc: isAr ? (item.left_desc_ar || item.left_desc || defaultDescShort) : (item.left_desc || defaultDescShort),
        left_product_id: item.left_product_id || '',
        right_image: item.right_image || '/model-banner-3.png',
-       right_title: item.right_title || 'Top Curated Fragrances',
-       right_subtitle: item.right_subtitle || 'Prestige Selection',
-       right_desc: item.right_desc || 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_title: isAr ? (item.right_title_ar || item.right_title || defaultCuratedTitle) : (item.right_title || defaultCuratedTitle),
+       right_subtitle: isAr ? (item.right_subtitle_ar || item.right_subtitle || defaultPrestige) : (item.right_subtitle || defaultPrestige),
+       right_desc: isAr ? (item.right_desc_ar || item.right_desc || defaultDescShort) : (item.right_desc || defaultDescShort),
        right_product_id: item.right_product_id || ''
     })) : [{
        left_image: '/model-banner-1.png',
-       left_title: 'Top Curated Fragrances',
-       left_subtitle: 'Exquisite Collection',
-       left_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       left_title: defaultCuratedTitle,
+       left_subtitle: defaultExquisite,
+       left_desc: defaultDescShort,
        left_product_id: '',
        right_image: '/model-banner-3.png',
-       right_title: 'Top Curated Fragrances',
-       right_subtitle: 'Prestige Selection',
-       right_desc: 'We offer the best niche fragrances on the market selected by our team of experts.',
+       right_title: defaultCuratedTitle,
+       right_subtitle: defaultPrestige,
+       right_desc: defaultDescShort,
        right_product_id: ''
     }];
 
@@ -247,14 +262,14 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-         <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[350px] md:h-[420px] lg:h-[480px] bg-black overflow-hidden">
+         <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[400px] md:h-[480px] lg:h-[550px] bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
-               const slideTitle = slide.title;
-               const slideSubtitle = isPromo ? `${slide.discount_type} • CODE: ${slide.code}` : slide.subtitle;
-               const slideDesc = isPromo ? (slide.subtitle || 'Exclusive fragrance savings & curated collections.') : slide.desc;
-               const slideCta = isPromo ? 'Claim Offer' : (slide.cta || 'Shop Collection');
+               const slideTitle = isAr ? (slide.title_ar || slide.title) : slide.title;
+               const slideSubtitle = isPromo ? `${slide.discount_type} • CODE: ${slide.code}` : (isAr ? (slide.subtitle_ar || slide.subtitle) : slide.subtitle);
+               const slideDesc = isPromo ? (slide.subtitle || 'Exclusive fragrance savings & curated collections.') : (isAr ? (slide.desc_ar || slide.desc) : slide.desc);
+               const slideCta = isPromo ? 'Claim Offer' : (isAr ? (slide.cta_ar || slide.cta) : slide.cta);
                
                let slideLink = isPromo ? '/offers' : '/shop';
                if (slide.link_type === 'product' && slide.product_slug) {
@@ -300,7 +315,7 @@ export default function Home() {
                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
                      <div className="absolute inset-0 flex items-end pb-12 sm:pb-14 md:pb-16">
-                        <div className="max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col items-start text-left">
+                        <div className={`max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col ${isAr ? 'items-end text-right' : 'items-start text-left'}`}>
                            <span className={`text-[9px] md:text-xs font-semibold tracking-[0.3em] text-accent uppercase mb-1 md:mb-3 transition-all duration-1000 delay-300 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                               } font-montserrat`}>
                               {slideSubtitle}
@@ -342,16 +357,20 @@ export default function Home() {
          <section className="bg-neutral-50 py-5 border-b border-neutral-100">
             <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-2 md:flex md:flex-wrap md:justify-between gap-x-4 gap-y-5 justify-items-center">
                {(cmsLayout?.trust_badges?.length > 0 ? cmsLayout.trust_badges : [
-                 { title: 'Free Shipping', sub: 'On orders over ₹999/-', icon: '🚚' },
+                 { title: 'Free Shipping', sub: 'On orders over AED 999', icon: '🚚' },
                  { title: '100% Authentic', sub: 'Genuine & original products only', icon: '✅' },
                  { title: 'Easy Returns', sub: '7-day hassle-free return policy', icon: '🔄' },
-                 { title: 'Secure Payments', sub: 'UPI, Cards, Razorpay accepted', icon: '🔒' },
+                 { title: 'Secure Payments', sub: 'Cards, Stripe Checkout accepted', icon: '🔒' },
                ]).map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center space-x-3 min-w-[140px] sm:min-w-[190px]">
                      <div className="text-xl flex-shrink-0">{item.icon || '★'}</div>
                      <div>
-                        <p className="text-[10px] font-black tracking-widest uppercase text-black">{item.title}</p>
-                        <p className="text-[9px] font-medium text-neutral-500 tracking-wider">{item.sub}</p>
+                        <p className="text-[10px] font-black tracking-widest uppercase text-black">
+                           {isAr ? (item.title_ar || item.title) : item.title}
+                        </p>
+                        <p className="text-[9px] font-medium text-neutral-500 tracking-wider">
+                           {isAr ? (item.sub_ar || item.sub) : item.sub}
+                        </p>
                      </div>
                   </div>
                ))}
@@ -362,9 +381,9 @@ export default function Home() {
          {categories.length > 0 && (
           <section className="pt-12 pb-6 bg-white border-b border-neutral-50 overflow-hidden">
              <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-4">
-                <span className="text-[9px] font-medium tracking-[0.25em] text-neutral-400 uppercase mb-2 block">Discover More</span>
+                <span className="text-[9px] font-medium tracking-[0.25em] text-neutral-400 uppercase mb-2 block">{t('discover_more')}</span>
                 <h2 className="text-2xl md:text-3xl font-nelphim font-medium text-black leading-none inline-block uppercase tracking-wide">
-                   Signature Categories
+                   {t('signature_categories')}
                 </h2>
                 <div className="w-12 h-[2.5px] bg-accent mx-auto mt-2.5" />
              </div>
@@ -424,11 +443,11 @@ export default function Home() {
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                <div className="flex justify-between items-end mb-16">
                   <div>
-                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">Store Favorites</span>
-                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">Popular Picks</h2>
+                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">{t('store_favorites')}</span>
+                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">{t('popular_picks')}</h2>
                   </div>
                   <Link href="/shop" className="group flex items-center space-x-3 text-[11px] font-bold tracking-widest text-black uppercase hover:text-accent transition-colors font-sans">
-                     <span>Explore All</span>
+                     <span>{t('explore_all')}</span>
                      <ChevronRight size={14} className="group-hover:translate-x-1.5 transition-transform text-accent" />
                   </Link>
                </div>
@@ -502,7 +521,7 @@ export default function Home() {
                                           {promo.min_purchase_amount > 0 && (
                                              <div className="flex items-start">
                                                 <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
-                                                <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
+                                                <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
                                              </div>
                                           )}
                                        </>
@@ -510,12 +529,12 @@ export default function Home() {
                                        <>
                                           <div className="flex items-start">
                                              <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
-                                             <span className="text-white font-medium">Flat ₹{promo.flat_discount_amount?.toLocaleString()} OFF</span>
+                                             <span className="text-white font-medium">Flat AED {promo.flat_discount_amount?.toLocaleString()} OFF</span>
                                           </div>
                                           {promo.min_purchase_amount > 0 && (
                                              <div className="flex items-start">
                                                 <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
-                                                <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
+                                                <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
                                              </div>
                                           )}
                                        </>
@@ -576,11 +595,11 @@ export default function Home() {
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                <div className="flex justify-between items-end mb-16">
                   <div>
-                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">Just Arrived</span>
-                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">New Arrivals</h2>
+                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">{t('just_arrived')}</span>
+                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">{t('new_arrivals')}</h2>
                   </div>
                   <Link href="/shop" className="group flex items-center space-x-3 text-[11px] font-bold tracking-widest text-black uppercase hover:text-accent transition-colors font-sans">
-                     <span>View Collection</span>
+                     <span>{t('view_collection')}</span>
                      <ChevronRight size={14} className="group-hover:translate-x-1.5 transition-transform text-accent" />
                   </Link>
                </div>
@@ -638,7 +657,7 @@ export default function Home() {
                                           href={getProductRedirectUrl(slide.left_product_id)} 
                                           className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
                                        >
-                                          Buy Now
+                                          {t('buy_now')}
                                        </Link>
                                     </div>
                                  </div>
@@ -673,7 +692,7 @@ export default function Home() {
                                           href={getProductRedirectUrl(slide.right_product_id)} 
                                           className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
                                        >
-                                          Buy Now
+                                          {t('buy_now')}
                                        </Link>
                                     </div>
                                  </div>
@@ -719,7 +738,7 @@ export default function Home() {
                                  }`}
                               >
                                  {/* Left: Text Content */}
-                                 <div className="w-full md:w-[60%] h-[260px] md:h-full bg-[#1b3b22] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-left text-white">
+                                 <div className={`w-full md:w-[60%] h-[260px] md:h-full bg-[#1b3b22] p-6 sm:p-10 md:p-12 flex flex-col justify-center text-white ${isAr ? 'text-right' : 'text-left'}`}>
                                     <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-white/75 uppercase mb-2 block font-sans">{slide.subtitle}</span>
                                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif tracking-wide uppercase leading-none mb-3">{slide.title}</h2>
                                     <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed font-light mb-5 sm:mb-6 tracking-wide max-w-xl line-clamp-3">
@@ -729,7 +748,7 @@ export default function Home() {
                                        href={getProductRedirectUrl(slide.product_id)} 
                                        className="bg-black hover:bg-neutral-900 text-white text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase py-2.5 px-6 sm:py-3.5 sm:px-8 text-center max-w-[150px] sm:max-w-[180px] transition-all duration-300 rounded-sm font-sans"
                                     >
-                                       Buy Now
+                                       {t('buy_now')}
                                     </Link>
                                  </div>
                                  {/* Right: Large Image */}
@@ -788,11 +807,11 @@ export default function Home() {
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
                <div className="flex justify-between items-end mb-16">
                   <div>
-                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">Curated Selection</span>
-                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">Favorite Products</h2>
+                     <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-3 block">{t('curated_selection')}</span>
+                     <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">{t('favorite_products')}</h2>
                   </div>
                   <Link href="/shop" className="group flex items-center space-x-3 text-[11px] font-bold tracking-widest text-black uppercase hover:text-accent transition-colors font-sans">
-                     <span>Explore Collection</span>
+                     <span>{t('explore_collection')}</span>
                      <ChevronRight size={14} className="group-hover:translate-x-1.5 transition-transform text-accent" />
                   </Link>
                </div>
@@ -835,7 +854,7 @@ export default function Home() {
                               />
                            </div>
                            {/* Right half: Text Content */}
-                           <div className="w-[55%] bg-[#8c5a2b] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                           <div className={`w-[55%] bg-[#8c5a2b] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-white ${isAr ? 'text-right' : 'text-left'}`}>
                               <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{slide.left_subtitle}</span>
                               <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{slide.left_title}</h3>
                               <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
@@ -845,7 +864,7 @@ export default function Home() {
                                  href={getProductRedirectUrl(slide.left_product_id)} 
                                  className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
                               >
-                                 Buy Now
+                                 {t('buy_now')}
                               </Link>
                            </div>
                         </div>
@@ -870,7 +889,7 @@ export default function Home() {
                               />
                            </div>
                            {/* Right half: Text Content */}
-                           <div className="w-[55%] bg-[#1b3b22] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-left text-white">
+                           <div className={`w-[55%] bg-[#1b3b22] p-4 sm:p-6 md:p-8 flex flex-col justify-center text-white ${isAr ? 'text-right' : 'text-left'}`}>
                               <span className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-white/75 uppercase mb-1 sm:mb-2">{slide.right_subtitle}</span>
                               <h3 className="text-base sm:text-lg md:text-2xl font-serif tracking-wide uppercase leading-tight mb-2 truncate">{slide.right_title}</h3>
                               <p className="text-[10px] text-white/80 leading-relaxed font-light mb-4 sm:mb-6 tracking-wide line-clamp-2 md:line-clamp-3">
@@ -880,7 +899,7 @@ export default function Home() {
                                  href={getProductRedirectUrl(slide.right_product_id)} 
                                  className="bg-black hover:bg-neutral-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase py-2.5 px-5 sm:py-3 sm:px-6 text-center max-w-[130px] transition-all duration-300 rounded-sm"
                               >
-                                 Buy Now
+                                 {t('buy_now')}
                               </Link>
                            </div>
                         </div>
@@ -910,11 +929,11 @@ export default function Home() {
           <section className="py-10 md:py-12 bg-[#FAF8F5] border-t border-b border-neutral-100 relative overflow-hidden">
              <div className="max-w-[1400px] mx-auto px-8 mb-6 flex justify-between items-end font-sans">
                 <div>
-                   <span className="text-[9px] font-medium tracking-[0.2em] text-accent uppercase mb-3 block">The Global Houses</span>
-                   <h2 className="text-2xl md:text-3xl font-serif font-normal text-neutral-900 leading-none uppercase tracking-wide">Elite Perfumery</h2>
+                   <span className="text-[9px] font-medium tracking-[0.2em] text-accent uppercase mb-3 block">{t('global_houses')}</span>
+                   <h2 className="text-2xl md:text-3xl font-serif font-normal text-neutral-900 leading-none uppercase tracking-wide">{t('elite_perfumery')}</h2>
                 </div>
                 <Link href="/brands" className="text-neutral-900 text-[11px] font-medium tracking-[0.2em] uppercase border-b border-neutral-900/10 pb-2 hover:border-accent hover:text-accent hover:border-accent transition-all duration-700">
-                   Explore All Houses
+                   {t('explore_all_houses')}
                 </Link>
              </div>
 
@@ -938,7 +957,7 @@ export default function Home() {
                              : (brand.banner_url 
                                 ? getMediaUrl(brand.banner_url) 
                                 : (productImage || null));
-                          const desc = brand.description || `Discover the signature collections and exclusive raw extractions crafted by the luxury house of ${brand.name}.`;
+                          const desc = locale === 'ar' ? (brand.description || `اكتشف المجموعات المميزة والمستخلصات الخام الحصرية التي ابتكرتها دار العطور الفاخرة ${brand.name}.`) : (brand.description || `Discover the signature collections and exclusive raw extractions crafted by the luxury house of ${brand.name}.`);
                           
                           return (
                              <Link
@@ -971,7 +990,7 @@ export default function Home() {
                                       />
                                    ) : (
                                       <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
-                                         <span className="text-accent text-xl font-serif italic">{brand.name?.[0] || '✦'}</span>
+                                         <span className="text-accent text-xl font-serif italic">{brand.name?.[0] || 'âœ¦'}</span>
                                       </div>
                                    )}
                                 </div>
@@ -979,7 +998,7 @@ export default function Home() {
                                 {/* Content Details */}
                                 <div className="p-6 pt-1 pb-8 flex flex-col items-center text-center flex-1 w-full">
                                    <span className="text-[9px] font-bold tracking-[0.25em] text-accent uppercase mb-2 block font-sans">
-                                      Signature House
+                                      {t('signature_house')}
                                    </span>
 
                                    <h3 className="text-xl sm:text-2xl font-serif font-normal text-neutral-900 uppercase tracking-wider mb-2 leading-none group-hover:text-accent transition-colors">
@@ -991,7 +1010,7 @@ export default function Home() {
                                    </p>
 
                                    <div className="bg-transparent border border-neutral-200 group-hover:border-accent group-hover:bg-accent text-neutral-800 group-hover:text-white py-2.5 px-6 text-[9px] font-bold tracking-[0.25em] uppercase transition-all duration-500 rounded-full flex items-center gap-2 mt-auto font-sans">
-                                      <span>Explore House</span>
+                                      <span>{t('explore_house')}</span>
                                       <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform" />
                                    </div>
                                 </div>
@@ -1088,24 +1107,24 @@ export default function Home() {
                         {/* Desktop image */}
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.men)} 
-                           alt="Shop Men" 
+                           alt="{t('shop_men')}" 
                            className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
                         />
                         {/* Mobile image */}
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.men_mobile || cmsLayout?.split_banners?.men)} 
-                           alt="Shop Men" 
+                           alt="{t('shop_men')}" 
                            className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
                         />
                         <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-1000" />
                         <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center pb-12">
-                           <h3 className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-300 mb-2 font-sans">Refined & Bold</h3>
-                           <h2 className="text-3xl md:text-4xl font-serif font-normal tracking-wider mb-6 uppercase text-white">For Him</h2>
+                           <h3 className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-300 mb-2 font-sans">{t('refined_bold')}</h3>
+                           <h2 className="text-3xl md:text-4xl font-serif font-normal tracking-wider mb-6 uppercase text-white">{t('for_him')}</h2>
                            <Link 
                               href="/shop?gender=Men" 
                               className="bg-transparent border border-white hover:bg-white text-white hover:text-black text-[10px] font-bold tracking-[0.2em] uppercase px-8 py-3.5 transition-all duration-700 rounded-full font-sans"
                            >
-                              Shop Men
+                              {t('shop_men')}
                            </Link>
                         </div>
                      </div>
@@ -1113,8 +1132,8 @@ export default function Home() {
                      {/* Column 2: The Privilege Collection */}
                      <div className="bg-neutral-50 border border-neutral-100/80 rounded shadow-sm p-6 sm:p-8 flex flex-col justify-between items-center text-center h-[340px] sm:h-[380px] md:h-[420px]">
                         <div className="w-full">
-                           <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Kozmo Rewards</span>
-                           <h3 className="text-xl md:text-2xl font-nelphim font-black text-neutral-900 uppercase tracking-wider mb-2">The Privilege Collection.</h3>
+                           <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">{t('kozmo_rewards')}</span>
+                           <h3 className="text-xl md:text-2xl font-nelphim font-black text-neutral-900 uppercase tracking-wider mb-2">{t('privilege_collection')}</h3>
                            <div className="w-8 h-[1.5px] bg-accent mx-auto mb-6" />
                         </div>
 
@@ -1154,7 +1173,7 @@ export default function Home() {
                            href="/rewards"
                            className="text-[9px] font-black tracking-[0.3em] uppercase border-b border-neutral-950/20 hover:border-neutral-950 pb-1 hover:text-accent transition-all duration-500 mt-6"
                         >
-                           View Full Gallery
+                           {t('view_full_gallery')}
                         </Link>
                      </div>
 
@@ -1163,24 +1182,24 @@ export default function Home() {
                         {/* Desktop image */}
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.women)} 
-                           alt="Shop Women" 
+                           alt="{t('shop_women')}" 
                            className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
                         />
                         {/* Mobile image */}
                         <img 
                            src={getMediaUrl(cmsLayout?.split_banners?.women_mobile || cmsLayout?.split_banners?.women)} 
-                           alt="Shop Women" 
+                           alt="{t('shop_women')}" 
                            className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2.5s] ease-out" 
                         />
                         <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-1000" />
                         <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center pb-12">
-                           <h3 className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-300 mb-2 font-sans">Elegant & Sweet</h3>
-                           <h2 className="text-3xl md:text-4xl font-serif font-normal tracking-wider mb-6 uppercase text-white">For Her</h2>
+                           <h3 className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-300 mb-2 font-sans">{t('elegant_sweet')}</h3>
+                           <h2 className="text-3xl md:text-4xl font-serif font-normal tracking-wider mb-6 uppercase text-white">{t('for_her')}</h2>
                            <Link 
                               href="/shop?gender=Women" 
                               className="bg-transparent border border-white hover:bg-white text-white hover:text-black text-[10px] font-bold tracking-[0.2em] uppercase px-8 py-3.5 transition-all duration-700 rounded-full font-sans"
                            >
-                              Shop Women
+                              {t('shop_women')}
                            </Link>
                         </div>
                      </div>
@@ -1193,30 +1212,30 @@ export default function Home() {
             <section className="grid grid-cols-1 md:grid-cols-2 gap-1 py-1 bg-white">
                <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
                   {/* Desktop image */}
-                  <img src={getMediaUrl(cmsLayout?.split_banners?.men)} alt="Shop Men" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.men)} alt="{t('shop_men')}" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
                   {/* Mobile image */}
-                  <img src={getMediaUrl(cmsLayout?.split_banners?.men_mobile || cmsLayout?.split_banners?.men)} alt="Shop Men" className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.men_mobile || cmsLayout?.split_banners?.men)} alt="{t('shop_men')}" className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
                      <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Refined & Bold</h3>
                      <h2 className="text-4xl md:text-5xl font-serif font-normal tracking-wide mb-6 uppercase">For Him</h2>
                      <Link href="/shop?gender=Men" className="bg-white hover:bg-accent text-black hover:text-white text-[11px] font-bold tracking-[0.25em] uppercase px-12 py-4 transition-all duration-700 shadow-2xl font-sans">
-                        Shop Men
+                        {t('shop_men')}
                      </Link>
                   </div>
                </div>
 
                <div className="relative h-[500px] md:h-[600px] group overflow-hidden bg-neutral-900">
                   {/* Desktop image */}
-                  <img src={getMediaUrl(cmsLayout?.split_banners?.women)} alt="Shop Women" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.women)} alt="{t('shop_women')}" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
                   {/* Mobile image */}
-                  <img src={getMediaUrl(cmsLayout?.split_banners?.women_mobile || cmsLayout?.split_banners?.women)} alt="Shop Women" className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
+                  <img src={getMediaUrl(cmsLayout?.split_banners?.women_mobile || cmsLayout?.split_banners?.women)} alt="{t('shop_women')}" className="block md:hidden absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[2s]" />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center">
                      <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-300 mb-3 font-sans">Elegant & Sweet</h3>
                      <h2 className="text-4xl md:text-5xl font-serif font-normal tracking-wide mb-6 uppercase">For Her</h2>
                      <Link href="/shop?gender=Women" className="bg-white hover:bg-accent text-black hover:text-white text-[11px] font-bold tracking-[0.25em] uppercase px-12 py-4 transition-all duration-700 shadow-2xl font-sans">
-                        Shop Women
+                        {t('shop_women')}
                      </Link>
                   </div>
                </div>
@@ -1248,7 +1267,7 @@ export default function Home() {
                 <div className="flex items-center justify-center gap-3 mb-5">
                    <div className="w-8 h-[1px] bg-accent/40" />
                    <span className="text-[9px] font-bold tracking-[0.4em] text-accent uppercase font-sans">
-                      {cmsLayout?.mid_quote?.author || 'The Essence of Beauty'}
+                      {isAr ? (cmsLayout?.mid_quote?.author_ar || cmsLayout?.mid_quote?.author || 'The Essence of Beauty') : (cmsLayout?.mid_quote?.author || 'The Essence of Beauty')}
                    </span>
                    <div className="w-8 h-[1px] bg-accent/40" />
                 </div>
@@ -1256,7 +1275,7 @@ export default function Home() {
                 {/* Main quote */}
                 <blockquote className="relative text-xl sm:text-2xl md:text-[2.25rem] font-serif font-normal uppercase tracking-wide text-neutral-800 leading-[1.3] mb-6 px-6">
                    <span className="text-neutral-200 text-5xl leading-none absolute -top-4 -left-1 select-none font-serif">&ldquo;</span>
-                   {cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It\u2019s a reference mark."}
+                   {isAr ? (cmsLayout?.mid_quote?.text_ar || cmsLayout?.mid_quote?.text || "عطر يتبعك، يطاردك ويبقى خلفك.") : (cmsLayout?.mid_quote?.text || "Perfume follows you; it chases you and lingers behind you. It\u2019s a reference mark.")}
                    <span className="text-neutral-200 text-5xl leading-none absolute -bottom-8 -right-1 select-none font-serif">&rdquo;</span>
                 </blockquote>
 
@@ -1270,9 +1289,9 @@ export default function Home() {
                 </div>
 
                 {/* Tagline + CTA */}
-                <p className="text-[9px] font-medium tracking-[0.4em] uppercase text-neutral-400 font-sans mb-6">Authentic Fragrances Only</p>
+                <p className="text-[9px] font-medium tracking-[0.4em] uppercase text-neutral-400 font-sans mb-6">{t('authentic_only')}</p>
                 <Link href="/shop" className="group inline-flex items-center gap-3 border border-neutral-800 hover:border-accent hover:bg-accent/5 text-neutral-800 hover:text-accent text-[9px] font-bold tracking-[0.3em] uppercase px-6 py-3 transition-all duration-500 font-sans rounded-sm">
-                   <span>Explore Collection</span>
+                   <span>{t('explore_collection')}</span>
                    <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
              </div>
@@ -1283,14 +1302,14 @@ export default function Home() {
          {cmsLayout?.house_favorites?.length > 0 && (
          <section className="relative w-full bg-[#fcfcfc] py-12 md:py-16 overflow-hidden border-t border-neutral-100">
             <div className="max-w-[1400px] mx-auto px-8 text-center mb-8 md:mb-10 relative z-20">
-               <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">The Elite List</span>
-               <h2 className="text-3xl md:text-4xl font-nelphim font-black text-black leading-normal uppercase tracking-wider">House Favorites</h2>
+               <span className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-3 block">{t('the_elite_list')}</span>
+               <h2 className="text-3xl md:text-4xl font-nelphim font-black text-black leading-normal uppercase tracking-wider">{t('house_favorites')}</h2>
                <div className="w-12 h-[2px] bg-accent mx-auto mt-3" />
             </div>
 
             <div className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-full text-center pointer-events-none">
                <h2 className="text-white text-5xl md:text-[7rem] font-black tracking-[0.2em] leading-none mix-blend-overlay uppercase filter drop-shadow-2xl opacity-70">
-                  LEGENDARY
+                  {t('legendary')}
                </h2>
             </div>
 
@@ -1309,7 +1328,7 @@ export default function Home() {
 
                      <div className="relative z-10 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-6 text-center flex justify-center items-center min-h-[80px] border-t border-white/5 backdrop-blur-[2px]">
                         <span className="text-white font-black text-[12px] tracking-[0.2em] uppercase group-hover:tracking-[0.4em] transition-all duration-700">
-                           {item.name}
+                           {isAr ? (item.name_ar || item.name) : item.name}
                         </span>
                      </div>
                   </div>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+﻿from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -581,31 +581,31 @@ async def update_order_status(
     if to_phone and status_actually_changed:
         status = body.status
         if status == OrderStatus.confirmed:
-            msg = f"Your order #{enriched.order_number} has been confirmed at KOZMOCART. We are preparing it for shipping."
+            msg = f"Your order #{enriched.order_number} has been confirmed at POMMASTORE. We are preparing it for shipping."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.processing:
-            msg = f"Your order #{enriched.order_number} is now being processed and packed at KOZMOCART warehouse."
+            msg = f"Your order #{enriched.order_number} is now being processed and packed at POMMASTORE warehouse."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.packed:
-            msg = f"Your order #{enriched.order_number} is packed and ready for courier pickup at KOZMOCART. Shipping soon!"
+            msg = f"Your order #{enriched.order_number} is packed and ready for courier pickup at POMMASTORE. Shipping soon!"
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.shipped:
             carrier = body.carrier or enriched.carrier or "Delhivery"
             tracking_number = body.tracking_number or enriched.tracking_number or ""
-            msg = f"Good news! Your order #{enriched.order_number} has been shipped via {carrier}. AWB: {tracking_number}. Track: https://kozmocart.com/track-order?order={enriched.order_number}&contact={to_phone}"
+            msg = f"Good news! Your order #{enriched.order_number} has been shipped via {carrier}. AWB: {tracking_number}. Track: https://pommastore.com/track-order?order={enriched.order_number}&contact={to_phone}"
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.out_for_delivery:
             msg = f"Your order #{enriched.order_number} is out for delivery today! Our delivery executive will arrive soon."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.delivered:
-            msg = f"Delivered! Your order #{enriched.order_number} has arrived. Thank you for shopping with KOZMOCART!"
+            msg = f"Delivered! Your order #{enriched.order_number} has arrived. Thank you for shopping with POMMASTORE!"
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.completed:
-            msg = f"Your order #{enriched.order_number} is now complete. Thank you for shopping at KOZMOCART! Loyalty points updated."
+            msg = f"Your order #{enriched.order_number} is now complete. Thank you for shopping at POMMASTORE! Loyalty points updated."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.cancelled:
             reason = body.notes or "No reason specified"
-            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact: support@kozmocart.com."
+            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact: support@pommastore.com."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.return_requested:
             msg = f"Return request received for order #{enriched.order_number}. Our team will review in 24-48 hours and contact you."

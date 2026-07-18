@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -29,14 +29,14 @@ export default function TermsConditions() {
     title: "Terms & Conditions",
     lastUpdated: "Last updated June 2026",
     authenticityTitle: "Age Mandate",
-    authenticityDesc: "By utilizing Kozmocart storefront, you affirm you are at least 18 years of age or accessing under familial supervision.",
+    authenticityDesc: "By utilizing Pommastore storefront, you affirm you are at least 18 years of age or accessing under familial supervision.",
     windowTitle: "Commercial Fair Use",
     windowDesc: "We prohibit automated bot crawlers or resellers from executing speculative bulk orders. We reserve cancellation rights.",
     contentHtml: `
       <section class="space-y-4 border-b border-neutral-100 pb-10">
         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-black">1. Terms of Use</h2>
         <p>
-          Welcome to Kozmocart. By using this storefront or subscribing to our concierge, you agree to comply with our commercial terms and local statutory mandates.
+          Welcome to Pommastore. By using this storefront or subscribing to our concierge, you agree to comply with our commercial terms and local statutory mandates.
         </p>
         <p>
           We provide high-end, premium personal fragrances directly to luxury consumers. All contents of this storefront are protected under national copyright regulations.
@@ -54,7 +54,7 @@ export default function TermsConditions() {
       <section class="space-y-4 pb-10">
         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-black">3. Intellectual Assets</h2>
         <p>
-          All brand titles, custom product photography, liquid obsidian illustrations, and Nelphim type styles are protected under intellectual property regulations and belong solely to Kozmocart.
+          All brand titles, custom product photography, liquid obsidian illustrations, and Nelphim type styles are protected under intellectual property regulations and belong solely to Pommastore.
         </p>
       </section>
     `

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import api from '@/services/api';
 import { ChevronRight, Search } from 'lucide-react';
 import { getMediaUrl } from '@/services/media';
+import { useTranslation } from '@/locales/i18nContext';
 
 interface Brand {
   id: string;
@@ -28,6 +29,7 @@ interface Brand {
 }
 
 export default function BrandsPage() {
+  const { t, locale } = useTranslation();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,8 +39,8 @@ export default function BrandsPage() {
     const fetchBrandsAndProducts = async () => {
       try {
         const [resBrands, resProducts] = await Promise.allSettled([
-          api.get('/brands'),
-          api.get('/products?limit=60')
+          api.get(`/brands?lang=${locale}`, { headers: { 'Accept-Language': locale } }),
+          api.get(`/products?limit=60&lang=${locale}`, { headers: { 'Accept-Language': locale } })
         ]);
         
         if (resBrands.status === 'fulfilled') {
@@ -54,7 +56,7 @@ export default function BrandsPage() {
       }
     };
     fetchBrandsAndProducts();
-  }, []);
+  }, [locale]);
 
   const filteredBrands = brands.filter(b => 
     b.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -311,7 +313,7 @@ export default function BrandsPage() {
                                        </h5>
                                       {pPrice && (
                                          <span className="text-[10px] text-neutral-900 font-semibold font-sans leading-none">
-                                            ₹{pPrice.toLocaleString('en-IN')}/-
+                                            AED {pPrice.toLocaleString('en-IN')}
                                          </span>
                                       )}
                                    </Link>

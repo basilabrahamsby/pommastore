@@ -1,6 +1,6 @@
-import os
+﻿import os
 
-filepath = 'c:\\Developer\\Kozmocart\\api_logs.txt'
+filepath = 'c:\\Developer\\Pommastore\\api_logs.txt'
 
 # Let's read the file and look for occurrences of error, exception, fail, 500, 400, etc.
 # We'll print the last 100 lines of the file first to see what's happening recently.

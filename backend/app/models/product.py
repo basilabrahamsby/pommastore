@@ -33,9 +33,11 @@ class Brand(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    name_ar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     origin_country: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(Text)
+    description_ar: Mapped[str | None] = mapped_column(Text)
     logo_url: Mapped[str | None] = mapped_column(Text)
     gallery: Mapped[List[str] | None] = mapped_column(JSONB, default=[])
     banner_url: Mapped[str | None] = mapped_column(Text)
@@ -86,10 +88,12 @@ class Category(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    name_ar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     parent_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True)
     scent_family: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(Text)
+    description_ar: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     seo_title: Mapped[str | None] = mapped_column(String(70))
     meta_description: Mapped[str | None] = mapped_column(String(165))
@@ -111,18 +115,23 @@ class Product(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     name: Mapped[str] = mapped_column(String(500), nullable=False)
+    name_ar: Mapped[str | None] = mapped_column(String(500), nullable=True)
     slug: Mapped[str] = mapped_column(String(500), unique=True, nullable=False, index=True)
     brand_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("brands.id"), nullable=False, index=True)
     category_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("categories.id"), index=True)
     gender: Mapped[GenderType | None] = mapped_column(SAEnum(GenderType, name="gendertype"))
     # {"top": ["Bergamot", "Lemon"], "heart": ["Rose", "Jasmine"], "base": ["Oud", "Musk"]}
     scent_notes: Mapped[dict] = mapped_column(JSONB, default=lambda: {"top": [], "heart": [], "base": []})
+    # Arabic scent notes: {"top": ["برغموت", "ليمون"], "heart": ["وردة", "ياسمين"], "base": ["عود", "مسك"]}
+    scent_notes_ar: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     longevity_hours: Mapped[int | None] = mapped_column(SmallInteger)
     sillage_rating: Mapped[int | None] = mapped_column(SmallInteger)  # 1-5
     occasion_tags: Mapped[list | None] = mapped_column(JSONB, default=list)
     season_tags: Mapped[list | None] = mapped_column(JSONB, default=list)
     short_description: Mapped[str | None] = mapped_column(Text)
+    short_description_ar: Mapped[str | None] = mapped_column(Text)
     full_description: Mapped[str | None] = mapped_column(Text)
+    full_description_ar: Mapped[str | None] = mapped_column(Text)
     meta_title: Mapped[str | None] = mapped_column(String(70))
     meta_description: Mapped[str | None] = mapped_column(String(165))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)

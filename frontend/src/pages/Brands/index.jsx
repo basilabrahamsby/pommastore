@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Plus, Search, Pencil, Trash2, Globe, Eye } from 'lucide-react'
 import api from '../../services/api'
 import { getMediaUrl } from '../../services/media'
@@ -8,8 +8,9 @@ import InfoButton from '../../components/ui/InfoButton'
 function BrandModal({ brand, onClose, onSaved }) {
   const editing = !!brand
   const [form, setForm] = useState({
-    name: brand?.name || '', slug: brand?.slug || '',
-    description: brand?.description || '', logo_url: brand?.logo_url || '',
+    name: brand?.name || '', name_ar: brand?.name_ar || '',
+    slug: brand?.slug || '',
+    description: brand?.description || '', description_ar: brand?.description_ar || '', logo_url: brand?.logo_url || '',
     gallery: brand?.gallery || (brand?.logo_url ? [brand.logo_url] : []),
     is_active: brand?.is_active ?? true,
     origin_country: brand?.origin_country || '',
@@ -52,8 +53,52 @@ function BrandModal({ brand, onClose, onSaved }) {
   const [converting3D, setConverting3D] = useState(false)
   const [threeDProgress, setThreeDProgress] = useState(0)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const translationTimeouts = useRef({})
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  const handleTranslateField = async (sourceField, targetField) => {
+    const textToTranslate = form[sourceField] || ''
+    if (!textToTranslate.trim()) {
+      toast.error('Please enter English text first!')
+      return
+    }
+
+    const loadingToast = toast.loading('Translating to Arabic...')
+    try {
+      const res = await api.get('/translate', {
+        params: { text: textToTranslate, sl: 'en', tl: 'ar' }
+      })
+      const translatedText = res.data.translated_text
+      set(targetField, translatedText)
+      toast.success('Translated successfully!', { id: loadingToast })
+    } catch (err) {
+      toast.error('Translation failed', { id: loadingToast })
+    }
+  }
+
+  const triggerDebouncedTranslation = (sourceField, targetField, val) => {
+    if (translationTimeouts.current[sourceField]) {
+      clearTimeout(translationTimeouts.current[sourceField])
+    }
+
+    if (!val || !val.trim()) {
+      set(targetField, '')
+      return
+    }
+
+    translationTimeouts.current[sourceField] = setTimeout(async () => {
+      try {
+        const res = await api.get('/translate', {
+          params: { text: val, sl: 'en', tl: 'ar' }
+        })
+        const translatedText = res.data.translated_text
+        set(targetField, translatedText)
+      } catch (err) {
+        console.warn('Debounced auto-translation failed:', err)
+      }
+    }, 800)
+  }
 
   const handleDirectUpload = async (e) => {
     const files = Array.from(e.target.files)
@@ -139,7 +184,7 @@ function BrandModal({ brand, onClose, onSaved }) {
           clearInterval(interval)
           setConverting3D(false)
           set('is_3d_active', true)
-          toast.success(`Kozmocart 3D Maker: Brand 3D asset generated ${form.remove_background ? 'without background' : 'with studio background'}!`)
+          toast.success(`Pommastore 3D Maker: Brand 3D asset generated ${form.remove_background ? 'without background' : 'with studio background'}!`)
           return 100
         }
         return p + 25
@@ -180,17 +225,96 @@ function BrandModal({ brand, onClose, onSaved }) {
           <div className="modal-body" style={{ maxHeight: '78vh', overflowY: 'auto' }}>
             <div className="grid-2">
               <div className="form-group">
-                <label className="form-label">Brand Name *</label>
-                <input className="input" value={form.name} onChange={e => set('name', e.target.value)} required placeholder="e.g. Chanel" />
+                <label className="form-label">Brand Name (English) *</label>
+                <input 
+                  className="input" 
+                  value={form.name} 
+                  onChange={e => {
+                    set('name', e.target.value)
+                    triggerDebouncedTranslation('name', 'name_ar', e.target.value)
+                  }} 
+                  required 
+                  placeholder="e.g. Chanel" 
+                />
               </div>
               <div className="form-group">
-                <label className="form-label">Slug</label>
-                <input className="input" value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="auto-generated" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>اسم العلامة التجارية (Arabic)</label>
+                  {form.name && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('name', 'name_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <input className="input" value={form.name_ar || ''} onChange={e => set('name_ar', e.target.value)} placeholder="مثال: شانيل" dir="rtl" style={{ textAlign: 'right' }} />
               </div>
             </div>
             <div className="form-group">
               <label className="form-label">Origin Country</label>
               <input className="input" value={form.origin_country} onChange={e => set('origin_country', e.target.value)} placeholder="France" />
+            </div>
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Brand Description (English)</label>
+                <textarea 
+                  className="input" 
+                  value={form.description} 
+                  onChange={e => {
+                    set('description', e.target.value)
+                    triggerDebouncedTranslation('description', 'description_ar', e.target.value)
+                  }} 
+                  placeholder="Describe the brand heritage and style..." 
+                  rows={3} 
+                  style={{ resize: 'vertical' }} 
+                />
+              </div>
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>وصف العلامة التجارية (Arabic)</label>
+                  {form.description && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('description', 'description_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <textarea className="input" value={form.description_ar || ''} onChange={e => set('description_ar', e.target.value)} placeholder="اكتب وصف العلامة التجارية بالعربية..." rows={3} dir="rtl" style={{ textAlign: 'right', resize: 'vertical' }} />
+              </div>
             </div>
 
             {/* Brand Images Direct Multi-Uploader */}
@@ -242,10 +366,10 @@ function BrandModal({ brand, onClose, onSaved }) {
                   <input className="input" value={form.video_url} onChange={e => set('video_url', e.target.value)} placeholder="https://youtube.com/shorts/... or https://vimeo.com/..." style={{ fontSize: '0.8rem' }} />
                 </div>
 
-                {/* Kozmocart AI 3D Logo Maker Studio */}
+                {/* Pommastore AI 3D Logo Maker Studio */}
                 <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, rgba(10,10,15,0.8) 100%)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px solid rgba(201,168,76,0.2)', marginBottom: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.05em' }}>⚡ KOZMOCART AI 3D LOGO MAKER</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.05em' }}>⚡ POMMASTORE AI 3D LOGO MAKER</span>
                     {form.is_3d_active && <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>✓ 3D ACTIVE</span>}
                   </div>
 

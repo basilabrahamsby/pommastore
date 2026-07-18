@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from app.models.loyalty import LoyaltyReward
 
 async def test_select():
-    engine = create_async_engine("postgresql+asyncpg://kozmocart:kozmocart_dev_2026@localhost:5432/kozmocart_db")
+    engine = create_async_engine("postgresql+asyncpg://pommastore:pommastore_dev_2026@localhost:5432/pommastore_db")
     AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     
     async with AsyncSessionLocal() as db:

@@ -223,7 +223,7 @@ export default function Account() {
                         <p className="text-xs text-gray-400">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-gray-900 mb-1">₹{order.total_amount.toLocaleString('en-IN')}</p>
+                        <p className="text-sm font-bold text-gray-900 mb-1">AED {order.total_amount.toLocaleString('en-IN')}</p>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order.items.length} Items</p>
                       </div>
                       <button 
@@ -524,12 +524,12 @@ export default function Account() {
                               {item.size_ml ? `${item.size_ml}ml` : ''} {item.sku ? `• SKU: ${item.sku}` : ''}
                             </p>
                           </div>
-                          <p className="text-sm font-bold">₹{item.total_price.toLocaleString('en-IN')}</p>
+                          <p className="text-sm font-bold">AED {item.total_price.toLocaleString('en-IN')}</p>
                         </div>
                         <div className="flex justify-between items-center mt-2">
-                          <p className="text-[10px] text-gray-500">Qty: {item.quantity} × ₹{item.unit_price.toLocaleString('en-IN')}</p>
+                          <p className="text-[10px] text-gray-500">Qty: {item.quantity} × AED {item.unit_price.toLocaleString('en-IN')}</p>
                           {item.discount_amount > 0 && (
-                            <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Saved ₹{item.discount_amount.toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Saved AED {item.discount_amount.toLocaleString('en-IN')}</p>
                           )}
                         </div>
                       </div>
@@ -541,23 +541,23 @@ export default function Account() {
               <div className="bg-gray-50 p-6 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Subtotal</span>
-                  <span className="font-medium text-gray-900">₹{Number(selectedOrder.subtotal || 0).toLocaleString('en-IN')}</span>
+                  <span className="font-medium text-gray-900">AED {Number(selectedOrder.subtotal || 0).toLocaleString('en-IN')}</span>
                 </div>
                 {selectedOrder.discount_amount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-red-500 uppercase tracking-widest text-[10px] font-bold">Discount</span>
-                    <span className="font-medium text-red-500">-₹{Number(selectedOrder.discount_amount || 0).toLocaleString('en-IN')}</span>
+                    <span className="font-medium text-red-500">-AED {Number(selectedOrder.discount_amount || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {selectedOrder.shipping_amount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Shipping</span>
-                    <span className="font-medium text-gray-900">₹{Number(selectedOrder.shipping_amount || 0).toLocaleString('en-IN')}</span>
+                    <span className="font-medium text-gray-900">AED {Number(selectedOrder.shipping_amount || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg pt-3 border-t border-gray-200">
                   <span className="font-serif">Total</span>
-                  <span className="font-bold">₹{Number(selectedOrder.total_amount || 0).toLocaleString('en-IN')}</span>
+                  <span className="font-bold">AED {Number(selectedOrder.total_amount || 0).toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

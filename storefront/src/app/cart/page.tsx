@@ -123,7 +123,7 @@ export default function Cart() {
                 <Truck size={13} className="text-neutral-500" />
                 <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-600">Free Shipping Progress</span>
               </div>
-              <span className="text-[10px] font-black text-black">₹{amountToFreeShipping.toLocaleString('en-IN')} away</span>
+              <span className="text-[10px] font-black text-black">AED {amountToFreeShipping.toLocaleString('en-IN')} away</span>
             </div>
             <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
               <div
@@ -218,11 +218,11 @@ export default function Cart() {
                       {/* Price */}
                       <div className="text-right">
                         <p className="text-sm md:text-base font-black text-black">
-                          ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                          AED {(item.price * item.quantity).toLocaleString('en-IN')}
                         </p>
                         {item.quantity > 1 && (
                           <p className="text-[9px] text-neutral-400 font-medium">
-                            ₹{item.price.toLocaleString('en-IN')} each
+                            AED {item.price.toLocaleString('en-IN')} each
                           </p>
                         )}
                       </div>
@@ -282,7 +282,7 @@ export default function Cart() {
                         <p className="text-[9px] text-neutral-400 font-medium">Qty: {item.quantity}</p>
                       </div>
                       <span className="text-[11px] font-black text-black flex-shrink-0">
-                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                        AED {(item.price * item.quantity).toLocaleString('en-IN')}
                       </span>
                     </div>
                   ))}
@@ -293,7 +293,7 @@ export default function Cart() {
                 {/* Subtotal Row */}
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-neutral-500 font-medium uppercase tracking-widest">Subtotal</span>
-                  <span className="text-[12px] font-black text-black">₹{totalPrice().toLocaleString('en-IN')}</span>
+                  <span className="text-[12px] font-black text-black">AED {totalPrice().toLocaleString('en-IN')}</span>
                 </div>
 
                 {/* Shipping Progress */}
@@ -304,7 +304,7 @@ export default function Cart() {
                       <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-500">Shipping</span>
                     </div>
                     <span className={`text-[10px] font-black ${isFreeShipping ? 'text-emerald-600' : 'text-black'}`}>
-                      {isFreeShipping ? 'FREE' : `₹${shippingFee}`}
+                      {isFreeShipping ? 'FREE' : `AED ${shippingFee}`}
                     </span>
                   </div>
                   <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden mb-2">
@@ -316,7 +316,7 @@ export default function Cart() {
                   <p className="text-[9px] text-neutral-400 font-medium">
                     {isFreeShipping
                       ? '🎉 You qualify for free delivery!'
-                      : `Add ₹${amountToFreeShipping.toLocaleString('en-IN')} more for free delivery`}
+                      : `Add AED ${amountToFreeShipping.toLocaleString('en-IN')} more for free delivery`}
                   </p>
                 </div>
 
@@ -337,7 +337,7 @@ export default function Cart() {
                 <div className="flex justify-between items-center">
                   <span className="text-[11px] font-black tracking-widest uppercase text-black">Total</span>
                   <span className="text-xl font-black text-black">
-                    ₹{(totalPrice() + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN')}
+                    AED {(totalPrice() + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN')}
                   </span>
                 </div>
 
@@ -358,7 +358,7 @@ export default function Cart() {
 
                 {/* Payment methods */}
                 <div className="flex items-center justify-center gap-2 flex-wrap pt-1">
-                  {['UPI', 'Cards', 'Razorpay'].map(m => (
+                  {['Visa', 'Mastercard', 'Stripe'].map(m => (
                     <span key={m} className="text-[8px] font-black tracking-widest text-neutral-400 border border-neutral-200 px-2.5 py-1 rounded-full uppercase bg-neutral-50">
                       {m}
                     </span>

@@ -24,7 +24,9 @@ async def enrich_product(product: Product, db: AsyncSession) -> ProductOut:
 
     out = ProductOut.model_validate(product)
     out.brand_name = product.brand.name if product.brand else ""
+    out.brand_name_ar = product.brand.name_ar if product.brand else ""
     out.category_name = product.category.name if product.category else None
+    out.category_name_ar = product.category.name_ar if product.category else None
     out.images = [img.url for img in product.images]
     for v_out in out.variants:
         v_out.current_stock = stock_map.get(v_out.id, 0)
@@ -51,7 +53,9 @@ async def enrich_products_bulk(products: list[Product], db: AsyncSession) -> lis
     for p in products:
         out = ProductOut.model_validate(p)
         out.brand_name = p.brand.name if p.brand else ""
+        out.brand_name_ar = p.brand.name_ar if p.brand else ""
         out.category_name = p.category.name if p.category else None
+        out.category_name_ar = p.category.name_ar if p.category else None
         out.images = [img.url for img in p.images]
         for v_out in out.variants:
             v_out.current_stock = stock_map.get(v_out.id, 0)

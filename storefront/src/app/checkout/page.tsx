@@ -20,7 +20,10 @@ import {
   Sparkles
 } from 'lucide-react';
 
+import { useTranslation } from '@/locales/i18nContext';
+
 export default function Checkout() {
+  const { t, locale } = useTranslation();
   const { items, clearCart, totalPrice } = useCartStore();
   const { customer, token } = useAuthStore();
   const router = useRouter();
@@ -45,6 +48,18 @@ export default function Checkout() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [emailOtp, setEmailOtp] = useState('');
   const [phoneOtp, setPhoneOtp] = useState('');
+
+  // Stripe Integration States
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [stripeSessionId, setStripeSessionId] = useState('');
+  const [stripeOrderNumber, setStripeOrderNumber] = useState('');
+  const [stripeAmount, setStripeAmount] = useState(0);
+  const [stripeCardNum, setStripeCardNum] = useState('4242 4242 4242 4242');
+  const [stripeCardExpiry, setStripeCardExpiry] = useState('12/29');
+  const [stripeCardCvc, setStripeCardCvc] = useState('123');
+  const [stripeCardName, setStripeCardName] = useState('');
+  const [processingStripe, setProcessingStripe] = useState(false);
+  const [stripeModalError, setStripeModalError] = useState<string | null>(null);
   const [verifyingOtps, setVerifyingOtps] = useState(false);
   const [verifyEmailNeeded, setVerifyEmailNeeded] = useState(false);
   const [verifyPhoneNeeded, setVerifyPhoneNeeded] = useState(false);
@@ -354,12 +369,12 @@ export default function Checkout() {
       const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
       const finalAmount = Math.max(0, totalPrice() + finalShippingFee - pointsToRedeem - promoDiscount);
 
-      // ================= RAZORPAY INTEGRATION =================
+      // ================= STRIPE INTEGRATION =================
       if (paymentMethod === 'card' || paymentMethod === 'upi') {
-        let rzpOrderData: any = null;
+        let stripeSessionData: any = null;
         try {
-          const createRes = await api.post('/orders/razorpay/create', {
-            payment_method: paymentMethod,
+          const createRes = await api.post('/orders/stripe/create', {
+            payment_method: 'stripe',
             shipping_address: shippingAddressData,
             billing_address: shippingAddressData,
             payment_status: 'pending',
@@ -370,7 +385,7 @@ export default function Checkout() {
             discount_amount: promoDiscount,
             coupon_code: appliedPromo ? appliedPromo.code : null
           });
-          rzpOrderData = createRes.data;
+          stripeSessionData = createRes.data;
         } catch (err: any) {
           const detail = err.response?.data?.detail;
           setCheckoutError(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to initialize payment.');
@@ -379,80 +394,36 @@ export default function Checkout() {
           return;
         }
 
-        const options = {
-          key: rzpOrderData.razorpay_key_id || 'rzp_test_demokey12345', 
-          amount: rzpOrderData.amount,
-          currency: rzpOrderData.currency,
-          name: 'Kozmocart',
-          description: 'Luxury Fragrance Curations',
-          image: '/placeholder-perfume.png',
-          order_id: rzpOrderData.razorpay_order_id,
-          handler: async function (response: any) {
-            try {
-              // Immediately verify payment with server and save reference number
-              const verifyRes = await api.post('/orders/razorpay/verify', {
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                order_number: rzpOrderData.order_number
-              });
-              setOrderSuccess(verifyRes.data.order || {
-                order_number: rzpOrderData.order_number,
-                total_amount: finalAmount,
-                shipping_address: shippingAddressData,
-                transaction_id: response.razorpay_payment_id
-              });
-              clearCart();
-            } catch (err: any) {
-              // Fallback: show success screen anyway, server will confirm via webhook
-              setOrderSuccess({
-                order_number: rzpOrderData.order_number,
-                total_amount: finalAmount,
-                shipping_address: shippingAddressData,
-                transaction_id: response.razorpay_payment_id
-              });
-              clearCart();
-            } finally {
-              setPlacingOrder(false);
-            }
-          },
-          prefill: {
-            name: customer?.full_name || 'Valued Client',
-            email: customer?.email || 'client@kozmocart.com',
-            contact: customer?.phone || '9999999999',
-            method: paymentMethod
-          },
-          theme: {
-            color: '#000000'
-          },
-          upi: {
-            flow: 'intent'
-          },
-          modal: {
-            ondismiss: async function () {
-              setPlacingOrder(false);
-              try {
-                await api.post('/orders/razorpay/cancel', {
-                  order_number: rzpOrderData.order_number
-                });
-              } catch (err) {}
-            }
-          }
-        };
+        const sessionId = stripeSessionData.stripe_session_id;
+        const publishableKey = stripeSessionData.stripe_publishable_key;
 
-        const rzp1 = new (window as any).Razorpay(options);
-        rzp1.on('payment.failed', async function (response: any) {
-          setCheckoutError('Payment Failed: ' + (response.error?.description || 'Oops! Something went wrong. Please check your credentials and try again.'));
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          setPlacingOrder(false);
+        // If real Stripe keys are configured
+        if (publishableKey && publishableKey !== 'pk_test_placeholder') {
           try {
-            await api.post('/orders/razorpay/cancel', {
-              order_number: rzpOrderData.order_number
+            const stripe = (window as any).Stripe(publishableKey);
+            const { error } = await stripe.redirectToCheckout({
+              sessionId: sessionId
             });
-          } catch (err) {}
-        });
-        rzp1.open();
-        return; // Halt execution and wait for Razorpay handler
+            if (error) {
+              setCheckoutError(error.message || 'Stripe redirect failed.');
+              setPlacingOrder(false);
+            }
+          } catch (err: any) {
+            setCheckoutError('Stripe JS load error. Please check configuration.');
+            setPlacingOrder(false);
+          }
+          return;
+        }
+
+        // If mock keys, open our custom simulated Stripe modal overlay!
+        setStripeSessionId(sessionId);
+        setStripeOrderNumber(stripeSessionData.order_number);
+        setStripeAmount(finalAmount);
+        setStripeCardName(customer?.full_name || '');
+        setStripeModalError(null);
+        setShowStripeModal(true);
+        setPlacingOrder(false);
+        return; // Halt execution and wait for modal handler
       }
       // ============================================================
 
@@ -501,11 +472,11 @@ export default function Checkout() {
             </div>
             <div>
               <p className="text-neutral-400 mb-1">Total Paid</p>
-              <p className="text-sm text-neutral-900">₹{orderSuccess.total_amount?.toLocaleString('en-IN')}</p>
+              <p className="text-sm text-neutral-900">AED {orderSuccess.total_amount?.toLocaleString('en-US')}</p>
             </div>
             {(orderSuccess.transaction_id) && (
               <div className="md:col-span-2">
-                <p className="text-neutral-400 mb-1">Payment Reference (Razorpay)</p>
+                <p className="text-neutral-400 mb-1">Payment Reference (Stripe)</p>
                 <p className="text-xs text-neutral-700 normal-case tracking-normal font-mono font-medium">{orderSuccess.transaction_id}</p>
               </div>
             )}
@@ -592,17 +563,17 @@ export default function Checkout() {
           <div>
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-serif text-sm">1</div>
-              <h2 className="text-xl font-serif text-neutral-900">Verify Contact Credentials</h2>
+              <h2 className="text-xl font-serif text-neutral-900">{t('checkout_secure_curation')}</h2>
             </div>
 
             <div className="p-6 bg-neutral-50 border border-neutral-100 space-y-5 mb-10">
               <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-wider leading-relaxed">
-                🚨 Mobile and email are required to complete your checkout and receive real-time dispatch and delivery tracking notifications.
+                {t('checkout_sub_desc')}
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 <div>
-                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Full Name</label>
+                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_full_name')}</label>
                   <input 
                     type="text"
                     value={contactForm.full_name}
@@ -611,7 +582,7 @@ export default function Checkout() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Email Address *</label>
+                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_email')}</label>
                   <input 
                     required
                     type="email"
@@ -622,7 +593,7 @@ export default function Checkout() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Mobile Number *</label>
+                  <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_mobile')}</label>
                   <input 
                     required
                     type="tel"
@@ -640,7 +611,7 @@ export default function Checkout() {
                 onClick={handleUpdateContact}
                 className="bg-black text-white px-6 py-3.5 text-[10px] font-black tracking-widest uppercase hover:bg-neutral-800 transition-colors disabled:opacity-50"
               >
-                {updatingContact ? 'Saving Changes...' : 'Save & Update Profile'}
+                {updatingContact ? t('checkout_saving') : t('checkout_save_profile')}
               </button>
             </div>
           </div>
@@ -649,11 +620,11 @@ export default function Checkout() {
           <div>
             <div className="flex items-center space-x-3 mb-8 border-t border-neutral-100 pt-12">
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-serif text-sm">2</div>
-              <h2 className="text-xl font-serif text-neutral-900">Select Delivery Destination</h2>
+              <h2 className="text-xl font-serif text-neutral-900">{t('checkout_delivery_title')}</h2>
             </div>
 {selectedAddressId !== 'new' && (
   <div className="mb-6 p-4 border border-neutral-200 rounded-lg bg-neutral-50 animate-in fade-in">
-    <p className="font-black text-sm text-neutral-900 mb-1">Selected Delivery Address</p>
+    <p className="font-black text-sm text-neutral-900 mb-1">{t('checkout_selected_address')}</p>
     <p className="text-xs text-neutral-600">
       {(() => {
         const addr = addresses.find((a) => a.id === selectedAddressId);
@@ -689,7 +660,7 @@ export default function Checkout() {
                     <div className="flex-1">
                       <p className="text-xs font-black tracking-widest uppercase text-neutral-900 mb-1 flex items-center justify-between">
                         <span>{a.label}</span>
-                        {a.is_default && <span className="text-[8px] font-black bg-black text-white px-1.5 py-0.5 rounded tracking-widest">DEFAULT</span>}
+                        {a.is_default && <span className="text-[8px] font-black bg-black text-white px-1.5 py-0.5 rounded tracking-widest">{locale === 'ar' ? 'افتراضي' : 'DEFAULT'}</span>}
                       </p>
                       <p className="text-xs text-neutral-500 leading-relaxed font-medium">
                         {a.address_line1}<br />
@@ -716,9 +687,9 @@ export default function Checkout() {
                   <div className="flex-1 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-black tracking-widest uppercase text-neutral-900 mb-1 flex items-center">
-                        <Plus size={12} className="mr-1" /> Ship to a New Address
+                        <Plus size={12} className="mr-1" /> {t('checkout_ship_new')}
                       </p>
-                      <p className="text-xs text-neutral-500">Provide tailored destination logistics below</p>
+                      <p className="text-xs text-neutral-500">{t('checkout_ship_new_desc')}</p>
                     </div>
                   </div>
                 </label>
@@ -730,21 +701,21 @@ export default function Checkout() {
               <div className="p-6 bg-neutral-50 border border-neutral-100 space-y-4 animate-in fade-in duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Address Line 1</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_address1')}</label>
                     <input 
                       required={selectedAddressId === 'new'}
                       type="text"
-                      placeholder="Apartment, street, locale"
+                      placeholder={t('checkout_address1_placeholder')}
                       value={addressForm.address_line1}
                       onChange={(e) => setAddressForm({...addressForm, address_line1: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Address Line 2 (Optional)</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_address2')}</label>
                     <input 
                       type="text"
-                      placeholder="Landmark, block, suite"
+                      placeholder={t('checkout_address2_placeholder')}
                       value={addressForm.address_line2}
                       onChange={(e) => setAddressForm({...addressForm, address_line2: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
@@ -754,44 +725,44 @@ export default function Checkout() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="col-span-1 sm:col-span-2">
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">City</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_city')}</label>
                     <input 
                       required={selectedAddressId === 'new'}
                       type="text"
-                      placeholder="E.g., Mumbai"
+                      placeholder={t('checkout_city_placeholder')}
                       value={addressForm.city}
                       onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">State</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_state')}</label>
                     <input 
                       required={selectedAddressId === 'new'}
                       type="text"
-                      placeholder="Maharashtra"
+                      placeholder={t('checkout_state_placeholder')}
                       value={addressForm.state}
                       onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Pincode</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_pincode')}</label>
                     <input 
                       required={selectedAddressId === 'new'}
                       type="text"
-                      placeholder="400001"
+                      placeholder="e.g. 400001"
                       value={addressForm.pincode}
                       onChange={(e) => setAddressForm({...addressForm, pincode: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Delivery Contact Number</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_phone')}</label>
                     <input 
                       required={selectedAddressId === 'new'}
                       type="tel"
-                      placeholder="+91 9988776655"
+                      placeholder="e.g. +971 50 123 4567"
                       value={addressForm.phone}
                       onChange={(e) => setAddressForm({...addressForm, phone: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
@@ -806,7 +777,7 @@ export default function Checkout() {
           <div className="border-t border-neutral-100 pt-12">
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-serif text-sm">3</div>
-              <h2 className="text-xl font-serif text-neutral-900">Select Payment Engine</h2>
+              <h2 className="text-xl font-serif text-neutral-900">{t('checkout_payment_title')}</h2>
             </div>
 
             <div className="space-y-4">
@@ -824,8 +795,8 @@ export default function Checkout() {
                     onChange={() => setPaymentMethod('card')} 
                   />
                   <div>
-                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">Debit / Credit Card</p>
-                    <p className="text-[10px] text-neutral-400 font-medium">Visa, Mastercard, Amex Secure Transactions</p>
+                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">{t('checkout_card_title')}</p>
+                    <p className="text-[10px] text-neutral-400 font-medium">{t('checkout_card_desc')}</p>
                   </div>
                 </div>
                 <CreditCard size={20} className="text-neutral-400" />
@@ -845,8 +816,8 @@ export default function Checkout() {
                     onChange={() => setPaymentMethod('upi')} 
                   />
                   <div>
-                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">UPI Instant Payment</p>
-                    <p className="text-[10px] text-neutral-400 font-medium">PhonePe, Google Pay, Paytm, Any UPI ID</p>
+                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">{t('checkout_upi_title')}</p>
+                    <p className="text-[10px] text-neutral-400 font-medium">{t('checkout_upi_desc')}</p>
                   </div>
                 </div>
                 <Smartphone size={20} className="text-neutral-400" />
@@ -860,19 +831,19 @@ export default function Checkout() {
         {/* Right Col: Sticky Summary */}
         <div className="w-full lg:w-1/3">
           <div className="bg-neutral-50 p-8 sticky top-32 border border-neutral-100">
-            <h2 className="text-lg font-serif mb-6 border-b border-neutral-200 pb-4">Summary of Curation</h2>
+            <h2 className="text-lg font-serif mb-6 border-b border-neutral-200 pb-4">{t('checkout_summary_title')}</h2>
             
             {/* Loyalty Rewards Redemption */}
             {customer && customer.loyalty_points > 0 && (
               <div className="mb-6 p-4 bg-white border border-neutral-100 animate-in fade-in duration-500">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black tracking-widest uppercase text-neutral-400">Loyalty Rewards</span>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-neutral-400">{t('checkout_loyalty_rewards')}</span>
                   <span className="text-[10px] font-black text-black bg-yellow-400 px-2 py-0.5 rounded tracking-widest uppercase">{customer.loyalty_tier}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-neutral-900">{customer.loyalty_points} Points Available</p>
-                    <p className="text-[9px] text-neutral-400 uppercase tracking-tight">1 Point = ₹1 Discount</p>
+                    <p className="text-xs font-bold text-neutral-900">{t('checkout_points_available').replace('{points}', String(customer.loyalty_points))}</p>
+                    <p className="text-[9px] text-neutral-400 uppercase tracking-tight">{t('checkout_point_value')}</p>
                   </div>
                   <button 
                     type="button"
@@ -881,7 +852,7 @@ export default function Checkout() {
                       useLoyaltyPoints ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
                     }`}
                   >
-                    {useLoyaltyPoints ? 'Redeeming' : 'Redeem'}
+                    {useLoyaltyPoints ? t('checkout_redeeming') : t('checkout_redeem')}
                   </button>
                 </div>
               </div>
@@ -893,15 +864,15 @@ export default function Checkout() {
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[9px] font-black tracking-widest uppercase text-emerald-800 flex items-center gap-1">
                     <Sparkles size={10} className="fill-emerald-600 text-emerald-600 animate-pulse" />
-                    Special Offer Applied
+                    {t('checkout_promo_applied')}
                   </span>
                   <span className="text-[8px] font-black text-white bg-emerald-600 px-1.5 py-0.5 rounded tracking-widest uppercase font-mono">
                     {appliedPromo.code}
                   </span>
                 </div>
-                <p className="text-xs font-bold text-neutral-900 leading-snug">{appliedPromo.title}</p>
+                <p className="text-xs font-bold text-neutral-900 leading-snug">{locale === 'ar' ? (appliedPromo.title_ar || appliedPromo.title) : appliedPromo.title}</p>
                 <p className="text-[9.5px] text-emerald-700 font-bold uppercase tracking-wide mt-1.5">
-                  🎉 Auto-saved ₹{promoDiscount.toLocaleString('en-IN')} on items
+                  {t('checkout_auto_saved').replace('{amount}', promoDiscount.toLocaleString('en-IN'))}
                 </p>
               </div>
             )}
@@ -919,38 +890,38 @@ export default function Checkout() {
                       <p className="text-neutral-400 mt-0.5 uppercase font-black tracking-widest text-[9px]">{item.sizeMl}ML × {item.quantity}</p>
                     </div>
                   </div>
-                  <span className="font-bold text-neutral-900 whitespace-nowrap">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-neutral-900 whitespace-nowrap">AED {(item.price * item.quantity).toLocaleString('en-IN')}</span>
                 </div>
               ))}
             </div>
 
              <div className="space-y-4 pt-4 border-t border-neutral-200 text-xs uppercase font-black tracking-widest mb-6">
                <div className="flex justify-between text-neutral-500">
-                 <span>Subtotal</span>
-                 <span className="text-neutral-900">₹{totalPrice().toLocaleString('en-IN')}</span>
+                 <span>{t('checkout_subtotal')}</span>
+                 <span className="text-neutral-900">AED {totalPrice().toLocaleString('en-IN')}</span>
                </div>
                <div className="flex justify-between text-neutral-500">
-                 <span>Logistics (Standard)</span>
+                 <span>{t('checkout_logistics')}</span>
                  <span className={totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? "text-green-600 font-bold" : "text-neutral-900 font-bold"}>
-                   {totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : `₹${shippingFee}`}
+                   {totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? t('free') : `AED ${shippingFee}`}
                  </span>
                </div>
                {appliedPromo && promoDiscount > 0 && (
                  <div className="flex justify-between text-green-600 animate-in slide-in-from-left-2 duration-300">
-                   <span>Promo Discount</span>
-                   <span>-₹{promoDiscount.toLocaleString('en-IN')}</span>
+                   <span>{t('checkout_promo_discount')}</span>
+                   <span>-AED {promoDiscount.toLocaleString('en-IN')}</span>
                  </div>
                )}
                {useLoyaltyPoints && (
                  <div className="flex justify-between text-yellow-600 animate-in slide-in-from-left-2 duration-300">
-                   <span>Loyalty Redemption</span>
-                   <span>-₹{Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)).toLocaleString('en-IN')}</span>
+                   <span>{t('checkout_loyalty_redemption')}</span>
+                   <span>-AED {Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)).toLocaleString('en-IN')}</span>
                  </div>
                )}
                <div className="flex justify-between text-neutral-900 border-t border-neutral-200 pt-4 text-sm">
-                 <span className="font-serif normal-case font-bold tracking-normal text-base">Grand Total</span>
+                 <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
                  <span className="font-bold text-lg font-serif normal-case tracking-normal">
-                   ₹{Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-IN')}
+                   AED {Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-IN')}
                  </span>
                </div>
              </div>
@@ -960,11 +931,11 @@ export default function Checkout() {
               disabled={placingOrder}
               className="w-full bg-black text-white py-5 text-xs font-black tracking-[0.2em] hover:bg-neutral-800 transition-colors flex items-center justify-center uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {placingOrder ? 'Processing Secure Transfer...' : 'CONFIRM & PLACE ORDER'}
+              {placingOrder ? t('checkout_confirm_processing') : t('checkout_confirm_btn')}
             </button>
 
             <div className="mt-4 text-[9px] text-neutral-400 font-bold text-center tracking-widest uppercase flex items-center justify-center">
-              <CheckCircle2 size={12} className="mr-1" /> Total security assured by Kozmocart Vaults
+              <CheckCircle2 size={12} className="mr-1" /> {t('checkout_security_assured')}
             </div>
           </div>
         </div>
@@ -974,16 +945,16 @@ export default function Checkout() {
       {showVerifyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-65 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-white border border-neutral-200 max-w-md w-full p-8 md:p-10 shadow-2xl relative">
-            <h3 className="text-xl font-serif italic text-neutral-900 mb-2">Verify Contact Details</h3>
+            <h3 className="text-xl font-serif italic text-neutral-900 mb-2">{t('checkout_verify_title')}</h3>
             <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-8 leading-relaxed">
-              We have dispatched a verification passcode to your new contact information.
+              {t('checkout_verify_desc')}
             </p>
 
             <form onSubmit={handleConfirmVerification} className="space-y-6">
               {verifyEmailNeeded && (
                 <div>
                   <label className="block text-[9px] font-black text-neutral-900 uppercase tracking-[0.2em] mb-2">
-                    Email Passcode (Sent to {contactForm.email})
+                    {t('checkout_email_code').replace('{email}', contactForm.email)}
                   </label>
                   <input
                     type="text"
@@ -999,7 +970,7 @@ export default function Checkout() {
               {verifyPhoneNeeded && (
                 <div>
                   <label className="block text-[9px] font-black text-neutral-900 uppercase tracking-[0.2em] mb-2">
-                    Mobile Passcode (Sent to {contactForm.phone})
+                    {t('checkout_phone_code').replace('{phone}', contactForm.phone)}
                   </label>
                   <input
                     type="text"
@@ -1018,14 +989,159 @@ export default function Checkout() {
                   onClick={() => setShowVerifyModal(false)}
                   className="flex-1 bg-transparent border border-neutral-200 text-neutral-900 py-4 text-xs font-black tracking-widest hover:border-black transition-colors uppercase rounded-none"
                 >
-                  Cancel
+                  {t('checkout_cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={verifyingOtps}
                   className="flex-1 bg-black text-white py-4 text-xs font-black tracking-widest hover:bg-neutral-800 transition-colors uppercase rounded-none disabled:opacity-50"
                 >
-                  {verifyingOtps ? 'Verifying...' : 'Verify & Save'}
+                  {verifyingOtps ? t('checkout_verifying_btn') : t('checkout_verify_btn')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Stripe Payment Simulation Modal */}
+      {showStripeModal && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md shadow-2xl p-6 md:p-8 animate-fadeIn flex flex-col font-sans border border-neutral-100">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-4 mb-6">
+              <div className="flex items-center space-x-2">
+                <span className="bg-[#635BFF] text-white p-1.5 rounded-sm flex items-center justify-center">
+                  <CreditCard size={16} />
+                </span>
+                <span className="text-sm font-bold text-neutral-900 tracking-wider">Stripe Payment Gateway</span>
+              </div>
+              <span className="bg-amber-50 text-amber-800 text-[9px] font-black tracking-widest px-2 py-0.5 uppercase border border-amber-200">
+                Test Mode
+              </span>
+            </div>
+
+            {stripeModalError && (
+              <div className="bg-red-50 text-red-700 text-xs p-3.5 mb-6 border border-red-200 font-semibold">
+                {stripeModalError}
+              </div>
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setProcessingStripe(true);
+                setStripeModalError(null);
+                
+                try {
+                  // Simulate Stripe processing delay
+                  await new Promise(r => setTimeout(r, 2000));
+                  
+                  // Call verify endpoint
+                  const verifyRes = await api.post('/orders/stripe/verify', {
+                    stripe_session_id: stripeSessionId,
+                    order_number: stripeOrderNumber,
+                    transaction_id: `ch_mock_stripe_${Math.random().toString(36).substring(2, 16)}`
+                  });
+                  
+                  // Clear cart and show order confirmation screen
+                  setOrderSuccess(verifyRes.data.order);
+                  clearCart();
+                  setShowStripeModal(false);
+                } catch (err: any) {
+                  const detail = err.response?.data?.detail;
+                  setStripeModalError(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Simulated Stripe Payment failed. Please try again.');
+                } finally {
+                  setProcessingStripe(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Cardholder Name</label>
+                <input
+                  type="text"
+                  required
+                  value={stripeCardName}
+                  onChange={(e) => setStripeCardName(e.target.value)}
+                  placeholder="Cardholder Name"
+                  className="w-full border border-neutral-300 py-3 px-4 text-sm focus:border-black outline-none rounded-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Card Number</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={stripeCardNum}
+                    onChange={(e) => setStripeCardNum(e.target.value)}
+                    placeholder="4242 4242 4242 4242"
+                    className="w-full border border-neutral-300 py-3 pl-4 pr-10 text-sm focus:border-black outline-none font-mono tracking-wider rounded-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                    🔒
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Expiry Date</label>
+                  <input
+                    type="text"
+                    required
+                    value={stripeCardExpiry}
+                    onChange={(e) => setStripeCardExpiry(e.target.value)}
+                    placeholder="MM/YY"
+                    className="w-full border border-neutral-300 py-3 px-4 text-sm focus:border-black outline-none font-mono text-center rounded-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">CVC</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={4}
+                    value={stripeCardCvc}
+                    onChange={(e) => setStripeCardCvc(e.target.value)}
+                    placeholder="CVC"
+                    className="w-full border border-neutral-300 py-3 px-4 text-sm focus:border-black outline-none font-mono text-center rounded-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 text-[10px] text-neutral-500 py-2 border-t border-neutral-100 mt-6">
+                <span className="text-[#635BFF]">⚡</span>
+                <span>Powered by Stripe. Payment details are encrypted and secured.</span>
+              </div>
+
+              <div className="flex space-x-4 pt-4 border-t border-neutral-100">
+                <button
+                  type="button"
+                  disabled={processingStripe}
+                  onClick={async () => {
+                    setShowStripeModal(false);
+                    try {
+                      await api.post('/orders/stripe/cancel', {
+                        order_number: stripeOrderNumber
+                      });
+                    } catch (err) {}
+                  }}
+                  className="flex-1 bg-transparent border border-neutral-200 text-neutral-900 py-4 text-xs font-black tracking-widest hover:border-black transition-colors uppercase rounded-none disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={processingStripe}
+                  className="flex-1 bg-black text-white py-4 text-xs font-black tracking-widest hover:bg-neutral-800 transition-colors uppercase rounded-none disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  {processingStripe ? (
+                    <span className="inline-block w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <span>Pay AED {stripeAmount.toFixed(2)}</span>
+                  )}
                 </button>
               </div>
             </form>

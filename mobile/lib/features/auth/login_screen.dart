@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
@@ -255,7 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         SizedBox(height: R.pad(context, 28)),
                         
                         Text(
-                          _otpSent ? 'ENTER VERIFICATION' : 'WELCOME TO KOZMOCART',
+                          _otpSent ? 'ENTER VERIFICATION' : 'WELCOME TO POMMASTORE',
                           style: GoogleFonts.montserrat(
                             fontSize: R.font(context, 15),
                             fontWeight: FontWeight.bold,

@@ -1,4 +1,4 @@
-package com.kozmocart.kozmocart_app
+﻿package com.pommastore.pommastore_app
 
 import io.flutter.embedding.android.FlutterActivity
 

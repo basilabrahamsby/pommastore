@@ -155,7 +155,7 @@ function BatchModal({ variants, suppliers, prefill, onClose, onSaved }) {
 
                   {/* Purchase Cost */}
                   <div className="form-group" style={{ margin: 0, width: 140 }}>
-                    <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: 4 }}>Purchase Cost (₹)</label>
+                    <label className="form-label" style={{ fontSize: '0.72rem', marginBottom: 4 }}>Purchase Cost (AED )</label>
                     <input className="input" type="number" min="0" value={item.purchase_cost} onChange={e => updateItem(idx, 'purchase_cost', e.target.value)} placeholder="1200" style={{ fontSize: '0.8rem', height: '36px' }} />
                   </div>
 
@@ -256,7 +256,7 @@ function AddSupplierModal({ onClose, onSaved }) {
 }
 
 function LedgerReportModal({ supplier, onClose }) {
-  const fmt = n => `₹${Number(n || 0).toLocaleString('en-IN')}`
+  const fmt = n => `AED ${Number(n || 0).toLocaleString('en-US')}`
   const totalInvoiced = supplier.total_invoiced || 0
   const totalPaid = totalInvoiced - (supplier.outstanding || 0)
   
@@ -349,11 +349,11 @@ function StockDetailsModal({ item, onClose }) {
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, textAlign: 'center' }}>
               <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cost Price</span>
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>₹{item.cost_price.toLocaleString('en-IN')}</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>AED {item.cost_price.toLocaleString('en-US')}</div>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, textAlign: 'center' }}>
               <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Selling Price</span>
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--gold)', marginTop: 4 }}>₹{item.selling_price.toLocaleString('en-IN')}</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--gold)', marginTop: 4 }}>AED {item.selling_price.toLocaleString('en-US')}</div>
             </div>
           </div>
 
@@ -372,7 +372,7 @@ function StockDetailsModal({ item, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Lot Expiry Date</span>
-              <strong style={{ color: '#fff' }}>{item.expiry_date ? new Date(item.expiry_date).toLocaleDateString('en-IN') : '—'}</strong>
+              <strong style={{ color: '#fff' }}>{item.expiry_date ? new Date(item.expiry_date).toLocaleDateString('en-US') : '—'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Points Multiplier</span>
@@ -430,7 +430,7 @@ function BatchDetailsModal({ batch, onClose }) {
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, textAlign: 'center' }}>
               <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cost Per Unit</span>
-              <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--gold)', marginTop: 4 }}>{batch.purchase_cost ? `₹${batch.purchase_cost.toLocaleString()}` : '—'}</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--gold)', marginTop: 4 }}>{batch.purchase_cost ? `AED ${batch.purchase_cost.toLocaleString()}` : '—'}</div>
             </div>
           </div>
 
@@ -445,11 +445,11 @@ function BatchDetailsModal({ batch, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Receipt / Creation Date</span>
-              <strong style={{ color: '#fff' }}>{new Date(batch.received_at).toLocaleDateString('en-IN')}</strong>
+              <strong style={{ color: '#fff' }}>{new Date(batch.received_at).toLocaleDateString('en-US')}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Total Batch Capital Valuation</span>
-              <strong style={{ color: 'var(--gold-bright)' }}>₹{totalValuation.toLocaleString('en-IN')}</strong>
+              <strong style={{ color: 'var(--gold-bright)' }}>AED {totalValuation.toLocaleString('en-US')}</strong>
             </div>
           </div>
 
@@ -510,7 +510,7 @@ function MovementDetailsModal({ movement, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Transaction Date</span>
-              <strong style={{ color: '#fff' }}>{new Date(movement.date).toLocaleDateString('en-IN')}</strong>
+              <strong style={{ color: '#fff' }}>{new Date(movement.date).toLocaleDateString('en-US')}</strong>
             </div>
           </div>
 
@@ -732,7 +732,7 @@ export default function Inventory() {
               Stock Cost Basis <InfoButton text="Summation of purchase cost across all batch inventory units currently sitting in distribution centers." />
             </span>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginTop: 2 }}>
-              ₹{stock.reduce((acc, curr) => acc + (curr.current_stock * curr.cost_price), 0).toLocaleString('en-IN')}
+              AED {stock.reduce((acc, curr) => acc + (curr.current_stock * curr.cost_price), 0).toLocaleString('en-US')}
             </div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
@@ -740,7 +740,7 @@ export default function Inventory() {
               Potential Revenue <InfoButton text="Gross realized value generated if every tracked unit sells at the current active listing price." />
             </span>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 2 }}>
-              ₹{stock.reduce((acc, curr) => acc + (curr.current_stock * curr.selling_price), 0).toLocaleString('en-IN')}
+              AED {stock.reduce((acc, curr) => acc + (curr.current_stock * curr.selling_price), 0).toLocaleString('en-US')}
             </div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
@@ -748,7 +748,7 @@ export default function Inventory() {
               Projected Profit Yield <InfoButton text="Calculated net liquidity variance separating potential revenue against verified stock costs." />
             </span>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)', marginTop: 2 }}>
-              ₹{(stock.reduce((acc, curr) => acc + (curr.current_stock * curr.selling_price), 0) - stock.reduce((acc, curr) => acc + (curr.current_stock * curr.cost_price), 0)).toLocaleString('en-IN')}
+              AED {(stock.reduce((acc, curr) => acc + (curr.current_stock * curr.selling_price), 0) - stock.reduce((acc, curr) => acc + (curr.current_stock * curr.cost_price), 0)).toLocaleString('en-US')}
             </div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
@@ -784,7 +784,7 @@ export default function Inventory() {
               Batch Capitalization <InfoButton text="Gross historical locked investment utilized directly towards active logistics receipts." />
             </span>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 2 }}>
-              ₹{batches.reduce((acc, b) => acc + (b.initial_quantity * (b.purchase_cost || 0)), 0).toLocaleString('en-IN')}
+              AED {batches.reduce((acc, b) => acc + (b.initial_quantity * (b.purchase_cost || 0)), 0).toLocaleString('en-US')}
             </div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
@@ -840,7 +840,7 @@ export default function Inventory() {
               Total Payables <InfoButton text="Cumulative absolute balance remaining outstanding due directly to manufacturing supply channels." />
             </span>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--error)', marginTop: 2 }}>
-              ₹{suppliers.reduce((acc, s) => acc + s.outstanding, 0).toLocaleString('en-IN')}
+              AED {suppliers.reduce((acc, s) => acc + s.outstanding, 0).toLocaleString('en-US')}
             </div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
@@ -1082,7 +1082,7 @@ export default function Inventory() {
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Batch: {item.batch}</div>
                          </div>
                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--error)', fontWeight: 800 }}>{new Date(item.date).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--error)', fontWeight: 800 }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}</div>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{item.qty} units</div>
                          </div>
                       </div>
@@ -1179,7 +1179,7 @@ export default function Inventory() {
                   <div key={b.id} onClick={() => setSelectedBatch(b)} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: 18, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, transition: 'all 0.3s' }} className="hover-glow">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--gold)', fontWeight: 800, background: 'rgba(201,168,76,0.1)', padding: '3px 8px', borderRadius: 4 }}>{b.batch_code || 'LOT'}</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>{new Date(b.received_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>{new Date(b.received_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
                     </div>
                     <div style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>{b.product_name}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 10 }}>
@@ -1199,7 +1199,7 @@ export default function Inventory() {
         <div className="table-container">
           <table className="data-table">
             <thead>
-              <tr><th>SKU</th><th>Product Name</th><th>Selling / Cost (₹)</th><th>Margin</th><th>Stock (Avail/Total)</th><th>Location</th><th>Weight</th><th>Expiry</th><th>Status</th><th style={{ textAlign: 'center' }}>Actions</th></tr>
+              <tr><th>SKU</th><th>Product Name</th><th>Selling / Cost (AED )</th><th>Margin</th><th>Stock (Avail/Total)</th><th>Location</th><th>Weight</th><th>Expiry</th><th>Status</th><th style={{ textAlign: 'center' }}>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -1211,7 +1211,7 @@ export default function Inventory() {
                   const isExpiringSoon = s.expiry_date && (new Date(s.expiry_date) - new Date()) < (6 * 30 * 24 * 60 * 60 * 1000)
                   return (
                     <tr key={s.variant_id} onClick={() => setSelectedStockItem(s)} style={{ cursor: 'pointer' }} className="clickable-row">
-                      <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fff' }}>{s.sku}</span></td><td><div style={{ fontWeight: 600 }}>{s.product_name}</div><span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Lot: {s.batch_code}</span></td><td><div style={{ color: '#fff', fontWeight: 600 }}>₹{s.selling_price.toLocaleString('en-IN')}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Cost: ₹{s.cost_price.toLocaleString('en-IN')}</div></td><td><span style={{ color: s.margin_pct >= 40 ? 'var(--success)' : 'var(--gold)', fontWeight: 700 }}>
+                      <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fff' }}>{s.sku}</span></td><td><div style={{ fontWeight: 600 }}>{s.product_name}</div><span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Lot: {s.batch_code}</span></td><td><div style={{ color: '#fff', fontWeight: 600 }}>AED {s.selling_price.toLocaleString('en-US')}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Cost: AED {s.cost_price.toLocaleString('en-US')}</div></td><td><span style={{ color: s.margin_pct >= 40 ? 'var(--success)' : 'var(--gold)', fontWeight: 700 }}>
                           {s.margin_pct}%
                         </span></td><td><strong style={{ color: s.is_low_stock ? 'var(--error)' : 'var(--success)' }}>
                           {s.current_stock}
@@ -1223,7 +1223,7 @@ export default function Inventory() {
                           background: isExpiringSoon ? 'rgba(239,68,68,0.1)' : 'transparent',
                           padding: isExpiringSoon ? '2px 6px' : '0', borderRadius: 4
                         }}>
-                          {new Date(s.expiry_date).toLocaleDateString('en-IN')}
+                          {new Date(s.expiry_date).toLocaleDateString('en-US')}
                           {isExpiringSoon && <span style={{ display: 'block', fontSize: '0.58rem', fontWeight: 'bold' }}>⚠️ EXPIRING</span>}
                         </span></td><td><span className="badge" style={{
                           fontSize: '0.68rem', fontWeight: 700,
@@ -1264,9 +1264,9 @@ export default function Inventory() {
               ) : (
                 batches.map(b => (
                   <tr key={b.id} onClick={() => setSelectedBatch(b)} style={{ cursor: 'pointer' }}>
-                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{b.batch_code || '—'}</span></td><td><div style={{ fontWeight: 600 }}>{b.product_name}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{b.variant_sku}</div></td><td>{b.supplier_name || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td><td>{b.initial_quantity}</td><td><strong style={{ color: b.current_quantity === 0 ? 'var(--error)' : 'var(--text-primary)' }}>{b.current_quantity}</strong></td><td>{b.purchase_cost ? `₹${b.purchase_cost}` : '—'}</td><td><span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{b.batch_code || '—'}</span></td><td><div style={{ fontWeight: 600 }}>{b.product_name}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{b.variant_sku}</div></td><td>{b.supplier_name || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td><td>{b.initial_quantity}</td><td><strong style={{ color: b.current_quantity === 0 ? 'var(--error)' : 'var(--text-primary)' }}>{b.current_quantity}</strong></td><td>{b.purchase_cost ? `AED ${b.purchase_cost}` : '—'}</td><td><span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                         {b.warehouse_location || '—'}
-                      </span></td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(b.received_at).toLocaleDateString('en-IN')}</td></tr>
+                      </span></td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(b.received_at).toLocaleDateString('en-US')}</td></tr>
                 ))
               )}
             </tbody>
@@ -1302,7 +1302,7 @@ export default function Inventory() {
                         {m.type}
                       </span></td><td><strong style={{ color: m.qty > 0 ? 'var(--success)' : 'var(--error)' }}>
                         {m.qty > 0 ? `+${m.qty}` : m.qty}
-                      </strong></td><td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.reason}</td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleDateString('en-IN')}</td></tr>
+                      </strong></td><td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.reason}</td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleDateString('en-US')}</td></tr>
                 ))
               )}
             </tbody>
@@ -1339,7 +1339,7 @@ export default function Inventory() {
                       </div></td><td><span style={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 600 }}>{s.gst_number || '—'}</span></td><td style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} color="var(--gold)" />
                         {s.address}
                       </div></td><td><strong style={{ color: (s.outstanding || 0) > 0 ? 'var(--error)' : 'var(--success)' }}>
-                        ₹{(s.outstanding || 0).toLocaleString('en-IN')}
+                        AED {(s.outstanding || 0).toLocaleString('en-US')}
                       </strong></td><td><div style={{ display: 'flex', justifyContent: 'center' }}><button className="btn btn-sm btn-ghost" onClick={() => setSelectedLedger(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)' }}>
                           <FileText size={11} /> Ledger Report
                         </button></div></td></tr>

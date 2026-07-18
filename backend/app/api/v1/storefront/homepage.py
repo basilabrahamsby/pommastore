@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header, Query, Response
 from fastapi.encoders import jsonable_encoder
 import json
 from app.core.redis import redis_service
@@ -13,7 +13,7 @@ from app.models.product import Category, Product, ProductVariant, Brand
 from app.models.system import SystemSettings
 from app.models.offer import Offer
 from app.models.loyalty import LoyaltyReward
-from app.api.v1.storefront.products import enrich_products_bulk
+from app.api.v1.storefront.products import enrich_products_bulk, get_lang
 from app.schemas.brand import CategoryOut, BrandOut
 from app.schemas.offer import OfferOut
 from app.schemas.product import ProductOut
@@ -25,10 +25,19 @@ class OfferWithProductsOut(OfferOut):
     products: List[ProductOut] = []
 
 @router.get("")
-async def get_homepage_data(db: AsyncSession = Depends(get_db)):
+async def get_homepage_data(
+    response: Response,
+    lang: str | None = Query(None),
+    accept_language: str | None = Header(None),
+    db: AsyncSession = Depends(get_db)
+):
     """Consolidated endpoint fetching all homepage layouts and product curation data en-masse."""
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    locale = get_lang(accept_language, lang)
+    cache_key = f"storefront:homepage:{locale}"
+    
     try:
-        cached = await redis_service.redis.get("storefront:homepage")
+        cached = await redis_service.redis.get(cache_key)
         if cached:
             return json.loads(cached)
     except Exception:
@@ -57,13 +66,31 @@ async def get_homepage_data(db: AsyncSession = Depends(get_db)):
     cats_result = await db.execute(
         select(Category).where(Category.is_active == True).order_by(Category.name)
     )
-    categories = [CategoryOut.model_validate(c) for c in cats_result.scalars().all()]
+    cat_objs = cats_result.scalars().all()
+    categories = []
+    for c in cat_objs:
+        cat_out = CategoryOut.model_validate(c)
+        if locale == "ar":
+            if getattr(c, "name_ar", None):
+                cat_out.name = c.name_ar
+            if getattr(c, "description_ar", None):
+                cat_out.description = c.description_ar
+        categories.append(cat_out)
 
     # 3. Fetch brands
     brands_result = await db.execute(
         select(Brand).order_by(Brand.name)
     )
-    brands = [BrandOut.model_validate(b) for b in brands_result.scalars().all()]
+    brand_objs = brands_result.scalars().all()
+    brands = []
+    for b in brand_objs:
+        brand_out = BrandOut.model_validate(b)
+        if locale == "ar":
+            if getattr(b, "name_ar", None):
+                brand_out.name = b.name_ar
+            if getattr(b, "description_ar", None):
+                brand_out.description = b.description_ar
+        brands.append(brand_out)
 
     # 4. Fetch loyalty rewards
     rewards_result = await db.execute(
@@ -122,7 +149,7 @@ async def get_homepage_data(db: AsyncSession = Depends(get_db)):
     unique_products_map = {p.id: p for p in combined_raw_products}
     unique_products = list(unique_products_map.values())
     
-    enriched_products = await enrich_products_bulk(unique_products, db)
+    enriched_products = await enrich_products_bulk(unique_products, db, lang=locale)
     enriched_map = {ep.id: ep for ep in enriched_products}
 
     new_arrivals_out = [enriched_map[p.id] for p in new_arrivals_list if p.id in enriched_map]
@@ -167,7 +194,7 @@ async def get_homepage_data(db: AsyncSession = Depends(get_db)):
         prod_res = await db.execute(prod_query)
         raw_offer_prods = prod_res.scalars().all()
         
-        enriched_offer_prods = await enrich_products_bulk(raw_offer_prods, db)
+        enriched_offer_prods = await enrich_products_bulk(raw_offer_prods, db, lang=locale)
         for ep in enriched_offer_prods:
             for v in ep.variants:
                 mapped_products_by_sku[v.sku] = ep
@@ -204,7 +231,7 @@ async def get_homepage_data(db: AsyncSession = Depends(get_db)):
     try:
         serializable_payload = jsonable_encoder(response_payload)
         # Cache for 60 seconds (1 minute) to ensure fast updates
-        await redis_service.redis.setex("storefront:homepage", 60, json.dumps(serializable_payload))
+        await redis_service.redis.setex(cache_key, 60, json.dumps(serializable_payload))
     except Exception:
         pass
 

@@ -1,4 +1,4 @@
-import httpx
+﻿import httpx
 from typing import Dict, Any, List
 from app.core.config import settings
 import logging
@@ -647,7 +647,7 @@ def generate_delhivery_label_html(order, pkg: Optional[Dict[str, Any]] = None) -
             <table class="table-layout">
                 <tr>
                     <td class="header-left">
-                        KOZMOCART COMMODITIES<br>PRIVATE LIMITED
+                        POMMASTORE COMMODITIES<br>PRIVATE LIMITED
                     </td>
                     <td class="header-right">
                         <span style="color: #e31e24;">DELHI</span><span>very</span>
@@ -686,8 +686,8 @@ def generate_delhivery_label_html(order, pkg: Optional[Dict[str, Any]] = None) -
             <!-- Seller Section -->
             <div class="info-split">
                 <div class="info-left">
-                    <strong>Seller:</strong> KOZMOCART COMMODITIES PRIVATE LIMITED<br>
-                    <strong>Address:</strong> Kozmocart Commodities Pvt Ltd 72/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O Kochi - 682026 Kerala<br>
+                    <strong>Seller:</strong> POMMASTORE COMMODITIES PRIVATE LIMITED<br>
+                    <strong>Address:</strong> Pommastore Commodities Pvt Ltd 72/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O Kochi - 682026 Kerala<br>
                     <strong>GST:</strong> 32AAHCK3784H1ZF
                 </div>
                 <div class="info-right" style="font-size: 9px; align-self: center;">
@@ -724,7 +724,7 @@ def generate_delhivery_label_html(order, pkg: Optional[Dict[str, Any]] = None) -
             
             <!-- Return Address -->
             <div style="padding: 8px 10px; font-size: 9px; line-height: 1.3; color: #333;">
-                <strong>Return Address:</strong> Kozmocart Commodities Pvt Ltd 72/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O Kochi - 682026 Kerala
+                <strong>Return Address:</strong> Pommastore Commodities Pvt Ltd 72/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O Kochi - 682026 Kerala
             </div>
         </div>
         

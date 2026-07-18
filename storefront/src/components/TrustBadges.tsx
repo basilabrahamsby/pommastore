@@ -11,7 +11,7 @@ const TrustBadges = () => {
     {
       icon: <Truck size={32} strokeWidth={1.5} />,
       title: "FREE SHIPPING",
-      desc: "On orders over ₹1,000"
+      desc: "On orders over AED 1,000"
     },
     {
       icon: <RotateCcw size={32} strokeWidth={1.5} />,

@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 
 def detect_and_read(filepath):
     # Try different encodings
@@ -13,4 +13,4 @@ def detect_and_read(filepath):
             print(f"Encoding {encoding} failed: {e}")
 
 if __name__ == '__main__':
-    detect_and_read('C:\\Developer\\Kozmocart\\api_logs.txt')
+    detect_and_read('C:\\Developer\\Pommastore\\api_logs.txt')

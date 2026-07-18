@@ -56,7 +56,7 @@ export default function Login() {
         <div style={styles.formHeader}>
           {/* Logo */}
           <div style={styles.logoBlock}>
-            <img src="/admin/logo.png" alt="Kozmocart Logo" style={{ height: '56px', objectFit: 'contain', marginBottom: 12, marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
+            <img src="/admin/logo_centered.png" alt="Pommastore Logo" style={{ height: '76px', objectFit: 'contain', marginBottom: 12, marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
             <p style={styles.logoSub}>Admin ERP Platform</p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function Login() {
                 id="login-email"
                 className="input"
                 type="email"
-                placeholder="admin@kozmocart.in"
+                placeholder="admin@pommastore.in"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setErrorMsg(''); }}
                 required
@@ -127,7 +127,7 @@ export default function Login() {
           </div>
 
           <p style={styles.footer}>
-            Kozmocart ERP v1.0 &nbsp;·&nbsp; For authorized personnel only<br />
+            Pommastore ERP v1.0 &nbsp;·&nbsp; For authorized personnel only<br />
             <span style={{marginTop: 6, display: 'inline-block'}}>
               Powered by <a href="https://teqmates.com" target="_blank" rel="noreferrer" style={styles.footerLink}>TeqMates</a>
             </span>

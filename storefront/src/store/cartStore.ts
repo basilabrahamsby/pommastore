@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface CartItem {
@@ -64,7 +64,7 @@ export const useCartStore = create<CartState>()(
       setItems: (items: CartItem[]) => set({ items }),
     }),
     {
-      name: 'kozmocart-cart',
+      name: 'pommastore-cart',
     }
   )
 );

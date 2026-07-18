@@ -1,4 +1,4 @@
-filepath = 'c:\\Developer\\Kozmocart\\storefront\\src\\app\\page.tsx'
+﻿filepath = 'c:\\Developer\\Pommastore\\storefront\\src\\app\\page.tsx'
 
 with open(filepath, 'r', encoding='utf-8') as f:
     lines = f.readlines()

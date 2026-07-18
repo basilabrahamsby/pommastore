@@ -70,11 +70,11 @@ function EditTaxModal({ sku, onClose, onSaved }) {
 
             <div className="grid-3">
               <div className="form-group">
-                <label className="form-label">Compare At Price (MRP) (₹) *</label>
+                <label className="form-label">Compare At Price (MRP) (AED ) *</label>
                 <input className="input" type="number" value={form.compare_at_price} onChange={e => set('compare_at_price', e.target.value)} required />
               </div>
               <div className="form-group">
-                <label className="form-label">Selling Price (₹) *</label>
+                <label className="form-label">Selling Price (AED ) *</label>
                 <input className="input" type="number" value={form.selling_price} onChange={e => set('selling_price', e.target.value)} required />
               </div>
               <div className="form-group">
@@ -123,15 +123,15 @@ function EditTaxModal({ sku, onClose, onSaved }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Base Taxable Price:</span>
-                  <strong style={{ color: '#fff' }}>₹{basePrice.toFixed(2)}</strong>
+                  <strong style={{ color: '#fff' }}>AED {basePrice.toFixed(2)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Sales GST ({form.gst_slab}%):</span>
-                  <strong style={{ color: 'var(--gold)' }}>₹{taxAmount.toFixed(2)}</strong>
+                  <strong style={{ color: 'var(--gold)' }}>AED {taxAmount.toFixed(2)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 6, marginTop: 4 }}>
                   <span style={{ color: '#fff', fontWeight: 600 }}>Final Customer MRP:</span>
-                  <strong style={{ color: 'var(--gold-bright)', fontSize: '0.85rem' }}>₹{finalMRP.toFixed(0)}</strong>
+                  <strong style={{ color: 'var(--gold-bright)', fontSize: '0.85rem' }}>AED {finalMRP.toFixed(0)}</strong>
                 </div>
               </div>
             </div>
@@ -184,15 +184,15 @@ function ViewSkuModal({ sku, onClose }) {
           <div className="grid-3">
             <div>
               <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>COMPARE AT / MRP</span>
-              <strong style={{ fontSize: '1rem', color: 'var(--gold-bright)' }}>{sku.compare_at_price ? `₹${Number(sku.compare_at_price).toLocaleString('en-IN')}` : '—'}</strong>
+              <strong style={{ fontSize: '1rem', color: 'var(--gold-bright)' }}>{sku.compare_at_price ? `AED ${Number(sku.compare_at_price).toLocaleString('en-US')}` : '—'}</strong>
             </div>
             <div>
               <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>SELLING PRICE</span>
-              <strong style={{ fontSize: '1rem', color: '#fff' }}>₹{Number(sku.selling_price).toLocaleString('en-IN')}</strong>
+              <strong style={{ fontSize: '1rem', color: '#fff' }}>AED {Number(sku.selling_price).toLocaleString('en-US')}</strong>
             </div>
             <div>
               <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>COST PRICE</span>
-              <strong style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>₹{Number(sku.cost_price || 0).toLocaleString('en-IN')}</strong>
+              <strong style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>AED {Number(sku.cost_price || 0).toLocaleString('en-US')}</strong>
             </div>
           </div>
           <div className="grid-3" style={{ background: 'rgba(255,255,255,0.02)', padding: 10, borderRadius: 6, border: '1px solid var(--border)' }}>
@@ -301,15 +301,15 @@ function AddSkuModal({ products, onClose, onSaved }) {
 
             <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
               <div className="form-group">
-                <label className="form-label">Compare At / MRP (₹) *</label>
+                <label className="form-label">Compare At / MRP (AED ) *</label>
                 <input className="input" type="number" value={form.compare_at_price} onChange={e => set('compare_at_price', e.target.value)} required placeholder="2999" />
               </div>
               <div className="form-group">
-                <label className="form-label">Selling Price (₹) *</label>
+                <label className="form-label">Selling Price (AED ) *</label>
                 <input className="input" type="number" value={form.selling_price} onChange={e => set('selling_price', e.target.value)} required placeholder="2499" />
               </div>
               <div className="form-group">
-                <label className="form-label">Cost Price (₹)</label>
+                <label className="form-label">Cost Price (AED )</label>
                 <input className="input" type="number" value={form.cost_price} onChange={e => set('cost_price', e.target.value)} placeholder="1200" />
               </div>
               <div className="form-group">
@@ -486,10 +486,10 @@ export default function SKUs({ hideHeader }) {
               <th>SKU</th>
               <th>Product</th>
               <th>Size / Conc.</th>
-              <th>Base Price (₹)</th>
+              <th>Base Price (AED )</th>
               <th>Tax Type</th>
               <th>GST Slab</th>
-              <th>Final MRP (₹)</th>
+              <th>Final MRP (AED )</th>
               <th>Stock</th>
               <th>Status</th>
               <th>Loyalty Points</th>
@@ -514,9 +514,9 @@ export default function SKUs({ hideHeader }) {
                   {s.size_ml ? `${s.size_ml}ml` : '—'} <span style={{ color: 'var(--text-muted)', margin: '0 4px' }}>•</span> {s.concentration || '—'}
                 </td>
                 <td>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>₹{Number(s.selling_price).toLocaleString('en-IN')}</div>
-                  {s.compare_at_price && <div style={{ fontSize: '0.7rem', color: 'var(--gold-bright)' }}>MRP: ₹{Number(s.compare_at_price).toLocaleString('en-IN')}</div>}
-                  {s.cost_price && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cost: ₹{Number(s.cost_price).toLocaleString('en-IN')}</div>}
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>AED {Number(s.selling_price).toLocaleString('en-US')}</div>
+                  {s.compare_at_price && <div style={{ fontSize: '0.7rem', color: 'var(--gold-bright)' }}>MRP: AED {Number(s.compare_at_price).toLocaleString('en-US')}</div>}
+                  {s.cost_price && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cost: AED {Number(s.cost_price).toLocaleString('en-US')}</div>}
                 </td>
                 <td>
                   <span className="badge" style={{
@@ -533,7 +533,7 @@ export default function SKUs({ hideHeader }) {
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>HSN: {s.hsn_code}</div>
                 </td>
                 <td>
-                  <strong style={{ color: '#fff', fontSize: '0.85rem' }}>₹{Math.round(s.final_mrp).toLocaleString('en-IN')}</strong>
+                  <strong style={{ color: '#fff', fontSize: '0.85rem' }}>AED {Math.round(s.final_mrp).toLocaleString('en-US')}</strong>
                 </td>
                 <td>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: s.current_stock <= s.min_stock_alert ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)', padding: '4px 8px', borderRadius: 4, color: s.current_stock <= s.min_stock_alert ? 'var(--error)' : 'var(--success)' }}>

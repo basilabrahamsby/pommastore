@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -290,7 +290,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         final options = {
           'key': razorpayKeyId,
           'amount': amountInPaise,
-          'name': 'Kozmocart',
+          'name': 'Pommastore',
           'order_id': razorpayOrderId,
           'description': 'Secure Order Payment for $orderNumber',
           'prefill': {

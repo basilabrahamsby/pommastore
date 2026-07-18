@@ -1,19 +1,20 @@
 const isServer = typeof window === 'undefined';
-const isProduction = process.env.NODE_ENV === 'production';
-const isLocalhost = !isServer && window.location.hostname === 'localhost';
 
-// In production, static uploads are served under /static_uploads/ via Nginx at root level
-const BACKEND_URL = isProduction
-  ? ''
-  : (isLocalhost || isServer)
-    ? 'http://localhost:8000'
-    : '';
+// Use runtime hostname detection (not NODE_ENV) so Docker production builds
+// work on localhost. On live server, nginx proxies /static_uploads/ so no prefix needed.
+const getBackendUrl = (): string => {
+  if (isServer) return 'http://api:8000';
+  if (window.location.hostname === 'localhost') return 'http://localhost:8020';
+  return ''; // live server: nginx handles /static_uploads/ at root
+};
+
+const BACKEND_URL = getBackendUrl();
 
 export const getMediaUrl = (path: string | null | undefined): string => {
   if (!path) return '/placeholder-perfume.png';
   
-  // Strip /kozmocart prefix if present in database path values
-  let cleanPath = path.replace(/^\/kozmocart/, '');
+  // Strip /pommastore prefix if present in database path values
+  let cleanPath = path.replace(/^\/pommastore/, '');
   if (cleanPath.startsWith('http')) return cleanPath;
   if (cleanPath.startsWith('data:')) return cleanPath;
 

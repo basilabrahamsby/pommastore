@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Search, ChevronDown, User, DollarSign, CreditCard, Activity, Plus, TrendingUp, TrendingDown, Download, Filter, ArrowUpRight, ArrowDownRight, ShoppingBag, Users, Percent, Building, Clock, Check, X, Package, ShieldCheck, Smartphone, Mail } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
@@ -71,7 +71,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
 
     const subtotal = calculateSubtotal()
     if (offer.min_purchase_amount && subtotal < offer.min_purchase_amount) {
-      toast.error(`Min purchase for this offer is ₹${offer.min_purchase_amount}`)
+      toast.error(`Min purchase for this offer is AED ${offer.min_purchase_amount}`)
       setSelectedOfferId('')
       return
     }
@@ -620,7 +620,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', background: 'rgba(201,168,76,0.05)', padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(201,168,76,0.1)' }}>
                    <div style={{ textAlign: 'right' }}>
                       <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Subtotal Estimate</span>
-                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gold-bright)' }}>₹{calculateSubtotal().toLocaleString('en-IN')}</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gold-bright)' }}>AED {calculateSubtotal().toLocaleString('en-US')}</div>
                    </div>
                 </div>
               </div>
@@ -730,7 +730,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'right' }}>
                     <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Grand Total</span>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)' }}>AED {calculateTotal().toLocaleString('en-US')}</span>
                   </div>
                 </div>
 
@@ -778,7 +778,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Payment Mode</span><span style={{ color: '#fff', fontWeight: 600, textTransform: 'uppercase' }}>{form.payment_method}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8, marginTop: 4 }}>
                          <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>PAYABLE AMOUNT</span>
-                         <span style={{ color: 'var(--gold-bright)', fontWeight: 800, fontSize: '1.1rem' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
+                         <span style={{ color: 'var(--gold-bright)', fontWeight: 800, fontSize: '1.1rem' }}>AED {calculateTotal().toLocaleString('en-US')}</span>
                       </div>
                    </div>
                 </div>
@@ -858,7 +858,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Amount to Pay</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>₹{calculateTotal().toLocaleString('en-IN')}</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>AED {calculateTotal().toLocaleString('en-US')}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Contact Account</div>
@@ -1017,12 +1017,12 @@ export default function Orders() {
   }, [tab, orderSearch, statusFilter, customerSearch, ovTime])
 
   const STATUS_MESSAGES = {
-    confirmed: (name, num) => `Hi ${name || 'there'} 👋, your Kozmocart order *${num}* has been *confirmed*! We're getting it ready for you. 🎉`,
+    confirmed: (name, num) => `Hi ${name || 'there'} 👋, your Pommastore order *${num}* has been *confirmed*! We're getting it ready for you. 🎉`,
     processing: (name, num) => `Hi ${name || 'there'}, your order *${num}* is now being *processed & packed* at our warehouse. 📦`,
     packed: (name, num) => `Your order *${num}* is *packed* and ready to ship, ${name || 'dear customer'}! Dispatch is imminent. 🚀`,
-    shipped: (name, num, awb) => `Great news ${name || 'there'}! 🚚 Your Kozmocart order *${num}* has been *shipped*.\nTracking AWB: *${awb || 'N/A'}*\nTrack at: https://www.delhivery.com/track/package/${awb || ''}`,
+    shipped: (name, num, awb) => `Great news ${name || 'there'}! 🚚 Your Pommastore order *${num}* has been *shipped*.\nTracking AWB: *${awb || 'N/A'}*\nTrack at: https://www.delhivery.com/track/package/${awb || ''}`,
     out_for_delivery: (name, num) => `Your order *${num}* is *out for delivery* today, ${name || 'dear customer'}! Please keep your phone handy. 🏠`,
-    delivered: (name, num) => `Your order *${num}* has been *delivered* successfully! 🎉 Thank you for shopping with Kozmocart. We'd love your review!`,
+    delivered: (name, num) => `Your order *${num}* has been *delivered* successfully! 🎉 Thank you for shopping with Pommastore. We'd love your review!`,
     completed: (name, num) => `Order *${num}* is now *completed*. Thank you ${name || ''}! 💛 Earn more loyalty points on your next purchase.`,
     cancelled: (name, num) => `We're sorry to inform you that order *${num}* has been *cancelled*, ${name || 'dear customer'}. Please contact us for assistance.`,
   }
@@ -1091,7 +1091,7 @@ export default function Orders() {
     }
   }
 
-  const fmt = n => `₹${Number(n || 0).toLocaleString('en-IN')}`
+  const fmt = n => `AED ${Number(n || 0).toLocaleString('en-US')}`
 
   const filteredTxns = transactions.filter(t => 
     t.id.toLowerCase().includes(txnSearch.toLowerCase()) ||
@@ -1108,15 +1108,15 @@ export default function Orders() {
     if (type === 'orders') {
       headers = ['Order Number', 'Customer', 'Channel', 'Total', 'Payment', 'Status', 'Date']
       rows = orders.map(o => [o.order_number, o.customer_name || 'Walk-In', o.channel, o.total_amount, o.payment_method || '—', o.status, new Date(o.created_at).toLocaleDateString()])
-      filename = 'Kozmocart_Orders_Ledger.csv'
+      filename = 'Pommastore_Orders_Ledger.csv'
     } else if (type === 'customers') {
       headers = ['Customer Name', 'Email', 'Phone', 'Loyalty Tier', 'Points', 'Orders Count', 'Total Spent', 'Last Order']
       rows = customers.map(c => [c.full_name || '—', c.email || '—', c.phone || '—', c.loyalty_tier, c.loyalty_points, c.order_count, c.total_spent, c.last_order_at ? new Date(c.last_order_at).toLocaleDateString() : '—'])
-      filename = 'Kozmocart_Customers_Ledger.csv'
+      filename = 'Pommastore_Customers_Ledger.csv'
     } else {
       headers = ['Transaction ID', 'Order Ref', 'Customer', 'Gateway', 'Amount', 'Status', 'Date']
       rows = filteredTxns.map(t => [t.id, t.order_ref, t.customer, t.gateway, t.amount, t.status, t.date])
-      filename = 'Kozmocart_Financial_Ledger.csv'
+      filename = 'Pommastore_Financial_Ledger.csv'
     }
 
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -1610,7 +1610,7 @@ export default function Orders() {
                         {o.status.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(o.created_at).toLocaleDateString('en-US')}</td>
                     <td onClick={e => e.stopPropagation()}>
                       <select className="select" style={{ width: 130, fontSize: '0.75rem', padding: '4px 8px' }}
                         value={o.status}
@@ -1638,10 +1638,10 @@ export default function Orders() {
                     status: ord.status,
                     customerName: 'Multiple Customers',
                     customerPhone: '91xxxxxxxxxx',
-                    customerEmail: 'bulk@kozmocart.com',
+                    customerEmail: 'bulk@pommastore.com',
                     isBulk: true,
                     ids: selectedOrderIds,
-                    message: `Hello! This is an update from Kozmocart regarding your order. We are processing it and will update you shortly.`
+                    message: `Hello! This is an update from Pommastore regarding your order. We are processing it and will update you shortly.`
                   })
                 }}>💬 Bulk Notify</button>
                 <button className="btn btn-secondary btn-sm" style={{ borderRadius: 20 }} onClick={() => setSelectedOrderIds([])}>Cancel</button>
@@ -1704,7 +1704,7 @@ export default function Orders() {
                     <td style={{ fontWeight: 600 }}>{c.loyalty_points}</td>
                     <td>{c.order_count}</td>
                     <td style={{ fontWeight: 700, color: 'var(--gold-bright)' }}>{fmt(c.total_spent)}</td>
-                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.last_order_at ? new Date(c.last_order_at).toLocaleDateString('en-IN') : '—'}</td>
+                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.last_order_at ? new Date(c.last_order_at).toLocaleDateString('en-US') : '—'}</td>
                     <td><span className="badge badge-neutral">{c.acquisition_source || '—'}</span></td>
                   </tr>
                 ))
@@ -1760,7 +1760,7 @@ export default function Orders() {
                         {t.status}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(t.date).toLocaleDateString('en-IN')}</td>
+                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(t.date).toLocaleDateString('en-US')}</td>
                   </tr>
                 ))
               )}
@@ -1849,7 +1849,7 @@ export default function Orders() {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Booking Date</div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>{new Date(selectedOrder.created_at).toLocaleString('en-IN')}</div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>{new Date(selectedOrder.created_at).toLocaleString('en-US')}</div>
                 </div>
               </div>
 
@@ -1932,7 +1932,7 @@ export default function Orders() {
 
               {/* STATUTORY COMPLIANCE FOOTER */}
               {(() => {
-                let companyDetails = { companyName: 'Kozmocart Retailers', gstin: '' }
+                let companyDetails = { companyName: 'Pommastore Retailers', gstin: '' }
                 try {
                   const saved = localStorage.getItem('kzm-company-gst')
                   if (saved) companyDetails = JSON.parse(saved)
@@ -1976,7 +1976,7 @@ export default function Orders() {
                       setPickupModal({
                         orderId: selectedOrder.id,
                         waybill: selectedOrder.tracking_number,
-                        pickupLocation: 'Kozmocart Commodities Pvt Ltd',
+                        pickupLocation: 'Pommastore Commodities Pvt Ltd',
                         pickupDate: new Date().toISOString().split('T')[0],
                         pickupTimeSlot: '14:00:00 - 18:00:00',
                         expectedCount: 1
@@ -2131,7 +2131,7 @@ export default function Orders() {
               </div>
 
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: 10, borderRadius: 8, marginTop: 12, fontSize: '0.68rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                🔒 Officially recorded inside the Kozmocart Financial Ledger database.
+                🔒 Officially recorded inside the Pommastore Financial Ledger database.
               </div>
             </div>
             <div className="modal-footer">
@@ -2347,7 +2347,7 @@ function CustomerProfileModal({ customer, onClose, fmt }) {
             </div>
             <div>
               <strong style={{ fontSize: '1.05rem', color: '#fff' }}>{customer.full_name || 'Anonymous Guest'}</strong>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Registered: {new Date(customer.created_at).toLocaleDateString('en-IN')}</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Registered: {new Date(customer.created_at).toLocaleDateString('en-US')}</div>
             </div>
           </div>
 

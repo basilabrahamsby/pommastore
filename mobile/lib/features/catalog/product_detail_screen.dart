@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -49,11 +49,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   Future<void> _loadProductDetailsAndRecommendations() async {

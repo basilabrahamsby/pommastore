@@ -6,17 +6,21 @@ import { useRouter } from 'next/navigation';
 import { ShoppingBag, Heart, Star } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { useTranslation } from '@/locales/i18nContext';
 import { getMediaUrl } from '@/services/media';
 
 interface ProductCardProps {
   product: {
     id: string;
     name: string;
+    name_ar?: string;
     slug: string;
     brand_name: string;
+    brand_name_ar?: string;
     images?: string[];
     variants: any[];
     scent_notes?: any;
+    scent_notes_ar?: any;
   };
 }
 
@@ -53,6 +57,7 @@ const getRating = (id: string) => {
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const cartItems = useCartStore((state) => state.items);
@@ -104,11 +109,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     : 0;
 
   const getNotes = () => {
-    if (product.scent_notes) {
-      const notesList: string[] = [];
-      const top = product.scent_notes.top || [];
-      const heart = product.scent_notes.heart || [];
-      const base = product.scent_notes.base || [];
+    const isAr = locale === 'ar';
+    const notesData = (isAr && product.scent_notes_ar) ? product.scent_notes_ar : product.scent_notes;
+    if (notesData) {
+      const top = notesData.top || [];
+      const heart = notesData.heart || [];
+      const base = notesData.base || [];
       const all = [...top, ...heart, ...base];
       if (all.length > 0) {
         return Array.from(new Set(all)).slice(0, 4);
@@ -295,20 +301,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         <div className="p-4 flex flex-col">
           <h3 className="text-[11px] font-medium text-neutral-600 uppercase tracking-wide line-clamp-1 h-4 mb-1 leading-tight w-full overflow-hidden text-ellipsis font-sans">
-            {product.name}
+            {locale === 'ar' ? (product.name_ar || product.name) : product.name}
           </h3>
           <p className="text-[10px] tracking-[0.1em] text-black font-nelphim font-black uppercase mb-2">
-            {product.brand_name}
+            {locale === 'ar' ? (product.brand_name_ar || product.brand_name) : product.brand_name}
           </p>
 
           <div className="flex items-center space-x-1.5 mt-1 font-sans">
             <span className="text-[13px] font-bold text-black">
-              ₹{primaryVariant?.selling_price?.toLocaleString('en-IN')}
+              AED {primaryVariant?.selling_price?.toLocaleString('en-IN')}
             </span>
             {hasDiscount && (
               <>
                 <span className="text-[10px] text-neutral-400 line-through font-medium">
-                  ₹{primaryVariant.compare_at_price.toLocaleString('en-IN')}
+                  AED {primaryVariant.compare_at_price.toLocaleString('en-IN')}
                 </span>
                 <span className="text-[10px] text-accent font-bold">
                   ({discountPercentage}% OFF)
@@ -335,7 +341,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                  -
                </button>
                <div className="flex-1 flex items-center justify-center text-[8px] font-black tracking-wider uppercase text-black h-full font-sans">
-                 {cartItem.quantity} In Bag
+                 {t('in_bag').replace('{quantity}', String(cartItem.quantity))}
                </div>
                <button
                  onClick={(e) => {
@@ -352,7 +358,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                onClick={handleBuyNow}
                className="flex-1 bg-accent border border-accent hover:bg-accent/90 text-white py-2 text-[9px] font-black tracking-widest transition-all duration-300 uppercase h-[36px] font-sans rounded shadow-[0_2px_8px_rgba(210,22,141,0.2)]"
              >
-               Buy Now
+               {t('buy_now')}
              </button>
            </div>
          ) : (
@@ -361,13 +367,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                onClick={handleAddToCart}
                className="flex-1 border border-neutral-900 bg-white hover:bg-neutral-50 text-neutral-900 py-2 text-[9px] font-black tracking-widest transition-all duration-300 uppercase h-[36px] font-sans rounded"
              >
-               Add to Bag
+               {t('add_to_bag')}
              </button>
              <button
                onClick={handleBuyNow}
                className="flex-1 bg-accent border border-accent hover:bg-accent/90 text-white py-2 text-[9px] font-black tracking-widest transition-all duration-300 uppercase h-[36px] font-sans rounded shadow-[0_2px_8px_rgba(210,22,141,0.2)]"
              >
-               Buy Now
+               {t('buy_now')}
              </button>
            </div>
          )}

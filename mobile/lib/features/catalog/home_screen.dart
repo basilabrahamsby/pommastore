@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
@@ -45,11 +45,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   void _handleSlideNavigation(Map<String, dynamic> slide) {
@@ -84,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (customLink.isNotEmpty) {
-      final cleanLink = customLink.replaceAll('https://kozmocart.com', '');
+      final cleanLink = customLink.replaceAll('https://pommastore.com', '');
       final uri = Uri.tryParse(cleanLink);
       if (uri != null) {
         if (uri.path.contains('/product/')) {
@@ -2385,7 +2385,7 @@ class _HomeFooter extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // About
-                Text('KOZMOCART',
+                Text('POMMASTORE',
                     style: GoogleFonts.playfairDisplay(
                         fontSize: 20,
                         color: Colors.white,
@@ -2504,7 +2504,7 @@ class _HomeFooter extends StatelessWidget {
 
                 // Copyright
                 Text(
-                  '© ${DateTime.now().year} Kozmocart Fragrances. All rights reserved.',
+                  '© ${DateTime.now().year} Pommastore Fragrances. All rights reserved.',
                   style: GoogleFonts.montserrat(
                       fontSize: 8,
                       fontWeight: FontWeight.w700,

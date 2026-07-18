@@ -1,4 +1,4 @@
-import smtplib
+﻿import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -95,7 +95,7 @@ def _base_template(title_line: str, tagline: str, content_html: str, cta_url: st
         <!-- Header -->
         <tr>
           <td bgcolor="#FFFFFF" style="padding:28px 20px;text-align:center;border-bottom:1px solid #EAE6DF;">
-            <img src="https://kozmocart.com/logo.png" alt="KOZMOCART" style="height:42px;display:block;margin:0 auto;border:0;" />
+            <img src="https://pommastore.com/logo.png" alt="POMMASTORE" style="height:42px;display:block;margin:0 auto;border:0;" />
             <p style="margin:6px 0 0;color:#D2168D;font-size:8px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;">{tagline}</p>
           </td>
         </tr>
@@ -112,8 +112,8 @@ def _base_template(title_line: str, tagline: str, content_html: str, cta_url: st
         <tr>
           <td bgcolor="#FAF8F5" style="padding:24px 20px;text-align:center;border-top:1px solid #EAE6DF;">
             <p style="margin:0;font-size:9px;color:#999999;letter-spacing:0.18em;text-transform:uppercase;line-height:1.8;">
-              © 2026 Kozmocart Luxury Fragrances &nbsp;|&nbsp; info@kozmocart.com<br>
-              You are receiving this because you placed an order on Kozmocart.
+              © 2026 Pommastore Luxury Fragrances &nbsp;|&nbsp; info@pommastore.com<br>
+              You are receiving this because you placed an order on Pommastore.
             </p>
           </td>
         </tr>
@@ -137,7 +137,7 @@ def _order_items_table(items: List[Dict[str, Any]]) -> str:
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-size:13px;color:#1A1A1A;font-weight:600;">{name}{size}</td>
           <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-size:13px;color:#666666;text-align:center;">×{qty}</td>
-          <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-size:13px;color:#1A1A1A;text-align:right;font-weight:700;">₹{float(price):,.2f}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #F0EDE8;font-size:13px;color:#1A1A1A;text-align:right;font-weight:700;">AED {float(price):,.2f}</td>
         </tr>"""
 
     return f"""
@@ -153,16 +153,16 @@ def _order_items_table(items: List[Dict[str, Any]]) -> str:
 
 def _order_summary_block(order_number: str, total: float, subtotal: float,
                           discount: float, shipping: float, tax: float, loyalty_used: int) -> str:
-    discount_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Discount</td><td style="font-size:12px;color:#D2168D;text-align:right;padding:4px 0;">−₹{discount:,.2f}</td></tr>' if discount > 0 else ""
-    loyalty_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Loyalty Points Used</td><td style="font-size:12px;color:#D2168D;text-align:right;padding:4px 0;">−₹{float(loyalty_used):,.2f}</td></tr>' if loyalty_used > 0 else ""
-    shipping_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Shipping</td><td style="font-size:12px;color:#1A1A1A;text-align:right;padding:4px 0;">₹{shipping:,.2f}</td></tr>' if shipping > 0 else ""
-    tax_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Tax</td><td style="font-size:12px;color:#1A1A1A;text-align:right;padding:4px 0;">₹{tax:,.2f}</td></tr>' if tax > 0 else ""
+    discount_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Discount</td><td style="font-size:12px;color:#D2168D;text-align:right;padding:4px 0;">−AED {discount:,.2f}</td></tr>' if discount > 0 else ""
+    loyalty_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Loyalty Points Used</td><td style="font-size:12px;color:#D2168D;text-align:right;padding:4px 0;">−AED {float(loyalty_used):,.2f}</td></tr>' if loyalty_used > 0 else ""
+    shipping_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Shipping</td><td style="font-size:12px;color:#1A1A1A;text-align:right;padding:4px 0;">AED {shipping:,.2f}</td></tr>' if shipping > 0 else ""
+    tax_row = f'<tr><td style="font-size:12px;color:#666;padding:4px 0;">Tax</td><td style="font-size:12px;color:#1A1A1A;text-align:right;padding:4px 0;">AED {tax:,.2f}</td></tr>' if tax > 0 else ""
 
     return f"""
     <div style="background:#FAF8F5;border:1px solid #EAE6DF;border-radius:3px;padding:16px 20px;margin:16px 0;">
       <p style="margin:0 0 10px;font-size:9px;color:#888;letter-spacing:0.2em;text-transform:uppercase;font-weight:700;">Order Summary — {order_number}</p>
       <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td style="font-size:12px;color:#666;padding:4px 0;">Subtotal</td><td style="font-size:12px;color:#1A1A1A;text-align:right;padding:4px 0;">₹{subtotal:,.2f}</td></tr>
+        <tr><td style="font-size:12px;color:#666;padding:4px 0;">Subtotal</td><td style="font-size:12px;color:#1A1A1A;text-align:right;padding:4px 0;">AED {subtotal:,.2f}</td></tr>
         {discount_row}
         {loyalty_row}
         {shipping_row}
@@ -170,7 +170,7 @@ def _order_summary_block(order_number: str, total: float, subtotal: float,
         <tr><td colspan="2" style="padding:6px 0;border-top:1px solid #E0D9CF;"></td></tr>
         <tr>
           <td style="font-size:14px;color:#0A0A0A;font-weight:800;padding:4px 0;">Total</td>
-          <td style="font-size:16px;color:#0A0A0A;font-weight:800;text-align:right;padding:4px 0;">₹{total:,.2f}</td>
+          <td style="font-size:16px;color:#0A0A0A;font-weight:800;text-align:right;padding:4px 0;">AED {total:,.2f}</td>
         </tr>
       </table>
     </div>"""
@@ -200,7 +200,7 @@ def _address_block(address: Optional[Dict[str, Any]]) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def send_otp_email(to_email: str, otp_code: str) -> bool:
-    subject = f"{otp_code} is your Kozmocart Access Code"
+    subject = f"{otp_code} is your Pommastore Access Code"
     body_text = f"Your verification code is {otp_code}. This code is valid for 5 minutes."
 
     content = f"""
@@ -209,7 +209,7 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
       <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:24px;font-style:italic;color:#1A1A1A;line-height:1.3;">Access the Inner Circle.</h2>
       <div style="width:40px;height:1px;background:#E2D9C8;margin:0 auto 20px;"></div>
       <p style="margin:0 0 28px;font-size:13px;color:#555;line-height:1.7;max-width:380px;margin-left:auto;margin-right:auto;">
-        Use the secure verification code below to authorize your session on Kozmocart. This code is valid for <strong>5 minutes</strong>.
+        Use the secure verification code below to authorize your session on Pommastore. This code is valid for <strong>5 minutes</strong>.
       </p>
       <div style="display:inline-block;background:#FAF8F5;border:1px dashed #E2D9C8;border-radius:4px;padding:20px 40px;margin-bottom:28px;">
         <p style="margin:0;font-size:36px;font-weight:800;letter-spacing:0.3em;color:#0A0A0A;padding-left:0.3em;">{otp_code}</p>
@@ -227,14 +227,14 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     """Generates a beautiful printable tax invoice HTML for an order."""
     if not company_details:
         company_details = {
-            "companyName": "KOZMOCART COMMODITIES PRIVATE LIMITED",
+            "companyName": "POMMASTORE COMMODITIES PRIVATE LIMITED",
             "registeredAddress": "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
             "gstin": "32AAHCK3784H1ZF",
             "pan": "AAHCK3784H",
             "stateCode": "32 (Kerala)"
         }
 
-    company_name = company_details.get("companyName") or "KOZMOCART COMMODITIES PRIVATE LIMITED"
+    company_name = company_details.get("companyName") or "POMMASTORE COMMODITIES PRIVATE LIMITED"
     company_address = company_details.get("registeredAddress") or "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
     # Derive short address (city, state, pin) for header display
     short_address = "Kochi, Kerala - 682026"
@@ -286,8 +286,8 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
         <tr>
           <td>{prod_desc}</td>
           <td style="text-align: center;font-weight:600;">{item.quantity}</td>
-          <td style="text-align: right;">₹{unit_price:,.2f}</td>
-          <td style="text-align: right;font-weight:700;">₹{total_price:,.2f}</td>
+          <td style="text-align: right;">AED {unit_price:,.2f}</td>
+          <td style="text-align: right;font-weight:700;">AED {total_price:,.2f}</td>
         </tr>
         """
 
@@ -317,36 +317,36 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     gst_rows_html = f"""
     <tr>
       <td style="font-size: 11px; color: #555555; padding-left: 10px;">Taxable Value:</td>
-      <td style="text-align: right; font-size: 11px; color: #555555;">₹{taxable_val:,.2f}</td>
+      <td style="text-align: right; font-size: 11px; color: #555555;">AED {taxable_val:,.2f}</td>
     </tr>
     """
     if is_kerala:
         gst_rows_html += f"""
         <tr>
           <td style="font-size: 11px; color: #555555; padding-left: 10px;">CGST (9.0%):</td>
-          <td style="text-align: right; font-size: 11px; color: #555555;">₹{cgst_val:,.2f}</td>
+          <td style="text-align: right; font-size: 11px; color: #555555;">AED {cgst_val:,.2f}</td>
         </tr>
         <tr>
           <td style="font-size: 11px; color: #555555; padding-left: 10px;">SGST (9.0%):</td>
-          <td style="text-align: right; font-size: 11px; color: #555555;">₹{sgst_val:,.2f}</td>
+          <td style="text-align: right; font-size: 11px; color: #555555;">AED {sgst_val:,.2f}</td>
         </tr>
         """
     else:
         gst_rows_html += f"""
         <tr>
           <td style="font-size: 11px; color: #555555; padding-left: 10px;">IGST (18.0%):</td>
-          <td style="text-align: right; font-size: 11px; color: #555555;">₹{igst_val:,.2f}</td>
+          <td style="text-align: right; font-size: 11px; color: #555555;">AED {igst_val:,.2f}</td>
         </tr>
         """
     gst_rows_html += f"""
     <tr>
       <td style="font-size: 11px; color: #555555; padding-left: 10px;">Total GST (Included):</td>
-      <td style="text-align: right; font-size: 11px; color: #555555;">₹{total_gst:,.2f}</td>
+      <td style="text-align: right; font-size: 11px; color: #555555;">AED {total_gst:,.2f}</td>
     </tr>
     """
 
-    discount_row = f'<tr><td>Discount:</td><td style="text-align: right;color:#E11D48;">-₹{discount:,.2f}</td></tr>' if discount > 0 else ""
-    shipping_row = f'<tr><td>Logistics (Standard):</td><td style="text-align: right;">{"FREE" if shipping == 0 else f"₹{shipping:,.2f}"}</td></tr>'
+    discount_row = f'<tr><td>Discount:</td><td style="text-align: right;color:#E11D48;">-AED {discount:,.2f}</td></tr>' if discount > 0 else ""
+    shipping_row = f'<tr><td>Logistics (Standard):</td><td style="text-align: right;">{"FREE" if shipping == 0 else f"AED {shipping:,.2f}"}</td></tr>'
 
     subtotal_str = f"{subtotal:,.2f}"
     total_str = f"{total:,.2f}"
@@ -571,7 +571,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     <div class="top-bar"></div>
     <div class="invoice-header">
       <div class="logo-block">
-        <img src="https://kozmocart.com/logo.png" alt="Kozmocart Logo">
+        <img src="https://pommastore.com/logo.png" alt="Pommastore Logo">
         <div class="company-address">
           <strong>{company_name}</strong><br>
           {short_address}<br>
@@ -624,7 +624,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
         <table class="summary-table">
           <tr>
             <td>Subtotal:</td>
-            <td style="text-align: right;">₹{subtotal_str}</td>
+            <td style="text-align: right;">AED {subtotal_str}</td>
           </tr>
           {discount_row}
           {shipping_row}
@@ -632,7 +632,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
           <tr class="total-row">
             <td colspan="2" style="text-align: right; padding-top: 10px;">
               <div class="total-box">
-                Total: ₹{total_str}
+                Total: AED {total_str}
               </div>
             </td>
           </tr>
@@ -644,7 +644,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
       <p style="margin: 0 0 8px; font-size: 10px; color: #555555;">{company_name}</p>
       <p style="margin: 0 0 4px; font-size: 10px; color: #555555;">{company_address}</p>
-      <p style="margin: 0; font-size: 10px; color: #555555;">Toll Free: 1800 890 2621 &nbsp;|&nbsp; <a href="mailto:info@kozmocart.com" style="color: #D2168D; text-decoration: none;">info@kozmocart.com</a> &nbsp;|&nbsp; www.kozmocart.com</p>
+      <p style="margin: 0; font-size: 10px; color: #555555;">Toll Free: 1800 890 2621 &nbsp;|&nbsp; <a href="mailto:info@pommastore.com" style="color: #D2168D; text-decoration: none;">info@pommastore.com</a> &nbsp;|&nbsp; www.pommastore.com</p>
     </div>
     <div class="bottom-bar"></div>
   </div>
@@ -665,14 +665,14 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     if not company_details:
         company_details = {
-            "companyName": "KOZMOCART COMMODITIES PRIVATE LIMITED",
+            "companyName": "POMMASTORE COMMODITIES PRIVATE LIMITED",
             "registeredAddress": "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
             "gstin": "32AAHCK3784H1ZF",
             "pan": "AAHCK3784H",
             "stateCode": "32 (Kerala)"
         }
 
-    company_name = company_details.get("companyName") or "KOZMOCART COMMODITIES PRIVATE LIMITED"
+    company_name = company_details.get("companyName") or "POMMASTORE COMMODITIES PRIVATE LIMITED"
     company_address = company_details.get("registeredAddress") or "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
     # Short address for header (city/state only)
     short_address = "Kochi, Kerala - 682026"
@@ -775,14 +775,14 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     logo_flowable = None
     try:
         req = urllib.request.Request(
-            "https://kozmocart.com/logo.png",
+            "https://pommastore.com/logo.png",
             headers={'User-Agent': 'Mozilla/5.0'}
         )
         logo_data = urllib.request.urlopen(req, timeout=3).read()
         logo_flowable = Image(BytesIO(logo_data), width=1.8*inch, height=0.4*inch)
     except Exception as img_err:
         print(f"Skipping remote logo loading: {img_err}")
-        logo_flowable = Paragraph("KOZMOCART", title_style)
+        logo_flowable = Paragraph("POMMASTORE", title_style)
 
     # Left Header: Logo & Company Address info
     left_header_text = f"<b>{company_name}</b><br/>{short_address}<br/>"
@@ -1027,7 +1027,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(Paragraph(clean_address, footer_addr_style))
     story.append(Spacer(1, 2))
     story.append(Paragraph(
-        "Toll Free: 1800 890 2621  \u2502  Email: info@kozmocart.com  \u2502  www.kozmocart.com",
+        "Toll Free: 1800 890 2621  \u2502  Email: info@pommastore.com  \u2502  www.pommastore.com",
         footer_addr_style
     ))
 
@@ -1101,7 +1101,7 @@ def send_admin_invoice_email(
     gift_message: str = "",
 ) -> bool:
     subject = f"[INVOICE/ORDER] {order_number} - New Order Details"
-    body_text = f"New Order Details for {order_number}. Customer: {customer_name}. Total: ₹{total:,.2f}"
+    body_text = f"New Order Details for {order_number}. Customer: {customer_name}. Total: AED {total:,.2f}"
 
     coupon_row = f'<p style="margin:8px 0 0;font-size:12px;color:#666;">Coupon Applied: <strong style="color:#D2168D;">{coupon_code}</strong></p>' if coupon_code else ""
     gift_row = f'<div style="margin:12px 0;padding:12px 16px;background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;"><p style="margin:0;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#D2168D;font-weight:700;margin-bottom:4px;">Gift Message</p><p style="margin:0;font-size:13px;color:#444;font-style:italic;">"{gift_message}"</p></div>' if gift_message else ""
@@ -1166,7 +1166,7 @@ def send_admin_invoice_email(
         print(f"Failed to generate PDF for admin email: {e}")
 
     return send_smtp_email(
-        "info@kozmocart.com", 
+        "info@pommastore.com", 
         subject, 
         html, 
         body_text,
@@ -1193,8 +1193,8 @@ def send_order_confirmation_email(
     customer_email: str = "",
     customer_phone: str = "",
 ) -> bool:
-    subject = f"Your Kozmocart Order is Confirmed — {order_number}"
-    body_text = f"Dear {customer_name}, your order {order_number} has been confirmed. Total: ₹{total:,.2f}"
+    subject = f"Your Pommastore Order is Confirmed — {order_number}"
+    body_text = f"Dear {customer_name}, your order {order_number} has been confirmed. Total: AED {total:,.2f}"
 
     coupon_row = f'<p style="margin:8px 0 0;font-size:12px;color:#666;">Coupon Applied: <strong style="color:#D2168D;">{coupon_code}</strong></p>' if coupon_code else ""
     gift_row = f'<div style="margin:12px 0;padding:12px 16px;background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;"><p style="margin:0;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#D2168D;font-weight:700;margin-bottom:4px;">Gift Message</p><p style="margin:0;font-size:13px;color:#444;font-style:italic;">"{gift_message}"</p></div>' if gift_message else ""
@@ -1218,14 +1218,14 @@ def send_order_confirmation_email(
     {gift_row}
     <div style="width:40px;height:1px;background:#E2D9C8;margin:24px 0;"></div>
     <p style="margin:0;font-size:11px;color:#888;line-height:1.7;">
-      Track your order anytime at <a href="https://kozmocart.com/track-order" style="color:#D2168D;text-decoration:none;">kozmocart.com/track-order</a> using your order number and email.
+      Track your order anytime at <a href="https://pommastore.com/track-order" style="color:#D2168D;text-decoration:none;">pommastore.com/track-order</a> using your order number and email.
     </p>"""
 
     html = _base_template(f"Order Confirmed — {order_number}", "Luxury Fragrance House", content,
-                          cta_url="https://kozmocart.com/track-order",
+                          cta_url="https://pommastore.com/track-order",
                           cta_label="Track My Order")
     
-    # Always send detailed invoice copy with full customer details to info@kozmocart.com
+    # Always send detailed invoice copy with full customer details to info@pommastore.com
     send_admin_invoice_email(
         customer_name=customer_name,
         customer_email=customer_email or to_email or "",
@@ -1303,7 +1303,7 @@ def send_order_processing_email(to_email: str, customer_name: str, order_number:
     </p>"""
 
     html = _base_template(f"Order Confirmed — {order_number}", "Luxury Fragrance House", content,
-                          cta_url="https://pommaholidays.com/kozmocart/orders",
+                          cta_url="https://pommaholidays.com/pommastore/orders",
                           cta_label="View My Order")
     return send_smtp_email(to_email, subject, html, body_text)
 
@@ -1345,11 +1345,11 @@ def send_order_shipped_email(
     {tracking_block}
     {items_html}
     <p style="margin:16px 0 0;font-size:12px;color:#888;line-height:1.7;">
-      If you have any questions, contact us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+      If you have any questions, contact us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
     </p>"""
 
     html = _base_template(f"Order Shipped — {order_number}", "Your Fragrance is En Route", content,
-                          cta_url="https://pommaholidays.com/kozmocart/orders",
+                          cta_url="https://pommaholidays.com/pommastore/orders",
                           cta_label="Track My Shipment")
     return send_smtp_email(to_email, subject, html, body_text)
 
@@ -1373,14 +1373,14 @@ def send_out_for_delivery_email(
     <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Arriving Today</p>
     <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Your order is out for delivery.</h2>
     <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
-      Dear <strong>{customer_name}</strong>, your Kozmocart order <strong>{order_number}</strong> is with our delivery partner and on its way to you right now. Please ensure someone is available to receive it.
+      Dear <strong>{customer_name}</strong>, your Pommastore order <strong>{order_number}</strong> is with our delivery partner and on its way to you right now. Please ensure someone is available to receive it.
     </p>
     <div style="background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;padding:14px 18px;margin:20px 0;">
       <p style="margin:0;font-size:12px;color:#D2168D;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Expected Today</p>
     </div>
     {address_html}
     <p style="margin:16px 0 0;font-size:12px;color:#888;line-height:1.7;">
-      If you are unavailable, please contact the delivery partner. Reach us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+      If you are unavailable, please contact the delivery partner. Reach us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
     </p>"""
 
     html = _base_template(f"Out for Delivery — {order_number}", "Arriving Today", content)
@@ -1398,7 +1398,7 @@ def send_order_delivered_email(
     items: Optional[List[Dict[str, Any]]] = None,
 ) -> bool:
     subject = f"Your Order Has Been Delivered — {order_number}"
-    body_text = f"Dear {customer_name}, your order {order_number} has been delivered. Thank you for choosing Kozmocart!"
+    body_text = f"Dear {customer_name}, your order {order_number} has been delivered. Thank you for choosing Pommastore!"
 
     items_html = _order_items_table(items) if items else ""
 
@@ -1406,19 +1406,19 @@ def send_order_delivered_email(
     <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Delivered</p>
     <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Your order has arrived.</h2>
     <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
-      Dear <strong>{customer_name}</strong>, your Kozmocart order <strong>{order_number}</strong> has been successfully delivered. We hope you enjoy your fragrance experience.
+      Dear <strong>{customer_name}</strong>, your Pommastore order <strong>{order_number}</strong> has been successfully delivered. We hope you enjoy your fragrance experience.
     </p>
     {items_html}
     <div style="background:#FAF8F5;border:1px solid #EAE6DF;border-radius:3px;padding:16px 20px;margin:20px 0;text-align:center;">
       <p style="margin:0 0 6px;font-size:12px;color:#555;line-height:1.6;">We'd love to hear from you. Share your experience and earn loyalty points.</p>
-      <p style="margin:0;font-size:11px;color:#888;">Contact: <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a></p>
+      <p style="margin:0;font-size:11px;color:#888;">Contact: <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a></p>
     </div>
     <p style="margin:0;font-size:11px;color:#888;line-height:1.7;">
       If you have any concerns about your delivery, please reach out to us within 48 hours.
     </p>"""
 
     html = _base_template(f"Delivered — {order_number}", "Luxury Fragrance House", content,
-                          cta_url="https://pommaholidays.com/kozmocart/shop",
+                          cta_url="https://pommaholidays.com/pommastore/shop",
                           cta_label="Explore More Fragrances")
     return send_smtp_email(to_email, subject, html, body_text)
 
@@ -1438,7 +1438,7 @@ def send_order_cancelled_email(
     body_text = f"Dear {customer_name}, your order {order_number} has been cancelled."
 
     reason_block = f'<p style="margin:12px 0 0;font-size:12px;color:#666;">Reason: <em>{reason}</em></p>' if reason else ""
-    refund_block = f'<div style="background:#FAF8F5;border-left:3px solid #EAE6DF;border-radius:2px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Refund of <strong>₹{total:,.2f}</strong> will be processed within 5–7 business days to your original payment method.</p></div>' if total > 0 else ""
+    refund_block = f'<div style="background:#FAF8F5;border-left:3px solid #EAE6DF;border-radius:2px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Refund of <strong>AED {total:,.2f}</strong> will be processed within 5–7 business days to your original payment method.</p></div>' if total > 0 else ""
 
     content = f"""
     <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#888;text-transform:uppercase;">Order Cancelled</p>
@@ -1449,11 +1449,11 @@ def send_order_cancelled_email(
     {reason_block}
     {refund_block}
     <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
-      If you believe this is an error or need assistance, please contact us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+      If you believe this is an error or need assistance, please contact us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
     </p>"""
 
     html = _base_template(f"Order Cancelled — {order_number}", "We're Sorry", content,
-                          cta_url="https://kozmocart.com/shop",
+                          cta_url="https://pommastore.com/shop",
                           cta_label="Continue Shopping")
     return send_smtp_email(to_email, subject, html, body_text)
 
@@ -1490,20 +1490,20 @@ def send_order_packed_email(to_email: str, customer_name: str, order_number: str
 
 def send_order_completed_email(to_email: str, customer_name: str, order_number: str) -> bool:
     subject = f"Order Complete — Thank You, {customer_name}!"
-    body_text = f"Dear {customer_name}, your order {order_number} is now complete. Thank you for shopping with Kozmocart!"
+    body_text = f"Dear {customer_name}, your order {order_number} is now complete. Thank you for shopping with Pommastore!"
 
     content = f"""
     <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Order Complete</p>
-    <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Thank you for choosing Kozmocart.</h2>
+    <h2 style="margin:0 0 16px;font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#1A1A1A;">Thank you for choosing Pommastore.</h2>
     <p style="margin:0 0 20px;font-size:13px;color:#555;line-height:1.7;">
       Dear <strong>{customer_name}</strong>, your order <strong>{order_number}</strong> is now marked as complete. We hope you're enjoying your fragrance. Your loyalty points have been updated.
     </p>
     <div style="background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;padding:14px 18px;margin:20px 0;">
-      <p style="margin:0;font-size:12px;color:#D2168D;font-weight:700;line-height:1.6;">We'd love to hear your thoughts — write to us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;">info@kozmocart.com</a></p>
+      <p style="margin:0;font-size:12px;color:#D2168D;font-weight:700;line-height:1.6;">We'd love to hear your thoughts — write to us at <a href="mailto:info@pommastore.com" style="color:#D2168D;">info@pommastore.com</a></p>
     </div>"""
 
     html = _base_template(f"Order Complete — {order_number}", "Luxury Fragrance House", content,
-                          cta_url="https://kozmocart.com/shop",
+                          cta_url="https://pommastore.com/shop",
                           cta_label="Shop Again")
     return send_smtp_email(to_email, subject, html, body_text)
 
@@ -1529,7 +1529,7 @@ def send_return_requested_email(to_email: str, customer_name: str, order_number:
       <p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Please keep the items in their original packaging until our team confirms the pickup.</p>
     </div>
     <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
-      For queries, contact us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+      For queries, contact us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
     </p>"""
 
     html = _base_template(f"Return Request — {order_number}", "We're Here to Help", content)
@@ -1544,7 +1544,7 @@ def send_order_returned_email(to_email: str, customer_name: str, order_number: s
     subject = f"Return Confirmed & Refund Initiated — {order_number}"
     body_text = f"Dear {customer_name}, your return for order {order_number} has been confirmed and refund initiated."
 
-    refund_block = f'<div style="background:#FAF8F5;border-left:3px solid #D2168D;border-radius:2px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Refund of <strong>₹{total:,.2f}</strong> will be processed within 5–7 business days to your original payment method.</p></div>' if total > 0 else ""
+    refund_block = f'<div style="background:#FAF8F5;border-left:3px solid #D2168D;border-radius:2px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Refund of <strong>AED {total:,.2f}</strong> will be processed within 5–7 business days to your original payment method.</p></div>' if total > 0 else ""
 
     content = f"""
     <p style="margin:0 0 6px;font-size:9px;font-weight:700;letter-spacing:0.2em;color:#D2168D;text-transform:uppercase;">Return Confirmed</p>
@@ -1554,11 +1554,11 @@ def send_order_returned_email(to_email: str, customer_name: str, order_number: s
     </p>
     {refund_block}
     <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
-      Thank you for your patience. If you have questions, reach us at <a href="mailto:info@kozmocart.com" style="color:#D2168D;text-decoration:none;">info@kozmocart.com</a>.
+      Thank you for your patience. If you have questions, reach us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
     </p>"""
 
     html = _base_template(f"Return Confirmed — {order_number}", "Refund Initiated", content,
-                          cta_url="https://kozmocart.com/shop",
+                          cta_url="https://pommastore.com/shop",
                           cta_label="Continue Shopping")
     return send_smtp_email(to_email, subject, html, body_text)
 

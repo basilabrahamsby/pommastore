@@ -26,8 +26,8 @@ const montserrat = Montserrat({
 // Dynamic Metadata Generator replacing static configuration
 export async function generateMetadata(): Promise<Metadata> {
   let seo = {
-    siteTitle: "Kozmocart | Luxury Fragrances",
-    metaDescription: "Experience the art of fine perfumery with Kozmocart. Curated luxury fragrances for men and women.",
+    siteTitle: "Pomma | Luxury Fragrances",
+    metaDescription: "Experience the art of fine perfumery with Pomma. Curated luxury fragrances for men and women.",
     indexingEnabled: true,
     googleConsoleId: ""
   };
@@ -58,6 +58,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+import { LanguageProvider } from "@/locales/i18nContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -69,10 +71,12 @@ export default function RootLayout({
       className={`${poppins.variable} ${playfair.variable} ${montserrat.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col">
-        <SmoothScroll />
-        <Navbar />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+        <LanguageProvider>
+          <SmoothScroll />
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -419,7 +419,7 @@ async def storefront_checkout(
     
     # Send order confirmation SMS to customer
     if enriched.customer_phone:
-        msg = f"Thank you for your order #{enriched.order_number} at KOZMOCART! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        msg = f"Thank you for your order #{enriched.order_number} at POMMASTORE! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
         
     # Notify admin/manager via SMS
@@ -790,7 +790,7 @@ async def verify_razorpay_payment(
 
     # Send confirmation SMS
     if enriched.customer_phone:
-        msg = f"Payment confirmed! Order #{enriched.order_number} placed at KOZMOCART. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}. Track: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        msg = f"Payment confirmed! Order #{enriched.order_number} placed at POMMASTORE. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}. Track: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
 
     # Notify admin/manager via SMS
@@ -798,6 +798,395 @@ async def verify_razorpay_payment(
         sendsms_orderadmin,
         "918848079307",
         f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}"
+    )
+
+    background_tasks.add_task(book_delhivery_shipment_task, order.id)
+
+    return {"status": "success", "order_number": order.order_number, "order": enriched}
+
+
+# Stripe Order Creation & Checkout Session
+@router.post("/stripe/create", status_code=201)
+async def create_stripe_order(
+    body: OrderCreate,
+    db: AsyncSession = Depends(get_db),
+    customer: Customer = Depends(get_current_customer)
+):
+    body.customer_id = customer.id
+    body.customer_name = customer.full_name
+    body.customer_email = customer.email
+    body.customer_phone = customer.phone
+    body.channel = "storefront"
+    body.payment_method = PaymentMethod.stripe
+    body.payment_gateway = "stripe"
+    body.payment_status = PaymentStatus.pending
+
+    if not body.customer_phone or not body.customer_email:
+        raise HTTPException(
+            status_code=400, 
+            detail="Mobile and email are compulsory to complete checkout."
+        )
+
+    # Check inventory stock levels
+    for item_data in body.items:
+        variant_res = await db.execute(
+            select(ProductVariant)
+            .where(ProductVariant.id == item_data.variant_id)
+            .options(joinedload(ProductVariant.product))
+        )
+        variant = variant_res.scalar_one_or_none()
+        
+        batch_result = await db.execute(
+            select(InventoryBatch)
+            .where(
+                InventoryBatch.variant_id == item_data.variant_id,
+                InventoryBatch.current_quantity >= item_data.quantity,
+            )
+            .order_by(InventoryBatch.received_at)
+            .limit(1)
+        )
+        batch = batch_result.scalar_one_or_none()
+        if not batch:
+            variant_name = "Unknown Product"
+            if variant and variant.product:
+                size_str = f" ({variant.size_ml}ml)" if variant.size_ml else ""
+                variant_name = f"{variant.product.name}{size_str}"
+            else:
+                variant_name = f"Variant {item_data.variant_id}"
+                
+            raise HTTPException(
+                status_code=400, 
+                detail=f"We apologize, but there is insufficient stock for '{variant_name}'."
+            )
+
+    subtotal = sum(item.unit_price * item.quantity - item.discount_amount for item in body.items)
+    
+    redemption_amount = 0.0
+    if body.loyalty_points_used > 0:
+        if customer.loyalty_points < body.loyalty_points_used:
+            raise HTTPException(status_code=400, detail="Insufficient loyalty points for redemption.")
+        redemption_amount = float(body.loyalty_points_used)
+
+    total = subtotal - body.discount_amount + body.tax_amount + body.shipping_amount - redemption_amount
+    if total < 0:
+        total = 0.0
+
+    amount_in_cents = int(round(total * 100))
+    stripe_session_id = f"cs_test_mock_{uuid.uuid4().hex[:16]}"
+    
+    if settings.STRIPE_SECRET_KEY != "sk_test_placeholder":
+        try:
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            # Prepare Stripe line items
+            line_items = []
+            for item in body.items:
+                line_items.append({
+                    "price_data": {
+                        "currency": "aed",
+                        "product_data": {
+                            "name": f"Variant {item.variant_id}",
+                        },
+                        "unit_amount": int(round(item.unit_price * 100)),
+                    },
+                    "quantity": item.quantity,
+                })
+            
+            # Add shipping if > 0
+            if body.shipping_amount > 0:
+                line_items.append({
+                    "price_data": {
+                        "currency": "aed",
+                        "product_data": {
+                            "name": "Standard Logistics Shipping",
+                        },
+                        "unit_amount": int(round(body.shipping_amount * 100)),
+                    },
+                    "quantity": 1,
+                })
+                
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=line_items,
+                mode='payment',
+                success_url="http://localhost:3000/checkout?success=true&session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="http://localhost:3000/checkout?canceled=true",
+                customer_email=customer.email,
+                metadata={
+                    "customer_id": str(customer.id),
+                    "loyalty_points_used": str(body.loyalty_points_used),
+                    "discount_amount": str(body.discount_amount)
+                }
+            )
+            stripe_session_id = session.id
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Stripe integration error: {str(e)}"
+            )
+
+    if body.shipping_address:
+        sa = body.shipping_address
+        pincode = sa.get("pincode")
+        line1 = sa.get("address_line1")
+        if pincode and line1:
+            addr_check = await db.execute(
+                select(CustomerAddress).where(
+                    CustomerAddress.customer_id == customer.id,
+                    CustomerAddress.pincode == pincode,
+                    CustomerAddress.address_line1 == line1
+                )
+            )
+            existing_addr = addr_check.scalar_one_or_none()
+            if not existing_addr:
+                new_addr = CustomerAddress(
+                    customer_id=customer.id,
+                    label=sa.get("label") or "Saved Location",
+                    address_line1=line1,
+                    address_line2=sa.get("address_line2"),
+                    city=sa.get("city"),
+                    state=sa.get("state"),
+                    pincode=pincode,
+                    country=sa.get("country") or "UAE",
+                    is_default=False
+                )
+                db.add(new_addr)
+
+    order = Order(
+        order_number=generate_order_number(),
+        customer_id=customer.id,
+        processed_by=None,
+        channel=body.channel,
+        payment_method=PaymentMethod.stripe,
+        payment_status=PaymentStatus.pending,
+        subtotal=subtotal,
+        discount_amount=body.discount_amount,
+        loyalty_points_used=body.loyalty_points_used,
+        tax_amount=body.tax_amount,
+        shipping_amount=body.shipping_amount,
+        total_amount=total,
+        notes=body.notes,
+        gift_message=body.gift_message,
+        coupon_code=body.coupon_code,
+        shipping_address=body.shipping_address,
+        billing_address=body.billing_address,
+        customer_name=customer.full_name,
+        customer_phone=customer.phone,
+        customer_email=customer.email,
+        payment_gateway="stripe",
+        payment_details={"stripe_session_id": stripe_session_id}
+    )
+    db.add(order)
+    await db.flush()
+
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=order.status,
+        notes="Stripe checkout session created (pending payment)"
+    )
+    db.add(history)
+
+    for item_data in body.items:
+        item = OrderItem(
+            order_id=order.id,
+            variant_id=item_data.variant_id,
+            batch_id=None,
+            quantity=item_data.quantity,
+            unit_price=item_data.unit_price,
+            cost_price=None,
+            discount_amount=item_data.discount_amount,
+            total_price=item_data.unit_price * item_data.quantity - item_data.discount_amount
+        )
+        db.add(item)
+
+    await db.commit()
+    
+    return {
+        "stripe_session_id": stripe_session_id,
+        "amount": amount_in_cents,
+        "currency": "AED",
+        "order_number": order.order_number,
+        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY
+    }
+
+@router.post("/stripe/cancel")
+async def cancel_stripe_order(
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    customer: Customer = Depends(get_current_customer)
+):
+    order_number = body.get("order_number")
+    if not order_number:
+        raise HTTPException(status_code=400, detail="Missing order number")
+        
+    q = select(Order).where(
+        Order.order_number == order_number,
+        Order.customer_id == customer.id,
+        Order.payment_status == PaymentStatus.pending
+    )
+    result = await db.execute(q)
+    order = result.scalar_one_or_none()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Pending order not found")
+        
+    await db.execute(delete(OrderStatusHistory).where(OrderStatusHistory.order_id == order.id))
+    await db.execute(delete(OrderItem).where(OrderItem.order_id == order.id))
+    await db.delete(order)
+    await db.commit()
+    return {"status": "cancelled", "order_number": order_number}
+
+@router.post("/stripe/verify")
+async def verify_stripe_payment(
+    body: dict,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    customer: Customer = Depends(get_current_customer)
+):
+    stripe_session_id = body.get("stripe_session_id")
+    order_number = body.get("order_number")
+    transaction_id = body.get("transaction_id") or stripe_session_id
+    
+    if not stripe_session_id or not order_number:
+        raise HTTPException(status_code=400, detail="Missing session ID or order number")
+
+    q = select(Order).where(
+        Order.order_number == order_number,
+        Order.customer_id == customer.id
+    ).options(joinedload(Order.customer))
+    result = await db.execute(q)
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.payment_status == PaymentStatus.paid:
+        return {"status": "success", "order_number": order.order_number, "order": order}
+
+    if settings.STRIPE_SECRET_KEY != "sk_test_placeholder" and not stripe_session_id.startswith("cs_test_mock_"):
+        try:
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            session = stripe.checkout.Session.retrieve(stripe_session_id)
+            if session.payment_status != "paid":
+                raise HTTPException(status_code=400, detail="Stripe session is not paid yet")
+            transaction_id = session.payment_intent or transaction_id
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Stripe payment verification failed: {str(e)}"
+            )
+
+    order.payment_status = PaymentStatus.paid
+    order.transaction_id = transaction_id
+    order.status = OrderStatus.processing
+
+    details = dict(order.payment_details or {})
+    details["stripe_payment_intent"] = transaction_id
+    order.payment_details = details
+
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=order.status,
+        notes=f"Payment verified (Stripe transaction: {transaction_id})"
+    )
+    db.add(history)
+
+    # Fetch order items
+    items_res = await db.execute(select(OrderItem).where(OrderItem.order_id == order.id))
+    order_items = items_res.scalars().all()
+
+    earned_points = 0
+    for item in order_items:
+        variant_res = await db.execute(select(ProductVariant).where(ProductVariant.id == item.variant_id))
+        variant = variant_res.scalar_one_or_none()
+        if variant:
+            if variant.loyalty_points:
+                earned_points += (variant.loyalty_points * item.quantity)
+
+            qty_to_deduct = item.quantity
+            while qty_to_deduct > 0:
+                batch_res = await db.execute(
+                    select(InventoryBatch)
+                    .where(
+                        InventoryBatch.variant_id == variant.id,
+                        InventoryBatch.current_quantity > 0
+                    )
+                    .order_by(InventoryBatch.received_at)
+                    .limit(1)
+                )
+                batch = batch_res.scalar_one_or_none()
+                if not batch:
+                    break
+                    
+                deduct_qty = min(qty_to_deduct, batch.current_quantity)
+                batch.current_quantity -= deduct_qty
+                qty_to_deduct -= deduct_qty
+                
+                item.batch_id = batch.id
+                item.cost_price = batch.purchase_cost
+                
+                movement = InventoryMovement(
+                    batch_id=batch.id,
+                    type="Deduction",
+                    quantity=-deduct_qty,
+                    reason=f"Sales Order Fulfillment ({order.order_number})"
+                )
+                db.add(movement)
+
+    cust = order.customer
+    if cust:
+        cust.order_count += 1
+        cust.total_spent += Decimal(str(order.total_amount))
+        cust.last_order_at = datetime.now(timezone.utc)
+        if order.loyalty_points_used > 0:
+            cust.loyalty_points = max(0, cust.loyalty_points - order.loyalty_points_used)
+        if earned_points > 0:
+            cust.loyalty_points += earned_points
+
+    if order.coupon_code:
+        offer_result = await db.execute(select(Offer).where(Offer.code == order.coupon_code))
+        db_offer = offer_result.scalar_one_or_none()
+        if db_offer:
+            db_offer.redemption_count += 1
+            db_offer.attributed_revenue += Decimal(str(order.total_amount))
+
+    await db.commit()
+
+    final_result = await db.execute(
+        select(Order)
+        .where(Order.id == order.id)
+        .options(joinedload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product))
+    )
+    enriched = final_result.scalar_one()
+
+    # Trigger emails
+    background_tasks.add_task(
+        send_order_confirmation_email,
+        customer_name=cust.full_name if cust else "Valued Client",
+        order_number=enriched.order_number,
+        subtotal=float(enriched.subtotal),
+        discount=float(enriched.discount_amount),
+        shipping=float(enriched.shipping_amount),
+        tax=float(enriched.tax_amount),
+        loyalty_used=enriched.loyalty_points_used or 0,
+        shipping_address=enriched.shipping_address,
+        payment_method=enriched.payment_method or "",
+        coupon_code=enriched.coupon_code or "",
+        gift_message=enriched.gift_message or "",
+        customer_email=enriched.customer_email or "",
+        customer_phone=enriched.customer_phone or "",
+    )
+
+    # Send confirmation SMS
+    if enriched.customer_phone:
+        msg = f"Payment confirmed! Order #{enriched.order_number} placed at POMMASTORE. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id}. Track: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
+
+    # Notify admin via SMS
+    background_tasks.add_task(
+        sendsms_orderadmin,
+        "918848079307",
+        f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id}"
     )
 
     background_tasks.add_task(book_delhivery_shipment_task, order.id)
@@ -964,7 +1353,7 @@ async def razorpay_webhook(
     
     # Send order confirmation SMS to customer
     if enriched.customer_phone:
-        msg = f"Thank you for your order #{enriched.order_number} at KOZMOCART! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://kozmocart.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        msg = f"Thank you for your order #{enriched.order_number} at POMMASTORE! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
         
     # Notify admin/manager via SMS

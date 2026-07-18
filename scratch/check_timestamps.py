@@ -1,7 +1,7 @@
-import os
+﻿import os
 import re
 
-filepath = 'c:\\Developer\\Kozmocart\\api_logs.txt'
+filepath = 'c:\\Developer\\Pommastore\\api_logs.txt'
 
 if os.path.exists(filepath):
     try:

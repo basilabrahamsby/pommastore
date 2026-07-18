@@ -335,7 +335,7 @@ function CatalogOverview({ setActiveTab }) {
                <div style={{ height: `${Math.max(5, t1Pct)}%`, width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: '4px 4px 0 0', transition: 'all 0.5s', position: 'relative' }}>
                  <span style={{ position: 'absolute', top: -18, left: 0, right: 0, textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t1Pct}%</span>
                </div>
-               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 8, whiteSpace: 'nowrap' }}>Under ₹2k</span>
+               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 8, whiteSpace: 'nowrap' }}>Under AED 2k</span>
              </div>
              {/* Bar 2 */}
              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%' }}>

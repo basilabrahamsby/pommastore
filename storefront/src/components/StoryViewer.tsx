@@ -429,11 +429,11 @@ export default function StoryViewer({
                     {/* Pricing */}
                     <div className="flex items-baseline gap-2 mb-5">
                       <span className="text-lg font-bold text-white font-sans">
-                        ₹{primaryVariant?.selling_price?.toLocaleString('en-IN')}
+                        AED {primaryVariant?.selling_price?.toLocaleString('en-IN')}
                       </span>
                       {primaryVariant?.compare_at_price > primaryVariant?.selling_price && (
                         <span className="text-[10px] text-neutral-500 line-through font-sans">
-                          ₹{primaryVariant.compare_at_price.toLocaleString('en-IN')}
+                          AED {primaryVariant.compare_at_price.toLocaleString('en-IN')}
                         </span>
                       )}
                     </div>

@@ -6,9 +6,11 @@ import Link from 'next/link';
 import api from '@/services/api';
 import ProductCard from '@/components/ProductCard';
 import { getMediaUrl } from '@/services/media';
+import { useTranslation } from '@/locales/i18nContext';
 import { SlidersHorizontal, ChevronDown, ChevronRight, LayoutGrid, List, X } from 'lucide-react';
 
 function ShopContent() {
+  const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
@@ -96,8 +98,8 @@ function ShopContent() {
     const fetchMeta = async () => {
       try {
         const [resBrands, resCats] = await Promise.all([
-          api.get('/brands'),
-          api.get('/categories')
+          api.get(`/brands?lang=${locale}`, { headers: { 'Accept-Language': locale } }),
+          api.get(`/categories?lang=${locale}`, { headers: { 'Accept-Language': locale } })
         ]);
         setBrandsList(resBrands.data);
         setCategoriesList(resCats.data);
@@ -106,7 +108,7 @@ function ShopContent() {
       }
     };
     fetchMeta();
-  }, []);
+  }, [locale]);
 
   // Fetch the base dataset based on indexable server parameters
   useEffect(() => {
@@ -114,7 +116,9 @@ function ShopContent() {
       setLoading(true);
       try {
         let url = '/products?limit=100'; // Fetch extended cache for frictionless client filtering
-        const res = await api.get(url);
+        // Append lang to URL to avoid HTTP cache sharing
+        const separator = url.includes('?') ? '&' : '?';
+        const res = await api.get(`${url}${separator}lang=${locale}`, { headers: { 'Accept-Language': locale } });
         setProducts(res.data);
       } catch (err) {
         console.error('Failed to fetch base product dataset', err);
@@ -123,13 +127,13 @@ function ShopContent() {
       }
     };
     fetchProducts();
-  }, []);
+  }, [locale]);
 
   const filterSections = [
     { title: "Gender" as const, options: ["Men", "Women", "Unisex"] },
     { title: "Category" as const, options: categoriesList.map((c: any) => c.name) },
     { title: "Brand" as const, options: brandsList.map((b: any) => b.name) },
-    { title: "Price Range" as const, options: ["Under ₹1,000", "₹1,000 - ₹5,000", "₹5,000 - ₹10,000", "Over ₹10,000"] },
+    { title: "Price Range" as const, options: ["Under AED 1,000", "AED 1,000 - AED 5,000", "AED 5,000 - AED 10,000", "Over AED 10,000"] },
     { title: "Scent Family" as const, options: ["Floral", "Woody", "Oriental", "Fresh", "Citrus"] },
     { title: "Concentration" as const, options: ["EDP", "EDT", "Parfum", "Cologne"] }
   ];
@@ -201,10 +205,10 @@ function ShopContent() {
         const basePrice = Math.min(...product.variants.map((v: any) => v.selling_price));
         
         const matchPrice = selectedFilters['Price Range'].some(range => {
-          if (range === "Under ₹1,000") return basePrice < 1000;
-          if (range === "₹1,000 - ₹5,000") return basePrice >= 1000 && basePrice <= 5000;
-          if (range === "₹5,000 - ₹10,000") return basePrice > 5000 && basePrice <= 10000;
-          if (range === "Over ₹10,000") return basePrice > 10000;
+          if (range === "Under AED 1,000") return basePrice < 1000;
+          if (range === "AED 1,000 - AED 5,000") return basePrice >= 1000 && basePrice <= 5000;
+          if (range === "AED 5,000 - AED 10,000") return basePrice > 5000 && basePrice <= 10000;
+          if (range === "Over AED 10,000") return basePrice > 10000;
           return false;
         });
         if (!matchPrice) return false;

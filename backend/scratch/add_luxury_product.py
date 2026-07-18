@@ -1,11 +1,11 @@
-import psycopg2
+﻿import psycopg2
 import uuid
 from datetime import datetime, date
 
 def add_luxury_product():
     try:
         # Connect to Postgres
-        conn = psycopg2.connect("postgresql://kozmocart:kozmocart_dev_2026@localhost:5432/kozmocart_db")
+        conn = psycopg2.connect("postgresql://pommastore:pommastore_dev_2026@localhost:5432/pommastore_db")
         cur = conn.cursor()
         
         print("Starting seeding of premium luxury perfume...")

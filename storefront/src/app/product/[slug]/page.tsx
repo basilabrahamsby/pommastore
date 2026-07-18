@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+﻿import { Metadata } from 'next';
 import ProductClient from './ProductClient';
 
 // Enable Incremental Static Regeneration (ISR) - cache page for up to 30 seconds
@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const product = await res.json();
     
     return {
-      title: product.meta_title || `${product.name} | Kozmocart`,
-      description: product.meta_description || product.short_description || `Unlock the details for ${product.name} on Kozmocart.`,
+      title: product.meta_title || `${product.name} | Pommastore`,
+      description: product.meta_description || product.short_description || `Unlock the details for ${product.name} on Pommastore.`,
       openGraph: {
         title: product.meta_title || product.name,
         description: product.meta_description || product.short_description,
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   } catch (err) {
     return {
-      title: "Discover Fragrance | Kozmocart",
+      title: "Discover Fragrance | Pommastore",
       description: "Premium authentic scents curated worldwide."
     };
   }

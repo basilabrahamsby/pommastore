@@ -201,7 +201,7 @@ export default function Loyalty() {
                     </span>
                   </td>
                   <td style={{ fontWeight: 700 }}>{reward.point_cost} PTS</td>
-                  <td>{reward.voucher_value ? `₹${reward.voucher_value}` : 'Product'}</td>
+                  <td>{reward.voucher_value ? `AED ${reward.voucher_value}` : 'Product'}</td>
                   <td>
                     {reward.is_active ? (
                       <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center' }}>
@@ -246,7 +246,7 @@ export default function Loyalty() {
                   </td>
                   <td><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{order.order_number}</span></td>
                   <td style={{ color: 'var(--gold)', fontWeight: 700 }}>{order.loyalty_points_used} PTS</td>
-                  <td style={{ fontWeight: 600 }}>₹{order.loyalty_points_used}</td>
+                  <td style={{ fontWeight: 600 }}>AED {order.loyalty_points_used}</td>
                 </tr>
               ))}
               {redemptions.length === 0 && (
@@ -312,7 +312,7 @@ export default function Loyalty() {
               )}
               {form.reward_type === 'voucher' && (
                 <div>
-                  <label className="form-label">Voucher Face Value (₹)</label>
+                  <label className="form-label">Voucher Face Value (AED )</label>
                   <input className="input" type="number" value={form.voucher_value} onChange={e => setForm({...form, voucher_value: e.target.value})} placeholder="500" />
                 </div>
               )}

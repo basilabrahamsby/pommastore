@@ -57,8 +57,8 @@ const CustomerReports = ({ products = [], offers = [] }) => {
         <div className="form-group">
           <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>SPEND RANGE (MIN-MAX)</label>
           <div style={{ display: 'flex', gap: 8 }}>
-            <input className="input" style={{ fontSize: '0.8rem' }} placeholder="Min ₹" type="number" value={filters.min_spent} onChange={e => set('min_spent', e.target.value)} />
-            <input className="input" style={{ fontSize: '0.8rem' }} placeholder="Max ₹" type="number" value={filters.max_spent} onChange={e => set('max_spent', e.target.value)} />
+            <input className="input" style={{ fontSize: '0.8rem' }} placeholder="Min AED " type="number" value={filters.min_spent} onChange={e => set('min_spent', e.target.value)} />
+            <input className="input" style={{ fontSize: '0.8rem' }} placeholder="Max AED " type="number" value={filters.max_spent} onChange={e => set('max_spent', e.target.value)} />
           </div>
         </div>
         <div className="form-group">
@@ -115,7 +115,7 @@ const CustomerReports = ({ products = [], offers = [] }) => {
                 <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{r.email}</td>
                 <td><span className={`badge ${r.loyalty_tier === 'Gold' ? 'badge-gold' : r.loyalty_tier === 'Silver' ? 'badge-secondary' : 'badge-primary'}`}>{r.loyalty_tier}</span></td>
                 <td><strong>{r.order_count}</strong></td>
-                <td><strong style={{ color: 'var(--gold-bright)' }}>₹{r.total_spent.toLocaleString()}</strong></td>
+                <td><strong style={{ color: 'var(--gold-bright)' }}>AED {r.total_spent.toLocaleString()}</strong></td>
                 <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{r.last_order_at ? new Date(r.last_order_at).toLocaleDateString() : 'Never'}</td>
               </tr>
             ))}
@@ -139,7 +139,7 @@ const MarketingReports = ({ scentTrends = [], socialData = [], geoData = [], seo
           </span>
           <Share2 size={16} color="var(--gold)" />
         </div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{kpiData ? `₹${kpiData.avg_cac.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{kpiData ? `AED ${kpiData.avg_cac.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
         <div style={{ fontSize: '0.7rem', color: 'var(--success)', marginTop: 4 }}>{kpiData ? kpiData.avg_cac_change : ''}</div>
       </div>
       <div className="stat-card" style={{ padding: 20 }}>
@@ -189,7 +189,7 @@ const MarketingReports = ({ scentTrends = [], socialData = [], geoData = [], seo
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: '0.8rem' }}>
                   <span style={{ color: '#fff', fontWeight: 600 }}>{g.state}</span>
-                  <span style={{ fontWeight: 700 }}>₹{g.revenue.toLocaleString()}</span>
+                  <span style={{ fontWeight: 700 }}>AED {g.revenue.toLocaleString()}</span>
                 </div>
                 <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${(g.revenue / (geoData[0]?.revenue || 1)) * 100}%`, background: 'var(--gold-bright)' }} />
@@ -251,7 +251,7 @@ const MarketingReports = ({ scentTrends = [], socialData = [], geoData = [], seo
               <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${(t.revenue / (scentTrends[0]?.revenue || 1)) * 100}%`, background: 'var(--gold)' }} />
               </div>
-              <div style={{ width: 80, textAlign: 'right', fontSize: '0.8rem', fontWeight: 700 }}>₹{t.revenue.toLocaleString()}</div>
+              <div style={{ width: 80, textAlign: 'right', fontSize: '0.8rem', fontWeight: 700 }}>AED {t.revenue.toLocaleString()}</div>
             </div>
           ))}
           {scentTrends.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>No scent trend data available.</div>}
@@ -293,25 +293,25 @@ const FinancialReports = ({ kpiData = null }) => (
         <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>
           CGST COLLECTED <InfoButton text="Central Goods & Services Tax collected on intra-state sales." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `₹${kpiData.cgst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${kpiData.cgst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
       </div>
       <div className="stat-card" style={{ padding: 16 }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>
           SGST COLLECTED <InfoButton text="State Goods & Services Tax collected on intra-state sales." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `₹${kpiData.sgst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${kpiData.sgst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
       </div>
       <div className="stat-card" style={{ padding: 16 }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>
           IGST COLLECTED <InfoButton text="Integrated Goods & Services Tax applied to inter-state sales." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `₹${kpiData.igst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${kpiData.igst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
       </div>
       <div className="stat-card" style={{ padding: 16, border: '1px solid var(--gold)' }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700 }}>
           TOTAL TAX LIABILITY <InfoButton text="Cumulative GST burden calculated by adding all active output taxes across active orders." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)', marginTop: 4 }}>{kpiData ? `₹${kpiData.total_tax_liability.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)', marginTop: 4 }}>{kpiData ? `AED ${kpiData.total_tax_liability.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
       </div>
     </div>
 
@@ -336,12 +336,12 @@ const FinancialReports = ({ kpiData = null }) => (
           {kpiData && kpiData.gstr1_ledger && kpiData.gstr1_ledger.map((row, index) => (
             <tr key={index}>
               <td>{row.month}</td>
-              <td>₹{row.taxable_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <td>AED {row.taxable_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
               <td>{row.gst_rate}%</td>
-              <td>₹{row.cgst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-              <td>₹{row.sgst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-              <td>₹{row.igst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-              <td><strong style={{ color: 'var(--gold-bright)' }}>₹{row.total_gst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
+              <td>AED {row.cgst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <td>AED {row.sgst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <td>AED {row.igst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <td><strong style={{ color: 'var(--gold-bright)' }}>AED {row.total_gst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
             </tr>
           ))}
           {(!kpiData || !kpiData.gstr1_ledger || kpiData.gstr1_ledger.length === 0) && (
@@ -372,7 +372,7 @@ const SalesAnalytics = ({ rfmData, kpiData = null }) => (
                 <span className="badge badge-gold" style={{ fontSize: '0.65rem' }}>{s.count} users</span>
               </div>
               <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: '4px 0 10px 0', lineHeight: 1.4 }}>{s.description}</p>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Avg. Spend: <strong>₹{Math.round(s.avg_monetary).toLocaleString()}</strong></div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Avg. Spend: <strong>AED {Math.round(s.avg_monetary).toLocaleString()}</strong></div>
             </div>
           ))}
         </div>
@@ -390,7 +390,7 @@ const SalesAnalytics = ({ rfmData, kpiData = null }) => (
                 <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{c.orders} orders • Last active {c.last_active}d ago</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold-bright)' }}>₹{c.spent.toLocaleString()}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold-bright)' }}>AED {c.spent.toLocaleString()}</div>
               </div>
             </div>
           ))}
@@ -457,7 +457,7 @@ const InventoryHealth = ({ healthData }) => (
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>
             CAPITAL LOCKED <InfoButton text="Theoretical locked liquidity calculated by summing Cost-Price of all batch items on hand in real-time." />
           </span>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: 4 }}>₹{healthData?.stock_value_by_category?.reduce((acc, c) => acc + c.value, 0).toLocaleString()}</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: 4 }}>AED {healthData?.stock_value_by_category?.reduce((acc, c) => acc + c.value, 0).toLocaleString()}</div>
           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>Total warehouse valuation</div>
        </div>
     </div>
@@ -493,7 +493,7 @@ const InventoryHealth = ({ healthData }) => (
               <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${(c.value / (healthData.stock_value_by_category[0]?.value || 1)) * 100}%`, background: 'var(--gold)' }} />
               </div>
-              <div style={{ width: 100, textAlign: 'right', fontSize: '0.8rem', fontWeight: 700 }}>₹{Math.round(c.value).toLocaleString()}</div>
+              <div style={{ width: 100, textAlign: 'right', fontSize: '0.8rem', fontWeight: 700 }}>AED {Math.round(c.value).toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -697,7 +697,7 @@ export default function Analytics() {
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
               AVG ORDER VALUE (AOV) <InfoButton text="Total Gross Sales Revenue divided by the Total Distinct Count of Successful Orders." />
             </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: 4 }}>{kpiData ? `₹${kpiData.aov.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: 4 }}>{kpiData ? `AED ${kpiData.aov.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>{kpiData ? `Based on ${kpiData.aov_transactions_count} successful transactions` : ''}</div>
          </div>
          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 20, borderRadius: 16 }}>

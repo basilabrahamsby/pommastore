@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+﻿from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
@@ -18,7 +18,7 @@ def format_xml(elem):
 @router.get("/sitemap.xml")
 async def get_sitemap(db: AsyncSession = Depends(get_db)):
     """Generate dynamic XML sitemap of active entities."""
-    base_url = "https://kozmocart.in"  # Ideally fetched from settings, defaulting here
+    base_url = "https://pommastore.in"  # Ideally fetched from settings, defaulting here
     
     urlset = ET.Element("urlset")
     urlset.set("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")

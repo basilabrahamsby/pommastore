@@ -1,9 +1,9 @@
-import asyncio
+﻿import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
 
 async def fix():
-    engine = create_async_engine("postgresql+asyncpg://kozmocart:kozmocart_dev_2026@postgres:5432/kozmocart_db")
+    engine = create_async_engine("postgresql+asyncpg://pommastore:pommastore_dev_2026@postgres:5432/pommastore_db")
     async with engine.begin() as conn:
         print("Adding reward_metadata to loyalty_rewards...")
         try:

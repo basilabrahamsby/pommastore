@@ -1,4 +1,4 @@
-import psycopg2
+﻿import psycopg2
 import uuid
 import random
 from datetime import datetime, timedelta
@@ -6,7 +6,7 @@ import sys
 
 def seed():
     # Inside container, postgres resolves to the postgres service
-    conn = psycopg2.connect("postgresql://kozmocart:kozmocart_dev_2026@postgres:5432/kozmocart_db")
+    conn = psycopg2.connect("postgresql://pommastore:pommastore_dev_2026@postgres:5432/pommastore_db")
     cur = conn.cursor()
     
     # 1. Fetch active variants

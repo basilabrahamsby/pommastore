@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,11 +69,11 @@ class _ProductCardState extends ConsumerState<ProductCard> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   List<String> _getScentNotes(Map<String, dynamic> product) {

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
 from sqlalchemy.orm import selectinload
@@ -9,7 +9,35 @@ from app.models.inventory import InventoryBatch
 from app.schemas.product import ProductOut, ProductDetailOut
 router = APIRouter(prefix="/products", tags=["Storefront Products"])
 
-async def enrich_product(product: Product, db: AsyncSession, detail: bool = False) -> ProductOut | ProductDetailOut:
+
+def get_lang(accept_language: str | None = None, lang: str | None = None) -> str:
+    if lang:
+        return lang.strip().lower()[:2]
+    if accept_language:
+        # e.g., 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7' -> 'ar'
+        return accept_language.strip().split(",")[0].split("-")[0].lower()
+    return "en"
+
+
+def localize_schema(out: ProductOut | ProductDetailOut, p: Product, lang: str):
+    if lang == "ar":
+        if getattr(p, "name_ar", None):
+            out.name = p.name_ar
+        if getattr(p, "short_description_ar", None):
+            out.short_description = p.short_description_ar
+        if getattr(p, "full_description_ar", None):
+            out.full_description = p.full_description_ar
+        if p.brand and getattr(p.brand, "name_ar", None):
+            out.brand_name = p.brand.name_ar
+        if p.category and getattr(p.category, "name_ar", None):
+            out.category_name = p.category.name_ar
+        if getattr(p, "scent_notes_ar", None):
+            ar_notes = p.scent_notes_ar
+            if isinstance(ar_notes, dict) and (ar_notes.get("top") or ar_notes.get("heart") or ar_notes.get("base")):
+                out.scent_notes = ar_notes
+
+
+async def enrich_product(product: Product, db: AsyncSession, detail: bool = False, lang: str = "en") -> ProductOut | ProductDetailOut:
     # Get stock per variant
     stock_result = await db.execute(
         select(InventoryBatch.variant_id, func.sum(InventoryBatch.current_quantity))
@@ -21,14 +49,18 @@ async def enrich_product(product: Product, db: AsyncSession, detail: bool = Fals
     schema = ProductDetailOut if detail else ProductOut
     out = schema.model_validate(product)
     out.brand_name = product.brand.name if product.brand else ""
+    out.brand_name_ar = product.brand.name_ar if product.brand else ""
     out.category_name = product.category.name if product.category else None
+    out.category_name_ar = product.category.name_ar if product.category else None
     out.images = [img.url for img in product.images]
     for v_out in out.variants:
         v_out.current_stock = stock_map.get(v_out.id, 0)
+    
+    localize_schema(out, product, lang)
     return out
 
 
-async def enrich_products_bulk(products: list[Product], db: AsyncSession) -> list[ProductOut]:
+async def enrich_products_bulk(products: list[Product], db: AsyncSession, lang: str = "en") -> list[ProductOut]:
     if not products:
         return []
 
@@ -48,10 +80,14 @@ async def enrich_products_bulk(products: list[Product], db: AsyncSession) -> lis
     for p in products:
         out = ProductOut.model_validate(p)
         out.brand_name = p.brand.name if p.brand else ""
+        out.brand_name_ar = p.brand.name_ar if p.brand else ""
         out.category_name = p.category.name if p.category else None
+        out.category_name_ar = p.category.name_ar if p.category else None
         out.images = [img.url for img in p.images]
         for v_out in out.variants:
             v_out.current_stock = stock_map.get(v_out.id, 0)
+        
+        localize_schema(out, p, lang)
         enriched.append(out)
 
     return enriched
@@ -59,6 +95,7 @@ async def enrich_products_bulk(products: list[Product], db: AsyncSession) -> lis
 
 @router.get("", response_model=list[ProductOut])
 async def list_products(
+    response: Response,
     search: str | None = Query(None),
     brand_id: str | None = Query(None),
     category_id: str | None = Query(None),
@@ -68,8 +105,11 @@ async def list_products(
     on_sale: bool | None = Query(None),
     skip: int = 0,
     limit: int = 50,
+    lang: str | None = Query(None),
+    accept_language: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     q = (
         select(Product)
         .where(Product.is_active == True)
@@ -98,9 +138,18 @@ async def list_products(
     q = q.order_by(case((Product.priority == 0, 999999), else_=Product.priority).asc(), Product.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(q)
     products = result.scalars().all()
-    return await enrich_products_bulk(products, db)
+    
+    locale = get_lang(accept_language, lang)
+    return await enrich_products_bulk(products, db, lang=locale)
 @router.get("/{slug}", response_model=ProductDetailOut)
-async def get_product_by_slug(slug: str, db: AsyncSession = Depends(get_db)):
+async def get_product_by_slug(
+    slug: str,
+    response: Response,
+    lang: str | None = Query(None),
+    accept_language: str | None = Header(None),
+    db: AsyncSession = Depends(get_db)
+):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     result = await db.execute(
         select(Product)
         .where(Product.slug == slug, Product.is_active == True)
@@ -114,7 +163,9 @@ async def get_product_by_slug(slug: str, db: AsyncSession = Depends(get_db)):
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    return await enrich_product(product, db, detail=True)
+    
+    locale = get_lang(accept_language, lang)
+    return await enrich_product(product, db, detail=True, lang=locale)
 
 from typing import Dict
 @router.post("/sync-prices", response_model=Dict[str, float])

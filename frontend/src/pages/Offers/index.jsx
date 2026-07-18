@@ -12,7 +12,7 @@ import { getMediaUrl } from '../../services/media'
 // In production the API is co-hosted on the same domain via Nginx (/api → :8000, /static_uploads → :8000)
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
-const fmt = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`
+const fmt = (v) => `AED ${Number(v || 0).toLocaleString('en-US')}`
 
 function OfferCard({ o, onDelete, onEdit, isPercentage, isFlat, isBogo, onPreview }) {
   const [activeIdx, setActiveIdx] = useState(0)
@@ -353,7 +353,7 @@ export default function Offers() {
 
   const isBogo = (type) => type.toLowerCase().includes('bogo') || type.toLowerCase().includes('buy')
   const isPercentage = (type) => type.toLowerCase().includes('percent') || type.includes('%')
-  const isFlat = (type) => type.toLowerCase().includes('flat') || type.toLowerCase().includes('amount') || type.toLowerCase().includes('₹')
+  const isFlat = (type) => type.toLowerCase().includes('flat') || type.toLowerCase().includes('amount') || type.toLowerCase().includes('AED ')
 
   const totalAttributed = offers.reduce((acc, o) => acc + Number(o.attributed_revenue || 0), 0)
   
@@ -405,7 +405,7 @@ export default function Offers() {
       templateForm = {
         ...templateForm,
         title: 'High Summer Solstice Saving',
-        subtitle: 'Flat ₹1,500 premium saving on our entire woody & exotic scent families.',
+        subtitle: 'Flat AED 1,500 premium saving on our entire woody & exotic scent families.',
         code: 'SUMMER1500',
         discount_type: 'Flat Discount',
         flat_discount_amount: '1500',
@@ -577,7 +577,7 @@ export default function Offers() {
                     onClick={() => handleApplyTemplate('summer')}
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: 600, padding: '8px 14px', fontSize: '0.78rem' }}
                   >
-                    ✨ Summer ₹1,500 Saving
+                    ✨ Summer AED 1,500 Saving
                   </button>
                 </div>
               </div>
@@ -683,7 +683,7 @@ export default function Offers() {
                       </span>
                     </td>
                     <td style={{ fontWeight: 700 }}>{reward.point_cost} PTS</td>
-                    <td>{reward.voucher_value ? `₹${reward.voucher_value}` : 'Product'}</td>
+                    <td>{reward.voucher_value ? `AED ${reward.voucher_value}` : 'Product'}</td>
                     <td>
                       {reward.is_active ? (
                         <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', fontSize: '0.8rem' }}>
@@ -774,13 +774,13 @@ export default function Offers() {
               )}
               {isFlat(form.discount_type) && (
                 <div>
-                  <label className="form-label">Flat Discount Amount (₹)</label>
+                  <label className="form-label">Flat Discount Amount (AED )</label>
                   <input className="input" type="number" placeholder="500" value={form.flat_discount_amount} onChange={e => setForm({...form, flat_discount_amount: e.target.value})} required />
                 </div>
               )}
               
               <div>
-                <label className="form-label">Min Purchase (₹)</label>
+                <label className="form-label">Min Purchase (AED )</label>
                 <input className="input" type="number" placeholder="999" value={form.min_purchase_amount} onChange={e => setForm({...form, min_purchase_amount: e.target.value})} />
               </div>
 
@@ -1008,7 +1008,7 @@ export default function Offers() {
               
               {loyaltyForm.reward_type === 'voucher' && (
                 <div>
-                  <label className="form-label">Voucher Face Value (₹)</label>
+                  <label className="form-label">Voucher Face Value (AED )</label>
                   <input className="input" type="number" value={loyaltyForm.voucher_value} onChange={e => setLoyaltyForm({...loyaltyForm, voucher_value: e.target.value})} placeholder="500" />
                 </div>
               )}

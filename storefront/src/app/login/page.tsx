@@ -7,8 +7,10 @@ import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { getMediaUrl } from '@/services/media';
 import { Mail, Lock, ArrowRight, Smartphone, ShieldCheck, X } from 'lucide-react';
+import { useTranslation } from '@/locales/i18nContext';
 
 function LoginContent() {
+  const { t, locale } = useTranslation();
   const continueRef = React.useRef<HTMLDivElement>(null);
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
@@ -192,15 +194,15 @@ function LoginContent() {
         <div className="w-full max-w-md animate-fadeIn">
           <div className="mb-12">
             <Link href="/" className="md:hidden inline-block mb-8">
-              <img src="/logo.png" alt="Kozmocart Logo" className="h-8 object-contain" />
+              <img src="/logo.png" alt="Pommastore Logo" className="h-8 object-contain" />
             </Link>
             <h1 className="text-3xl font-serif text-neutral-950 mb-3 tracking-[0.15em] uppercase font-normal">
-              {step === 'send' ? 'Sign In' : 'Verify Account'}
+              {step === 'send' ? t('login_title') : t('login_access_code')}
             </h1>
             <p className="text-neutral-500 font-montserrat text-[10px] tracking-[0.25em] uppercase font-semibold">
               {step === 'send' 
-                ? 'Unlock your personalized scent journey' 
-                : `Enter the code sent to ${identifier}`}
+                ? t('login_subtitle_send') 
+                : t('login_subtitle_verify').replace('{identifier}', identifier)}
             </p>
           </div>
 
@@ -217,20 +219,20 @@ function LoginContent() {
                   onClick={() => { setLoginMethod('email'); setIdentifier(''); }}
                   className={`text-[10px] font-bold font-montserrat tracking-[0.25em] uppercase pb-3 border-b-2 transition-all ${loginMethod === 'email' ? 'border-neutral-950 text-neutral-950' : 'border-transparent text-neutral-300 hover:text-neutral-500'}`}
                 >
-                  Email
+                  {t('login_email')}
                 </button>
                 <button
                   onClick={() => { setLoginMethod('phone'); setIdentifier(''); }}
                   className={`text-[10px] font-bold font-montserrat tracking-[0.25em] uppercase pb-3 border-b-2 transition-all ${loginMethod === 'phone' ? 'border-neutral-950 text-neutral-950' : 'border-transparent text-neutral-300 hover:text-neutral-500'}`}
                 >
-                  Mobile
+                  {t('login_mobile')}
                 </button>
               </div>
 
               <form onSubmit={handleSendOTP} className="space-y-8">
                 <div>
                   <label className="block text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em] mb-3">
-                    {loginMethod === 'email' ? 'Email Identification' : 'Mobile Verification'}
+                    {loginMethod === 'email' ? t('login_email_id') : t('login_mobile_id')}
                   </label>
                   <div className="relative group">
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 text-neutral-800 transition-transform group-focus-within:scale-110 duration-300">
@@ -252,9 +254,9 @@ function LoginContent() {
                   disabled={loading}
                   className="w-full bg-neutral-950 text-white py-4 rounded-full text-[11px] font-bold font-montserrat tracking-[0.3em] hover:bg-neutral-900 transition-all duration-300 flex items-center justify-center space-x-2.5 disabled:bg-neutral-200 group"
                 >
-                  {loading ? 'PROCESSING...' : (
+                  {loading ? t('login_processing') : (
                     <>
-                      <span>CONTINUE</span>
+                      <span>{t('login_continue')}</span>
                       <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
                     </>
                   )}
@@ -265,7 +267,7 @@ function LoginContent() {
               <div className="pt-8">
                 <div className="relative mb-8 text-center">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-100"></div></div>
-                  <span className="relative bg-white px-6 text-[9px] font-bold font-montserrat tracking-[0.25em] text-neutral-400 uppercase">Or connect with</span>
+                  <span className="relative bg-white px-6 text-[9px] font-bold font-montserrat tracking-[0.25em] text-neutral-400 uppercase">{t('login_or_connect')}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <button 
@@ -273,13 +275,13 @@ function LoginContent() {
                     onClick={() => setShowGoogleModal(true)}
                     className="flex items-center justify-center space-x-3 border border-neutral-200 rounded-full py-3.5 hover:border-neutral-950 transition-all duration-300 group"
                   >
-                    <span className="text-[10px] font-bold font-montserrat tracking-[0.2em] uppercase text-neutral-800">Google</span>
+                    <span className="text-[10px] font-bold font-montserrat tracking-[0.2em] uppercase text-neutral-800">{t('login_google')}</span>
                   </button>
                   <button 
                     type="button" 
                     className="flex items-center justify-center space-x-3 border border-neutral-200 rounded-full py-3.5 hover:border-neutral-950 transition-all duration-300 group"
                   >
-                    <span className="text-[10px] font-bold font-montserrat tracking-[0.2em] uppercase text-neutral-800">Apple</span>
+                    <span className="text-[10px] font-bold font-montserrat tracking-[0.2em] uppercase text-neutral-800">{t('login_apple')}</span>
                   </button>
                 </div>
               </div>
@@ -289,13 +291,13 @@ function LoginContent() {
               <form onSubmit={handleVerifyOTP} className="space-y-8">
                 <div>
                   <div className="flex justify-between items-end mb-4">
-                    <label className="text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em]">Access Code</label>
+                    <label className="text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em]">{t('login_access_code')}</label>
                     <button 
                       type="button"
                       onClick={() => setStep('send')}
                       className="text-[9px] font-bold font-montserrat text-neutral-400 uppercase tracking-widest hover:text-neutral-950 transition-colors"
                     >
-                      Change Details
+                      {t('login_change_details')}
                     </button>
                   </div>
                   <div className="relative group">
@@ -320,9 +322,9 @@ function LoginContent() {
                   disabled={loading}
                   className="w-full bg-neutral-950 text-white py-4 rounded-full text-[11px] font-bold font-montserrat tracking-[0.3em] hover:bg-neutral-900 transition-all duration-300 flex items-center justify-center space-x-2.5 disabled:bg-neutral-200 group"
                 >
-                  {loading ? 'VERIFYING...' : (
+                  {loading ? t('login_verifying') : (
                     <>
-                      <span>SECURE LOGIN</span>
+                      <span>{t('login_secure')}</span>
                       <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
                     </>
                   )}
@@ -332,19 +334,19 @@ function LoginContent() {
               <div className="text-center">
                 {resendSuccess && (
                   <div className="mb-4 py-2.5 px-4 bg-emerald-50 border border-emerald-200 rounded text-[10px] font-bold font-montserrat text-emerald-700 tracking-[0.2em] uppercase animate-fadeIn">
-                    ✓ New code sent to {identifier}
+                    {t('login_resend_success').replace('{identifier}', identifier)}
                   </div>
                 )}
                 {timer > 0 ? (
                   <p className="text-[10px] font-bold font-montserrat text-neutral-400 tracking-[0.2em] uppercase">
-                    Resend Code in <span className="text-neutral-950 font-semibold">{timer}s</span>
+                    {t('login_resend_timer').replace('{timer}', String(timer))}
                   </p>
                 ) : (
                   <button
                     onClick={() => handleSendOTP()}
                     className="text-[10px] font-bold font-montserrat text-neutral-950 tracking-[0.2em] uppercase border-b border-neutral-950 pb-0.5 hover:text-neutral-600 hover:border-neutral-600 transition-all"
                   >
-                    Resend Access Code
+                    {t('login_resend_btn')}
                   </button>
                 )}
               </div>
@@ -353,7 +355,7 @@ function LoginContent() {
 
           <div className="mt-12 pt-6 border-t border-neutral-100 flex items-center justify-center">
              <ShieldCheck size={14} className="text-neutral-300 mr-2" />
-             <p className="text-[9px] text-neutral-400 font-semibold font-montserrat uppercase tracking-[0.2em]">End-to-end encrypted session</p>
+             <p className="text-[9px] text-neutral-400 font-semibold font-montserrat uppercase tracking-[0.2em]">{t('login_encrypted')}</p>
           </div>
         </div>
       </div>
@@ -389,7 +391,7 @@ function LoginContent() {
                 </svg>
               </div>
               <h3 className="text-xl text-gray-900 font-normal tracking-tight mb-2">Sign in</h3>
-              <p className="text-[13px] text-gray-600 font-normal mb-8">to continue to <strong className="text-black">Kozmocart</strong></p>
+              <p className="text-[13px] text-gray-600 font-normal mb-8">to continue to <strong className="text-black">Pommastore</strong></p>
               <form onSubmit={handleGoogleAuth} className="flex flex-col gap-6 text-left">
                 <div className="relative group border border-gray-300 rounded p-1 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600 transition-all">
                   <label className="block text-[10px] px-1 font-medium text-gray-500 absolute -top-2 left-3 bg-white select-none group-focus-within:text-blue-600 transition-colors">

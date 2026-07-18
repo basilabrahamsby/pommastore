@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/api_client.dart';
@@ -102,7 +102,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     _init();
   }
 
-  static const _prefsKey = 'kozmocart_cart_items';
+  static const _prefsKey = 'pommastore_cart_items';
   final _api = ApiClient();
 
   Future<void> _init() async {

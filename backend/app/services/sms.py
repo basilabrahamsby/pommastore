@@ -1,4 +1,4 @@
-import httpx
+﻿import httpx
 import logging
 from typing import Optional
 
@@ -50,7 +50,7 @@ async def sendsms_otp(phone: str, otp: str) -> Optional[str]:
     """
     Sends a login OTP SMS via SapTeleServices GET API using DL T-TID template.
     """
-    message = f"{otp} is your One-Time-Password (OTP) to login at your KOZMOCART account. It is valid for 10 mins."
+    message = f"{otp} is your One-Time-Password (OTP) to login at your POMMASTORE account. It is valid for 10 mins."
     tid = "1707174314117516014"
     return await sendsms(phone, message, tid)
 

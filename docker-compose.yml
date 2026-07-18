@@ -1,43 +1,49 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: kozmocart_postgres
+    container_name: pommastore_postgres
     environment:
-      POSTGRES_USER: kozmocart
-      POSTGRES_PASSWORD: kozmocart_dev_2026
-      POSTGRES_DB: kozmocart_db
+      POSTGRES_USER: pommastore
+      POSTGRES_PASSWORD: pommastore_dev_2026
+      POSTGRES_DB: pommastore
+      TZ: Asia/Dubai
+    ports:
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kozmocart -d kozmocart_db"]
+      test: ["CMD-SHELL", "pg_isready -U pommastore -d pommastore"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: kozmocart_redis
+    container_name: pommastore_redis
+    environment:
+      TZ: Asia/Dubai
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
 
   api:
     build: ./backend
-    container_name: kozmocart_api
+    container_name: pommastore_api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
-      DATABASE_URL: postgresql+asyncpg://kozmocart:kozmocart_dev_2026@postgres:5432/kozmocart_db
+      DATABASE_URL: postgresql+asyncpg://pommastore:pommastore_dev_2026@postgres:5432/pommastore
       REDIS_URL: redis://redis:6379/0
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
-      SMTP_USER: info@kozmocart.com
+      SMTP_USER: info@pommastore.com
       SMTP_PASSWORD: "boxr xytu ycye snof"
-      SMTP_FROM_EMAIL: info@kozmocart.com
-      SMTP_FROM_NAME: "Kozmocart.com"
+      SMTP_FROM_EMAIL: info@pommastore.com
+      SMTP_FROM_NAME: "Pommastore.com"
       SMTP_TLS: "true"
       SMTP_SSL: "false"
+      TZ: Asia/Dubai
     ports:
-      - "8020:8000"
+      - "8030:8000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -48,20 +54,23 @@ services:
 
   admin:
     build: ./frontend
-    container_name: kozmocart_admin
+    container_name: pommastore_admin
     environment:
       VITE_API_BASE_URL: /api/v1
       VITE_STATIC_BASE_URL: ""
+      TZ: Asia/Dubai
     ports:
-      - "5173:5173"
+      - "5174:5173"
     depends_on:
       - api
 
   storefront:
     build: ./storefront
-    container_name: kozmocart_storefront
+    container_name: pommastore_storefront
+    environment:
+      TZ: Asia/Dubai
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - api
 

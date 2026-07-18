@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -29,14 +29,14 @@ export default function ReturnPolicy() {
     title: "Returns & Exchange Policy",
     lastUpdated: "Last updated June 2026",
     authenticityTitle: "100% Authenticity",
-    authenticityDesc: "Every fragrance dispatched from Kozmocart is completely sealed and sourced directly. We guarantee absolute authenticity.",
+    authenticityDesc: "Every fragrance dispatched from Pommastore is completely sealed and sourced directly. We guarantee absolute authenticity.",
     windowTitle: "7-Day Window",
     windowDesc: "Requests for returns or replacements due to transit damage or shipping errors are accepted within 7 days of delivery.",
     contentHtml: `
       <section class="space-y-4 border-b border-neutral-100 pb-10">
         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-black">1. General Overview</h2>
         <p>
-          At Kozmocart, we specialize in premium, personal-care items namely liquid luxury perfumes and colognes. 
+          At Pommastore, we specialize in premium, personal-care items namely liquid luxury perfumes and colognes. 
           Due to hygiene protocols, the strict personal nature of fragrances, and safety mandates surrounding flammable liquids, 
           <strong> products cannot be returned once the primary seal or outer cellophane wrap has been broken or altered</strong>.
         </p>
@@ -50,7 +50,7 @@ export default function ReturnPolicy() {
           2. Valid Grounds for Return or Exchange
         </h2>
         <p>
-          Kozmocart handles exceptions under very strict quality controls. We will issue replacements, exchanges, or full refunds if:
+          Pommastore handles exceptions under very strict quality controls. We will issue replacements, exchanges, or full refunds if:
         </p>
         <ul class="list-disc pl-5 space-y-2 text-neutral-500">
           <li>The received product suffered severe physical breakage/leakage during transit.</li>
@@ -69,7 +69,7 @@ export default function ReturnPolicy() {
         </p>
         <ol class="list-decimal pl-5 space-y-4 text-neutral-500 font-medium">
           <li>
-            <span class="text-black font-black tracking-wide">Contact Concierge:</span> Email us at <span class="text-black font-black">concierge@kozmocart.com</span> within 48 hours of delivery. Include your <strong>Order Number</strong> and the <strong>Unboxing Video</strong>.
+            <span class="text-black font-black tracking-wide">Contact Concierge:</span> Email us at <span class="text-black font-black">concierge@pommastore.com</span> within 48 hours of delivery. Include your <strong>Order Number</strong> and the <strong>Unboxing Video</strong>.
           </li>
           <li>
             <span class="text-black font-black tracking-wide">Internal Review:</span> Our warehouse auditing team will analyze the metadata and footage within 48 business hours.

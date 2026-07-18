@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import httpx
 import logging
 import sys
@@ -54,10 +54,10 @@ async def sendsms_cmercury(phone: str, message: str):
 
 async def main():
     phone = "9035810416"
-    test_msg_sap = "123456 is your One-Time-Password (OTP) to login at your KOZMOCART account. It is valid for 10 mins."
+    test_msg_sap = "123456 is your One-Time-Password (OTP) to login at your POMMASTORE account. It is valid for 10 mins."
     tid_sap = "1707174314117516014"
     
-    test_msg_cmercury = "Your order #KZM-2026-327348 is packed and ready for courier pickup at KOZMOCART. Shipping soon!"
+    test_msg_cmercury = "Your order #KZM-2026-327348 is packed and ready for courier pickup at POMMASTORE. Shipping soon!"
     
     await sendsms_sap(phone, test_msg_sap, tid_sap)
     print("-" * 50)

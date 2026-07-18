@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -238,7 +238,7 @@ export default function Rewards() {
         {/* CTA Footer */}
         {!customer && (
           <div className="mt-20 bg-neutral-50 p-12 text-center border border-neutral-100">
-            <h4 className="text-xl font-serif text-neutral-900 mb-4">Join the Kozmocart Inner Circle.</h4>
+            <h4 className="text-xl font-serif text-neutral-900 mb-4">Join the Pommastore Inner Circle.</h4>
             <p className="text-xs text-neutral-500 max-w-sm mx-auto mb-8 font-medium uppercase tracking-widest leading-relaxed">
               Sign up today and receive 10 complimentary points instantly to start your journey.
             </p>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Plus, Search, Pencil, Trash2, Eye } from 'lucide-react'
 import api from '../../services/api'
 import { getMediaUrl } from '../../services/media'
@@ -7,8 +7,9 @@ import toast from 'react-hot-toast'
 function CategoryModal({ category, onClose, onSaved }) {
   const editing = !!category
   const [form, setForm] = useState({
-    name: category?.name || '', slug: category?.slug || '',
-    description: category?.description || '',
+    name: category?.name || '', name_ar: category?.name_ar || '',
+    slug: category?.slug || '',
+    description: category?.description || '', description_ar: category?.description_ar || '',
     is_active: category?.is_active ?? true,
     image_url: category?.image_url || '',
     images: category?.images || (category?.image_url ? [category.image_url] : []),
@@ -43,8 +44,52 @@ function CategoryModal({ category, onClose, onSaved }) {
   const [converting3D, setConverting3D] = useState(false)
   const [threeDProgress, setThreeDProgress] = useState(0)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const translationTimeouts = useRef({})
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  const handleTranslateField = async (sourceField, targetField) => {
+    const textToTranslate = form[sourceField] || ''
+    if (!textToTranslate.trim()) {
+      toast.error('Please enter English text first!')
+      return
+    }
+
+    const loadingToast = toast.loading('Translating to Arabic...')
+    try {
+      const res = await api.get('/translate', {
+        params: { text: textToTranslate, sl: 'en', tl: 'ar' }
+      })
+      const translatedText = res.data.translated_text
+      set(targetField, translatedText)
+      toast.success('Translated successfully!', { id: loadingToast })
+    } catch (err) {
+      toast.error('Translation failed', { id: loadingToast })
+    }
+  }
+
+  const triggerDebouncedTranslation = (sourceField, targetField, val) => {
+    if (translationTimeouts.current[sourceField]) {
+      clearTimeout(translationTimeouts.current[sourceField])
+    }
+
+    if (!val || !val.trim()) {
+      set(targetField, '')
+      return
+    }
+
+    translationTimeouts.current[sourceField] = setTimeout(async () => {
+      try {
+        const res = await api.get('/translate', {
+          params: { text: val, sl: 'en', tl: 'ar' }
+        })
+        const translatedText = res.data.translated_text
+        set(targetField, translatedText)
+      } catch (err) {
+        console.warn('Debounced auto-translation failed:', err)
+      }
+    }, 800)
+  }
 
   const handleDirectUpload = async (e) => {
     const files = Array.from(e.target.files)
@@ -108,7 +153,7 @@ function CategoryModal({ category, onClose, onSaved }) {
           clearInterval(interval)
           setConverting3D(false)
           set('is_3d_active', true)
-          toast.success(`Kozmocart 3D Maker: Category 3D asset generated ${form.remove_background ? 'without background' : 'with studio background'}!`)
+          toast.success(`Pommastore 3D Maker: Category 3D asset generated ${form.remove_background ? 'without background' : 'with studio background'}!`)
           return 100
         }
         return p + 25
@@ -120,8 +165,10 @@ function CategoryModal({ category, onClose, onSaved }) {
     e.preventDefault(); setSaving(true)
     const payload = {
       name: form.name,
+      name_ar: form.name_ar || null,
       slug: form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       description: form.description || null,
+      description_ar: form.description_ar || null,
       parent_id: form.parent_id && form.parent_id !== "" ? form.parent_id : null,
       scent_family: form.top_notes_preview || null,
       seo_title: form.seo_title || null,
@@ -156,12 +203,91 @@ function CategoryModal({ category, onClose, onSaved }) {
           <div className="modal-body" style={{ maxHeight: '78vh', overflowY: 'auto' }}>
             <div className="grid-2">
               <div className="form-group">
-                <label className="form-label">Category Name *</label>
-                <input className="input" value={form.name} onChange={e => set('name', e.target.value)} required placeholder="e.g. Niche Perfumes" />
+                <label className="form-label">Category Name (English) *</label>
+                <input 
+                  className="input" 
+                  value={form.name} 
+                  onChange={e => {
+                    set('name', e.target.value)
+                    triggerDebouncedTranslation('name', 'name_ar', e.target.value)
+                  }} 
+                  required 
+                  placeholder="e.g. Niche Perfumes" 
+                />
               </div>
               <div className="form-group">
-                <label className="form-label">Slug</label>
-                <input className="input" value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="auto-generated" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>اسم الفئة (Arabic)</label>
+                  {form.name && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('name', 'name_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <input className="input" value={form.name_ar || ''} onChange={e => set('name_ar', e.target.value)} placeholder="مثال: عطور النيش" dir="rtl" style={{ textAlign: 'right' }} />
+              </div>
+            </div>
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Description (English)</label>
+                <textarea 
+                  className="input" 
+                  value={form.description} 
+                  onChange={e => {
+                    set('description', e.target.value)
+                    triggerDebouncedTranslation('description', 'description_ar', e.target.value)
+                  }} 
+                  placeholder="Describe this category..." 
+                  rows={3} 
+                  style={{ resize: 'vertical' }} 
+                />
+              </div>
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>وصف الفئة (Arabic)</label>
+                  {form.description && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('description', 'description_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <textarea className="input" value={form.description_ar || ''} onChange={e => set('description_ar', e.target.value)} placeholder="اكتب وصف الفئة بالعربية..." rows={3} dir="rtl" style={{ textAlign: 'right', resize: 'vertical' }} />
               </div>
             </div>
 
@@ -214,10 +340,10 @@ function CategoryModal({ category, onClose, onSaved }) {
                   <input className="input" value={form.video_url} onChange={e => set('video_url', e.target.value)} placeholder="https://youtube.com/shorts/... or https://vimeo.com/..." style={{ fontSize: '0.8rem' }} />
                 </div>
 
-                {/* Kozmocart AI 3D Category Maker Studio */}
+                {/* Pommastore AI 3D Category Maker Studio */}
                 <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, rgba(10,10,15,0.8) 100%)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px solid rgba(201,168,76,0.2)', marginBottom: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.05em' }}>⚡ KOZMOCART AI 3D CATEGORY MAKER</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.05em' }}>⚡ POMMASTORE AI 3D CATEGORY MAKER</span>
                     {form.is_3d_active && <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>✓ 3D ACTIVE</span>}
                   </div>
 

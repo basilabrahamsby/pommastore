@@ -32,6 +32,7 @@ class PaymentMethod(str, enum.Enum):
     bank_transfer = "bank_transfer"
     cod = "cod"
     razorpay = "razorpay"
+    stripe = "stripe"
     loyalty_points = "loyalty_points"
 
 

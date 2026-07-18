@@ -188,17 +188,17 @@ const OfferProductCard = ({ item, isBuyItem, isGetItem, promoCode }: {
         {/* Pricing */}
         <div className="flex items-baseline gap-1.5 mb-1.5 flex-wrap">
           <span className="text-xs font-black text-black">
-            ₹{variant?.selling_price?.toLocaleString('en-IN') ?? '—'}
+            AED {variant?.selling_price?.toLocaleString('en-IN') ?? '—'}
           </span>
           {hasDiscount && (
             <span className="text-[8px] text-neutral-400 line-through font-medium">
-              ₹{variant.compare_at_price.toLocaleString('en-IN')}
+              AED {variant.compare_at_price.toLocaleString('en-IN')}
             </span>
           )}
         </div>
         
         {hasDiscount && (
-          <p className="text-[8px] text-accent font-black mb-1.5 truncate">You save ₹{(variant.compare_at_price - variant.selling_price).toLocaleString('en-IN')}</p>
+          <p className="text-[8px] text-accent font-black mb-1.5 truncate">You save AED {(variant.compare_at_price - variant.selling_price).toLocaleString('en-IN')}</p>
         )}
         {isGetItem && (
           <p className="text-[8px] text-green-600 font-black mb-1.5 truncate flex items-center gap-0.5"><Gift size={8} /> Free with purchase</p>
@@ -360,7 +360,7 @@ export default function OffersPage() {
                             {promo.min_purchase_amount > 0 && (
                               <div className="flex items-start">
                                 <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
-                                <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
+                                <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
                               </div>
                             )}
                           </>
@@ -368,12 +368,12 @@ export default function OffersPage() {
                           <>
                             <div className="flex items-start">
                               <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
-                              <span className="text-white font-medium">Flat ₹{promo.flat_discount_amount?.toLocaleString()} OFF</span>
+                              <span className="text-white font-medium">Flat AED {promo.flat_discount_amount?.toLocaleString()} OFF</span>
                             </div>
                             {promo.min_purchase_amount > 0 && (
                               <div className="flex items-start">
                                 <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
-                                <span className="text-white font-medium">₹{promo.min_purchase_amount.toLocaleString()}</span>
+                                <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
                               </div>
                             )}
                           </>
@@ -524,7 +524,7 @@ export default function OffersPage() {
                         )}
                         {isFlat && (
                           <div className="bg-white text-black px-3 py-1.5 text-[11px] font-black tracking-widest uppercase shadow-md">
-                            ₹{promo.flat_discount_amount?.toLocaleString()} OFF
+                            AED {promo.flat_discount_amount?.toLocaleString()} OFF
                           </div>
                         )}
                       </div>
@@ -619,7 +619,7 @@ export default function OffersPage() {
                               </div>
                               <div>
                                 <span className="text-[9px] font-black tracking-widest text-neutral-400 uppercase block mb-0.5">Flat Discount</span>
-                                <span className="text-amber-400 text-sm font-bold">₹{promo.flat_discount_amount?.toLocaleString()} OFF</span>
+                                <span className="text-amber-400 text-sm font-bold">AED {promo.flat_discount_amount?.toLocaleString()} OFF</span>
                               </div>
                             </div>
                           )}
@@ -627,7 +627,7 @@ export default function OffersPage() {
                           {promo.min_purchase_amount > 0 && (
                             <div className="flex items-center gap-3 pt-3 mt-2 border-t border-white/10">
                               <span className="text-[9px] font-black tracking-widest text-neutral-500 uppercase">Min. Purchase:</span>
-                              <span className="text-white text-xs font-bold">₹{promo.min_purchase_amount?.toLocaleString()}</span>
+                              <span className="text-white text-xs font-bold">AED {promo.min_purchase_amount?.toLocaleString()}</span>
                             </div>
                           )}
                         </div>

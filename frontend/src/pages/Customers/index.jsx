@@ -18,7 +18,7 @@ export default function Customers() {
       .finally(()=>setLoading(false))
   },[search])
 
-  const fmt = n => `₹${Number(n||0).toLocaleString('en-IN')}`
+  const fmt = n => `AED ${Number(n||0).toLocaleString('en-US')}`
 
   return (
     <div>
@@ -60,7 +60,7 @@ export default function Customers() {
                 <td style={{fontWeight:600}}>{c.loyalty_points}</td>
                 <td>{c.order_count}</td>
                 <td style={{fontWeight:700,color:'var(--gold-bright)'}}>{fmt(c.total_spent)}</td>
-                <td style={{fontSize:'0.75rem',color:'var(--text-muted)'}}>{c.last_order_at?new Date(c.last_order_at).toLocaleDateString('en-IN'):'—'}</td>
+                <td style={{fontSize:'0.75rem',color:'var(--text-muted)'}}>{c.last_order_at?new Date(c.last_order_at).toLocaleDateString('en-US'):'—'}</td>
                 <td><span className="badge badge-neutral">{c.acquisition_source||'—'}</span></td>
               </tr>
             ))}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
@@ -17,7 +17,7 @@ export default function FAQ() {
     {
       category: 'AUTHENTICITY',
       question: "Are your fragrances 100% original?",
-      answer: "Absolutely. Kozmocart holds a zero-tolerance policy towards counterfeits or grey-market adulterated products. Every single bottle is sourced directly from certified distributors, retains its original batch codes, and matches global brand inventory logs. You can verify the batch code upon arrival."
+      answer: "Absolutely. Pommastore holds a zero-tolerance policy towards counterfeits or grey-market adulterated products. Every single bottle is sourced directly from certified distributors, retains its original batch codes, and matches global brand inventory logs. You can verify the batch code upon arrival."
     },
     {
       category: 'AUTHENTICITY',
@@ -47,7 +47,7 @@ export default function FAQ() {
     {
       category: 'PAYMENTS',
       question: "Do you support Cash on Delivery (COD)?",
-      answer: "Yes, we provide COD options up to limits of ₹15,000 across select pin codes serviced securely by Delhivery. For amounts exceeding this threshold, pre-payment via UPI or Cards is mandated to secure high-value consignments."
+      answer: "Yes, we provide COD options up to limits of AED 15,000 across select pin codes serviced securely by Delhivery. For amounts exceeding this threshold, pre-payment via UPI or Cards is mandated to secure high-value consignments."
     }
   ];
 

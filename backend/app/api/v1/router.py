@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.api.v1 import auth, brands, categories, products, inventory, orders, dashboard, offers, analytics, settings, seo, uploads, loyalty
+from app.api.v1 import auth, brands, categories, products, inventory, orders, dashboard, offers, analytics, settings, seo, uploads, loyalty, translate
 from app.api.v1.storefront import router as storefront_router
 from app.core.deps import get_current_user
 
@@ -27,5 +27,6 @@ protected_router.include_router(loyalty.router)
 protected_router.include_router(analytics.router)
 protected_router.include_router(settings.router, prefix="/settings", tags=["Settings"])
 protected_router.include_router(uploads.router)
+protected_router.include_router(translate.router)
 
 api_router.include_router(protected_router)

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -80,11 +80,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   Future<void> _loadCategories() async {

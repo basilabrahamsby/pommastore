@@ -1,6 +1,6 @@
-import sys
+﻿import sys
 import asyncio
-sys.path.append('C:\\Developer\\Kozmocart\\backend')
+sys.path.append('C:\\Developer\\Pommastore\\backend')
 
 from app.core.database import AsyncSessionLocal
 from app.models.product import Brand, Category

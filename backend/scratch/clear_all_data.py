@@ -1,9 +1,9 @@
-import os
+﻿import os
 import psycopg2
 
 def clear_all_data():
     try:
-        db_url = os.environ.get("DATABASE_URL", "postgresql://kozmocart:kozmocart_dev_2026@localhost:5432/kozmocart_db")
+        db_url = os.environ.get("DATABASE_URL", "postgresql://pommastore:pommastore_dev_2026@localhost:5432/pommastore_db")
         if "asyncpg" in db_url:
             db_url = db_url.replace("+asyncpg", "")
         conn = psycopg2.connect(db_url)

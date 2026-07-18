@@ -32,6 +32,7 @@ import {
   ExternalLink,
   MapPin
 } from 'lucide-react';
+import { useTranslation } from '@/locales/i18nContext';
 
 
 export default function ProductClient({ 
@@ -44,6 +45,7 @@ export default function ProductClient({
   initialOffers: any[]; 
 }) {
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const { customer } = useAuthStore();
   const [product, setProduct] = useState<any>(initialProduct);
   const [selectedVariant, setSelectedVariant] = useState<any>(initialProduct?.variants?.[0] || null);
@@ -55,6 +57,35 @@ export default function ProductClient({
   const [pincode, setPincode] = useState('');
   const [pinStatus, setPinStatus] = useState<'idle' | 'checking' | 'serviceable' | 'unserviceable' | 'error'>('idle');
   const [pinResult, setPinResult] = useState<any>(null);
+
+  // Dynamic localization re-fetch on locale shift
+  useEffect(() => {
+    if (!slug) return;
+    let active = true;
+    const fetchLocalized = async () => {
+      try {
+        const res = await api.get(`/products/${slug}?lang=${locale}`, { headers: { 'Accept-Language': locale } });
+        if (active && res.data) {
+          setProduct(res.data);
+          // Keep active variant selection synchronized
+          setSelectedVariant((prev: any) => {
+            const currentSku = prev?.sku;
+            return res.data.variants?.find((v: any) => v.sku === currentSku) || res.data.variants?.[0] || null;
+          });
+          // Also set active image if none is selected
+          if (!activeImage && res.data.images?.[0]) {
+            setActiveImage(res.data.images[0]);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch localized product details', err);
+      }
+    };
+    fetchLocalized();
+    return () => {
+      active = false;
+    };
+  }, [slug, locale]);
 
   useEffect(() => {
     const checkSavedAddressPincode = async () => {
@@ -168,7 +199,7 @@ export default function ProductClient({
         if (!product) {
           setLoading(true);
         }
-        const res = await api.get(`/products/${slug}`);
+        const res = await api.get(`/products/${slug}?lang=${locale}`, { headers: { 'Accept-Language': locale } });
         const prod = res.data;
         setProduct(prod);
         
@@ -188,7 +219,7 @@ export default function ProductClient({
 
         // Fetch active storefront offers and filter
         try {
-          const offersRes = await api.get('/offers');
+          const offersRes = await api.get(`/offers?lang=${locale}`, { headers: { 'Accept-Language': locale } });
           const productSkus = prod.variants?.map((v: any) => v.sku) || [];
           const matches = offersRes.data.filter((off: any) => {
             const inProductsList = off.products?.some((p: any) => p.id === prod.id);
@@ -204,7 +235,7 @@ export default function ProductClient({
 
         // Fetch recommendations dynamically based on category, brand, and price
         try {
-          const allRes = await api.get('/products', { params: { limit: 120 } });
+          const allRes = await api.get('/products', { params: { limit: 120, lang: locale }, headers: { 'Accept-Language': locale } });
           const allProducts = allRes.data.filter((p: any) => p.id !== prod.id);
 
           // 1. Same Brand Products
@@ -259,13 +290,13 @@ export default function ProductClient({
     };
     
     fetchProductAndRecs();
-  }, [slug]);
+  }, [slug, locale]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white">
         <div className="relative mb-6">
-          <img src="/logo.png" alt="Kozmocart Logo" className="h-12 object-contain animate-pulse" />
+          <img src="/logo.png" alt="Pommastore Logo" className="h-12 object-contain animate-pulse" />
         </div>
         <span className="text-[9px] font-black tracking-[0.4em] text-neutral-400 uppercase animate-pulse">Revealing Olfactory Masterpiece...</span>
       </div>
@@ -377,7 +408,7 @@ export default function ProductClient({
       return `Get ${offer.discount_percentage}% off on your purchase.`;
     }
     if (offer.flat_discount_amount) {
-      return `Flat ₹${offer.flat_discount_amount} off on qualifying items.`;
+      return `Flat AED ${offer.flat_discount_amount} off on qualifying items.`;
     }
     return '';
   };
@@ -390,7 +421,12 @@ export default function ProductClient({
 
   const longevityText = product.longevity_hours ? `${product.longevity_hours} Hours` : '8-12 Hours (Ultra Long-Lasting)';
 
-  const sillageMap: Record<number, string> = {
+  const sillageMap: Record<number, string> = locale === 'ar' ? {
+    1: 'انتشار قريب (شخصي)',
+    2: 'انتشار متوسط',
+    3: 'انتشار قوي',
+    4: 'انتشار هائل'
+  } : {
     1: 'Intimate Projection',
     2: 'Moderate Projection',
     3: 'Strong Projection',
@@ -398,23 +434,33 @@ export default function ProductClient({
   };
   const sillageText = product.sillage_rating 
     ? sillageMap[product.sillage_rating] || `${product.sillage_rating}/4 Projection`
-    : 'Intense / Room-filling';
+    : (locale === 'ar' ? 'فواح جداً' : 'Intense / Room-filling');
     
-  const targetGender = product.gender || 'Unisex';
+  const genderMap: Record<string, string> = {
+    'Men': 'للرجال',
+    'Women': 'للنساء',
+    'Unisex': 'للجنسين'
+  };
+  const targetGender = locale === 'ar' ? (genderMap[product.gender] || product.gender || 'للجنسين') : (product.gender || 'Unisex');
   
-  const topNotes = product.scent_notes?.top?.length > 0 
-    ? product.scent_notes.top.join(', ') 
-    : 'Sicilian Bergamot, Grapefruit Zest, Pink Peppercorn';
-  
-  const heartNotes = product.scent_notes?.heart?.length > 0 
-    ? product.scent_notes.heart.join(', ') 
-    : 'Damask Rose, French Lavender, Warm Cardamom';
-  
-  const baseNotes = product.scent_notes?.base?.length > 0 
-    ? product.scent_notes.base.join(', ') 
-    : 'Madagascar Vanilla, Patchouli Essence, Ambergris, White Musk';
+  const isAr = locale === 'ar';
+  const notesSource = (isAr && product.scent_notes_ar) ? product.scent_notes_ar : product.scent_notes;
 
-  const defaultDescription = `An immersive sensory journey crafted by world-class perfumers. This signature masterpiece balances rare raw extracts with cutting-edge molecular engineering, producing a timeless scent trail that adapts dynamically to your skin chemistry. Designed for connoisseurs of authentic luxury.`;
+  const topNotes = notesSource?.top?.length > 0 
+    ? notesSource.top.join(', ') 
+    : (isAr ? 'البرغموت الصقلي، قشر الجريب فروت، الفلفل الوردي' : 'Sicilian Bergamot, Grapefruit Zest, Pink Peppercorn');
+  
+  const heartNotes = notesSource?.heart?.length > 0 
+    ? notesSource.heart.join(', ') 
+    : (isAr ? 'الورد الدمشقي، اللافندر الفرنسي، الهيل الدافئ' : 'Damask Rose, French Lavender, Warm Cardamom');
+  
+  const baseNotes = notesSource?.base?.length > 0 
+    ? notesSource.base.join(', ') 
+    : (isAr ? 'فانيليا مدغشقر، خلاصة الباتشولي، عنبر الحوت، المسك الأبيض' : 'Madagascar Vanilla, Patchouli Essence, Ambergris, White Musk');
+
+  const defaultDescription = isAr
+    ? `رحلة حسية غامرة صممها خبراء العطور العالميون. توازن هذه التحفة الفنية بين المستخلصات الخام النادرة والهندسة الجزيئية المتطورة، مما ينتج عنه أثر عطري خالد يتكيف ديناميكيًا مع كيمياء بشرتك. مصممة لخبراء الفخامة الحقيقية.`
+    : `An immersive sensory journey crafted by world-class perfumers. This signature masterpiece balances rare raw extracts with cutting-edge molecular engineering, producing a timeless scent trail that adapts dynamically to your skin chemistry. Designed for connoisseurs of authentic luxury.`;
 
   return (
     <div className="bg-white text-black selection:bg-neutral-900 selection:text-white min-h-screen">
@@ -474,27 +520,31 @@ export default function ProductClient({
             
             {/* Breadcrumb / Brand */}
             <div className="flex items-center space-x-2 mb-4">
-              <span className="text-[10px] tracking-[0.35em] font-black text-neutral-400 uppercase">{product.brand_name || "Exquisite House"}</span>
+              <span className="text-[10px] tracking-[0.35em] font-black text-neutral-400 uppercase">
+                {locale === 'ar' ? (product.brand_name_ar || product.brand_name || "تشكيلة رائعة") : (product.brand_name || "Exquisite House")}
+              </span>
               <span className="w-1.5 h-1.5 rounded-full bg-neutral-300" />
-              {product.category_name && (
-                <span className="text-[10px] tracking-[0.2em] font-bold text-neutral-400 uppercase">{product.category_name}</span>
+              {(product.category_name || product.category_name_ar) && (
+                <span className="text-[10px] tracking-[0.2em] font-bold text-neutral-400 uppercase">
+                  {locale === 'ar' ? (product.category_name_ar || product.category_name) : product.category_name}
+                </span>
               )}
             </div>
 
             {/* Product Title */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-semibold tracking-wide text-neutral-900 leading-tight mb-4 uppercase">
-              {product.name}
+              {locale === 'ar' ? (product.name_ar || product.name) : product.name}
             </h1>
 
             {/* Price Box */}
             <div className="flex items-end space-x-4 mb-8">
               <span className="text-3xl font-bold text-black">
-                ₹{selectedVariant?.selling_price?.toLocaleString('en-IN')}/-
+                AED {selectedVariant?.selling_price?.toLocaleString('en-IN')}
               </span>
               {selectedVariant?.compare_at_price > selectedVariant?.selling_price && (
                 <div className="flex items-center space-x-2">
                   <span className="text-lg text-neutral-400 line-through font-semibold">
-                    ₹{selectedVariant.compare_at_price.toLocaleString('en-IN')}
+                    AED {selectedVariant.compare_at_price.toLocaleString('en-IN')}
                   </span>
                   <span className="bg-red-100 text-red-600 text-[9px] font-semibold tracking-wider px-2 py-0.5 uppercase rounded">
                     {Math.round(((selectedVariant.compare_at_price - selectedVariant.selling_price) / selectedVariant.compare_at_price) * 100)}% OFF
@@ -508,14 +558,14 @@ export default function ProductClient({
               <div className="flex items-center space-x-3 mb-8 bg-neutral-50 px-4 py-3 border border-neutral-100 rounded-md shadow-2xs self-start">
                 <Award size={16} className="text-neutral-900 fill-current" />
                 <span className="text-[9px] font-black tracking-[0.2em] text-neutral-900 uppercase">
-                  Earn {selectedVariant.loyalty_points} exclusive loyalty points with this purchase
+                  {t('earn_points').replace('{points}', String(selectedVariant.loyalty_points))}
                 </span>
               </div>
             )}
 
             {/* Micro details */}
             <div className="text-neutral-600 text-sm leading-relaxed mb-8 font-medium whitespace-pre-wrap">
-              {product.short_description || defaultDescription}
+              {locale === 'ar' ? (product.short_description_ar || product.short_description || defaultDescription) : (product.short_description || defaultDescription)}
             </div>
 
             {/* ACTIVE OFFERS BANNER */}
@@ -625,8 +675,8 @@ export default function ProductClient({
             {/* SELECT SIZE */}
             <div className="mb-10">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-[10px] font-semibold tracking-[0.25em] text-neutral-900 uppercase">Select Size</h3>
-                <span className="text-[9px] font-medium text-neutral-400 uppercase tracking-widest">In Stock</span>
+                <h3 className="text-[10px] font-semibold tracking-[0.25em] text-neutral-900 uppercase">{t('select_size')}</h3>
+                <span className="text-[9px] font-medium text-neutral-400 uppercase tracking-widest">{t('in_stock')}</span>
               </div>
               <div className="flex flex-wrap gap-3">
                 {product.variants && product.variants.map((v: any) => (
@@ -656,7 +706,7 @@ export default function ProductClient({
                     -
                   </button>
                   <div className="flex-1 flex items-center justify-center text-[9px] font-semibold tracking-[0.15em] bg-neutral-50/50 text-black uppercase text-center px-1">
-                    {cartItem.quantity} In Bag
+                    {t('in_bag').replace('{quantity}', String(cartItem.quantity))}
                   </div>
                   <button
                     onClick={() => updateQuantity(cartItem.id, cartItem.quantity + 1)}
@@ -671,7 +721,7 @@ export default function ProductClient({
                   className="flex-1 bg-black text-white text-[9px] font-semibold tracking-[0.15em] hover:bg-neutral-900 transition-colors flex items-center justify-center space-x-2 h-full rounded shadow-sm hover:shadow-md duration-300"
                 >
                   <ShoppingBag size={14} />
-                  <span>ADD TO BAG</span>
+                  <span>{t('add_to_bag')}</span>
                 </button>
               )}
               
@@ -679,7 +729,7 @@ export default function ProductClient({
                 onClick={handleBuyNow}
                 className="flex-1 bg-amber-500 text-black text-[9px] font-black tracking-[0.15em] hover:bg-amber-600 transition-colors flex items-center justify-center space-x-2 h-full rounded shadow-sm hover:shadow-md duration-300"
               >
-                <span>BUY NOW</span>
+                <span>{t('buy_now')}</span>
               </button>
               
               <button
@@ -713,17 +763,17 @@ export default function ProductClient({
             <div className="border-t border-neutral-100 pt-6 mt-6">
               <div className="flex items-center space-x-2 text-neutral-900 font-serif text-sm mb-1.5">
                 <MapPin size={16} className="text-neutral-500" />
-                <span>DELIVERY DETAILS</span>
+                <span>{t('delivery_availability')}</span>
               </div>
               <p className="text-[10px] text-neutral-400 font-medium tracking-wide uppercase mb-3">
-                Enter pin to get correct delivery charge or know delivery details
+                {t('enter_pin_desc')}
               </p>
               
               <form onSubmit={handleCheckPincode} className="flex space-x-2 max-w-xs">
                 <input 
                   type="text"
                   maxLength={6}
-                  placeholder="Enter 6-digit Pincode"
+                  placeholder={t('enter_pincode_placeholder')}
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
                   className="flex-1 border border-neutral-200 px-3 py-2 text-xs focus:border-black outline-none rounded bg-white text-black"
@@ -733,7 +783,7 @@ export default function ProductClient({
                   disabled={pinStatus === 'checking'}
                   className="bg-black text-white px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-800 transition-colors rounded"
                 >
-                  {pinStatus === 'checking' ? 'CHECKING...' : 'CHECK'}
+                  {pinStatus === 'checking' ? t('checking') : t('check')}
                 </button>
               </form>
 
@@ -741,12 +791,12 @@ export default function ProductClient({
                 <div className="mt-3 text-xs text-green-700 bg-green-50/80 p-3 rounded border border-green-100 flex items-start space-x-2 animate-in fade-in duration-300">
                   <div className="font-semibold">✓</div>
                   <div>
-                    <p className="font-bold">Serviceable by Delhivery</p>
+                    <p className="font-bold">{t('serviceable_by_delhivery')}</p>
                     <p className="text-[11px] text-green-800 mt-0.5">
-                      Destination: {pinResult.district}, {pinResult.state || 'India'}
+                      {locale === 'ar' ? 'الوجهة' : 'Destination'}: {pinResult.district}, {pinResult.state || 'India'}
                     </p>
                     <p className="text-[11px] text-green-800 mt-1">
-                      • Shipping Fee: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? 'FREE' : '₹' + (pinResult.shipping_fee || 150) + ' (FREE on orders over ₹' + (cmsLayout?.free_shipping_limit || 999) + ')'}
+                      • {t('shipping_fee')}: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? t('free') : 'AED ' + (pinResult.shipping_fee || 150) + ' (' + t('free_on_orders_over') + ' AED ' + (cmsLayout?.free_shipping_limit || 999) + ')'}
                     </p>
                   </div>
                 </div>
@@ -756,8 +806,8 @@ export default function ProductClient({
                 <div className="mt-3 text-xs text-red-700 bg-red-50/80 p-3 rounded border border-red-100 flex items-start space-x-2 animate-in fade-in duration-300">
                   <div className="font-semibold">✗</div>
                   <div>
-                    <p className="font-bold">Not Serviceable</p>
-                    <p className="text-[11px] text-red-800 mt-0.5">We do not ship to this pincode via Delhivery.</p>
+                    <p className="font-bold">{t('not_serviceable')}</p>
+                    <p className="text-[11px] text-red-800 mt-0.5">{t('not_serviceable_desc')}</p>
                   </div>
                 </div>
               )}
@@ -772,28 +822,28 @@ export default function ProductClient({
               <div className="flex items-center space-x-3">
                 <ShieldCheck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">100% Genuine</p>
-                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">Brand Direct</p>
+                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">{t('badge_genuine')}</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">{t('badge_genuine_sub')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Truck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">Free Shipping</p>
-                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">Orders &gt; ₹{cmsLayout?.free_shipping_limit || '999'}</p>
+                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">{t('badge_shipping')}</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">{t('badge_shipping_sub').replace('{limit}', String(cmsLayout?.free_shipping_limit || '999'))}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <RefreshCw size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">Easy Returns</p>
-                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">7-Day Return Policy</p>
+                  <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">{t('badge_returns')}</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">{t('badge_returns_sub')}</p>
                 </div>
               </div>
             </div>
 
             {/* COLLAPSIBLE DETAILS Accordion */}
-            {product.full_description && (
+            {(product.full_description || product.full_description_ar) && (
               <div className="border-t border-neutral-100 pt-6 mt-6">
                 <div className="border border-neutral-200 rounded overflow-hidden">
                   <button
@@ -801,7 +851,7 @@ export default function ProductClient({
                     className="w-full flex items-center justify-between p-4 bg-neutral-50/30 hover:bg-neutral-50/80 transition-colors select-none text-left"
                   >
                     <span className="text-[10px] font-black tracking-[0.2em] text-neutral-900 uppercase">
-                      Creation Narrative (Click to view details)
+                      {t('creation_narrative')}
                     </span>
                     {isDescriptionExpanded ? (
                       <ChevronUp size={16} className="text-neutral-900" />
@@ -815,7 +865,7 @@ export default function ProductClient({
                     }`}
                   >
                     <div className="p-4 text-neutral-600 text-xs leading-relaxed font-medium whitespace-pre-wrap">
-                      {product.full_description}
+                      {locale === 'ar' ? (product.full_description_ar || product.full_description) : product.full_description}
                     </div>
                   </div>
                 </div>
@@ -827,14 +877,14 @@ export default function ProductClient({
 
         {/* Sensory Profile & Specifications Grid */}
         <section className="mb-24 bg-neutral-50/50 border border-neutral-100 p-8 rounded-lg shadow-2xs">
-          <span className="text-[9px] font-semibold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Specifications</span>
-          <h2 className="text-2xl font-serif italic text-black mb-8">Sensory Profile & Features</h2>
+          <span className="text-[9px] font-semibold tracking-[0.3em] text-neutral-400 uppercase mb-2 block">{t('specifications')}</span>
+          <h2 className="text-2xl font-serif italic text-black mb-8">{t('sensory_profile')}</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
               <div className="flex items-center space-x-3 mb-3 text-neutral-400">
                 <Droplet size={18} />
-                <span className="text-[9px] font-semibold tracking-widest uppercase">Olfactory Family</span>
+                <span className="text-[9px] font-semibold tracking-widest uppercase">{t('olfactory_family')}</span>
               </div>
               <p className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">{olfactoryFamily}</p>
             </div>
@@ -842,7 +892,7 @@ export default function ProductClient({
             <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
               <div className="flex items-center space-x-3 mb-3 text-neutral-400">
                 <Wind size={18} />
-                <span className="text-[9px] font-semibold tracking-widest uppercase">Sillage Projection</span>
+                <span className="text-[9px] font-semibold tracking-widest uppercase">{t('sillage_projection')}</span>
               </div>
               <p className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">{sillageText}</p>
             </div>
@@ -850,7 +900,7 @@ export default function ProductClient({
             <div className="bg-white p-5 border border-neutral-100 rounded shadow-3xs">
               <div className="flex items-center space-x-3 mb-3 text-neutral-400">
                 <User size={18} />
-                <span className="text-[9px] font-semibold tracking-widest uppercase">Fragrance Gender</span>
+                <span className="text-[9px] font-semibold tracking-widest uppercase">{t('fragrance_gender')}</span>
               </div>
               <p className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">{targetGender}</p>
             </div>
@@ -859,8 +909,8 @@ export default function ProductClient({
 
         {/* Olfactory Journey Section (Horizontal) */}
         <section className="mb-24">
-          <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2 block">Composition</span>
-          <h2 className="text-2xl font-serif italic text-black mb-8 border-b border-neutral-100 pb-3">Olfactory Journey</h2>
+          <span className="text-[9px] font-black tracking-[0.3em] text-neutral-400 uppercase mb-2 block">{t('composition')}</span>
+          <h2 className="text-2xl font-serif italic text-black mb-8 border-b border-neutral-100 pb-3">{t('olfactory_journey')}</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
@@ -868,27 +918,27 @@ export default function ProductClient({
               <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
                 <Flame size={18} />
               </div>
-              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">Top Notes (Opening)</h4>
+              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">{t('top_notes')}</h4>
               <p className="text-sm font-bold text-neutral-800 leading-relaxed mb-1">{topNotes}</p>
-              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">First 15-30 minutes of initial impression.</p>
+              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">{t('top_notes_desc')}</p>
             </div>
 
             <div className="flex flex-col items-start bg-neutral-50/50 p-6 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
               <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
                 <Heart size={18} />
               </div>
-              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">Heart Notes (Core Profile)</h4>
+              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">{t('heart_notes')}</h4>
               <p className="text-sm font-bold text-neutral-800 leading-relaxed mb-1">{heartNotes}</p>
-              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">Main olfactory signature lasting 2-4 hours.</p>
+              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">{t('heart_notes_desc')}</p>
             </div>
 
             <div className="flex flex-col items-start bg-neutral-50/50 p-6 border border-neutral-100 rounded-lg hover:border-black/10 transition-colors duration-300">
               <div className="bg-neutral-100 text-neutral-900 p-2.5 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
                 <Sparkles size={18} />
               </div>
-              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">Base Notes (Dry Down)</h4>
+              <h4 className="text-[10px] font-black tracking-widest uppercase text-neutral-400 mb-2">{t('base_notes')}</h4>
               <p className="text-sm font-bold text-neutral-800 leading-relaxed mb-1">{baseNotes}</p>
-              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">Deep, rich foundational notes lasting 8+ hours.</p>
+              <p className="text-[9px] text-neutral-400 font-medium tracking-wide">{t('base_notes_desc')}</p>
             </div>
 
           </div>
@@ -898,8 +948,8 @@ export default function ProductClient({
         {product?.gallery_images?.length > 0 && (
           <section className="bg-white py-16 md:py-24 border-t border-neutral-100 mt-16 w-full">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center mb-12">
-              <span className="text-[10px] font-black tracking-[0.35em] text-neutral-400 uppercase mb-3 block">Olfactory Vignettes</span>
-              <h2 className="text-3xl md:text-5xl font-serif text-black uppercase tracking-widest font-light">The Visual Gallery</h2>
+              <span className="text-[10px] font-black tracking-[0.35em] text-neutral-400 uppercase mb-3 block">{t('olfactory_vignettes')}</span>
+              <h2 className="text-3xl md:text-5xl font-serif text-black uppercase tracking-widest font-light">{t('visual_gallery')}</h2>
               <div className="w-12 h-[1px] bg-neutral-300 mx-auto mt-5" />
             </div>
 
@@ -932,7 +982,7 @@ export default function ProductClient({
                           {/* Full Screen View Icon Button */}
                           <div 
                             className="bg-black/80 hover:bg-white hover:text-black border border-white/20 p-3 rounded-full text-white transition-all duration-300 shadow-md hover:scale-110 flex items-center justify-center"
-                            title="Fullscreen View"
+                            title={t('view_fullscreen')}
                           >
                             <Maximize2 size={16} />
                           </div>
@@ -946,7 +996,7 @@ export default function ProductClient({
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className="bg-amber-500 text-black hover:bg-white border border-amber-400 p-3 rounded-full transition-all duration-300 shadow-md hover:scale-110 flex items-center justify-center"
-                                  title="Shop the Look"
+                                  title={t('discover_shop')}
                                 >
                                   <ExternalLink size={16} />
                                 </a>
@@ -954,7 +1004,7 @@ export default function ProductClient({
                                 <Link 
                                   href={itemLink} 
                                   className="bg-amber-500 text-black hover:bg-white border border-amber-400 p-3 rounded-full transition-all duration-300 shadow-md hover:scale-110 flex items-center justify-center"
-                                  title="Shop the Look"
+                                  title={t('discover_shop')}
                                 >
                                   <ExternalLink size={16} />
                                 </Link>
@@ -964,7 +1014,7 @@ export default function ProductClient({
                         </div>
                         
                         <span className="text-white text-[8px] font-black tracking-[0.25em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500 mt-3 block">
-                          {itemLink ? 'Discover & Shop' : 'View Fullscreen'}
+                          {itemLink ? t('discover_shop') : t('view_fullscreen')}
                         </span>
                       </div>
                     </div>
@@ -1164,7 +1214,7 @@ export default function ProductClient({
                   <div className="flex-1 min-w-0">
                     <p className="text-[8px] font-black tracking-[0.2em] text-neutral-400 uppercase mb-0.5">{product.brand_name || "Brand Legacy"}</p>
                     <h4 className="text-xs font-bold text-black truncate">{product.name}</h4>
-                    <p className="text-xs font-black text-black mt-1">₹{(selectedVariant?.selling_price || 0).toLocaleString('en-IN')}</p>
+                    <p className="text-xs font-black text-black mt-1">AED {(selectedVariant?.selling_price || 0).toLocaleString('en-IN')}</p>
                     <span className="inline-block bg-neutral-100 text-neutral-600 text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase mt-1 rounded-sm">
                       {selectedVariant?.size_ml || 50}ML
                     </span>
@@ -1200,7 +1250,7 @@ export default function ProductClient({
                         <div className="flex-1 min-w-0">
                           <p className="text-[8px] font-black tracking-[0.2em] text-neutral-400 uppercase mb-0.5">{bundleProducts[0].brand_name || "Brand Legacy"}</p>
                           <h4 className="text-xs font-bold text-black truncate">{bundleProducts[0].name}</h4>
-                          <p className="text-xs font-black text-black mt-1">₹{(bundleProducts[0].variants?.[0]?.selling_price || 0).toLocaleString('en-IN')}</p>
+                          <p className="text-xs font-black text-black mt-1">AED {(bundleProducts[0].variants?.[0]?.selling_price || 0).toLocaleString('en-IN')}</p>
                           <span className="inline-block bg-neutral-100 text-neutral-600 text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase mt-1 rounded-sm">
                             {bundleProducts[0].variants?.[0]?.size_ml || 50}ML
                           </span>
@@ -1239,7 +1289,7 @@ export default function ProductClient({
                         <div className="flex-1 min-w-0">
                           <p className="text-[8px] font-black tracking-[0.2em] text-neutral-400 uppercase mb-0.5">{bundleProducts[1].brand_name || "Brand Legacy"}</p>
                           <h4 className="text-xs font-bold text-black truncate">{bundleProducts[1].name}</h4>
-                          <p className="text-xs font-black text-black mt-1">₹{(bundleProducts[1].variants?.[0]?.selling_price || 0).toLocaleString('en-IN')}</p>
+                          <p className="text-xs font-black text-black mt-1">AED {(bundleProducts[1].variants?.[0]?.selling_price || 0).toLocaleString('en-IN')}</p>
                           <span className="inline-block bg-neutral-100 text-neutral-600 text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase mt-1 rounded-sm">
                             {bundleProducts[1].variants?.[0]?.size_ml || 50}ML
                           </span>
@@ -1258,14 +1308,14 @@ export default function ProductClient({
                   <ul className="space-y-2 mb-6">
                     <li className="text-xs flex justify-between font-bold text-black">
                       <span className="truncate max-w-[200px]">{product.name} (Active)</span>
-                      <span>₹{(selectedVariant?.selling_price || 0).toLocaleString('en-IN')}</span>
+                      <span>AED {(selectedVariant?.selling_price || 0).toLocaleString('en-IN')}</span>
                     </li>
                     {bundleProducts.map((p) => {
                       if (!checkedBundleIds.includes(p.id)) return null;
                       return (
                         <li key={p.id} className="text-xs flex justify-between text-neutral-600 font-semibold">
                           <span className="truncate max-w-[200px]">{p.name}</span>
-                          <span>₹{(p.variants?.[0]?.selling_price || 0).toLocaleString('en-IN')}</span>
+                          <span>AED {(p.variants?.[0]?.selling_price || 0).toLocaleString('en-IN')}</span>
                         </li>
                       );
                     })}
@@ -1275,7 +1325,7 @@ export default function ProductClient({
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-xs text-neutral-500 font-bold uppercase tracking-wider">Subtotal:</span>
                       <span className={`text-sm text-neutral-500 font-bold ${checkedBundleIds.length > 1 ? 'line-through' : ''}`}>
-                        ₹{[product, ...bundleProducts].filter(p => checkedBundleIds.includes(p.id)).reduce((sum, p) => sum + (p.id === product.id ? (selectedVariant?.selling_price || 0) : (p.variants?.[0]?.selling_price || 0)), 0).toLocaleString('en-IN')}
+                        AED {[product, ...bundleProducts].filter(p => checkedBundleIds.includes(p.id)).reduce((sum, p) => sum + (p.id === product.id ? (selectedVariant?.selling_price || 0) : (p.variants?.[0]?.selling_price || 0)), 0).toLocaleString('en-IN')}
                       </span>
                     </div>
 
@@ -1288,7 +1338,7 @@ export default function ProductClient({
                           <span className="text-xs text-black font-black uppercase tracking-wider">Bundle Total:</span>
                         </div>
                         <span className="text-xl font-black text-black">
-                          ₹{Math.round([product, ...bundleProducts].filter(p => checkedBundleIds.includes(p.id)).reduce((sum, p) => sum + (p.id === product.id ? (selectedVariant?.selling_price || 0) : (p.variants?.[0]?.selling_price || 0)), 0) * 0.9).toLocaleString('en-IN')}/-
+                          AED {Math.round([product, ...bundleProducts].filter(p => checkedBundleIds.includes(p.id)).reduce((sum, p) => sum + (p.id === product.id ? (selectedVariant?.selling_price || 0) : (p.variants?.[0]?.selling_price || 0)), 0) * 0.9).toLocaleString('en-IN')}
                         </span>
                       </div>
                     )}

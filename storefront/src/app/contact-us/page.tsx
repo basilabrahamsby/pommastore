@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, Clock } from 'lucide-react';
@@ -60,7 +60,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <span className="text-[9px] font-black text-neutral-400 tracking-widest uppercase block mb-1">Digital Correspondence</span>
-                  <a href="mailto:concierge@kozmocart.com" className="text-sm font-bold text-black hover:opacity-70 transition-opacity font-medium">concierge@kozmocart.com</a>
+                  <a href="mailto:concierge@pommastore.com" className="text-sm font-bold text-black hover:opacity-70 transition-opacity font-medium">concierge@pommastore.com</a>
                 </div>
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function ContactUs() {
                 <div>
                   <span className="text-[9px] font-black text-neutral-400 tracking-widest uppercase block mb-1">Corporate Offices</span>
                   <p className="text-[12px] text-neutral-600 font-medium leading-relaxed">
-                    Kozmocart Retail Private Limited <br/>
+                    Pommastore Retail Private Limited <br/>
                     Premium Logistics Zone, New Delhi, 110037 <br/>
                     Republic of India.
                   </p>

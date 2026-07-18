@@ -41,6 +41,8 @@ Thumbs.db
 backup/
 scratch/
 backend/clear_data.py
+backend/static_uploads/*
+!backend/static_uploads/_Banner_3.jpg
 check_db_databases.py
 check_suppliers.py
 check_tags.py

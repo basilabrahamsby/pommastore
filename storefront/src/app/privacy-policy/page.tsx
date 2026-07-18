@@ -36,7 +36,7 @@ export default function PrivacyPolicy() {
       <section class="space-y-4 border-b border-neutral-100 pb-10">
         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-black">1. Collection of Personal Information</h2>
         <p>
-          At Kozmocart, we collect necessary customer details to fulfill orders and provide tailored luxury fragrances recommendations. 
+          At Pommastore, we collect necessary customer details to fulfill orders and provide tailored luxury fragrances recommendations. 
           This includes identity details (name, email), shipping descriptors, contact numbers, and billing data.
         </p>
         <p>
@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
           We implement standard, high-grade security patches, SSL transmission channels, and database isolation frameworks to shield details from unauthorized breaches.
         </p>
         <p>
-          Our payment processing is fully outsourced to PCI-DSS certified gateway providers like Razorpay; no credit card details are ever retained on Kozmocart databases.
+          Our payment processing is fully outsourced to PCI-DSS certified gateway providers like Stripe; no credit card details are ever retained on Pommastore databases.
         </p>
       </section>
 

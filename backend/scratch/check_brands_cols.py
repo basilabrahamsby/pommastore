@@ -1,8 +1,8 @@
-import psycopg2
+﻿import psycopg2
 
 def check_brands_columns():
     try:
-        conn = psycopg2.connect("postgresql://kozmocart:kozmocart_dev_2026@localhost:5432/kozmocart_db")
+        conn = psycopg2.connect("postgresql://pommastore:pommastore_dev_2026@localhost:5432/pommastore_db")
         cur = conn.cursor()
         
         cur.execute("SELECT table_schema, table_name FROM information_schema.tables WHERE table_name='brands'")

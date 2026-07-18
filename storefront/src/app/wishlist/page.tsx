@@ -253,12 +253,12 @@ export default function Wishlist() {
 
                   <div className="flex items-center space-x-1.5 mt-1 font-sans">
                     <span className="text-[13px] font-bold text-black">
-                      ₹{variant?.selling_price?.toLocaleString('en-IN') || item.price.toLocaleString('en-IN')}
+                      AED {variant?.selling_price?.toLocaleString('en-IN') || item.price.toLocaleString('en-IN')}
                     </span>
                     {hasDiscount && (
                       <>
                         <span className="text-[10px] text-neutral-400 line-through font-medium">
-                          ₹{variant.compare_at_price.toLocaleString('en-IN')}
+                          AED {variant.compare_at_price.toLocaleString('en-IN')}
                         </span>
                         <span className="text-[10px] text-accent font-bold">
                           ({discountPct}% OFF)

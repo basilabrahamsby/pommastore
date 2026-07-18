@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Mail, Phone, MapPin, ChevronRight } from 'lucide-react';
 import api from '@/services/api';
 
+import { useTranslation } from '@/locales/i18nContext';
+
 /* ──────────────────── Social Icon SVGs ──────────────────── */
 const FacebookIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -45,21 +47,15 @@ const MastercardIcon = () => (
     <path d="M24 7.5a10 10 0 0 1 0 15 10 10 0 0 1 0-15z" fill="#FF5F00"/>
   </svg>
 );
-const RazorpayIcon = () => (
+const StripeIcon = () => (
   <svg viewBox="0 0 48 30" className="h-6 w-auto">
-    <rect width="48" height="30" rx="4" fill="#2C2C54"/>
-    <text x="5" y="20" fontFamily="Arial" fontWeight="bold" fontSize="11" fill="#3395FF">Razor</text>
-    <text x="27" y="20" fontFamily="Arial" fontWeight="bold" fontSize="11" fill="white">pay</text>
-  </svg>
-);
-const UPIIcon = () => (
-  <svg viewBox="0 0 48 30" className="h-6 w-auto">
-    <rect width="48" height="30" rx="4" fill="#f5f5f5"/>
-    <text x="50%" y="19" textAnchor="middle" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="#097939">UPI</text>
+    <rect width="48" height="30" rx="4" fill="#635BFF"/>
+    <text x="50%" y="19" textAnchor="middle" fontFamily="Arial" fontWeight="bold" fontSize="13" fill="white">Stripe</text>
   </svg>
 );
 
 const Footer = () => {
+  const { t, locale } = useTranslation();
   const [layout, setLayout] = useState<any>(null);
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -76,10 +72,12 @@ const Footer = () => {
       setBrands(resBrands.data);
       setCategories(resCats.data);
     }).catch(err => console.warn('Footer failed to fetch data', err));
-  }, []);
+  }, [locale]);
 
   const footer = layout?.footer_settings || {};
-  const defaultAbout = "Your destination for 100% original luxury fragrances. We bring international perfumes directly to India, ensuring premium quality and authenticity with every single spray.";
+  const defaultAbout = locale === 'ar'
+    ? (footer.aboutText_ar || footer.aboutText || t('footer_about_desc'))
+    : (footer.aboutText || t('footer_about_desc'));
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,18 +94,18 @@ const Footer = () => {
       <div className="border-b border-neutral-800 bg-neutral-900">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.3em] text-accent uppercase mb-1">Stay in the know</p>
-            <h3 className="text-xl md:text-2xl font-serif font-bold text-white tracking-tight">Get exclusive offers & new arrivals</h3>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-accent uppercase mb-1">{t('footer_stay_in_know')}</p>
+            <h3 className="text-xl md:text-2xl font-serif font-bold text-white tracking-tight">{t('footer_subscribe_desc')}</h3>
           </div>
           {subscribed ? (
-            <div className="text-sm font-bold text-green-400 tracking-widest uppercase font-sans">✓ You're subscribed!</div>
+            <div className="text-sm font-bold text-green-400 tracking-widest uppercase font-sans">{t('footer_subscribed')}</div>
           ) : (
             <form onSubmit={handleSubscribe} className="flex w-full md:w-auto md:min-w-[380px] rounded overflow-hidden border border-neutral-700 focus-within:border-accent/60 transition-colors">
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="Enter your email address"
+                placeholder={t('footer_email_placeholder')}
                 required
                 className="bg-neutral-800/80 text-sm text-white px-4 py-3 w-full outline-none placeholder-neutral-500 font-sans"
               />
@@ -115,7 +113,7 @@ const Footer = () => {
                 type="submit"
                 className="bg-accent hover:bg-accent/90 text-white px-6 text-[10px] font-black tracking-widest uppercase whitespace-nowrap transition-colors font-sans"
               >
-                Subscribe
+                {t('footer_subscribe_btn')}
               </button>
             </form>
           )}
@@ -131,10 +129,10 @@ const Footer = () => {
           {/* About Column */}
           <div>
             <div className="mb-6">
-              <img src="/logo.png" alt="Kozmocart Logo" className="h-9 object-contain" />
+              <img src="/logo.png" alt="Pommastore Logo" className="h-9 object-contain" />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed mb-8 font-medium">
-              {footer.aboutText || defaultAbout}
+              {defaultAbout}
             </p>
             {/* Social Icons */}
             <div className="flex items-center space-x-3">
@@ -159,15 +157,15 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Customer Service</h3>
+            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">{t('footer_customer_service')}</h3>
             <ul className="space-y-3.5">
               {[
-                { label: 'Track Your Order', href: '/track-order' },
-                { label: 'Return & Refund Policy', href: '/return-policy' },
-                { label: 'About Us', href: '/about-us' },
-                { label: 'FAQ', href: '/faq' },
-                { label: 'Contact Us', href: '/contact-us' },
-                { label: 'Rewards Program', href: '/rewards' },
+                { label: t('nav_track_order'), href: '/track-order' },
+                { label: t('nav_return_policy'), href: '/return-policy' },
+                { label: t('nav_about_us'), href: '/about-us' },
+                { label: t('nav_faq'), href: '/faq' },
+                { label: t('nav_contact_us'), href: '/contact-us' },
+                { label: t('nav_rewards'), href: '/rewards' },
               ].map((item) => (
                 <li key={item.label}>
                   <Link href={item.href} className="flex items-center gap-2 text-neutral-400 text-[12px] font-medium font-sans tracking-wide hover:text-white transition-colors group">
@@ -181,7 +179,7 @@ const Footer = () => {
 
           {/* Shop Categories */}
           <div>
-            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Shop</h3>
+            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">{t('footer_shop')}</h3>
             <ul className="space-y-3.5">
               {categories.slice(0, 6).map((cat) => (
                 <li key={cat.id}>
@@ -193,7 +191,7 @@ const Footer = () => {
               ))}
               {categories.length === 0 && (
                 <>
-                  {['Men', 'Women', 'Unisex', 'New Arrivals', 'Bestsellers', 'Sale'].map(item => (
+                  {[t('nav_men'), t('nav_women'), t('nav_unisex'), t('new_arrivals'), t('popular_picks'), t('nav_offers')].map(item => (
                     <li key={item}>
                       <Link href="/shop" className="flex items-center gap-2 text-neutral-400 text-[12px] font-medium tracking-wide hover:text-white transition-colors group">
                         <ChevronRight size={10} className="text-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-0.5 flex-shrink-0" />
@@ -208,12 +206,12 @@ const Footer = () => {
 
           {/* Contact Column */}
           <div>
-            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">Contact Us</h3>
+            <h3 className="text-[11px] font-sans font-semibold tracking-[0.25em] uppercase mb-6 text-neutral-400 border-b border-neutral-800 pb-4">{t('footer_contact_title')}</h3>
             <ul className="space-y-5">
               <li className="flex items-start gap-3">
                 <Phone size={15} className="text-accent mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">Phone</p>
+                  <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">{locale === 'ar' ? 'الهاتف' : 'Phone'}</p>
                   <a href={`tel:${footer.phone || '+919999999999'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
                     {footer.phone || "+91 99999 99999"}
                   </a>
@@ -222,9 +220,9 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <Mail size={15} className="text-accent mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">Email</p>
-                  <a href={`mailto:${footer.email || 'support@kozmocart.com'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
-                    {footer.email || "support@kozmocart.com"}
+                  <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">{locale === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
+                  <a href={`mailto:${footer.email || 'support@pommastore.com'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
+                    {footer.email || "support@pommastore.com"}
                   </a>
                 </div>
               </li>
@@ -239,8 +237,8 @@ const Footer = () => {
               )}
               <li className="pt-2">
                 <div className="bg-neutral-900 border border-neutral-800 rounded-sm p-4">
-                  <p className="text-[10px] font-bold tracking-[0.2em] text-accent uppercase mb-1">Authenticity Guaranteed</p>
-                  <p className="text-neutral-500 text-[11px] leading-relaxed">100% original products. Certified & verified fragrance retailer.</p>
+                  <p className="text-[10px] font-bold tracking-[0.2em] text-accent uppercase mb-1">{t('footer_authenticity')}</p>
+                  <p className="text-neutral-500 text-[11px] leading-relaxed">{t('footer_authenticity_desc')}</p>
                 </div>
               </li>
             </ul>
@@ -250,25 +248,25 @@ const Footer = () => {
         {/* Olfactory Sitemap Directory - All Brands & Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12 border-b border-neutral-800 pb-12">
           <div>
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">All Fragrance Houses</h4>
+            <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">{t('footer_all_houses')}</h4>
             <div className="flex flex-wrap gap-x-5 gap-y-2.5">
               {brands.map((brand) => (
                 <Link key={brand.id} href={`/shop?brand=${brand.id}`} className="text-neutral-500 hover:text-neutral-200 text-[11px] font-bold uppercase tracking-wider transition-colors duration-200">
-                  {brand.name}
+                  {locale === 'ar' ? (brand.name_ar || brand.name) : brand.name}
                 </Link>
               ))}
-              {brands.length === 0 && <span className="text-neutral-700 text-[11px] font-bold uppercase tracking-widest">No active brands found.</span>}
+              {brands.length === 0 && <span className="text-neutral-700 text-[11px] font-bold uppercase tracking-widest">{t('footer_no_brands')}</span>}
             </div>
           </div>
           <div>
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">All Scent Categories</h4>
+            <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">{t('footer_all_categories')}</h4>
             <div className="flex flex-wrap gap-x-5 gap-y-2.5">
               {categories.map((cat) => (
                 <Link key={cat.id} href={`/shop?category=${cat.slug || cat.id}`} className="text-neutral-500 hover:text-neutral-200 text-[11px] font-bold uppercase tracking-wider transition-colors duration-200">
                   {cat.name}
                 </Link>
               ))}
-              {categories.length === 0 && <span className="text-neutral-700 text-[11px] font-bold uppercase tracking-widest">No active categories found.</span>}
+              {categories.length === 0 && <span className="text-neutral-700 text-[11px] font-bold uppercase tracking-widest">{t('footer_no_categories')}</span>}
             </div>
           </div>
         </div>
@@ -277,7 +275,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col items-center md:items-start gap-1">
             <p className="text-[10px] font-bold tracking-widest text-neutral-600 uppercase">
-              © {new Date().getFullYear()} Kozmocart Fragrances. All rights reserved.
+              © {new Date().getFullYear()} {t('copyright')}
             </p>
             <p className="text-[9px] font-bold tracking-[0.2em] text-neutral-700 uppercase text-center md:text-left">
               Powered by{' '}
@@ -294,17 +292,16 @@ const Footer = () => {
 
           {/* Payment Methods */}
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-bold tracking-widest text-neutral-700 uppercase mr-1">We Accept</span>
+            <span className="text-[9px] font-bold tracking-widest text-neutral-700 uppercase mr-1">{t('footer_we_accept')}</span>
             <VisaIcon />
             <MastercardIcon />
-            <RazorpayIcon />
-            <UPIIcon />
+            <StripeIcon />
           </div>
 
           <div className="flex items-center gap-5 text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
-            <Link href="/privacy-policy" className="hover:text-neutral-300 transition-colors">Privacy</Link>
-            <Link href="/terms-conditions" className="hover:text-neutral-300 transition-colors">Terms</Link>
-            <Link href="/return-policy" className="hover:text-neutral-300 transition-colors">Returns</Link>
+            <Link href="/privacy-policy" className="hover:text-neutral-300 transition-colors">{locale === 'ar' ? 'الخصوصية' : 'Privacy'}</Link>
+            <Link href="/terms-conditions" className="hover:text-neutral-300 transition-colors">{locale === 'ar' ? 'الشروط' : 'Terms'}</Link>
+            <Link href="/return-policy" className="hover:text-neutral-300 transition-colors">{locale === 'ar' ? 'الإرجاع' : 'Returns'}</Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-// Microsoft Visual C++ generated resource script.
+﻿// Microsoft Visual C++ generated resource script.
 //
 #pragma code_page(65001)
 #include "resource.h"
@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.kozmocart" "\0"
-            VALUE "FileDescription", "kozmocart_app" "\0"
+            VALUE "CompanyName", "com.pommastore" "\0"
+            VALUE "FileDescription", "pommastore_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "kozmocart_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.kozmocart. All rights reserved." "\0"
-            VALUE "OriginalFilename", "kozmocart_app.exe" "\0"
-            VALUE "ProductName", "kozmocart_app" "\0"
+            VALUE "InternalName", "pommastore_app" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.pommastore. All rights reserved." "\0"
+            VALUE "OriginalFilename", "pommastore_app.exe" "\0"
+            VALUE "ProductName", "pommastore_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

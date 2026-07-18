@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import sys
 import random
 import uuid
@@ -54,7 +54,7 @@ async def get_or_create_supplier(db):
     res = await db.execute(select(Supplier).limit(1))
     sup = res.scalar_one_or_none()
     if not sup:
-        sup = Supplier(company_name="Prestige Fragrance Supplies Ltd", contact_name="Aravind Sharma", email="supplies@kozmocart.in")
+        sup = Supplier(company_name="Prestige Fragrance Supplies Ltd", contact_name="Aravind Sharma", email="supplies@pommastore.in")
         db.add(sup)
         await db.flush()
     return sup

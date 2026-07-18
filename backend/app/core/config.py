@@ -6,13 +6,13 @@ import json
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-    APP_NAME: str = "Kozmocart ERP"
+    APP_NAME: str = "Pommastore ERP"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-this-in-production"
 
-    DATABASE_URL: str = "postgresql+asyncpg://kozmocart:kozmocart_dev_2026@localhost:5432/kozmocart_db"
-    DATABASE_URL_SYNC: str = "postgresql://kozmocart:kozmocart_dev_2026@localhost:5432/kozmocart_db"
+    DATABASE_URL: str = "postgresql+asyncpg://pommastore:pommastore_dev_2026@localhost:5432/pommastore"
+    DATABASE_URL_SYNC: str = "postgresql://pommastore:pommastore_dev_2026@localhost:5432/pommastore"
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -24,10 +24,15 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: str = "placeholder_secret"
     RAZORPAY_WEBHOOK_SECRET: str = "placeholder_webhook_secret"
 
+    # Stripe Settings
+    STRIPE_PUBLISHABLE_KEY: str = "pk_test_placeholder"
+    STRIPE_SECRET_KEY: str = "sk_test_placeholder"
+    STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
+
     # Delhivery Settings
     DELHIVERY_API_TOKEN: str = "placeholder_delhivery_token"
     DELHIVERY_SANDBOX: bool = True
-    DELHIVERY_PICKUP_LOCATION: str = "Kozmocart Warehouse"
+    DELHIVERY_PICKUP_LOCATION: str = "Pommastore Warehouse"
 
     # SMTP Settings
     SMTP_HOST: str = "smtp.gmail.com"
@@ -35,7 +40,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = ""
-    SMTP_FROM_NAME: str = "Kozmocart"
+    SMTP_FROM_NAME: str = "Pommastore"
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
 
@@ -48,9 +53,9 @@ class Settings(BaseSettings):
         "http://www.teqmates.com",
     ]
 
-    FIRST_SUPERADMIN_EMAIL: str = "admin@kozmocart.in"
+    FIRST_SUPERADMIN_EMAIL: str = "admin@pommastore.in"
     FIRST_SUPERADMIN_PASSWORD: str = "Admin@2026!"
-    FIRST_SUPERADMIN_NAME: str = "Kozmocart Admin"
+    FIRST_SUPERADMIN_NAME: str = "Pommastore Admin"
 
 
 settings = Settings()

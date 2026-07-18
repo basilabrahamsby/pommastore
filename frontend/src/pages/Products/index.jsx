@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Plus, Search, Pencil, Package, Info, Eye, Trash2 } from 'lucide-react'
 import api from '../../services/api'
 import { getMediaUrl } from '../../services/media'
@@ -22,10 +22,13 @@ function LabelWithInfo({ label, info }) {
 function ProductModal({ product, brands, categories, onClose, onSaved, onRefreshData }) {
   const editing = !!product
   const [form, setForm] = useState({
-    name: product?.name || '', brand_id: product?.brand_id || '',
+    name: product?.name || '', name_ar: product?.name_ar || '',
+    brand_id: product?.brand_id || '',
     category_id: product?.category_id || '', gender: product?.gender || '',
     short_description: product?.short_description || '',
+    short_description_ar: product?.short_description_ar || '',
     full_description: product?.full_description || '',
+    full_description_ar: product?.full_description_ar || '',
     longevity_hours: product?.longevity_hours || '',
     sillage_rating: product?.sillage_rating || '',
     is_active: product?.is_active ?? true,
@@ -33,6 +36,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     is_new_arrival: product?.is_new_arrival ?? false,
     priority: product?.priority ?? 0,
     scent_notes: product?.scent_notes || { top: [], heart: [], base: [] },
+    scent_notes_ar: product?.scent_notes_ar || { top: [], heart: [], base: [] },
     
     // Extended Perfume Specific Fields
     olfactory_family: product?.occasion_tags?.find(t => t.startsWith('family:'))?.replace('family:', '') || product?.olfactory_family || 'Woody',
@@ -87,6 +91,18 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     }],
   })
   const [saving, setSaving] = useState(false)
+  const translationTimeouts = useRef({})
+  const [localScentNotes, setLocalScentNotes] = useState({
+    top: (product?.scent_notes?.top || []).join(', '),
+    heart: (product?.scent_notes?.heart || []).join(', '),
+    base: (product?.scent_notes?.base || []).join(', ')
+  })
+  const [localScentNotesAr, setLocalScentNotesAr] = useState({
+    top: (product?.scent_notes_ar?.top || []).join(', '),
+    heart: (product?.scent_notes_ar?.heart || []).join(', '),
+    base: (product?.scent_notes_ar?.base || []).join(', ')
+  })
+
   const [quickBrand, setQuickBrand] = useState('')
   const [addingBrand, setAddingBrand] = useState(false)
   const [quickCategory, setQuickCategory] = useState('')
@@ -101,9 +117,75 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
   const setNote = (tier, val) => setForm(p => ({
     ...p, scent_notes: { ...p.scent_notes, [tier]: val.split(',').map(s => s.trim()).filter(Boolean) }
   }))
+  const setNoteAr = (tier, val) => setForm(p => ({
+    ...p, scent_notes_ar: { ...(p.scent_notes_ar || { top: [], heart: [], base: [] }), [tier]: val.split(',').map(s => s.trim()).filter(Boolean) }
+  }))
   const setVariant = (i, k, v) => setForm(p => {
     const vs = [...p.variants]; vs[i] = { ...vs[i], [k]: v }; return { ...p, variants: vs }
   })
+
+  const handleTranslateField = async (sourceField, targetField, isNotes = false, tier = null) => {
+    let textToTranslate = ''
+    if (isNotes) {
+      textToTranslate = localScentNotes[tier] || ''
+    } else {
+      textToTranslate = form[sourceField] || ''
+    }
+
+    if (!textToTranslate.trim()) {
+      toast.error('Please enter English text first!')
+      return
+    }
+
+    const loadingToast = toast.loading('Translating to Arabic...')
+    try {
+      const res = await api.get('/translate', {
+        params: { text: textToTranslate, sl: 'en', tl: 'ar' }
+      })
+      const translatedText = res.data.translated_text
+      if (isNotes) {
+        setLocalScentNotesAr(p => ({ ...p, [tier]: translatedText }))
+      } else {
+        set(targetField, translatedText)
+      }
+      toast.success('Translated successfully!', { id: loadingToast })
+    } catch (err) {
+      toast.error('Translation failed', { id: loadingToast })
+    }
+  }
+
+  const triggerDebouncedTranslation = (sourceField, targetField, val, isNotes = false, tier = null) => {
+    const key = isNotes ? `notes-${tier}` : sourceField
+
+    if (translationTimeouts.current[key]) {
+      clearTimeout(translationTimeouts.current[key])
+    }
+
+    if (!val || !val.trim()) {
+      if (isNotes) {
+        setLocalScentNotesAr(p => ({ ...p, [tier]: '' }))
+      } else {
+        set(targetField, '')
+      }
+      return
+    }
+
+    translationTimeouts.current[key] = setTimeout(async () => {
+      try {
+        const res = await api.get('/translate', {
+          params: { text: val, sl: 'en', tl: 'ar' }
+        })
+        const translatedText = res.data.translated_text
+        if (isNotes) {
+          setLocalScentNotesAr(p => ({ ...p, [tier]: translatedText }))
+        } else {
+          set(targetField, translatedText)
+        }
+      } catch (err) {
+        console.warn('Debounced auto-translation failed:', err)
+      }
+    }, 800)
+  }
 
   useEffect(() => {
     if (editing && product?.id) {
@@ -112,10 +194,43 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
           const fullProd = res.data;
           setForm(p => ({
             ...p,
-            full_description: fullProd.full_description || '',
-            olfactory_family: fullProd.occasion_tags?.find(t => t.startsWith('family:'))?.replace('family:', '') || fullProd.olfactory_family || 'Woody',
-            gallery_images: fullProd.gallery_images || [],
+            name: fullProd.name || p.name,
+            name_ar: fullProd.name_ar || p.name_ar,
+            brand_id: fullProd.brand_id || p.brand_id,
+            category_id: fullProd.category_id || p.category_id,
+            gender: fullProd.gender || p.gender,
+            short_description: fullProd.short_description || p.short_description,
+            short_description_ar: fullProd.short_description_ar || p.short_description_ar,
+            full_description: fullProd.full_description || p.full_description,
+            full_description_ar: fullProd.full_description_ar || p.full_description_ar,
+            longevity_hours: fullProd.longevity_hours || p.longevity_hours,
+            sillage_rating: fullProd.sillage_rating || p.sillage_rating,
+            is_active: fullProd.is_active ?? p.is_active,
+            is_featured: fullProd.is_featured ?? p.is_featured,
+            is_new_arrival: fullProd.is_new_arrival ?? p.is_new_arrival,
+            priority: fullProd.priority ?? p.priority,
+            scent_notes: fullProd.scent_notes || p.scent_notes,
+            scent_notes_ar: fullProd.scent_notes_ar || p.scent_notes_ar,
+            olfactory_family: fullProd.occasion_tags?.find(t => t.startsWith('family:'))?.replace('family:', '') || fullProd.olfactory_family || p.olfactory_family,
+            seo_title: fullProd.meta_title || p.seo_title,
+            meta_description: fullProd.meta_description || p.meta_description,
+            keywords: fullProd.keywords || p.keywords,
+            images: fullProd.images || p.images,
+            gallery_images: fullProd.gallery_images || p.gallery_images,
+            video_url: fullProd.video_url || p.video_url,
+            three_d_source_image: fullProd.three_d_source_image || p.three_d_source_image,
+            is_3d_active: fullProd.is_3d_active ?? p.is_3d_active,
           }));
+          setLocalScentNotes({
+            top: (fullProd.scent_notes?.top || []).join(', '),
+            heart: (fullProd.scent_notes?.heart || []).join(', '),
+            base: (fullProd.scent_notes?.base || []).join(', ')
+          });
+          setLocalScentNotesAr({
+            top: (fullProd.scent_notes_ar?.top || []).join(', '),
+            heart: (fullProd.scent_notes_ar?.heart || []).join(', '),
+            base: (fullProd.scent_notes_ar?.base || []).join(', ')
+          });
         })
         .catch(err => console.warn('Failed to fetch full product details', err));
     }
@@ -134,7 +249,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
           clearInterval(interval)
           setConverting3D(false)
           set('is_3d_active', true)
-          toast.success('Kozmocart AI 3D Studio: Photo converted to 3D asset successfully!')
+          toast.success('Pommastore AI 3D Studio: Photo converted to 3D asset successfully!')
           return 100
         }
         return p + 20
@@ -274,14 +389,20 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
 
     const payload = {
       name: form.name,
+      name_ar: form.name_ar || null,
       slug: form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       brand_id: form.brand_id && form.brand_id !== "" ? form.brand_id : (brands?.[0]?.id || "00000000-0000-0000-0000-000000000000"),
       category_id: form.category_id && form.category_id !== "" ? form.category_id : null,
       gender: form.gender && form.gender !== "" ? form.gender : null,
       scent_notes: {
-        top: form.scent_notes?.top || [],
-        heart: form.scent_notes?.heart || [],
-        base: form.scent_notes?.base || []
+        top: localScentNotes.top.split(',').map(s => s.trim()).filter(Boolean),
+        heart: localScentNotes.heart.split(',').map(s => s.trim()).filter(Boolean),
+        base: localScentNotes.base.split(',').map(s => s.trim()).filter(Boolean)
+      },
+      scent_notes_ar: {
+        top: localScentNotesAr.top.split(',').map(s => s.trim()).filter(Boolean),
+        heart: localScentNotesAr.heart.split(',').map(s => s.trim()).filter(Boolean),
+        base: localScentNotesAr.base.split(',').map(s => s.trim()).filter(Boolean)
       },
       longevity_hours: form.longevity_hours ? parseInt(form.longevity_hours) : null,
       sillage_rating: form.sillage_rating ? parseInt(form.sillage_rating) : null,
@@ -291,7 +412,9 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
       ],
       season_tags: form.season_tags || [],
       short_description: form.short_description || null,
+      short_description_ar: form.short_description_ar || null,
       full_description: form.full_description || null,
+      full_description_ar: form.full_description_ar || null,
       meta_title: form.seo_title || null,
       meta_description: form.meta_description || null,
       is_active: !!form.is_active,
@@ -329,9 +452,49 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
             
             {/* ── SECTION 1: CORE PRODUCT DETAILS ── */}
             <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold)', marginBottom: 12, borderBottom: '1px solid rgba(201,168,76,0.2)', paddingBottom: 4 }}>🏺 Core Perfume Properties</p>
-            <div className="form-group">
-              <LabelWithInfo label="Product Name *" info="The commercial name of your perfume, e.g. Midnight Oud or Bleu de Chanel." />
-              <input className="input" value={form.name} onChange={e => set('name', e.target.value)} required placeholder="e.g. Bleu de Chanel" />
+            <div className="grid-2">
+              <div className="form-group">
+                <LabelWithInfo label="Product Name (English) *" info="The commercial name of your perfume in English." />
+                <input 
+                  className="input" 
+                  value={form.name} 
+                  onChange={e => {
+                    set('name', e.target.value)
+                    triggerDebouncedTranslation('name', 'name_ar', e.target.value)
+                  }} 
+                  required 
+                  placeholder="e.g. Bleu de Chanel" 
+                />
+              </div>
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>اسم المنتج (Arabic)</label>
+                  {form.name && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('name', 'name_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <input className="input" value={form.name_ar || ''} onChange={e => set('name_ar', e.target.value)} placeholder="مثال: بلو دي شانيل" dir="rtl" style={{ textAlign: 'right' }} />
+              </div>
             </div>
             <div className="grid-3">
               <div className="form-group">
@@ -404,26 +567,169 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
             </div>
 
             {/* Scent Pyramid */}
-            <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gold)', marginTop: 16, marginBottom: 8 }}>🌸 Scent Pyramid (Notes)</p>
-            <div className="grid-3" style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
-              {['top','heart','base'].map(tier => (
-                <div className="form-group" key={tier} style={{ margin: 0 }}>
-                  <LabelWithInfo label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} Notes`} info={`Fragrance ingredients that are active during the ${tier} phase of the olfactory journey.`} />
-                  <input className="input" style={{ fontSize: '0.8rem' }} placeholder="Bergamot, Lemon" defaultValue={(form.scent_notes[tier] || []).join(', ')} onBlur={e => setNote(tier, e.target.value)} />
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gold)', marginTop: 16, marginBottom: 8, borderBottom: '1px solid rgba(201,168,76,0.2)', paddingBottom: 4 }}>🌸 Scent Pyramid (Notes) / الهرم العطري</p>
+            <div className="grid-2">
+              <div>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', marginBottom: 8 }}>English Scent Notes</p>
+                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['top','heart','base'].map(tier => (
+                    <div className="form-group" key={tier} style={{ margin: 0 }}>
+                      <LabelWithInfo label={`${tier.charAt(0).toUpperCase() + tier.slice(1)} Notes`} info={`Fragrance ingredients active during the ${tier} phase.`} />
+                      <input 
+                        className="input" 
+                        style={{ fontSize: '0.8rem' }} 
+                        placeholder="e.g. Bergamot, Lemon" 
+                        value={localScentNotes[tier] || ''} 
+                        onChange={e => {
+                          setLocalScentNotes(p => ({ ...p, [tier]: e.target.value }))
+                          triggerDebouncedTranslation(null, null, e.target.value, true, tier)
+                        }} 
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', marginBottom: 8, textAlign: 'right' }}>المكونات العطرية (Arabic)</p>
+                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['top','heart','base'].map(tier => {
+                    const labelAr = tier === 'top' ? 'المكونات العليا' : tier === 'heart' ? 'المكونات الوسطى' : 'المكونات الأساسية';
+                    const hasEngNotes = localScentNotes[tier] && localScentNotes[tier].length > 0;
+                    return (
+                      <div className="form-group" key={tier} style={{ margin: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          {hasEngNotes && (
+                            <button
+                              type="button"
+                              onClick={() => handleTranslateField(null, null, true, tier)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--gold)',
+                                fontSize: '0.72rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: 0,
+                                opacity: 0.8,
+                                transition: 'opacity 0.2s'
+                              }}
+                              onMouseEnter={e => e.target.style.opacity = 1}
+                              onMouseLeave={e => e.target.style.opacity = 0.8}
+                            >
+                              🪄 Translate
+                            </button>
+                          )}
+                          <label className="form-label" style={{ textAlign: 'right', display: 'block', margin: 0 }}>{labelAr}</label>
+                        </div>
+                        <input 
+                          className="input" 
+                          style={{ fontSize: '0.8rem', textAlign: 'right' }} 
+                          dir="rtl" 
+                          placeholder="مثال: البرغموت، الليمون" 
+                          value={localScentNotesAr[tier] || ''} 
+                          onChange={e => {
+                            setLocalScentNotesAr(p => ({ ...p, [tier]: e.target.value }))
+                          }} 
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            {/* Description */}
-            <div className="form-group" style={{ marginTop: 14 }}>
-              <LabelWithInfo label="Short Description" info="A captivating story or description of the perfume's olfactory journey." />
-              <textarea className="textarea" rows={2} value={form.short_description} onChange={e => set('short_description', e.target.value)} placeholder="Describe the olfactory journey..." />
+             {/* Description */}
+            <div className="grid-2" style={{ marginTop: 14 }}>
+              <div className="form-group">
+                <LabelWithInfo label="Short Description (English)" info="A captivating story or description of the perfume's olfactory journey." />
+                <textarea 
+                  className="textarea" 
+                  rows={2} 
+                  value={form.short_description || ''} 
+                  onChange={e => {
+                    set('short_description', e.target.value)
+                    triggerDebouncedTranslation('short_description', 'short_description_ar', e.target.value)
+                  }}
+                  placeholder="Describe the olfactory journey..." 
+                />
+              </div>
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>وصف مختصر (Arabic)</label>
+                  {form.short_description && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('short_description', 'short_description_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <textarea className="textarea" rows={2} value={form.short_description_ar || ''} onChange={e => set('short_description_ar', e.target.value)} placeholder="اكتب وصفاً مختصراً بالعربية..." dir="rtl" style={{ textAlign: 'right' }} />
+              </div>
             </div>
 
             {/* Full Narrative Story */}
-            <div className="form-group" style={{ marginTop: 14 }}>
-              <LabelWithInfo label="Creation Narrative / Full Story" info="The detailed, dynamic background story or creation narrative displayed on the storefront product page." />
-              <textarea className="textarea" rows={4} value={form.full_description} onChange={e => set('full_description', e.target.value)} placeholder="Tell the complete detailed story of the perfume, raw extracts, and design..." />
+            <div className="grid-2" style={{ marginTop: 14 }}>
+              <div className="form-group">
+                <LabelWithInfo label="Full Story (English)" info="The detailed, dynamic background story displayed on the storefront product page." />
+                <textarea 
+                  className="textarea" 
+                  rows={4} 
+                  value={form.full_description || ''} 
+                  onChange={e => {
+                    set('full_description', e.target.value)
+                    triggerDebouncedTranslation('full_description', 'full_description_ar', e.target.value)
+                  }}
+                  placeholder="Tell the complete detailed story of the perfume, raw extracts, and design..." 
+                />
+              </div>
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label className="form-label" style={{ margin: 0 }}>القصة الكاملة (Arabic)</label>
+                  {form.full_description && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateField('full_description', 'full_description_ar')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: 0,
+                        opacity: 0.8,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = 1}
+                      onMouseLeave={e => e.target.style.opacity = 0.8}
+                    >
+                      🪄 Translate
+                    </button>
+                  )}
+                </div>
+                <textarea className="textarea" rows={4} value={form.full_description_ar || ''} onChange={e => set('full_description_ar', e.target.value)} placeholder="اكتب القصة الكاملة بالعربية..." dir="rtl" style={{ textAlign: 'right' }} />
+              </div>
             </div>
 
             {/* Catalog Visibility, Section & Priority */}
@@ -566,7 +872,7 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                     </label>
                   </div>
                   <div className="form-group" style={{ margin: 0 }}>
-                    <LabelWithInfo label="Gift Wrap Surcharge (₹)" info="An optional premium gift wrapping fee charged at checkout." />
+                    <LabelWithInfo label="Gift Wrap Surcharge (AED )" info="An optional premium gift wrapping fee charged at checkout." />
                     <input className="input" type="number" style={{ fontSize: '0.8rem' }} value={form.gift_wrap_surcharge} onChange={e => set('gift_wrap_surcharge', e.target.value)} placeholder="150" />
                   </div>
                   <div className="form-group" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -650,15 +956,15 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                     </div>
                     <div className="grid-3">
                       <div className="form-group" style={{ margin: 0 }}>
-                        <label className="form-label">Compare At Price (MRP) (₹) *</label>
+                        <label className="form-label">Compare At Price (MRP) (AED ) *</label>
                         <input className="input" type="number" value={v.compare_at_price} onChange={e => setVariant(i,'compare_at_price',e.target.value)} required placeholder="2999" />
                       </div>
                       <div className="form-group" style={{ margin: 0 }}>
-                        <label className="form-label">Selling Price (₹) *</label>
+                        <label className="form-label">Selling Price (AED ) *</label>
                         <input className="input" type="number" value={v.selling_price} onChange={e => setVariant(i,'selling_price',e.target.value)} required placeholder="2499" />
                       </div>
                       <div className="form-group" style={{ margin: 0 }}>
-                        <label className="form-label">Cost Price (₹)</label>
+                        <label className="form-label">Cost Price (AED )</label>
                         <input className="input" type="number" value={v.cost_price} onChange={e => setVariant(i,'cost_price',e.target.value)} placeholder="1200" />
                       </div>
                     </div>
@@ -736,10 +1042,10 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
               <input className="input" value={form.video_url} onChange={e => set('video_url', e.target.value)} placeholder="https://youtube.com/shorts/... or https://vimeo.com/..." style={{ fontSize: '0.8rem' }} />
             </div>
 
-            {/* Kozmocart AI 3D Studio Converter panel */}
+            {/* Pommastore AI 3D Studio Converter panel */}
             <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, rgba(10,10,15,0.8) 100%)', padding: 18, borderRadius: 'var(--radius-md)', border: '1px solid rgba(201,168,76,0.2)', marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.05em' }}>⚡ KOZMOCART AI 3D STUDIO (INDEPENDENT)</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.05em' }}>⚡ POMMASTORE AI 3D STUDIO (INDEPENDENT)</span>
                 {form.is_3d_active && <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>✓ 3D ACTIVE</span>}
               </div>
               

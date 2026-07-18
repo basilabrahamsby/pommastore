@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { 
   Settings as SettingsIcon, Palette, DollarSign, Bell, Shield, 
   Save, Building2, FileText, Globe, Search, Link as LinkIcon, Truck, Award, Mail, MessageSquare, Smartphone, Wifi, WifiOff
@@ -7,14 +7,14 @@ import toast from 'react-hot-toast'
 import api from '../../services/api'
 
 const DEFAULT_EMAIL_TEMPLATES = {
-  confirmed:      { subject: 'Your Kozmocart Order {{order}} is Confirmed! 🎉', body: 'Dear {{name}},\n\nGreat news! Your order *{{order}}* has been confirmed and is being prepared.\n\nThank you for choosing Kozmocart.\n\nWarm Regards,\nKozmocart Team' },
-  processing:     { subject: 'Order {{order}} is Being Processed 📦', body: 'Dear {{name}},\n\nYour order *{{order}}* is currently being processed at our warehouse. We will notify you once it is packed and ready to ship.\n\nThank you for your patience.\n\nKozmocart Team' },
-  packed:         { subject: 'Order {{order}} is Packed & Ready to Ship 🚀', body: 'Dear {{name}},\n\nYour order *{{order}}* has been packed and will be dispatched very soon!\n\nKozmocart Team' },
-  shipped:        { subject: 'Your Order {{order}} Has Shipped! 🚚 Track it Here', body: 'Dear {{name}},\n\nExciting news — your order *{{order}}* is on its way!\n\nTracking AWB: {{awb}}\nTrack here: https://www.delhivery.com/track/package/{{awb}}\n\nEstimated delivery: 3-5 business days.\n\nKozmocart Team' },
-  out_for_delivery: { subject: 'Out for Delivery Today! 🏠 Order {{order}}', body: 'Dear {{name}},\n\nYour order *{{order}}* is out for delivery today. Please keep your phone handy for the delivery partner.\n\nKozmocart Team' },
-  delivered:      { subject: 'Order {{order}} Delivered Successfully ✅', body: 'Dear {{name}},\n\nYour order *{{order}}* has been delivered. We hope you love your purchase!\n\nPlease share a review — it means the world to us.\n\nKozmocart Team' },
-  completed:      { subject: 'Thank You for Shopping with Kozmocart 💛', body: 'Dear {{name}},\n\nOrder *{{order}}* is now marked complete. Thank you for being a valued Kozmocart customer.\n\nEarn more loyalty points on your next order!\n\nKozmocart Team' },
-  cancelled:      { subject: 'Order {{order}} Has Been Cancelled', body: 'Dear {{name}},\n\nWe are sorry to inform you that order *{{order}}* has been cancelled.\n\nIf you have any concerns, please reach out to our support team immediately.\n\nKozmocart Team' },
+  confirmed:      { subject: 'Your Pommastore Order {{order}} is Confirmed! 🎉', body: 'Dear {{name}},\n\nGreat news! Your order *{{order}}* has been confirmed and is being prepared.\n\nThank you for choosing Pommastore.\n\nWarm Regards,\nPommastore Team' },
+  processing:     { subject: 'Order {{order}} is Being Processed 📦', body: 'Dear {{name}},\n\nYour order *{{order}}* is currently being processed at our warehouse. We will notify you once it is packed and ready to ship.\n\nThank you for your patience.\n\nPommastore Team' },
+  packed:         { subject: 'Order {{order}} is Packed & Ready to Ship 🚀', body: 'Dear {{name}},\n\nYour order *{{order}}* has been packed and will be dispatched very soon!\n\nPommastore Team' },
+  shipped:        { subject: 'Your Order {{order}} Has Shipped! 🚚 Track it Here', body: 'Dear {{name}},\n\nExciting news — your order *{{order}}* is on its way!\n\nTracking AWB: {{awb}}\nTrack here: https://www.delhivery.com/track/package/{{awb}}\n\nEstimated delivery: 3-5 business days.\n\nPommastore Team' },
+  out_for_delivery: { subject: 'Out for Delivery Today! 🏠 Order {{order}}', body: 'Dear {{name}},\n\nYour order *{{order}}* is out for delivery today. Please keep your phone handy for the delivery partner.\n\nPommastore Team' },
+  delivered:      { subject: 'Order {{order}} Delivered Successfully ✅', body: 'Dear {{name}},\n\nYour order *{{order}}* has been delivered. We hope you love your purchase!\n\nPlease share a review — it means the world to us.\n\nPommastore Team' },
+  completed:      { subject: 'Thank You for Shopping with Pommastore 💛', body: 'Dear {{name}},\n\nOrder *{{order}}* is now marked complete. Thank you for being a valued Pommastore customer.\n\nEarn more loyalty points on your next order!\n\nPommastore Team' },
+  cancelled:      { subject: 'Order {{order}} Has Been Cancelled', body: 'Dear {{name}},\n\nWe are sorry to inform you that order *{{order}}* has been cancelled.\n\nIf you have any concerns, please reach out to our support team immediately.\n\nPommastore Team' },
 }
 
 export default function Settings() {
@@ -25,18 +25,18 @@ export default function Settings() {
   const [colorTheme, setColorTheme] = useState('classic')
   const [notifications, setNotifications] = useState({ stockAlert: true, orders: true, hazmat: false })
   const [companyGst, setCompanyGst] = useState({
-    companyName: 'Kozmocart Luxury Innovations Pvt Ltd',
+    companyName: 'Pommastore Luxury Innovations Pvt Ltd',
     gstin: '',
     pan: '',
     registeredAddress: '',
     stateCode: '07 (Delhi)'
   })
   const [seoConfig, setSeoConfig] = useState({
-    siteTitle: 'Kozmocart | Luxury Perfume ERP',
+    siteTitle: 'Pommastore | Luxury Perfume ERP',
     metaDescription: 'The definitive ERP for high-end perfume houses and luxury retail management.',
     metaKeywords: 'perfume erp, luxury retail, inventory management, fragrance software',
     googleConsoleId: '',
-    robotsTxt: 'User-agent: *\nAllow: /\nSitemap: https://kozmocart.in/api/v1/seo/sitemap.xml',
+    robotsTxt: 'User-agent: *\nAllow: /\nSitemap: https://pommastore.in/api/v1/seo/sitemap.xml',
     indexingEnabled: true
   })
 
@@ -53,7 +53,7 @@ export default function Settings() {
     title: 'Returns & Exchange Policy',
     lastUpdated: 'Last updated June 2026',
     authenticityTitle: '100% Authenticity',
-    authenticityDesc: 'Every fragrance dispatched from Kozmocart is completely sealed and sourced directly. We guarantee absolute authenticity.',
+    authenticityDesc: 'Every fragrance dispatched from Pommastore is completely sealed and sourced directly. We guarantee absolute authenticity.',
     windowTitle: '7-Day Window',
     windowDesc: 'Requests for returns or replacements due to transit damage or shipping errors are accepted within 7 days of delivery.',
     contentHtml: ''
@@ -73,7 +73,7 @@ export default function Settings() {
     title: 'Terms & Conditions',
     lastUpdated: 'Last updated June 2026',
     authenticityTitle: 'Age Mandate',
-    authenticityDesc: 'By utilizing Kozmocart storefront, you affirm you are at least 18 years of age or accessing under familial supervision.',
+    authenticityDesc: 'By utilizing Pommastore storefront, you affirm you are at least 18 years of age or accessing under familial supervision.',
     windowTitle: 'Commercial Fair Use',
     windowDesc: 'We prohibit automated bot crawlers or resellers from executing speculative bulk orders. We reserve cancellation rights.',
     contentHtml: ''
@@ -87,10 +87,10 @@ export default function Settings() {
     host: 'smtp.gmail.com',
     port: '587',
     encryption: 'TLS',
-    username: 'noreply@kozmocart.in',
+    username: 'noreply@pommastore.in',
     password: '',
-    fromName: 'Kozmocart Orders',
-    fromEmail: 'noreply@kozmocart.in',
+    fromName: 'Pommastore Orders',
+    fromEmail: 'noreply@pommastore.in',
     enabled: false
   })
   const [whatsappConfig, setWhatsappConfig] = useState({
@@ -112,14 +112,14 @@ export default function Settings() {
   const [commSubTab, setCommSubTab] = useState('smtp')
 
   // Email notification config
-  const [emailConfig, setEmailConfig] = useState({ senderName: 'Kozmocart', replyTo: '', enabled: true })
+  const [emailConfig, setEmailConfig] = useState({ senderName: 'Pommastore', replyTo: '', enabled: true })
   const [emailTemplates, setEmailTemplates] = useState(DEFAULT_EMAIL_TEMPLATES)
   const [selectedEmailStatus, setSelectedEmailStatus] = useState('confirmed')
 
   const [delhiveryConfig, setDelhiveryConfig] = useState({
     api_token: 'placeholder_delhivery_token',
     sandbox: true,
-    pickup_location: 'Kozmocart Warehouse'
+    pickup_location: 'Pommastore Warehouse'
   })
 
   // Load settings from DB on mount
@@ -218,11 +218,11 @@ export default function Settings() {
   }
 
   const currencies = [
+    { code: 'AED', label: 'UAE Dirham (AED)', symbol: 'AED ' },
     { code: 'INR', label: 'Indian Rupee (₹)', symbol: '₹' },
     { code: 'USD', label: 'US Dollar ($)', symbol: '$' },
     { code: 'EUR', label: 'Euro (€)', symbol: '€' },
-    { code: 'GBP', label: 'British Pound (£)', symbol: '£' },
-    { code: 'AED', label: 'UAE Dirham (د.إ)', symbol: 'د.إ' }
+    { code: 'GBP', label: 'British Pound (£)', symbol: '£' }
   ]
 
   const colorThemes = [
@@ -386,7 +386,7 @@ export default function Settings() {
                 ))}
               </select>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.5 }}>
-                This preference updates localized symbolic prefixes (e.g. ₹, $) across Catalog valuations, Order POS registers, and analytic KPIs.
+                This preference updates localized symbolic prefixes (e.g. AED , $) across Catalog valuations, Order POS registers, and analytic KPIs.
               </p>
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function Settings() {
                 <input 
                   type="text" 
                   className="input" 
-                  placeholder="e.g. Kozmocart Retailers Private Limited"
+                  placeholder="e.g. Pommastore Retailers Private Limited"
                   value={companyGst.companyName}
                   onChange={e => setCompanyGst(prev => ({ ...prev, companyName: e.target.value }))}
                 />
@@ -510,7 +510,7 @@ export default function Settings() {
                 <input 
                   type="text" 
                   className="input" 
-                  placeholder="e.g. Kozmocart | Prestige Fragrances ERP"
+                  placeholder="e.g. Pommastore | Prestige Fragrances ERP"
                   value={seoConfig.siteTitle}
                   onChange={e => setSeoConfig(prev => ({ ...prev, siteTitle: e.target.value }))}
                 />
@@ -679,11 +679,11 @@ export default function Settings() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">From Name</label>
-                  <input className="input" value={emailConfig.senderName} onChange={e => setEmailConfig(p => ({ ...p, senderName: e.target.value }))} placeholder="e.g. Kozmocart" />
+                  <input className="input" value={emailConfig.senderName} onChange={e => setEmailConfig(p => ({ ...p, senderName: e.target.value }))} placeholder="e.g. Pommastore" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Reply-To Email</label>
-                  <input className="input" type="email" value={emailConfig.replyTo} onChange={e => setEmailConfig(p => ({ ...p, replyTo: e.target.value }))} placeholder="support@kozmocart.in" />
+                  <input className="input" type="email" value={emailConfig.replyTo} onChange={e => setEmailConfig(p => ({ ...p, replyTo: e.target.value }))} placeholder="support@pommastore.in" />
                 </div>
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -817,7 +817,7 @@ export default function Settings() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">Username / Login Email</label>
-                      <input className="input" value={smtpConfig.username} onChange={e => setSmtpConfig(p => ({ ...p, username: e.target.value }))} placeholder="noreply@kozmocart.in" />
+                      <input className="input" value={smtpConfig.username} onChange={e => setSmtpConfig(p => ({ ...p, username: e.target.value }))} placeholder="noreply@pommastore.in" />
                     </div>
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">Password / App Password</label>
@@ -827,11 +827,11 @@ export default function Settings() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">From Name</label>
-                      <input className="input" value={smtpConfig.fromName} onChange={e => setSmtpConfig(p => ({ ...p, fromName: e.target.value }))} placeholder="Kozmocart Orders" />
+                      <input className="input" value={smtpConfig.fromName} onChange={e => setSmtpConfig(p => ({ ...p, fromName: e.target.value }))} placeholder="Pommastore Orders" />
                     </div>
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">From Email Address</label>
-                      <input className="input" value={smtpConfig.fromEmail} onChange={e => setSmtpConfig(p => ({ ...p, fromEmail: e.target.value }))} placeholder="noreply@kozmocart.in" />
+                      <input className="input" value={smtpConfig.fromEmail} onChange={e => setSmtpConfig(p => ({ ...p, fromEmail: e.target.value }))} placeholder="noreply@pommastore.in" />
                     </div>
                   </div>
                 </div>
@@ -1202,7 +1202,7 @@ export default function Settings() {
                 <input 
                   type="text" 
                   className="input" 
-                  placeholder="e.g. Kozmocart Main Warehouse"
+                  placeholder="e.g. Pommastore Main Warehouse"
                   value={delhiveryConfig.pickup_location}
                   onChange={e => setDelhiveryConfig(prev => ({ ...prev, pickup_location: e.target.value }))}
                 />

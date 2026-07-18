@@ -14,9 +14,11 @@ def make_slug(name: str) -> str:
 
 class BrandCreate(BaseModel):
     name: str
+    name_ar: str | None = None
     slug: str | None = None
     origin_country: str | None = None
     description: str | None = None
+    description_ar: str | None = None
     logo_url: str | None = None
     is_active: bool = True
     seo_title: str | None = None
@@ -58,9 +60,11 @@ class BrandCreate(BaseModel):
 
 class BrandUpdate(BaseModel):
     name: str | None = None
+    name_ar: str | None = None
     slug: str | None = None
     origin_country: str | None = None
     description: str | None = None
+    description_ar: str | None = None
     logo_url: str | None = None
     is_active: bool | None = None
     seo_title: str | None = None
@@ -96,9 +100,11 @@ class BrandUpdate(BaseModel):
 class BrandOut(BaseModel):
     id: UUID
     name: str
+    name_ar: str | None = None
     slug: str
     origin_country: str | None
     description: str | None
+    description_ar: str | None = None
     logo_url: str | None
     is_active: bool
     seo_title: str | None = None
@@ -137,10 +143,12 @@ class BrandOut(BaseModel):
 
 class CategoryCreate(BaseModel):
     name: str
+    name_ar: str | None = None
     slug: str | None = None
     parent_id: UUID | None = None
     scent_family: str | None = None
     description: str | None = None
+    description_ar: str | None = None
     is_active: bool = True
     seo_title: str | None = None
     meta_description: str | None = None
@@ -160,9 +168,11 @@ class CategoryCreate(BaseModel):
 
 class CategoryUpdate(BaseModel):
     name: str | None = None
+    name_ar: str | None = None
     slug: str | None = None
     scent_family: str | None = None
     description: str | None = None
+    description_ar: str | None = None
     is_active: bool | None = None
     seo_title: str | None = None
     meta_description: str | None = None
@@ -176,9 +186,11 @@ class CategoryUpdate(BaseModel):
 class CategoryOut(BaseModel):
     id: UUID
     name: str
+    name_ar: str | None = None
     slug: str
     scent_family: str | None
     description: str | None
+    description_ar: str | None = None
     parent_id: UUID | None
     is_active: bool
     seo_title: str | None

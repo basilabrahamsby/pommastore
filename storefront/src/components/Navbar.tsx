@@ -9,13 +9,15 @@ import { useAuthStore } from '@/store/authStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { getMediaUrl } from '@/services/media';
 import api from '@/services/api';
-
+import { useTranslation } from '@/locales/i18nContext';
+ 
 const SocialFB = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>);
 const SocialIG = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>);
 const SocialX  = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>);
 const SocialIN = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>);
-
+ 
 const Navbar = () => {
+  const { locale, changeLanguage, t } = useTranslation();
   const totalItems = useCartStore((state) => state.totalItems());
   const customer = useAuthStore((state) => state.customer);
   const wishlistItems = useWishlistStore((state) => state.items);
@@ -49,12 +51,16 @@ const Navbar = () => {
       .then(res => setCmsLayout(res.data))
       .catch(err => console.warn('Navbar failed to fetch global layout', err));
 
-    // Fetch products and brands for live suggestions
-    api.get('/products?limit=80').then(res => setProducts(res.data)).catch(() => {});
-    api.get('/brands').then(res => setBrands(res.data)).catch(() => {});
+
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Fetch products and brands for live suggestions on locale change
+  useEffect(() => {
+    api.get(`/products?limit=80&lang=${locale}`, { headers: { 'Accept-Language': locale } }).then(res => setProducts(res.data)).catch(() => {});
+    api.get(`/brands?lang=${locale}`, { headers: { 'Accept-Language': locale } }).then(res => setBrands(res.data)).catch(() => {});
+  }, [locale]);
 
   // Handle click outside suggestions
   useEffect(() => {
@@ -105,19 +111,19 @@ const Navbar = () => {
             {/* Left Logo Area */}
             <div className="flex-shrink-0 flex items-center">
                <Link href="/" className="flex items-center">
-                 <img src="/logo.png" alt="Kozmocart Logo" className="h-6 sm:h-8 md:h-9 object-contain" />
+                 <img src="/logo.png" alt="Pommastore Logo" className="h-10 sm:h-12 md:h-14 object-contain" />
                </Link>
             </div>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center space-x-6 text-[10px] font-bold tracking-[0.2em] uppercase font-sans">
-               <Link href="/" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Home</Link>
-               <Link href="/shop?gender=Men" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Men</Link>
-               <Link href="/shop?gender=Women" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Women</Link>
-               <Link href="/shop?gender=Unisex" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Unisex</Link>
-               <Link href="/brands" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Brands</Link>
-               <Link href="/offers" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300 text-accent">Offers</Link>
-               <Link href="/shop" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">Products</Link>
+               <Link href="/" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">{t('nav_home')}</Link>
+               <Link href="/shop?gender=Men" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">{t('nav_men')}</Link>
+               <Link href="/shop?gender=Women" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">{t('nav_women')}</Link>
+               <Link href="/shop?gender=Unisex" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">{t('nav_unisex')}</Link>
+               <Link href="/brands" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">{t('nav_brands')}</Link>
+               <Link href="/offers" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300 text-accent">{t('nav_offers')}</Link>
+               <Link href="/shop" className="hover:text-accent border-b-2 border-transparent hover:border-accent py-1.5 transition-all duration-300">{t('nav_products')}</Link>
             </nav>
           </div>
 
@@ -136,7 +142,7 @@ const Navbar = () => {
             <div className="relative w-full">
               <input 
                 type="text" 
-                placeholder="Search for luxury perfumes, brands..." 
+                placeholder={t('search_placeholder')} 
                 value={searchQuery}
                 onFocus={() => setShowSuggestions(true)}
                 onChange={(e) => {
@@ -204,7 +210,7 @@ const Navbar = () => {
                             </div>
                             {price && (
                               <div className="text-xs font-bold text-black font-mono">
-                                ₹{price.toLocaleString('en-IN')}
+                                AED {price.toLocaleString('en-IN')}
                               </div>
                             )}
                           </Link>
@@ -219,6 +225,12 @@ const Navbar = () => {
 
           {/* Right Desktop Utilities */}
           <div className="flex items-center space-x-2.5 sm:space-x-5 md:space-x-6">
+            <button
+               onClick={() => changeLanguage(locale === 'en' ? 'ar' : 'en')}
+               className={`text-[9px] font-black uppercase border border-current px-2 py-0.5 rounded tracking-widest hover:text-accent transition-colors`}
+            >
+               {locale === 'en' ? 'العربية' : 'EN'}
+            </button>
             <button onClick={() => setIsSearchOpen(true)} className="md:hidden hover:text-accent transition-colors">
               <Search size={20} strokeWidth={1.5} />
             </button>
@@ -256,16 +268,16 @@ const Navbar = () => {
           {/* Announcement Bar */}
           <div className={`text-[8px] sm:text-[9px] h-8 flex items-center justify-center font-black tracking-[0.2em] sm:tracking-[0.25em] uppercase gap-2 sm:gap-3 px-4 ${isHome ? 'bg-black/20 backdrop-blur-sm text-white' : 'bg-neutral-950 text-white'}`}>
             <span className="w-8 h-[1px] bg-current opacity-40 hidden md:block" />
-            <span className="truncate sm:hidden">🚚 Free Shipping over ₹{freeShippingLimit} | Code: <span className="text-accent font-mono">KOZMO999</span></span>
-            <span className="hidden sm:inline">🚚 FREE SHIPPING ON ORDERS OVER ₹{freeShippingLimit.toLocaleString()}/- &nbsp;|&nbsp; USE CODE: <span className="text-accent font-mono ml-1">KOZMO999</span></span>
+            <span className="truncate sm:hidden">🚚 Free Shipping over AED {freeShippingLimit} | Code: <span className="text-accent font-mono">KOZMO999</span></span>
+            <span className="hidden sm:inline">🚚 FREE SHIPPING ON ORDERS OVER AED {freeShippingLimit.toLocaleString()} &nbsp;|&nbsp; USE CODE: <span className="text-accent font-mono ml-1">KOZMO999</span></span>
             <span className="w-8 h-[1px] bg-current opacity-40 hidden md:block" />
           </div>
 
           {/* Top Utilities Bar */}
           <div className={`max-w-[1400px] mx-auto px-6 lg:px-12 hidden md:flex justify-between items-center h-10 w-full text-[9px] font-black tracking-widest uppercase ${isHome ? 'border-t border-white/10' : 'border-t border-neutral-100'}`}>
             <div className="flex space-x-6">
-               <Link href="/track-order" className="hover:opacity-70 transition-opacity">Track Your Order</Link>
-               <Link href="/rewards" className="hover:opacity-70 transition-opacity">Rewards Program</Link>
+               <Link href="/track-order" className="hover:opacity-70 transition-opacity">{t('track_order')}</Link>
+               <Link href="/rewards" className="hover:opacity-70 transition-opacity">{t('rewards_program')}</Link>
             </div>
             <div className={`flex items-center gap-2.5 ${isHome ? 'text-white/70' : 'text-neutral-400'}`}>
                <a href="#" aria-label="Facebook" className="hover:opacity-100 transition-opacity"><SocialFB /></a>
@@ -363,7 +375,7 @@ const Navbar = () => {
                             </div>
                             {price && (
                               <div className="text-sm font-black text-black font-mono">
-                                ₹{price.toLocaleString('en-IN')}
+                                AED {price.toLocaleString('en-IN')}
                               </div>
                             )}
                           </Link>
@@ -385,7 +397,7 @@ const Navbar = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-6 border-b border-gray-100">
-             <img src="/logo.png" alt="Kozmocart Logo" className="h-6 object-contain" />
+             <img src="/logo.png" alt="Pommastore Logo" className="h-6 object-contain" />
              <button onClick={() => setIsMobileMenuOpen(false)}><X size={20} /></button>
           </div>
           <nav className="flex flex-col p-6 font-black tracking-[0.2em] uppercase text-xs space-y-6">

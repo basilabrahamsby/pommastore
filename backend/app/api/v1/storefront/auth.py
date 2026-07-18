@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+﻿from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -108,7 +108,7 @@ async def register(body: CustomerCreate, background_tasks: BackgroundTasks, db: 
 
     # Send welcome SMS if phone number is available
     if customer.phone:
-        welcome_msg = f"Welcome to KOZMOCART, {customer.full_name or 'Valued Customer'}! Discover exclusive premium fragrances at kozmocart.com. Thank you for joining us!"
+        welcome_msg = f"Welcome to POMMASTORE, {customer.full_name or 'Valued Customer'}! Discover exclusive premium fragrances at pommastore.com. Thank you for joining us!"
         background_tasks.add_task(sendsms_welcome, customer.phone, welcome_msg)
 
     return CustomerOut.model_validate(customer)
@@ -158,7 +158,7 @@ async def google_auth(body: GoogleAuthRequest, background_tasks: BackgroundTasks
 
     # Welcome SMS for newly registered Google customers who have a phone
     if is_new and customer.phone:
-        welcome_msg = f"Welcome to KOZMOCART, {customer.full_name or 'Valued Customer'}! Discover exclusive premium fragrances at kozmocart.com. Thank you for joining us!"
+        welcome_msg = f"Welcome to POMMASTORE, {customer.full_name or 'Valued Customer'}! Discover exclusive premium fragrances at pommastore.com. Thank you for joining us!"
         background_tasks.add_task(sendsms_welcome, customer.phone, welcome_msg)
 
     token = create_access_token(str(customer.id))

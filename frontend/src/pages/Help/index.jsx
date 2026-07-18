@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import {
   BookOpen, HelpCircle, Share2, TrendingUp, Landmark, Boxes,
   Settings, ShieldCheck, Search, Activity, Users, FileText, ArrowRight,
@@ -24,21 +24,21 @@ export default function Help() {
             <BookOpen size={22} color="var(--gold)" style={{ verticalAlign: 'middle', marginRight: 8 }} /> Store Architecture & System Overview
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6 }}>
-            An overview of how Kozmocart keeps your customer storefront and administration dashboard in perfect sync.
+            An overview of how Pommastore keeps your customer storefront and administration dashboard in perfect sync.
           </p>
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>What is this?</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Kozmocart is an all-in-one business software that connects your store administration console with your live customer shopping site at **`kozmocart.com`**. It manages everything from adding products to catalog pages, tracking sales, updating inventory counts, and analyzing buyer trends.
+            Pommastore is an all-in-one business software that connects your store administration console with your live customer shopping site at **`pommastore.com`**. It manages everything from adding products to catalog pages, tracking sales, updating inventory counts, and analyzing buyer trends.
           </p>
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>What is the purpose of this?</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            The primary purpose is to ensure **zero delays and total accuracy** in your store operations. When a customer makes a purchase on `kozmocart.com`, the system instantly updates stock levels, calculates correct sales taxes, awards loyalty points, and updates your executive dashboard without requiring manual entries.
+            The primary purpose is to ensure **zero delays and total accuracy** in your store operations. When a customer makes a purchase on `pommastore.com`, the system instantly updates stock levels, calculates correct sales taxes, awards loyalty points, and updates your executive dashboard without requiring manual entries.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default function Help() {
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <ArrowRight size={12} color="var(--gold)" />
-              <span><strong>Where:</strong> Customer actions occur on <code style={{ color: '#fff' }}>kozmocart.com</code>, updating records instantly in your Admin console.</span>
+              <span><strong>Where:</strong> Customer actions occur on <code style={{ color: '#fff' }}>pommastore.com</code>, updating records instantly in your Admin console.</span>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <ArrowRight size={12} color="var(--gold)" />
@@ -117,11 +117,11 @@ export default function Help() {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>How to use this? (Referral Setup)</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            To automatically track customer orders from social media, simply append tracking tags to your bio profiles or ad links leading to **`kozmocart.com`**:
+            To automatically track customer orders from social media, simply append tracking tags to your bio profiles or ad links leading to **`pommastore.com`**:
             <ul style={{ paddingLeft: 20, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, color: 'var(--gold-bright)' }}>
-              <li>Instagram bio link: <strong>https://kozmocart.com/?ref=instagram</strong></li>
-              <li>Facebook ad link: <strong>https://kozmocart.com/?ref=facebook</strong></li>
-              <li>LinkedIn post link: <strong>https://kozmocart.com/?ref=linkedin</strong></li>
+              <li>Instagram bio link: <strong>https://pommastore.com/?ref=instagram</strong></li>
+              <li>Facebook ad link: <strong>https://pommastore.com/?ref=facebook</strong></li>
+              <li>LinkedIn post link: <strong>https://pommastore.com/?ref=linkedin</strong></li>
             </ul>
             When a customer clicks these links and checks out, their order is permanently attributed to that social media platform.
           </p>
@@ -142,14 +142,14 @@ export default function Help() {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>What is this?</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Kozmocart includes an automated tax calculation system that splits your sales taxes into **CGST** (Central tax), **SGST** (State tax), and **IGST** (Integrated cross-state tax) based on where your customer lives.
+            Pommastore includes an automated tax calculation system that splits your sales taxes into **CGST** (Central tax), **SGST** (State tax), and **IGST** (Integrated cross-state tax) based on where your customer lives.
           </p>
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>What is the purpose of this?</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            To save your accountant hours of manual work and keep your business fully compliant. Government tax filing requires you to aggregate transactions based on their interstate destination state. Kozmocart handles this automatically.
+            To save your accountant hours of manual work and keep your business fully compliant. Government tax filing requires you to aggregate transactions based on their interstate destination state. Pommastore handles this automatically.
           </p>
         </div>
 
@@ -244,14 +244,14 @@ export default function Help() {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
             *   <strong>Customer Segments</strong>: Categorizes buyers into groups like **"Champions"** (recent, frequent high-spenders), **"Loyal"** (frequent buyers), or **"Hibernating"** (long time since last purchase).
             *   <strong>Loyalty Statuses</strong>: Customers are automatically awarded **Bronze**, **Silver**, or **Gold** status as their total spent increases.
-            *   <strong>Point Rewards</strong>: Customers earn points on their net spent total. These points act like direct cash discounts on their next purchase during storefront checkout (e.g., 1 point offsets ₹1 on their invoice).
+            *   <strong>Point Rewards</strong>: Customers earn points on their net spent total. These points act like direct cash discounts on their next purchase during storefront checkout (e.g., 1 point offsets AED 1 on their invoice).
           </p>
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>How to use this?</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Browse customer lists and behavioral clusters under the **Customer Report** tab in Analytics. You can check customer point balances inside the **CRM & Orders** pages. Customers can view and redeem their points balances seamlessly when shopping on `kozmocart.com`.
+            Browse customer lists and behavioral clusters under the **Customer Report** tab in Analytics. You can check customer point balances inside the **CRM & Orders** pages. Customers can view and redeem their points balances seamlessly when shopping on `pommastore.com`.
           </p>
         </div>
       </div>
@@ -266,8 +266,8 @@ export default function Help() {
           <HelpCircle size={24} />
         </div>
         <div>
-          <h1 className="page-title" style={{ margin: 0, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>Kozmocart System Manual</h1>
-          <p className="page-subtitle" style={{ margin: 0 }}>Reference manual detailing operations and business flows in Kozmocart ERP</p>
+          <h1 className="page-title" style={{ margin: 0, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>Pommastore System Manual</h1>
+          <p className="page-subtitle" style={{ margin: 0 }}>Reference manual detailing operations and business flows in Pommastore ERP</p>
         </div>
       </div>
 

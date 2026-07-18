@@ -11,7 +11,7 @@ import api from '../../services/api'
 import InfoButton from '../../components/ui/InfoButton'
 
 // Shared formatting
-const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`
+const fmt = (n) => `AED ${Number(n || 0).toLocaleString('en-US')}`
 
 const StatCard = ({ label, value, icon: Icon, color, trend, trendLabel, sub, info }) => (
   <div className="stat-card" style={{ background: 'linear-gradient(145deg, var(--bg-card), var(--bg-surface))', border: '1px solid rgba(201,168,76,0.08)' }}>
@@ -54,7 +54,7 @@ const CustomTooltip = ({ active, payload, label, isCurrency }) => {
       {payload.map((entry, index) => (
         <p key={index} style={{ fontSize: '0.9rem', fontWeight: 700, color: entry.color, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
           <span style={{color: 'var(--text-secondary)', fontWeight: 500}}>{entry.name}</span>
-          <span>{isCurrency ? `₹${Number(entry.value).toLocaleString('en-IN')}` : entry.value}</span>
+          <span>{isCurrency ? `AED ${Number(entry.value).toLocaleString('en-US')}` : entry.value}</span>
         </p>
       ))}
     </div>
@@ -260,7 +260,7 @@ export default function Dashboard() {
                         <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Batch: {item.batch}</div>
                      </div>
                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--error)', fontWeight: 700 }}>{new Date(item.date).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--error)', fontWeight: 700 }}>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}</div>
                         <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{item.qty} units</div>
                      </div>
                   </div>
@@ -292,7 +292,7 @@ export default function Dashboard() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
-              <YAxis yAxisId="left" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} dx={-10} />
+              <YAxis yAxisId="left" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `AED ${(v/1000).toFixed(0)}k`} dx={-10} />
               <YAxis yAxisId="right" orientation="right" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dx={10} />
               <Tooltip content={<CustomTooltip isCurrency={true} />} />
               {chartType === 'area' ? (
@@ -318,7 +318,7 @@ export default function Dashboard() {
             <ComposedChart data={stats?.profit_timeline || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} dx={-10} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `AED ${(v/1000).toFixed(0)}k`} dx={-10} />
               <Tooltip content={<CustomTooltip isCurrency={true} />} />
               <Bar dataKey="revenue" name="Revenue" fill="#1e293b" radius={[4, 4, 0, 0]} />
               <Line type="monotone" dataKey="profit" name="Gross Profit" stroke="#34d399" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#34d399', stroke: '#08080f', strokeWidth: 2 }} />
@@ -348,7 +348,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{o.order_number}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{new Date(o.created_at).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{new Date(o.created_at).toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}</div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
