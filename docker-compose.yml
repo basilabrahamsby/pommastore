@@ -36,9 +36,9 @@ services:
       REDIS_URL: redis://redis:6379/0
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
-      SMTP_USER: info@pommastore.com
+      SMTP_USER: info@kozmocart.com
       SMTP_PASSWORD: "boxr xytu ycye snof"
-      SMTP_FROM_EMAIL: info@pommastore.com
+      SMTP_FROM_EMAIL: info@kozmocart.com
       SMTP_FROM_NAME: "Pommastore.com"
       SMTP_TLS: "true"
       SMTP_SSL: "false"
