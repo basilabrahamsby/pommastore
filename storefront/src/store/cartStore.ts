@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface CartItem {
@@ -77,7 +77,15 @@ export const syncCartWithServer = async () => {
   const localItems = useCartStore.getState().items;
   try {
     const res = await api.get('/account/cart');
-    const serverItems = res.data || [];
+    const serverItems = (res.data || []).map((i: any) => ({
+      ...i,
+      id: i.id || i.variant_id,
+      image: i.image || i.image_url || '/placeholder-perfume.png',
+      variantName: i.variantName || i.variant_name || '',
+      productId: i.productId || i.product_id || '',
+      sizeMl: i.sizeMl || i.size_ml || 100,
+      loyaltyPoints: i.loyaltyPoints || i.loyalty_points || 0
+    }));
     
     // Merge
     const itemMap = new Map<string, CartItem>();

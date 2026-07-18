@@ -367,7 +367,7 @@ export default function Checkout() {
       }
 
       const orderItems = items.map(item => ({
-        variant_id: item.id,
+        variant_id: item.id || (item as any).variant_id,
         quantity: item.quantity,
         unit_price: item.price,
         discount_amount: 0.0
