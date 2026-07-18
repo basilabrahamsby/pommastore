@@ -53,12 +53,10 @@ async def send_verification(
         res_data["email_sent"] = True
 
     if body.phone:
-        phone = body.phone.strip()
-        otp = str(random.randint(100000, 999999))
-        await redis_service.redis.setex(f"verify_phone_otp:{customer.id}", 300, otp)
-        await redis_service.redis.setex(f"verify_phone_val:{customer.id}", 300, phone)
-        background_tasks.add_task(sendsms_otp, phone, otp)
-        res_data["phone_sent"] = True
+        raise HTTPException(
+            status_code=400,
+            detail="SMS OTP verification is disabled."
+        )
 
     return {"message": "Verification code(s) sent successfully", **res_data}
 

@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -36,7 +36,10 @@ async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: 
     if body.email:
         background_tasks.add_task(send_otp_email, body.email, otp)
     elif body.phone:
-        background_tasks.add_task(sendsms_otp, body.phone, otp)
+        raise HTTPException(
+            status_code=400,
+            detail="SMS OTP is disabled. Please login via Email OTP."
+        )
     
     return {"message": "OTP sent successfully"}
 

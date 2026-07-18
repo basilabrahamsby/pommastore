@@ -42,6 +42,8 @@ services:
       SMTP_FROM_NAME: "Pommastore.com"
       SMTP_TLS: "true"
       SMTP_SSL: "false"
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
       TZ: Asia/Dubai
     ports:
       - "8030:8000"

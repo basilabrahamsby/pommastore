@@ -1,4 +1,4 @@
-﻿import httpx
+import httpx
 from typing import Dict, Any, List
 from app.core.config import settings
 import logging
@@ -183,7 +183,7 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
         return {
             "success": True,
             "waybill": mock_waybill,
-            "carrier": "Delhivery",
+            "carrier": "Panda Delivery",
             "message": "Mock shipment created successfully"
         }
 
@@ -240,14 +240,14 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
                         return {
                             "success": True,
                             "waybill": package.get("waybill"),
-                            "carrier": "Delhivery",
+                            "carrier": "Panda Delivery",
                             "message": "Shipment created successfully"
                         }
                     else:
                         return {
                             "success": False,
                             "waybill": None,
-                            "carrier": "Delhivery",
+                            "carrier": "Panda Delivery",
                             "message": f"Delhivery packaging error: {package.get('remarks')}"
                         }
             else:
@@ -255,7 +255,7 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
                 return {
                     "success": False,
                     "waybill": None,
-                    "carrier": "Delhivery",
+                    "carrier": "Panda Delivery",
                     "message": f"Delhivery API responded with status {res.status_code}: {res.text}"
                 }
     except Exception as e:
@@ -264,7 +264,7 @@ async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any
     return {
         "success": False,
         "waybill": None,
-        "carrier": "Delhivery",
+        "carrier": "Panda Delivery",
         "message": "Network or server failure during Delhivery booking"
     }
 

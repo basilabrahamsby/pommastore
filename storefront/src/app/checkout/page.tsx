@@ -149,18 +149,27 @@ export default function Checkout() {
     if (emailChanged || phoneChanged) {
       setUpdatingContact(true);
       try {
-        await api.post('/account/verify/send', {
-          email: emailChanged ? contactForm.email.trim() : undefined,
-          phone: phoneChanged ? contactForm.phone.trim() : undefined
-        });
-        setVerifyEmailNeeded(emailChanged);
-        setVerifyPhoneNeeded(phoneChanged);
-        setEmailOtp('');
-        setPhoneOtp('');
-        setShowVerifyModal(true);
+        if (phoneChanged) {
+          const patchRes = await api.patch('/account/me', { phone: contactForm.phone.trim() });
+          useAuthStore.setState({ customer: patchRes.data });
+        }
+
+        if (emailChanged) {
+          await api.post('/account/verify/send', {
+            email: contactForm.email.trim()
+          });
+          setVerifyEmailNeeded(true);
+          setVerifyPhoneNeeded(false);
+          setEmailOtp('');
+          setPhoneOtp('');
+          setShowVerifyModal(true);
+        } else {
+          // If only phone was updated
+          alert('Phone number updated successfully!');
+        }
       } catch (err: any) {
         const detail = err.response?.data?.detail;
-        alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to send verification code.');
+        alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to update contact details.');
       } finally {
         setUpdatingContact(false);
       }

@@ -65,7 +65,7 @@ def _enrich_order(order: Order) -> OrderOut:
 from app.core.database import AsyncSessionLocal
 
 async def book_delhivery_shipment_task(order_id: uuid.UUID):
-    from app.services.delhivery import create_delhivery_shipment
+    import random
     
     async with AsyncSessionLocal() as db:
         q = select(Order).where(Order.id == order_id)
@@ -74,28 +74,17 @@ async def book_delhivery_shipment_task(order_id: uuid.UUID):
         if not order:
             return
             
-        order_data = {
-            "order_number": order.order_number,
-            "total_amount": float(order.total_amount),
-            "payment_method": order.payment_method.value if order.payment_method else "prepaid",
-            "customer_name": order.customer_name,
-            "customer_phone": order.customer_phone,
-            "customer_email": order.customer_email,
-            "shipping_address": order.shipping_address
-        }
+        mock_waybill = f"PND{random.randint(10000000, 99999999)}"
+        order.tracking_number = mock_waybill
+        order.carrier = "Panda Delivery"
         
-        result = await create_delhivery_shipment(order_data)
-        if result.get("success") and result.get("waybill"):
-            order.tracking_number = result["waybill"]
-            order.carrier = "Delhivery"
-            
-            history = OrderStatusHistory(
-                order_id=order.id,
-                status=order.status,
-                notes=f"Automated shipping label generated with Delhivery. Waybill: {result['waybill']}"
-            )
-            db.add(history)
-            await db.commit()
+        history = OrderStatusHistory(
+            order_id=order.id,
+            status=order.status,
+            notes=f"Automated shipping label generated with Panda Delivery. Waybill: {mock_waybill}"
+        )
+        db.add(history)
+        await db.commit()
 
 
 @router.get("/{order_id}/invoice", response_class=HTMLResponse)
@@ -168,9 +157,15 @@ async def get_storefront_order_invoice_pdf(
 async def verify_shipping_pincode(pincode: str):
     if not pincode or len(pincode.strip()) < 6:
         raise HTTPException(status_code=400, detail="Invalid pincode format.")
-    from app.services.delhivery import check_pincode_serviceability
-    result = await check_pincode_serviceability(pincode.strip())
-    return result
+    return {
+        "serviceable": True,
+        "cod_available": True,
+        "prepaid_available": True,
+        "district": "",
+        "state": "",
+        "shipping_fee": 150.0,
+        "message": "Serviceable via Panda Delivery"
+    }
 
 
 @router.post("/track")

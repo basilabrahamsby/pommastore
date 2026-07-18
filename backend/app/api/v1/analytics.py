@@ -751,7 +751,7 @@ async def get_logistics_report(
         c_str = carrier or "Unassigned"
         carrier_counts[c_str] = carrier_counts.get(c_str, 0) + count
         
-        if carrier == "Delhivery":
+        if carrier in ["Delhivery", "Panda Delivery"]:
             total_delhivery += count
             if status == OrderStatus.delivered:
                 delivered += count

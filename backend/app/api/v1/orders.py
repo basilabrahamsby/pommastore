@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -590,7 +590,7 @@ async def update_order_status(
             msg = f"Your order #{enriched.order_number} is packed and ready for courier pickup at POMMASTORE. Shipping soon!"
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.shipped:
-            carrier = body.carrier or enriched.carrier or "Delhivery"
+            carrier = body.carrier or enriched.carrier or "Panda Delivery"
             tracking_number = body.tracking_number or enriched.tracking_number or ""
             msg = f"Good news! Your order #{enriched.order_number} has been shipped via {carrier}. AWB: {tracking_number}. Track: https://pommastore.com/track-order?order={enriched.order_number}&contact={to_phone}"
             background_tasks.add_task(sendsms_status, to_phone, msg)

@@ -214,37 +214,22 @@ function LoginContent() {
 
           {step === 'send' ? (
             <div className="space-y-8">
-              <div className="flex space-x-8 border-b border-neutral-100 mb-6">
-                <button
-                  onClick={() => { setLoginMethod('email'); setIdentifier(''); }}
-                  className={`text-[10px] font-bold font-montserrat tracking-[0.25em] uppercase pb-3 border-b-2 transition-all ${loginMethod === 'email' ? 'border-neutral-950 text-neutral-950' : 'border-transparent text-neutral-300 hover:text-neutral-500'}`}
-                >
-                  {t('login_email')}
-                </button>
-                <button
-                  onClick={() => { setLoginMethod('phone'); setIdentifier(''); }}
-                  className={`text-[10px] font-bold font-montserrat tracking-[0.25em] uppercase pb-3 border-b-2 transition-all ${loginMethod === 'phone' ? 'border-neutral-950 text-neutral-950' : 'border-transparent text-neutral-300 hover:text-neutral-500'}`}
-                >
-                  {t('login_mobile')}
-                </button>
-              </div>
-
               <form onSubmit={handleSendOTP} className="space-y-8">
                 <div>
                   <label className="block text-[9px] font-bold font-montserrat text-neutral-700 uppercase tracking-[0.25em] mb-3">
-                    {loginMethod === 'email' ? t('login_email_id') : t('login_mobile_id')}
+                    {t('login_email_id')}
                   </label>
                   <div className="relative group">
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 text-neutral-800 transition-transform group-focus-within:scale-110 duration-300">
-                      {loginMethod === 'email' ? <Mail size={16} /> : <Smartphone size={16} />}
+                      <Mail size={16} />
                     </div>
                     <input
-                      type={loginMethod === 'email' ? 'email' : 'tel'}
+                      type="email"
                       required
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       className="w-full border-b border-neutral-200 bg-transparent py-4 pl-8 pr-4 text-sm focus:border-neutral-950 transition-all outline-none font-sans placeholder:text-neutral-300 tracking-wider"
-                      placeholder={loginMethod === 'email' ? 'your@email.com' : '9876543210'}
+                      placeholder="your@email.com"
                     />
                   </div>
                 </div>
