@@ -294,6 +294,29 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
     })
   }
 
+  const handleMakeCover = (idxToCover) => {
+    if (idxToCover === 0) return
+    setForm(p => {
+      const list = [...(p.images || [])]
+      const [chosen] = list.splice(idxToCover, 1)
+      list.unshift(chosen)
+      return { ...p, images: list }
+    })
+    toast.success('Set as Cover / Primary Photo!')
+  }
+
+  const handleMoveImage = (idx, direction) => {
+    const targetIdx = idx + direction
+    if (targetIdx < 0 || !form.images || targetIdx >= form.images.length) return
+    setForm(p => {
+      const list = [...(p.images || [])]
+      const temp = list[idx]
+      list[idx] = list[targetIdx]
+      list[targetIdx] = temp
+      return { ...p, images: list }
+    })
+  }
+
   // Gallery Handlers
   const addGallerySlot = () => {
     setForm(p => ({ ...p, gallery_images: [...(p.gallery_images || []), { image: '', link: '' }] }))
@@ -1016,22 +1039,96 @@ function ProductModal({ product, brands, categories, onClose, onSaved, onRefresh
                 <input id="direct-image-upload" type="file" multiple accept="image/*" onChange={handleDirectUpload} style={{ display: 'none' }} />
               </label>
 
-              {/* Uploaded Thumbnails Grid */}
+              {/* Uploaded Thumbnails Grid with Cover Selection & Reordering */}
               {form.images?.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(75px, 1fr))', gap: 10, marginTop: 10 }}>
-                  {form.images.map((imgUrl, idx) => (
-                    <div key={idx} style={{
-                      position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 'var(--radius-sm)',
-                      overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#0c0c12'
-                    }}>
-                      <img src={getMediaUrl(imgUrl)} alt={`Perfume ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={() => handleRemoveImage(idx)} style={{
-                        position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: '50%',
-                        background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.65rem', fontWeight: 'bold',
-                        border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                      }} title="Delete Image">✕</button>
-                    </div>
-                  ))}
+                <div>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, marginTop: 12 }}>
+                    💡 <strong style={{ color: 'var(--gold)' }}>First image is the main Cover Photo</strong>. Click <strong>★ Set Cover</strong> or use <strong>◄ ► arrows</strong> to reorder images.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 12 }}>
+                    {form.images.map((imgUrl, idx) => {
+                      const isCover = idx === 0
+                      return (
+                        <div key={idx} style={{
+                          position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 'var(--radius-sm)',
+                          overflow: 'hidden', border: isCover ? '2px solid var(--gold)' : '1px solid rgba(255,255,255,0.12)',
+                          background: '#0c0c12', boxShadow: isCover ? '0 0 10px rgba(201,168,76,0.35)' : 'none'
+                        }}>
+                          <img src={getMediaUrl(imgUrl)} alt={`Perfume ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          
+                          {/* Cover Badge or Set Cover Button */}
+                          {isCover ? (
+                            <span style={{
+                              position: 'absolute', top: 4, left: 4, background: 'var(--gold)', color: '#000',
+                              fontSize: '0.58rem', fontWeight: 800, padding: '2px 5px', borderRadius: 4,
+                              letterSpacing: '0.05em', boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                            }}>
+                              ★ COVER
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleMakeCover(idx)}
+                              style={{
+                                position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.75)', color: 'var(--gold)',
+                                fontSize: '0.58rem', fontWeight: 700, padding: '2px 5px', borderRadius: 4,
+                                border: '1px solid var(--gold)', cursor: 'pointer'
+                              }}
+                              title="Set as Main Cover Photo"
+                            >
+                              ★ Cover
+                            </button>
+                          )}
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(idx)}
+                            style={{
+                              position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%',
+                              background: 'rgba(239, 68, 68, 0.85)', color: '#fff', fontSize: '0.65rem', fontWeight: 'bold',
+                              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                            }}
+                            title="Delete Image"
+                          >
+                            ✕
+                          </button>
+
+                          {/* Reorder Arrows Bar at Bottom */}
+                          <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.8)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 6px'
+                          }}>
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveImage(idx, -1)}
+                              style={{
+                                background: 'none', border: 'none', color: idx === 0 ? 'rgba(255,255,255,0.2)' : '#fff',
+                                fontSize: '0.75rem', cursor: idx === 0 ? 'default' : 'pointer', padding: '0 4px'
+                              }}
+                              title="Move Left"
+                            >
+                              ◄
+                            </button>
+                            <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 700 }}>#{idx + 1}</span>
+                            <button
+                              type="button"
+                              disabled={idx === form.images.length - 1}
+                              onClick={() => handleMoveImage(idx, 1)}
+                              style={{
+                                background: 'none', border: 'none', color: idx === form.images.length - 1 ? 'rgba(255,255,255,0.2)' : '#fff',
+                                fontSize: '0.75rem', cursor: idx === form.images.length - 1 ? 'default' : 'pointer', padding: '0 4px'
+                              }}
+                              title="Move Right"
+                            >
+                              ►
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
             </div>
