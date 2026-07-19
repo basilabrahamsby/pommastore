@@ -928,13 +928,12 @@ export default function Checkout() {
                  </div>
                )}
 
+                {/* UAE VAT 5% Breakdown (Product Price Only) */}
                 {(() => {
-                  const currentShipping = totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee;
-                  const loyaltyRedemption = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
-                  const grandTotal = Math.max(0, totalPrice() + currentShipping - promoDiscount - loyaltyRedemption);
+                  const subtotal = Math.max(0, totalPrice() - promoDiscount);
                   const vatRate = 0.05;
-                  const taxableVal = grandTotal / (1 + vatRate);
-                  const vatAmount = grandTotal - taxableVal;
+                  const taxableVal = subtotal / (1 + vatRate);
+                  const vatAmount = subtotal - taxableVal;
                   return (
                     <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2 normal-case font-sans tracking-normal">
                       <div className="flex justify-between items-center text-[10px]">

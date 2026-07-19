@@ -320,13 +320,12 @@ export default function Cart() {
                   </p>
                 </div>
 
-                {/* UAE VAT 5% Tax Breakdown */}
+                {/* UAE VAT 5% Tax Breakdown (Product Price Only) */}
                 {(() => {
-                  const currentShipping = isFreeShipping ? 0 : shippingFee;
-                  const grandTotal = totalPrice() + currentShipping;
+                  const subtotal = totalPrice();
                   const vatRate = 0.05;
-                  const taxableVal = grandTotal / (1 + vatRate);
-                  const vatAmount = grandTotal - taxableVal;
+                  const taxableVal = subtotal / (1 + vatRate);
+                  const vatAmount = subtotal - taxableVal;
                   return (
                     <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2">
                       <div className="flex justify-between items-center text-[10px]">
