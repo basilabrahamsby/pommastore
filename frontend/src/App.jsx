@@ -19,8 +19,9 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
+  const baseName = import.meta.env.BASE_URL.replace(/\/$/, '') || '/pommastore/admin'
   return (
-    <BrowserRouter basename="/admin">
+    <BrowserRouter basename={baseName}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
