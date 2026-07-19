@@ -59,7 +59,7 @@ services:
     build: ./frontend
     container_name: pommastore_admin
     environment:
-      VITE_API_BASE_URL: /api/v1
+      VITE_API_BASE_URL: /pommastore/api/v1
       VITE_STATIC_BASE_URL: ""
       TZ: Asia/Dubai
     ports:
