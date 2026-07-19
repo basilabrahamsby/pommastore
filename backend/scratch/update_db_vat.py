@@ -2,8 +2,9 @@ import asyncio
 import os
 import sys
 
-# Add project root to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Ensure current dir and parent dir are in sys.path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, '/app')
 
 from sqlalchemy import text
 from app.db.session import engine
