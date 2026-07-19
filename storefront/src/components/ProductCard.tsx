@@ -157,6 +157,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       quantity: 1,
       sizeMl: primaryVariant.size_ml,
       loyaltyPoints: primaryVariant.loyalty_points,
+      taxType: primaryVariant.tax_type || 'Exclusive',
     });
   };
 
@@ -177,6 +178,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         quantity: 1,
         sizeMl: primaryVariant.size_ml,
         loyaltyPoints: primaryVariant.loyalty_points,
+        taxType: primaryVariant.tax_type || 'Exclusive',
       });
     }
     

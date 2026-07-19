@@ -328,6 +328,7 @@ export default function ProductClient({
       quantity: 1,
       sizeMl: selectedVariant.size_ml,
       loyaltyPoints: selectedVariant.loyalty_points,
+      taxType: selectedVariant.tax_type || 'Exclusive',
     });
   };
 
@@ -345,6 +346,7 @@ export default function ProductClient({
         quantity: 1,
         sizeMl: selectedVariant.size_ml,
         loyaltyPoints: selectedVariant.loyalty_points,
+        taxType: selectedVariant.tax_type || 'Exclusive',
       });
     }
     router.push('/checkout');
@@ -372,6 +374,7 @@ export default function ProductClient({
         quantity: 1,
         sizeMl: variant.size_ml,
         loyaltyPoints: variant.loyalty_points,
+        taxType: variant.tax_type || 'Exclusive',
       });
     });
 

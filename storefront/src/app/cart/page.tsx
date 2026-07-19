@@ -320,21 +320,40 @@ export default function Cart() {
                   </p>
                 </div>
 
-                {/* UAE VAT 5% Tax Breakdown (Exclusive Mode) */}
+                {/* UAE VAT 5% Tax Breakdown (per-item tax_type aware) */}
                 {(() => {
-                  const subtotal = totalPrice();
                   const vatRate = 0.05;
-                  const taxableVal = subtotal;
-                  const vatAmount = subtotal * vatRate;
+                  // For each item:
+                  // Exclusive: taxable = price, vat = price * 0.05
+                  // Inclusive: taxable = price / 1.05, vat = price - (price / 1.05)
+                  // Zero-Rated: vat = 0
+                  let totalTaxable = 0;
+                  let totalVat = 0;
+                  items.forEach(item => {
+                    const lineTotal = item.price * item.quantity;
+                    const tt = (item.taxType || 'Exclusive').toLowerCase();
+                    if (tt === 'inclusive') {
+                      const taxable = lineTotal / (1 + vatRate);
+                      totalTaxable += taxable;
+                      totalVat += lineTotal - taxable;
+                    } else if (tt === 'zero-rated') {
+                      totalTaxable += lineTotal;
+                      totalVat += 0;
+                    } else {
+                      // Exclusive (default)
+                      totalTaxable += lineTotal;
+                      totalVat += lineTotal * vatRate;
+                    }
+                  });
                   return (
                     <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2">
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount (Base)</span>
-                        <span className="text-neutral-800 font-bold">AED {taxableVal.toFixed(2)}</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount</span>
+                        <span className="text-neutral-800 font-bold">AED {totalTaxable.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0% Exclusive)</span>
-                        <span className="text-neutral-900 font-black">AED {vatAmount.toFixed(2)}</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0%)</span>
+                        <span className="text-neutral-900 font-black">AED {totalVat.toFixed(2)}</span>
                       </div>
                     </div>
                   );
@@ -357,7 +376,17 @@ export default function Cart() {
                 <div className="flex justify-between items-center">
                   <span className="text-[11px] font-black tracking-widest uppercase text-black">Total</span>
                   <span className="text-xl font-black text-black">
-                    AED {(totalPrice() + (totalPrice() * 0.05) + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    AED {(() => {
+                      const vatRate = 0.05;
+                      let vatSum = 0;
+                      items.forEach(item => {
+                        const lineTotal = item.price * item.quantity;
+                        const tt = (item.taxType || 'Exclusive').toLowerCase();
+                        if (tt === 'exclusive') vatSum += lineTotal * vatRate;
+                        // inclusive: vat already inside price, zero-rated: no vat
+                      });
+                      return (totalPrice() + vatSum + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    })()}
                   </span>
                 </div>
 

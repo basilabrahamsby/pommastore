@@ -12,6 +12,7 @@ export interface CartItem {
   quantity: number;
   sizeMl?: number;
   loyaltyPoints?: number;
+  taxType?: string; // 'Exclusive' | 'Inclusive' | 'Zero-Rated'
 }
 
 interface CartState {
