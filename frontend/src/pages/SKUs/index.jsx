@@ -7,32 +7,36 @@ function EditTaxModal({ sku, onClose, onSaved }) {
   const [form, setForm] = useState({
     id: sku.id,
     sku_code: sku.sku,
-    selling_price: sku.selling_price || 5000,
+    selling_price: sku.selling_price || 500,
     compare_at_price: sku.compare_at_price || '',
-    tax_type: sku.tax_type || 'Inclusive', // 'Inclusive' | 'Exclusive'
-    gst_slab: sku.gst_slab || '18', // '0' | '5' | '12' | '18' | '28'
-    hsn_code: sku.hsn_code || '3303.00',
-    place_of_supply: sku.place_of_supply || 'Intrastate (CGST + SGST)',
-    loyalty_points_rule: sku.loyalty_points_rule || 'Total MRP reduces points value'
+    tax_type: sku.tax_type || 'Inclusive', // 'Inclusive' | 'Exclusive' | 'Zero-Rated'
+    gst_slab: sku.gst_slab || '5', // '5' | '0'
+    hsn_code: sku.hsn_code || '100234567890003',
+    place_of_supply: sku.place_of_supply || 'Dubai',
+    loyalty_points_rule: sku.loyalty_points_rule || 'Total price reduces points value'
   })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   const selling = Number(form.selling_price) || 0
-  const gstPct = Number(form.gst_slab) || 0
+  const vatPct = form.tax_type === 'Zero-Rated' ? 0 : (Number(form.gst_slab) || 5)
 
-  // Live tax calculations
+  // Live UAE VAT calculations
   let basePrice = 0
   let taxAmount = 0
   let finalMRP = 0
 
   if (form.tax_type === 'Inclusive') {
-    basePrice = selling / (1 + gstPct / 100)
+    basePrice = selling / (1 + vatPct / 100)
     taxAmount = selling - basePrice
+    finalMRP = selling
+  } else if (form.tax_type === 'Zero-Rated') {
+    basePrice = selling
+    taxAmount = 0
     finalMRP = selling
   } else {
     basePrice = selling
-    taxAmount = selling * (gstPct / 100)
+    taxAmount = selling * (vatPct / 100)
     finalMRP = selling + taxAmount
   }
 
@@ -47,10 +51,10 @@ function EditTaxModal({ sku, onClose, onSaved }) {
         hsn_code: form.hsn_code,
         place_of_supply: form.place_of_supply
       })
-      toast.success(`Tax settings for SKU ${form.sku_code} saved!`)
+      toast.success(`UAE VAT settings for SKU ${form.sku_code} saved!`)
       onSaved()
     } catch (err) {
-      toast.error('Failed to save tax settings')
+      toast.error('Failed to save VAT settings')
     } finally { setSaving(false) }
   }
 
@@ -58,7 +62,7 @@ function EditTaxModal({ sku, onClose, onSaved }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 520 }}>
         <div className="modal-header">
-          <span className="modal-title">🛡️ Edit SKU Sales GST & Pricing — {form.sku_code}</span>
+          <span className="modal-title">🛡️ Edit SKU Sales VAT & Pricing — {form.sku_code}</span>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -70,27 +74,28 @@ function EditTaxModal({ sku, onClose, onSaved }) {
 
             <div className="grid-3">
               <div className="form-group">
-                <label className="form-label">Compare At Price (MRP) (AED ) *</label>
-                <input className="input" type="number" value={form.compare_at_price} onChange={e => set('compare_at_price', e.target.value)} required />
+                <label className="form-label">Compare At Price (AED)</label>
+                <input className="input" type="number" step="0.01" value={form.compare_at_price} onChange={e => set('compare_at_price', e.target.value)} placeholder="e.g. 55.00" />
               </div>
               <div className="form-group">
-                <label className="form-label">Selling Price (AED ) *</label>
-                <input className="input" type="number" value={form.selling_price} onChange={e => set('selling_price', e.target.value)} required />
+                <label className="form-label">Selling Price (AED) *</label>
+                <input className="input" type="number" step="0.01" value={form.selling_price} onChange={e => set('selling_price', e.target.value)} required />
               </div>
               <div className="form-group">
-                <label className="form-label">HSN Code *</label>
-                <input className="input" value={form.hsn_code} onChange={e => set('hsn_code', e.target.value)} required placeholder="3303.00" />
+                <label className="form-label">Tax Code / TRN *</label>
+                <input className="input" value={form.hsn_code} onChange={e => set('hsn_code', e.target.value)} required placeholder="100234567890003" />
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label">GST Tax Logic (Display Mode) *</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+              <label className="form-label">VAT Tax Logic (Display Mode) *</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                 {[
-                  { id: 'Inclusive', label: '💎 Inclusive of GST (Luxury Standard)' },
-                  { id: 'Exclusive', label: '➕ Exclusive of GST' }
+                  { id: 'Inclusive', label: '💎 Inclusive of 5% VAT (UAE Standard)' },
+                  { id: 'Exclusive', label: '➕ Exclusive of 5% VAT' },
+                  { id: 'Zero-Rated', label: '🌿 Zero-Rated (0%)' }
                 ].map(opt => (
-                  <button key={opt.id} type="button" className={`btn btn-sm ${form.tax_type === opt.id ? 'btn-primary' : 'btn-secondary'}`} onClick={() => set('tax_type', opt.id)} style={{ padding: '10px 4px', fontSize: '0.72rem' }}>
+                  <button key={opt.id} type="button" className={`btn btn-sm ${form.tax_type === opt.id ? 'btn-primary' : 'btn-secondary'}`} onClick={() => set('tax_type', opt.id)} style={{ padding: '8px 2px', fontSize: '0.68rem' }}>
                     {opt.label}
                   </button>
                 ))}
@@ -99,20 +104,23 @@ function EditTaxModal({ sku, onClose, onSaved }) {
 
             <div className="grid-2">
               <div className="form-group">
-                <label className="form-label">GST Slab *</label>
+                <label className="form-label">UAE VAT Rate *</label>
                 <select className="select" value={form.gst_slab} onChange={e => set('gst_slab', e.target.value)} required>
-                  <option value="0">0% (Exempt)</option>
-                  <option value="5">5% (Essentials)</option>
-                  <option value="12">12% (Promotions)</option>
-                  <option value="18">18% (Perfume Standard)</option>
-                  <option value="28">28% (Luxury Cess)</option>
+                  <option value="5">5% (Standard UAE Rate)</option>
+                  <option value="0">0% (Export / Exempt)</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Place of Supply *</label>
+                <label className="form-label">Emirate of Supply *</label>
                 <select className="select" value={form.place_of_supply} onChange={e => set('place_of_supply', e.target.value)} required>
-                  <option value="Intrastate (CGST + SGST)">Intrastate (CGST + SGST)</option>
-                  <option value="Interstate (IGST)">Interstate (IGST)</option>
+                  <option value="Dubai">Dubai</option>
+                  <option value="Abu Dhabi">Abu Dhabi</option>
+                  <option value="Sharjah">Sharjah</option>
+                  <option value="Ajman">Ajman</option>
+                  <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                  <option value="Fujairah">Fujairah</option>
+                  <option value="Umm Al Quwain">Umm Al Quwain</option>
+                  <option value="GCC / International Export">GCC / International Export</option>
                 </select>
               </div>
             </div>
@@ -126,12 +134,12 @@ function EditTaxModal({ sku, onClose, onSaved }) {
                   <strong style={{ color: '#fff' }}>AED {basePrice.toFixed(2)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Sales GST ({form.gst_slab}%):</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>UAE VAT ({vatPct}%):</span>
                   <strong style={{ color: 'var(--gold)' }}>AED {taxAmount.toFixed(2)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 6, marginTop: 4 }}>
-                  <span style={{ color: '#fff', fontWeight: 600 }}>Final Customer MRP:</span>
-                  <strong style={{ color: 'var(--gold-bright)', fontSize: '0.85rem' }}>AED {finalMRP.toFixed(0)}</strong>
+                  <span style={{ color: '#fff', fontWeight: 600 }}>Final Customer Total:</span>
+                  <strong style={{ color: 'var(--gold-bright)', fontSize: '0.85rem' }}>AED {finalMRP.toFixed(2)}</strong>
                 </div>
               </div>
             </div>
@@ -486,10 +494,10 @@ export default function SKUs({ hideHeader }) {
               <th>SKU</th>
               <th>Product</th>
               <th>Size / Conc.</th>
-              <th>Base Price (AED )</th>
+              <th>Base Price (AED)</th>
               <th>Tax Type</th>
-              <th>GST Slab</th>
-              <th>Final MRP (AED )</th>
+              <th>UAE VAT</th>
+              <th>Final Price (AED)</th>
               <th>Stock</th>
               <th>Status</th>
               <th>Loyalty Points</th>
@@ -515,7 +523,7 @@ export default function SKUs({ hideHeader }) {
                 </td>
                 <td>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>AED {Number(s.selling_price).toLocaleString('en-US')}</div>
-                  {s.compare_at_price && <div style={{ fontSize: '0.7rem', color: 'var(--gold-bright)' }}>MRP: AED {Number(s.compare_at_price).toLocaleString('en-US')}</div>}
+                  {s.compare_at_price && <div style={{ fontSize: '0.7rem', color: 'var(--gold-bright)' }}>Compare: AED {Number(s.compare_at_price).toLocaleString('en-US')}</div>}
                   {s.cost_price && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cost: AED {Number(s.cost_price).toLocaleString('en-US')}</div>}
                 </td>
                 <td>
@@ -530,7 +538,7 @@ export default function SKUs({ hideHeader }) {
                 </td>
                 <td>
                   <strong style={{ color: 'var(--gold)' }}>{s.gst_slab}%</strong>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>HSN: {s.hsn_code}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>TRN: {s.hsn_code}</div>
                 </td>
                 <td>
                   <strong style={{ color: '#fff', fontSize: '0.85rem' }}>AED {Math.round(s.final_mrp).toLocaleString('en-US')}</strong>

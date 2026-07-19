@@ -643,10 +643,10 @@ async def get_kpis_report(
         gstr1_ledger.append(GSTR1LedgerRow(
             month=month_dt.strftime("%B %Y"),
             taxable_value=round(taxable_value, 2),
-            gst_rate=18,
-            cgst=round(m_cgst, 2),
-            sgst=round(m_sgst, 2),
-            igst=round(m_igst, 2),
+            gst_rate=5,
+            cgst=0.0,
+            sgst=0.0,
+            igst=0.0,
             total_gst=round(total_gst, 2)
         ))
 

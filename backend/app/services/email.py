@@ -1,4 +1,4 @@
-﻿import smtplib
+import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -297,54 +297,21 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     subtotal = float(order.subtotal or 0)
     total = float(order.total_amount or 0)
 
-    # Calculate GST Breakdown (18.0% Inclusive)
-    tax_rate = 0.18
-    taxable_val = subtotal / (1 + tax_rate)
-    total_gst = subtotal - taxable_val
+    # Calculate UAE VAT Breakdown (5.0% Inclusive)
+    vat_rate = 0.05
+    taxable_val = subtotal / (1 + vat_rate)
+    total_vat = subtotal - taxable_val
     
-    shipping_address_lower = shipping_address_str.lower()
-    is_kerala = "kerala" in shipping_address_lower or " kl" in shipping_address_lower or "32" in shipping_address_lower
-    
-    if is_kerala:
-        cgst_rate, cgst_val = 9.0, total_gst / 2.0
-        sgst_rate, sgst_val = 9.0, total_gst / 2.0
-        igst_rate, igst_val = 0.0, 0.0
-    else:
-        cgst_rate, cgst_val = 0.0, 0.0
-        sgst_rate, sgst_val = 0.0, 0.0
-        igst_rate, igst_val = 18.0, total_gst
-
     gst_rows_html = f"""
     <tr>
       <td style="font-size: 11px; color: #555555; padding-left: 10px;">Taxable Value:</td>
       <td style="text-align: right; font-size: 11px; color: #555555;">AED {taxable_val:,.2f}</td>
     </tr>
-    """
-    if is_kerala:
-        gst_rows_html += f"""
-        <tr>
-          <td style="font-size: 11px; color: #555555; padding-left: 10px;">CGST (9.0%):</td>
-          <td style="text-align: right; font-size: 11px; color: #555555;">AED {cgst_val:,.2f}</td>
-        </tr>
-        <tr>
-          <td style="font-size: 11px; color: #555555; padding-left: 10px;">SGST (9.0%):</td>
-          <td style="text-align: right; font-size: 11px; color: #555555;">AED {sgst_val:,.2f}</td>
-        </tr>
-        """
-    else:
-        gst_rows_html += f"""
-        <tr>
-          <td style="font-size: 11px; color: #555555; padding-left: 10px;">IGST (18.0%):</td>
-          <td style="text-align: right; font-size: 11px; color: #555555;">AED {igst_val:,.2f}</td>
-        </tr>
-        """
-    gst_rows_html += f"""
     <tr>
-      <td style="font-size: 11px; color: #555555; padding-left: 10px;">Total GST (Included):</td>
-      <td style="text-align: right; font-size: 11px; color: #555555;">AED {total_gst:,.2f}</td>
+      <td style="font-size: 11px; color: #555555; padding-left: 10px;">UAE VAT (5.0%):</td>
+      <td style="text-align: right; font-size: 11px; color: #555555;">AED {total_vat:,.2f}</td>
     </tr>
     """
-
     discount_row = f'<tr><td>Discount:</td><td style="text-align: right;color:#E11D48;">-AED {discount:,.2f}</td></tr>' if discount > 0 else ""
     shipping_row = f'<tr><td>Logistics (Standard):</td><td style="text-align: right;">{"FREE" if shipping == 0 else f"AED {shipping:,.2f}"}</td></tr>'
 
@@ -931,47 +898,29 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     payment_info_para = Paragraph(payment_info_text, ParagraphStyle('PayInfoText', parent=body_style, fontSize=8, leading=12, textColor=colors.HexColor('#555555')))
 
     subtotal = float(order.subtotal or 0)
-    tax_rate = 0.18
-    taxable_val = subtotal / (1 + tax_rate)
-    total_gst = subtotal - taxable_val
-
-    shipping_address_lower = shipping_address_str.lower()
-    is_kerala = "kerala" in shipping_address_lower or " kl" in shipping_address_lower or "32" in shipping_address_lower
-
-    if is_kerala:
-        cgst_rate, cgst_val = 9.0, total_gst / 2.0
-        sgst_rate, sgst_val = 9.0, total_gst / 2.0
-        igst_rate, igst_val = 0.0, 0.0
-    else:
-        cgst_rate, cgst_val = 0.0, 0.0
-        sgst_rate, sgst_val = 0.0, 0.0
-        igst_rate, igst_val = 18.0, total_gst
+    vat_rate = 0.05
+    taxable_val = subtotal / (1 + vat_rate)
+    total_vat = subtotal - taxable_val
 
     gst_label_style = ParagraphStyle('GstLabel', parent=body_style, fontSize=7, leading=10, textColor=colors.HexColor('#666666'))
     gst_val_style = ParagraphStyle('GstVal', parent=body_style, fontSize=7, leading=10, textColor=colors.HexColor('#666666'), alignment=2)
 
     summary_data = [
-        [Paragraph("Subtotal (GST Incl.):", body_style), Paragraph(f"Rs. {subtotal:,.2f}", body_style)],
-        [Paragraph("Taxable Value:", gst_label_style), Paragraph(f"Rs. {taxable_val:,.2f}", gst_val_style)],
+        [Paragraph("Subtotal (VAT Incl.):", body_style), Paragraph(f"AED {subtotal:,.2f}", body_style)],
+        [Paragraph("Taxable Value:", gst_label_style), Paragraph(f"AED {taxable_val:,.2f}", gst_val_style)],
+        [Paragraph("UAE VAT (5.0%):", gst_label_style), Paragraph(f"AED {total_vat:,.2f}", gst_val_style)],
     ]
-    if is_kerala:
-        summary_data.append([Paragraph("CGST (9.0%):", gst_label_style), Paragraph(f"Rs. {cgst_val:,.2f}", gst_val_style)])
-        summary_data.append([Paragraph("SGST (9.0%):", gst_label_style), Paragraph(f"Rs. {sgst_val:,.2f}", gst_val_style)])
-    else:
-        summary_data.append([Paragraph("IGST (18.0%):", gst_label_style), Paragraph(f"Rs. {igst_val:,.2f}", gst_val_style)])
-
-    summary_data.append([Paragraph("Total GST (Included):", gst_label_style), Paragraph(f"Rs. {total_gst:,.2f}", gst_val_style)])
 
     if order.discount_amount and float(order.discount_amount) > 0:
-        summary_data.append([Paragraph("Discount:", body_style), Paragraph(f"-Rs. {float(order.discount_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Discount:", body_style), Paragraph(f"-AED {float(order.discount_amount):,.2f}", body_style)])
     if order.shipping_amount and float(order.shipping_amount) > 0:
-        summary_data.append([Paragraph("Shipping:", body_style), Paragraph(f"Rs. {float(order.shipping_amount):,.2f}", body_style)])
+        summary_data.append([Paragraph("Shipping:", body_style), Paragraph(f"AED {float(order.shipping_amount):,.2f}", body_style)])
     else:
         summary_data.append([Paragraph("Shipping:", body_style), Paragraph("FREE", body_style)])
 
     summary_data.append([
         Paragraph("<b>Total:</b>", ParagraphStyle('TotalLabel', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'))),
-        Paragraph(f"<b>Rs. {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'), alignment=2))
+        Paragraph(f"<b>AED {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'), alignment=2))
     ])
 
     summary_table = Table(summary_data, colWidths=[2.2*inch, 1.2*inch])
