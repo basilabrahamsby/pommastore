@@ -19,7 +19,7 @@ export default function Login() {
     setErrorMsg('')
     try {
       const form = new URLSearchParams()
-      form.append('username', email)
+      form.append('username', email.trim())
       form.append('password', password)
       const { data } = await api.post('/auth/login', form, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
