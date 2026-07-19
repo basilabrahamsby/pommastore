@@ -296,7 +296,7 @@ export default function ProductClient({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white">
         <div className="relative mb-6">
-          <img src="/logo.png" alt="Pommastore Logo" className="h-12 object-contain animate-pulse" />
+          <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-12 object-contain animate-pulse" />
         </div>
         <span className="text-[9px] font-black tracking-[0.4em] text-neutral-400 uppercase animate-pulse">Revealing Olfactory Masterpiece...</span>
       </div>

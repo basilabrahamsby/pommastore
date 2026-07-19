@@ -397,7 +397,7 @@ const Navbar = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-6 border-b border-gray-100">
-             <img src="/logo.png" alt="Pommastore Logo" className="h-6 object-contain" />
+             <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-6 object-contain" />
              <button onClick={() => setIsMobileMenuOpen(false)}><X size={20} /></button>
           </div>
           <nav className="flex flex-col p-6 font-black tracking-[0.2em] uppercase text-xs space-y-6">

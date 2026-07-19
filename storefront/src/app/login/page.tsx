@@ -194,7 +194,7 @@ function LoginContent() {
         <div className="w-full max-w-md animate-fadeIn">
           <div className="mb-12">
             <Link href="/" className="md:hidden inline-block mb-8">
-              <img src="/logo.png" alt="Pommastore Logo" className="h-8 object-contain" />
+              <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-8 object-contain" />
             </Link>
             <h1 className="text-3xl font-serif text-neutral-950 mb-3 tracking-[0.15em] uppercase font-normal">
               {step === 'send' ? t('login_title') : t('login_access_code')}
