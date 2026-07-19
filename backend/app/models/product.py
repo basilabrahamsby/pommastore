@@ -164,6 +164,10 @@ class ProductVariant(Base):
     weight_grams: Mapped[int | None] = mapped_column(Integer)
     min_stock_alert: Mapped[int] = mapped_column(Integer, default=5)
     loyalty_points: Mapped[int] = mapped_column(Integer, default=0)
+    tax_type: Mapped[str | None] = mapped_column(String(50), default="Exclusive")
+    gst_slab: Mapped[str | None] = mapped_column(String(50), default="5")
+    hsn_code: Mapped[str | None] = mapped_column(String(100), default="3303.00")
+    place_of_supply: Mapped[str | None] = mapped_column(String(100), default="Dubai")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

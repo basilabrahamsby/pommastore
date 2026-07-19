@@ -30,6 +30,10 @@ class VariantCreate(BaseModel):
     weight_grams: int | None = None
     min_stock_alert: int = 5
     loyalty_points: int = 0
+    tax_type: str | None = "Exclusive"
+    gst_slab: str | None = "5"
+    hsn_code: str | None = "3303.00"
+    place_of_supply: str | None = "Dubai"
     is_active: bool = True
 
 
@@ -44,6 +48,10 @@ class VariantUpdate(BaseModel):
     weight_grams: int | None = None
     min_stock_alert: int | None = None
     loyalty_points: int | None = None
+    tax_type: str | None = None
+    gst_slab: str | None = None
+    hsn_code: str | None = None
+    place_of_supply: str | None = None
     is_active: bool | None = None
 
 
@@ -60,6 +68,10 @@ class VariantOut(BaseModel):
     weight_grams: int | None
     min_stock_alert: int
     loyalty_points: int
+    tax_type: str | None = "Exclusive"
+    gst_slab: str | None = "5"
+    hsn_code: str | None = "3303.00"
+    place_of_supply: str | None = "Dubai"
     is_active: bool
     current_stock: int = 0
     created_at: datetime
