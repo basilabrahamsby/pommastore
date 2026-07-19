@@ -1,13 +1,10 @@
 import asyncio
-import os
 import sys
+sys.path.append('/app')
+sys.path.append('.')
 
-# Ensure current dir and parent dir are in sys.path
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-sys.path.insert(0, '/app')
-
+from app.core.database import engine
 from sqlalchemy import text
-from app.db.session import engine
 
 async def main():
     async with engine.begin() as conn:
