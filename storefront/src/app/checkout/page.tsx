@@ -927,12 +927,17 @@ export default function Checkout() {
                    <span>-AED {Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)).toLocaleString('en-IN')}</span>
                  </div>
                )}
-               <div className="flex justify-between text-neutral-900 border-t border-neutral-200 pt-4 text-sm">
-                 <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
-                 <span className="font-bold text-lg font-serif normal-case tracking-normal">
-                   AED {Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-IN')}
-                 </span>
-               </div>
+               <div className="border-t border-neutral-200 pt-4">
+                  <div className="flex justify-between text-neutral-900 text-sm">
+                    <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
+                    <span className="font-bold text-lg font-serif normal-case tracking-normal">
+                      AED {Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-US')}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider text-right mt-1">
+                    {t('checkout_vat_inclusive')}
+                  </p>
+                </div>
              </div>
 
             <button

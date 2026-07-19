@@ -230,7 +230,7 @@ const Footer = () => {
                 <li className="flex items-start gap-3">
                   <MapPin size={15} className="text-accent mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">GST</p>
+                    <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">TRN</p>
                     <span className="text-neutral-300 text-sm font-medium">{layout.company.gst_number}</span>
                   </div>
                 </li>

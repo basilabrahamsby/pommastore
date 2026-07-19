@@ -215,6 +215,7 @@ export const ar = {
   "checkout_promo_discount": "خصم العرض",
   "checkout_loyalty_redemption": "استبدال نقاط الولاء",
   "checkout_grand_total": "المجموع الإجمالي",
+  "checkout_vat_inclusive": "شامل ضريبة القيمة المضافة 5%",
   "checkout_confirm_btn": "تأكيد وإرسال الطلب",
   "checkout_confirm_processing": "جاري معالجة التحويل الآمن...",
   "checkout_security_assured": "أمان كامل مضمون بواسطة خزائن بوما ستور",

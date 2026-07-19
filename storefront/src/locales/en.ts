@@ -215,6 +215,7 @@ export const en = {
   "checkout_promo_discount": "Promo Discount",
   "checkout_loyalty_redemption": "Loyalty Redemption",
   "checkout_grand_total": "Grand Total",
+  "checkout_vat_inclusive": "Includes 5% UAE VAT",
   "checkout_confirm_btn": "CONFIRM & PLACE ORDER",
   "checkout_confirm_processing": "Processing Secure Transfer...",
   "checkout_security_assured": "Total security assured by Pommastore Vaults",
