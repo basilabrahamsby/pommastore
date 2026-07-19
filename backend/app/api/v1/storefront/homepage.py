@@ -32,13 +32,14 @@ async def get_homepage_data(
     db: AsyncSession = Depends(get_db)
 ):
     """Consolidated endpoint fetching all homepage layouts and product curation data en-masse."""
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     locale = get_lang(accept_language, lang)
     cache_key = f"storefront:homepage:{locale}"
     
     try:
         cached = await redis_service.redis.get(cache_key)
         if cached:
+            response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+            response.headers["X-Cache"] = "HIT"
             return json.loads(cached)
     except Exception:
         pass

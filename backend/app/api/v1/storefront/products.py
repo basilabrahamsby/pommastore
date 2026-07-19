@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
 from sqlalchemy.orm import selectinload
+import json
 
 from app.core.database import get_db
+from app.core.cache import product_cache
 from app.models.product import Product, ProductVariant, ProductImage
 from app.models.inventory import InventoryBatch
 from app.schemas.product import ProductOut, ProductDetailOut
@@ -109,7 +111,16 @@ async def list_products(
     accept_language: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ):
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    locale = get_lang(accept_language, lang)
+    # Build a deterministic cache key from all query parameters
+    cache_key = f"products:{locale}:{search}:{brand_id}:{category_id}:{gender}:{is_featured}:{is_new_arrival}:{on_sale}:{skip}:{limit}"
+    
+    cached = product_cache.get(cache_key)
+    if cached is not None:
+        response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+        response.headers["X-Cache"] = "HIT"
+        return cached
+
     q = (
         select(Product)
         .where(Product.is_active == True)
@@ -139,8 +150,11 @@ async def list_products(
     result = await db.execute(q)
     products = result.scalars().all()
     
-    locale = get_lang(accept_language, lang)
-    return await enrich_products_bulk(products, db, lang=locale)
+    enriched = await enrich_products_bulk(products, db, lang=locale)
+    product_cache.set(cache_key, enriched)
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+    response.headers["X-Cache"] = "MISS"
+    return enriched
 @router.get("/{slug}", response_model=ProductDetailOut)
 async def get_product_by_slug(
     slug: str,

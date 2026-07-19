@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, Header
+from fastapi import APIRouter, Depends, Query, HTTPException, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.core.database import get_db
+from app.core.cache import meta_cache
 from app.models.product import Brand, Product
 from app.schemas.brand import BrandOut
 from app.api.v1.storefront.products import get_lang
@@ -12,17 +13,23 @@ router = APIRouter(prefix="/brands", tags=["Storefront Brands"])
 
 @router.get("")
 async def list_active_brands(
+    response: Response,
     lang: str | None = Query(None),
     accept_language: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ):
     locale = get_lang(accept_language, lang)
-    # Select only active brands that have published products
+    cache_key = f"brands:{locale}"
+    cached = meta_cache.get(cache_key)
+    if cached is not None:
+        response.headers["Cache-Control"] = "public, max-age=300, s-maxage=300"
+        response.headers["X-Cache"] = "HIT"
+        return cached
+
     q = select(Brand).where(Brand.is_active == True).order_by(Brand.name)
     result = await db.execute(q)
     brands = result.scalars().all()
 
-    # Direct count query for stability
     counts = {}
     try:
         from sqlalchemy import text
@@ -36,7 +43,6 @@ async def list_active_brands(
     out = []
     try:
         for b in brands:
-            # Safe serialization
             try:
                 brand_data = BrandOut.model_validate(b).model_dump()
                 brand_data["product_count"] = counts.get(str(b.id), 0)
@@ -51,6 +57,10 @@ async def list_active_brands(
                 continue
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Discovery Error: {str(e)}")
+
+    meta_cache.set(cache_key, out)
+    response.headers["Cache-Control"] = "public, max-age=300, s-maxage=300"
+    response.headers["X-Cache"] = "MISS"
     return out
 
 @router.get("/{slug}", response_model=BrandOut)
