@@ -247,3 +247,17 @@ async def update_variant(
     await db.commit()
     await db.refresh(variant)
     return VariantOut.model_validate(variant)
+
+
+@router.delete("/variants/{variant_id}", status_code=204)
+async def delete_variant(
+    variant_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_manager),
+):
+    result = await db.execute(select(ProductVariant).where(ProductVariant.id == variant_id))
+    variant = result.scalar_one_or_none()
+    if not variant:
+        raise HTTPException(status_code=404, detail="Variant not found")
+    await db.delete(variant)
+    await db.commit()

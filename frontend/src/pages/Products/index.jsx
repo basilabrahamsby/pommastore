@@ -1263,6 +1263,18 @@ export default function Products({ hideHeader }) {
     }
   }
 
+  const handleDeleteProduct = async (productItem) => {
+    if (window.confirm(`Are you sure you want to delete product "${productItem.name}"?\n\nThis will permanently delete the product and all its associated SKU variants.`)) {
+      try {
+        await api.delete(`/products/${productItem.id}`)
+        toast.success(`Product "${productItem.name}" deleted successfully!`)
+        load()
+      } catch (err) {
+        toast.error(err.response?.data?.detail || 'Failed to delete product')
+      }
+    }
+  }
+
   useEffect(() => { load() }, [search])
 
   return (
@@ -1270,33 +1282,34 @@ export default function Products({ hideHeader }) {
       {!hideHeader && (
         <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
           <div>
-            <div className="page-title">Products</div>
-            <div className="page-subtitle">Full perfume catalog with variants & scent notes</div>
+            <div className="page-title">Catalog & Products</div>
+            <div className="page-subtitle">Manage perfume master definitions, fragrances, notes, and variants</div>
           </div>
-          <button className="btn btn-primary" onClick={() => setModal('new')}><Plus size={14} /> New Product</button>
+          <button className="btn btn-primary flex items-center gap-2" onClick={() => setModal('new')} style={{ background: 'var(--gold)', color: '#000', fontWeight: 'bold' }}>
+            <Plus size={16} /> New Product
+          </button>
         </div>
       )}
 
-
-      {/* Dynamic KPI Cards */}
+      {/* Dynamic KPI Summary Bar */}
       <div className="grid-4" style={{ marginBottom: 20 }}>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Total Products <InfoButton text="Combined volume of all distinct parent models stored in the database." /></span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Products</span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{products.length}</div>
-          <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>All registered perfume items</p>
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Master perfume lines</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Active in Catalog <InfoButton text="Count of entries currently verified and reachable via live client store." /></span>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 4 }}>{products.filter(p => p.is_active).length}</div>
-          <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Live and orderable online</p>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Active Products</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)', marginTop: 4 }}>{products.filter(p => p.is_active).length}</div>
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Live on storefront</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Featured Creations <InfoButton text="High-value curation items prominently flagged on storefront homepage grids." /></span>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{products.filter(p => p.is_featured).length}</div>
-          <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Highlighted luxury items</p>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Variants</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 4 }}>{products.reduce((acc, p) => acc + (p.variants?.length || 0), 0)}</div>
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>SKUs configured</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px 20px', borderRadius: 12 }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>Total Brands <InfoButton text="The cumulative count of unique registered perfume manufacturer houses." /></span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 'bold' }}>Brand Houses</span>
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginTop: 4 }}>{brands.length}</div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Distinct perfume houses</p>
         </div>
@@ -1360,6 +1373,9 @@ export default function Products({ hideHeader }) {
                   <div className="flex gap-2">
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setViewModal(p)} title="View"><Eye size={13} style={{ color: 'var(--text-muted)' }} /></button>
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setModal(p)} title="Edit"><Pencil size={13} /></button>
+                    <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDeleteProduct(p)} title="Delete Product" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 </td>
               </tr>

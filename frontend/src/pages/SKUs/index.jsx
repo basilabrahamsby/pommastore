@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, Edit2, CheckCircle, Percent, Info, Sliders, HelpCircle, Eye, QrCode } from 'lucide-react'
+import { Search, Edit2, CheckCircle, Percent, Info, Sliders, HelpCircle, Eye, QrCode, Trash2 } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 
@@ -427,9 +427,15 @@ export default function SKUs({ hideHeader }) {
     try {
       await api.patch(`/products/variants/${sku.id}`, { is_active: newStatus })
       toast.success(newStatus ? 'SKU activated' : 'SKU deactivated')
-      load()
-    } catch (err) {
-      toast.error('Failed to update SKU status')
+  const handleDeleteSku = async (skuItem) => {
+    if (window.confirm(`Are you sure you want to delete SKU "${skuItem.sku}" (${skuItem.product_name})?\n\nThis will permanently remove this SKU variant.`)) {
+      try {
+        await api.delete(`/products/variants/${skuItem.id}`)
+        toast.success(`SKU ${skuItem.sku} deleted successfully!`)
+        load()
+      } catch (err) {
+        toast.error(err.response?.data?.detail || 'Failed to delete SKU')
+      }
     }
   }
 
@@ -572,6 +578,9 @@ export default function SKUs({ hideHeader }) {
                     </button>
                     <button className="btn btn-sm btn-ghost btn-icon" onClick={() => setEditModal(s)} title="Configure Sales Tax Logic" style={{ background: 'rgba(201,168,76,0.1)', color: 'var(--gold)' }}>
                       <Edit2 size={12} />
+                    </button>
+                    <button className="btn btn-sm btn-ghost btn-icon" onClick={() => handleDeleteSku(s)} title="Delete SKU Variant" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </td>
