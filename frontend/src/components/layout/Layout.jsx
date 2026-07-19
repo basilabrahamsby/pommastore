@@ -20,7 +20,7 @@ export default function Layout() {
       <main className="main-content">
         {/* Mobile top bar with hamburger */}
         <div className="mobile-topbar">
-          <img src="/admin/logo.png" alt="Pommastore Logo" style={{ height: '36px', objectFit: 'contain' }} />
+          <img src={`${import.meta.env.BASE_URL}logo.png`.replace(/\/\//g, '/')} alt="Pommastore Logo" style={{ height: '36px', objectFit: 'contain' }} />
           <button
             className="hamburger"
             onClick={() => setSidebarOpen(o => !o)}
