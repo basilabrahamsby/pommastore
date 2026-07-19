@@ -427,6 +427,12 @@ export default function SKUs({ hideHeader }) {
     try {
       await api.patch(`/products/variants/${sku.id}`, { is_active: newStatus })
       toast.success(newStatus ? 'SKU activated' : 'SKU deactivated')
+      load()
+    } catch (err) {
+      toast.error('Failed to update SKU status')
+    }
+  }
+
   const handleDeleteSku = async (skuItem) => {
     if (window.confirm(`Are you sure you want to delete SKU "${skuItem.sku}" (${skuItem.product_name})?\n\nThis will permanently remove this SKU variant.`)) {
       try {
