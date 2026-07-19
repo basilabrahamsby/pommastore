@@ -11,16 +11,24 @@ const getBackendUrl = (): string => {
 const BACKEND_URL = getBackendUrl();
 
 export const getMediaUrl = (path: string | null | undefined): string => {
-  if (!path) return '/placeholder-perfume.png';
+  if (!path) return '/pommastore/placeholder-perfume.png';
   
-  // Strip /pommastore prefix if present in database path values
-  let cleanPath = path.replace(/^\/pommastore/, '');
-  if (cleanPath.startsWith('http')) return cleanPath;
-  if (cleanPath.startsWith('data:')) return cleanPath;
+  let cleanPath = path;
+  
+  // Extract relative /static_uploads/ path if embedded with localhost/remote URL
+  if (cleanPath.includes('/static_uploads/')) {
+    const idx = cleanPath.indexOf('/static_uploads/');
+    cleanPath = cleanPath.substring(idx);
+  } else if (cleanPath.startsWith('http') || cleanPath.startsWith('data:')) {
+    return cleanPath;
+  }
 
-  // Ensure the path starts with /
   cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
 
-  return `${BACKEND_URL}${cleanPath}`;
+  const prefix = isServer 
+    ? 'http://api:8000' 
+    : (window.location.hostname === 'localhost' ? 'http://localhost:8030' : '/pommastore');
+
+  return `${prefix}${cleanPath}`;
 };
 

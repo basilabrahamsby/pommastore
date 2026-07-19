@@ -111,7 +111,7 @@ const Navbar = () => {
             {/* Left Logo Area */}
             <div className="flex-shrink-0 flex items-center">
                <Link href="/" className="flex items-center">
-                 <img src="/logo.png" alt="Pommastore Logo" className="h-10 sm:h-12 md:h-14 object-contain" />
+                 <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-10 sm:h-12 md:h-14 object-contain" />
                </Link>
             </div>
 
