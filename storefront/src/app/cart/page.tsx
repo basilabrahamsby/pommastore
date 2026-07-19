@@ -320,20 +320,20 @@ export default function Cart() {
                   </p>
                 </div>
 
-                {/* UAE VAT 5% Tax Breakdown (Product Price Only) */}
+                {/* UAE VAT 5% Tax Breakdown (Exclusive Mode) */}
                 {(() => {
                   const subtotal = totalPrice();
                   const vatRate = 0.05;
-                  const taxableVal = subtotal / (1 + vatRate);
-                  const vatAmount = subtotal - taxableVal;
+                  const taxableVal = subtotal;
+                  const vatAmount = subtotal * vatRate;
                   return (
                     <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2">
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount (Base)</span>
                         <span className="text-neutral-800 font-bold">AED {taxableVal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0%)</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0% Exclusive)</span>
                         <span className="text-neutral-900 font-black">AED {vatAmount.toFixed(2)}</span>
                       </div>
                     </div>
@@ -357,7 +357,7 @@ export default function Cart() {
                 <div className="flex justify-between items-center">
                   <span className="text-[11px] font-black tracking-widest uppercase text-black">Total</span>
                   <span className="text-xl font-black text-black">
-                    AED {(totalPrice() + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN')}
+                    AED {(totalPrice() + (totalPrice() * 0.05) + (isFreeShipping ? 0 : shippingFee)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
 

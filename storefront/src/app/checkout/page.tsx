@@ -928,20 +928,20 @@ export default function Checkout() {
                  </div>
                )}
 
-                {/* UAE VAT 5% Breakdown (Product Price Only) */}
+                {/* UAE VAT 5% Breakdown (Exclusive Mode) */}
                 {(() => {
                   const subtotal = Math.max(0, totalPrice() - promoDiscount);
                   const vatRate = 0.05;
-                  const taxableVal = subtotal / (1 + vatRate);
-                  const vatAmount = subtotal - taxableVal;
+                  const taxableVal = subtotal;
+                  const vatAmount = subtotal * vatRate;
                   return (
                     <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2 normal-case font-sans tracking-normal">
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount (Base)</span>
                         <span className="text-neutral-800 font-bold">AED {taxableVal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0%)</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0% Exclusive)</span>
                         <span className="text-neutral-900 font-black">AED {vatAmount.toFixed(2)}</span>
                       </div>
                     </div>
@@ -952,11 +952,11 @@ export default function Checkout() {
                   <div className="flex justify-between text-neutral-900 text-sm">
                     <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
                     <span className="font-bold text-lg font-serif normal-case tracking-normal">
-                      AED {Math.max(0, totalPrice() + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-US')}
+                      AED {Math.max(0, totalPrice() + (totalPrice() * 0.05) + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider text-right mt-1">
-                    {t('checkout_vat_inclusive')}
+                    VAT Exclusive (5% on Product Price)
                   </p>
                 </div>
              </div>
