@@ -89,10 +89,15 @@ export default function Sidebar({ isOpen, onClose }) {
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Logo row — includes close button on mobile */}
-      <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <img src={`${import.meta.env.BASE_URL}logo.png`.replace(/\/\//g, '/')} alt="Pommastore Logo" style={{ height: '48px', objectFit: 'contain', display: 'block' }} />
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', display: 'block', marginTop: 6 }}>
+      <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+        <div style={{ background: '#0a0a0f', padding: '10px 16px', borderRadius: '12px', display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', border: '1px solid rgba(201,168,76,0.35)', boxShadow: '0 4px 14px rgba(0,0,0,0.2)' }}>
+          <img 
+            src={`${import.meta.env.BASE_URL}logo.png`} 
+            alt="Pommastore Logo" 
+            style={{ height: '38px', objectFit: 'contain', display: 'block' }} 
+            onError={(e) => { e.target.onerror = null; e.target.src = '/pommastore/admin/logo.png' }}
+          />
+          <span style={{ fontSize: '0.62rem', color: 'var(--gold)', letterSpacing: '0.18em', textTransform: 'uppercase', display: 'block', marginTop: 4, fontWeight: 800 }}>
             Admin ERP
           </span>
         </div>
