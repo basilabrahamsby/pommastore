@@ -245,7 +245,7 @@ export default function Checkout() {
     country: 'India'
   });
 
-  const [shippingFee, setShippingFee] = useState(150);
+  const [shippingFee, setShippingFee] = useState(17);
 
   useEffect(() => {
     const updateShippingRate = async () => {
@@ -265,16 +265,16 @@ export default function Checkout() {
         try {
           const res = await api.get(`/orders/shipping/verify-pincode?pincode=${pinToCheck}`);
           if (res.data && res.data.serviceable) {
-            setShippingFee(res.data.shipping_fee || 150);
+            setShippingFee(res.data.shipping_fee || 17);
           } else {
-            setShippingFee(150);
+            setShippingFee(17);
           }
         } catch (err) {
           console.warn('Failed to verify shipping fee for pincode', err);
-          setShippingFee(150);
+          setShippingFee(17);
         }
       } else {
-        setShippingFee(150);
+        setShippingFee(17);
       }
     };
 
@@ -927,7 +927,29 @@ export default function Checkout() {
                    <span>-AED {Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)).toLocaleString('en-IN')}</span>
                  </div>
                )}
-               <div className="border-t border-neutral-200 pt-4">
+
+                {(() => {
+                  const currentShipping = totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee;
+                  const loyaltyRedemption = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
+                  const grandTotal = Math.max(0, totalPrice() + currentShipping - promoDiscount - loyaltyRedemption);
+                  const vatRate = 0.05;
+                  const taxableVal = grandTotal / (1 + vatRate);
+                  const vatAmount = grandTotal - taxableVal;
+                  return (
+                    <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2 normal-case font-sans tracking-normal">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount</span>
+                        <span className="text-neutral-800 font-bold">AED {taxableVal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0%)</span>
+                        <span className="text-neutral-900 font-black">AED {vatAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="border-t border-neutral-200 pt-4">
                   <div className="flex justify-between text-neutral-900 text-sm">
                     <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
                     <span className="font-bold text-lg font-serif normal-case tracking-normal">

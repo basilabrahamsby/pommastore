@@ -12,7 +12,7 @@ export default function Cart() {
   const { customer } = useAuthStore();
   const [cmsLayout, setCmsLayout] = React.useState<any>(null);
   const [removing, setRemoving] = React.useState<string | null>(null);
-  const [shippingFee, setShippingFee] = React.useState(150);
+  const [shippingFee, setShippingFee] = React.useState(17);
 
   React.useEffect(() => {
     syncCartItemPrices();
@@ -24,7 +24,7 @@ export default function Cart() {
   React.useEffect(() => {
     const fetchDefaultAddressShipping = async () => {
       if (!customer) {
-        setShippingFee(150);
+        setShippingFee(17);
         return;
       }
       try {
@@ -34,16 +34,16 @@ export default function Cart() {
         if (defaultAddr && defaultAddr.pincode) {
           const verifyRes = await api.get(`/orders/shipping/verify-pincode?pincode=${defaultAddr.pincode}`);
           if (verifyRes.data && verifyRes.data.serviceable) {
-            setShippingFee(verifyRes.data.shipping_fee || 150);
+            setShippingFee(verifyRes.data.shipping_fee || 17);
           } else {
-            setShippingFee(150);
+            setShippingFee(17);
           }
         } else {
-          setShippingFee(150);
+          setShippingFee(17);
         }
       } catch (err) {
         console.warn('Failed to verify cart shipping fee', err);
-        setShippingFee(150);
+        setShippingFee(17);
       }
     };
     fetchDefaultAddressShipping();
@@ -301,7 +301,7 @@ export default function Cart() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
                       <Truck size={11} className={isFreeShipping ? 'text-emerald-600' : 'text-neutral-400'} />
-                      <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-500">Shipping</span>
+                      <span className="text-[9px] font-bold tracking-widest uppercase text-neutral-500">Logistics (Base Fee)</span>
                     </div>
                     <span className={`text-[10px] font-black ${isFreeShipping ? 'text-emerald-600' : 'text-black'}`}>
                       {isFreeShipping ? 'FREE' : `AED ${shippingFee}`}
@@ -319,6 +319,27 @@ export default function Cart() {
                       : `Add AED ${amountToFreeShipping.toLocaleString('en-IN')} more for free delivery`}
                   </p>
                 </div>
+
+                {/* UAE VAT 5% Tax Breakdown */}
+                {(() => {
+                  const currentShipping = isFreeShipping ? 0 : shippingFee;
+                  const grandTotal = totalPrice() + currentShipping;
+                  const vatRate = 0.05;
+                  const taxableVal = grandTotal / (1 + vatRate);
+                  const vatAmount = grandTotal - taxableVal;
+                  return (
+                    <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount</span>
+                        <span className="text-neutral-800 font-bold">AED {taxableVal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0%)</span>
+                        <span className="text-neutral-900 font-black">AED {vatAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Loyalty Points */}
                 {totalLoyaltyPoints > 0 && (
