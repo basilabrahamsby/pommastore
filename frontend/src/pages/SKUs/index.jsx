@@ -10,8 +10,8 @@ function EditTaxModal({ sku, onClose, onSaved }) {
     selling_price: sku.selling_price || 500,
     compare_at_price: sku.compare_at_price || '',
     tax_type: sku.tax_type || 'Inclusive', // 'Inclusive' | 'Exclusive' | 'Zero-Rated'
-    gst_slab: sku.gst_slab || '5', // '5' | '0'
-    hsn_code: sku.hsn_code || '100234567890003',
+    gst_slab: (sku.gst_slab && sku.gst_slab !== '18' && sku.gst_slab !== '12' && sku.gst_slab !== '28') ? sku.gst_slab : '5',
+    hsn_code: sku.hsn_code || '3303.00',
     place_of_supply: sku.place_of_supply || 'Dubai',
     loyalty_points_rule: sku.loyalty_points_rule || 'Total price reduces points value'
   })
@@ -19,7 +19,7 @@ function EditTaxModal({ sku, onClose, onSaved }) {
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   const selling = Number(form.selling_price) || 0
-  const vatPct = form.tax_type === 'Zero-Rated' ? 0 : (Number(form.gst_slab) || 5)
+  const vatPct = form.tax_type === 'Zero-Rated' ? 0 : (form.gst_slab === '0' ? 0 : 5)
 
   // Live UAE VAT calculations
   let basePrice = 0

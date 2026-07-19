@@ -71,7 +71,7 @@ class Brand(Base):
     brand_commission: Mapped[float | None] = mapped_column(Numeric(5, 2))
     exclusivity_toggle: Mapped[bool] = mapped_column(Boolean, default=False)
     brand_tier: Mapped[str | None] = mapped_column(String(50), default="Niche")
-    gst_category: Mapped[str | None] = mapped_column(String(100), default="Perfumes (18% GST)")
+    gst_category: Mapped[str | None] = mapped_column(String(100), default="Perfumes (5% UAE VAT)")
     
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     seo_title: Mapped[str | None] = mapped_column(String(70))

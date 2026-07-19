@@ -8,8 +8,8 @@ from sqlalchemy import text
 
 async def main():
     async with engine.begin() as conn:
-        result = await conn.execute(text("UPDATE product_variants SET gst_slab = '5', place_of_supply = 'Dubai' WHERE gst_slab IS NULL OR gst_slab = '18' OR gst_slab = '12' OR gst_slab = '28' OR place_of_supply LIKE '%Intrastate%';"))
-        print(f"Updated {result.rowcount} product variants to 5% UAE VAT and Dubai Emirate!")
+        res_brands = await conn.execute(text("UPDATE brands SET gst_category = 'Perfumes (5% UAE VAT)';"))
+        print(f"Updated {res_brands.rowcount} brands to 'Perfumes (5% UAE VAT)'!")
 
 if __name__ == "__main__":
     asyncio.run(main())
