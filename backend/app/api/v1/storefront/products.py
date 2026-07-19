@@ -167,16 +167,22 @@ async def get_product_by_slug(
     locale = get_lang(accept_language, lang)
     return await enrich_product(product, db, detail=True, lang=locale)
 
-from typing import Dict
-@router.post("/sync-prices", response_model=Dict[str, float])
+from typing import Dict, Any
+@router.post("/sync-prices")
 async def sync_prices(variant_ids: list[str], db: AsyncSession = Depends(get_db)):
     """
-    Returns the latest selling_price for each variant ID.
+    Returns the latest selling_price and tax_type for each variant ID.
     """
     if not variant_ids:
         return {}
     result = await db.execute(
-        select(ProductVariant.id, ProductVariant.selling_price)
+        select(ProductVariant.id, ProductVariant.selling_price, ProductVariant.tax_type)
         .where(ProductVariant.id.in_(variant_ids))
     )
-    return {row[0]: float(row[1]) for row in result.all()}
+    return {
+        str(row[0]): {
+            "price": float(row[1]),
+            "tax_type": row[2] or "Exclusive"
+        }
+        for row in result.all()
+    }

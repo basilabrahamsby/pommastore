@@ -116,16 +116,24 @@ export const syncCartItemPrices = async () => {
   try {
     const variantIds = items.map(i => i.id);
     const res = await api.post('/products/sync-prices', variantIds);
-    const priceMap = res.data || {};
+    const dataMap = res.data || {};
     
     let changed = false;
     const updated = items.map(item => {
-      const serverPrice = priceMap[item.id];
+      const serverData = dataMap[item.id];
+      if (!serverData) return item;
+      const serverPrice = serverData.price;
+      const serverTaxType = serverData.tax_type;
+      let updatedItem = { ...item };
       if (serverPrice !== undefined && serverPrice !== item.price) {
         changed = true;
-        return { ...item, price: serverPrice };
+        updatedItem.price = serverPrice;
       }
-      return item;
+      if (serverTaxType !== undefined && serverTaxType !== item.taxType) {
+        changed = true;
+        updatedItem.taxType = serverTaxType;
+      }
+      return updatedItem;
     });
     
     if (changed) {
