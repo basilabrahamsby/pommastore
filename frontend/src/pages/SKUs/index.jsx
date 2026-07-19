@@ -239,9 +239,9 @@ function AddSkuModal({ products, onClose, onSaved }) {
     batch_number: 'BATCH-2026A',
     expiry_date: '',
     tax_type: 'Inclusive',
-    gst_slab: '18',
+    gst_slab: '5',
     hsn_code: '3303.00',
-    place_of_supply: 'Intrastate (CGST + SGST)'
+    place_of_supply: 'Dubai'
   })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
@@ -336,9 +336,6 @@ function AddSkuModal({ products, onClose, onSaved }) {
                 <select className="select" value={form.gst_slab} onChange={e => set('gst_slab', e.target.value)} required>
                   <option value="0">0%</option>
                   <option value="5">5%</option>
-                  <option value="12">12%</option>
-                  <option value="18">18% (Perfume)</option>
-                  <option value="28">28% (Luxury)</option>
                 </select>
               </div>
               <div className="form-group">
@@ -392,11 +389,12 @@ export default function SKUs({ hideHeader }) {
         productsList.forEach((p, idx) => {
           if (p.variants) {
             p.variants.forEach((v, vidx) => {
-              const taxType = v.tax_type || 'Exclusive'
-              const gstSlab = v.gst_slab || '18'
-              const selling = Number(v.selling_price) || 5000
-              const gst = Number(gstSlab)
-              const finalMRP = taxType === 'Inclusive' ? selling : selling * (1 + gst / 100)
+              const taxType = v.tax_type || 'Inclusive'
+              const rawSlab = v.gst_slab
+              const gstSlab = (rawSlab && rawSlab !== '18' && rawSlab !== '12' && rawSlab !== '28') ? rawSlab : '5'
+              const selling = Number(v.selling_price) || 0
+              const vatPct = taxType === 'Zero-Rated' ? 0 : Number(gstSlab)
+              const finalMRP = taxType === 'Inclusive' ? selling : selling * (1 + vatPct / 100)
 
               flattened.push({
                 ...v,
@@ -405,7 +403,7 @@ export default function SKUs({ hideHeader }) {
                 tax_type: taxType,
                 gst_slab: gstSlab,
                 hsn_code: v.hsn_code || '3303.00',
-                place_of_supply: v.place_of_supply || 'Intrastate (CGST + SGST)',
+                place_of_supply: v.place_of_supply || 'Dubai',
                 final_mrp: finalMRP,
                 loyalty_points: v.loyalty_points || Math.round(selling / 100)
               })
