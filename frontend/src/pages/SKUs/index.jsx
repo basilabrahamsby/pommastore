@@ -9,7 +9,7 @@ function EditTaxModal({ sku, onClose, onSaved }) {
     sku_code: sku.sku,
     selling_price: sku.selling_price || 500,
     compare_at_price: sku.compare_at_price || '',
-    tax_type: sku.tax_type || 'Inclusive', // 'Inclusive' | 'Exclusive' | 'Zero-Rated'
+    tax_type: sku.tax_type || 'Exclusive', // 'Exclusive' | 'Inclusive' | 'Zero-Rated'
     gst_slab: (sku.gst_slab && sku.gst_slab !== '18' && sku.gst_slab !== '12' && sku.gst_slab !== '28') ? sku.gst_slab : '5',
     hsn_code: sku.hsn_code || '3303.00',
     place_of_supply: sku.place_of_supply || 'Dubai',
@@ -238,7 +238,7 @@ function AddSkuModal({ products, onClose, onSaved }) {
     min_stock_alert: '5',
     batch_number: 'BATCH-2026A',
     expiry_date: '',
-    tax_type: 'Inclusive',
+    tax_type: 'Exclusive',
     gst_slab: '5',
     hsn_code: '3303.00',
     place_of_supply: 'Dubai'
@@ -389,7 +389,7 @@ export default function SKUs({ hideHeader }) {
         productsList.forEach((p, idx) => {
           if (p.variants) {
             p.variants.forEach((v, vidx) => {
-              const taxType = v.tax_type || 'Inclusive'
+              const taxType = v.tax_type || 'Exclusive'
               const rawSlab = v.gst_slab
               const gstSlab = (rawSlab && rawSlab !== '18' && rawSlab !== '12' && rawSlab !== '28') ? rawSlab : '5'
               const selling = Number(v.selling_price) || 0
