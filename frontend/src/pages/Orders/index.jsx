@@ -52,6 +52,14 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     items: [{ variant_id: '', quantity: 1, unit_price: 0 }]
   })
 
+  const calculateSubtotal = () => {
+    return form.items.reduce((acc, curr) => acc + (Number(curr.unit_price || 0) * Number(curr.quantity || 1)), 0)
+  }
+
+  const calculateTotal = () => {
+    return calculateSubtotal() - Number(form.discount_amount || 0) + Number(form.tax_amount || 0) + Number(form.shipping_amount || 0)
+  }
+
   useEffect(() => {
     api.get('/offers').then(res => setAllOffers(res.data || [])).catch(() => {})
     api.get('/settings/storefront_layout').then(res => setCmsLayout(res.data)).catch(() => {})
@@ -153,7 +161,7 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     } else {
       set('shipping_amount', 0)
     }
-  }, [delhiveryActive, totalQty, form.shipping_pincode, cmsLayout, calculateSubtotal()])
+  }, [delhiveryActive, totalQty, form.shipping_pincode, cmsLayout])
 
   useEffect(() => {
     const pin = (form.shipping_pincode || '').trim()
@@ -318,20 +326,12 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
     set('items', updated.length ? updated : [{ variant_id: '', quantity: 1, unit_price: 0 }])
   }
 
-  const calculateSubtotal = () => {
-    return form.items.reduce((acc, curr) => acc + (Number(curr.unit_price || 0) * Number(curr.quantity || 1)), 0)
-  }
-
   useEffect(() => {
     if (selectedOfferId) {
        const off = allOffers.find(o => o.id === selectedOfferId)
        if (off) applyOffer(off)
     }
-  }, [form.items.length, calculateSubtotal()])
-
-  const calculateTotal = () => {
-    return calculateSubtotal() - Number(form.discount_amount || 0) + Number(form.tax_amount || 0) + Number(form.shipping_amount || 0)
-  }
+  }, [form.items.length])
 
   const sendOtp = () => {
     if (!form.contact_email || !form.contact_phone || !form.contact_name) {
