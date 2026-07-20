@@ -202,6 +202,8 @@ export const ar = {
   "checkout_card_desc": "معاملات آمنة بواسطة فيزا، ماستركارد، أمريكان إكسبريس",
   "checkout_upi_title": "الدفع الفوري عبر UPI",
   "checkout_upi_desc": "تطبيقات الدفع الفوري ومعرفات UPI",
+  "checkout_cod_title": "الدفع عند الاستلام (COD)",
+  "checkout_cod_desc": "ادفع نقداً عند استلام طلبيتك عند باب منزلك",
   "checkout_summary_title": "ملخص الطلب",
   "checkout_loyalty_rewards": "مكافآت الولاء",
   "checkout_points_available": "{points} نقطة متاحة",

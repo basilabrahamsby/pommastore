@@ -202,6 +202,8 @@ export const en = {
   "checkout_card_desc": "Visa, Mastercard, Amex Secure Transactions",
   "checkout_upi_title": "UPI Instant Payment",
   "checkout_upi_desc": "PhonePe, Google Pay, Paytm, Any UPI ID",
+  "checkout_cod_title": "Cash on Delivery (COD)",
+  "checkout_cod_desc": "Pay in cash upon doorstep delivery of your order",
   "checkout_summary_title": "Summary of Curation",
   "checkout_loyalty_rewards": "Loyalty Rewards",
   "checkout_points_available": "{points} Points Available",

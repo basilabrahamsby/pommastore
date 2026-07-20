@@ -17,7 +17,8 @@ import {
   Calendar, 
   Smartphone,
   ShieldAlert,
-  Sparkles
+  Sparkles,
+  Banknote
 } from 'lucide-react';
 
 import { useTranslation } from '@/locales/i18nContext';
@@ -30,7 +31,7 @@ export default function Checkout() {
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'cod'>('card');
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
@@ -436,6 +437,35 @@ export default function Checkout() {
       }
       // ============================================================
 
+      // ================= CASH ON DELIVERY (COD) INTEGRATION =================
+      if (paymentMethod === 'cod') {
+        try {
+          const createRes = await api.post('/orders/checkout', {
+            payment_method: 'cod',
+            shipping_address: shippingAddressData,
+            billing_address: shippingAddressData,
+            payment_status: 'pending',
+            items: orderItems,
+            loyalty_points_used: pointsToRedeem,
+            shipping_amount: finalShippingFee,
+            tax_amount: 0.0,
+            discount_amount: promoDiscount,
+            coupon_code: appliedPromo ? appliedPromo.code : null,
+            notes: 'Cash on Delivery'
+          });
+          setOrderSuccess(createRes.data);
+          clearCart();
+          setPlacingOrder(false);
+          return;
+        } catch (err: any) {
+          const detail = err.response?.data?.detail;
+          setCheckoutError(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to place Cash on Delivery order.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setPlacingOrder(false);
+          return;
+        }
+      }
+
       throw new Error('Selected payment method is not supported.');
       clearCart();
     } catch (err: any) {
@@ -830,6 +860,27 @@ export default function Checkout() {
                   </div>
                 </div>
                 <Smartphone size={20} className="text-neutral-400" />
+              </label>
+
+              <label 
+                className={`border p-5 flex items-center justify-between cursor-pointer transition-all duration-200 ${
+                  paymentMethod === 'cod' ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-400'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <input 
+                    type="radio" 
+                    name="payment_mode" 
+                    className="accent-black"
+                    checked={paymentMethod === 'cod'} 
+                    onChange={() => setPaymentMethod('cod')} 
+                  />
+                  <div>
+                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">{t('checkout_cod_title')}</p>
+                    <p className="text-[10px] text-neutral-400 font-medium">{t('checkout_cod_desc')}</p>
+                  </div>
+                </div>
+                <Banknote size={20} className="text-neutral-400" />
               </label>
 
 
