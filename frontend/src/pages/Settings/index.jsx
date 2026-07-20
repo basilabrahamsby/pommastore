@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Settings as SettingsIcon, Palette, DollarSign, Bell, Shield, 
   Save, Building2, FileText, Globe, Search, Link as LinkIcon, Truck, Award, Mail, MessageSquare, Smartphone, Wifi, WifiOff
@@ -20,16 +20,16 @@ const DEFAULT_EMAIL_TEMPLATES = {
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('appearance')
 
-  const [currency, setCurrency] = useState('INR')
+  const [currency, setCurrency] = useState('AED')
   const [theme, setTheme] = useState('light')
   const [colorTheme, setColorTheme] = useState('classic')
   const [notifications, setNotifications] = useState({ stockAlert: true, orders: true, hazmat: false })
   const [companyGst, setCompanyGst] = useState({
-    companyName: 'Pommastore Luxury Innovations Pvt Ltd',
+    companyName: 'Pommastore Commodities LLC',
     gstin: '',
     pan: '',
     registeredAddress: '',
-    stateCode: '07 (Delhi)'
+    stateCode: 'Dubai'
   })
   const [seoConfig, setSeoConfig] = useState({
     siteTitle: 'Pommastore | Luxury Perfume ERP',
@@ -41,7 +41,7 @@ export default function Settings() {
   })
 
   // New Phase 3/4 states
-  const [exchangeRates, setExchangeRates] = useState({ USD: 83.5, EUR: 89.2, GBP: 104.5, AED: 22.7 })
+  const [exchangeRates, setExchangeRates] = useState({ USD: 0.27, EUR: 0.25, GBP: 0.21, INR: 22.7 })
   const [restrictedRegions, setRestrictedRegions] = useState('IR, KP, SY')
   const [loyaltySettings, setLoyaltySettings] = useState({ 
     points_per_currency_unit: '1', 
@@ -286,7 +286,7 @@ export default function Settings() {
         <h1 className="page-title" style={{ fontSize: '1.8rem', background: 'linear-gradient(to right, var(--text-primary), var(--gold))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           ERP System Settings
         </h1>
-        <p className="page-subtitle">Configure your business profile, GST compliance, currency format, and aesthetics</p>
+        <p className="page-subtitle">Configure your business profile, TRN / VAT compliance, currency format, and aesthetics</p>
       </div>
 
       {/* TABS ROW */}
@@ -421,14 +421,14 @@ export default function Settings() {
           </div>
         )}
 
-        {/* TAB 4: COMPANY & GST */}
+        {/* TAB 4: COMPANY & TRN */}
         {activeTab === 'company' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
               <Building2 size={24} style={{ color: 'var(--gold)' }} />
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', margin: 0 }}>Company Profile & GST Compliance</h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Configure statutory identification details for digital invoicing</p>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', margin: 0 }}>Company Profile & TRN Compliance</h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Configure UAE statutory identification & tax registration details for digital invoicing</p>
               </div>
             </div>
 
@@ -438,7 +438,7 @@ export default function Settings() {
                 <input 
                   type="text" 
                   className="input" 
-                  placeholder="e.g. Pommastore Retailers Private Limited"
+                  placeholder="e.g. Pommastore Commodities LLC"
                   value={companyGst.companyName}
                   onChange={e => setCompanyGst(prev => ({ ...prev, companyName: e.target.value }))}
                 />
@@ -446,22 +446,22 @@ export default function Settings() {
 
               <div className="grid-2" style={{ gap: 20 }}>
                 <div className="form-group">
-                  <label className="form-label">Company GSTIN *</label>
+                  <label className="form-label">TRN Number (Tax Registration Number) *</label>
                   <input 
                     type="text" 
                     className="input" 
-                    placeholder="e.g. 07AADCB2230M1Z5"
+                    placeholder="e.g. 100234567800003"
                     style={{ textTransform: 'uppercase', fontFamily: 'monospace', fontWeight: 600, color: 'var(--gold-bright)' }}
                     value={companyGst.gstin}
                     onChange={e => setCompanyGst(prev => ({ ...prev, gstin: e.target.value.toUpperCase() }))}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">PAN Number</label>
+                  <label className="form-label">Trade License Number</label>
                   <input 
                     type="text" 
                     className="input" 
-                    placeholder="ABCDE1234F"
+                    placeholder="e.g. 1234567 / Dubai Economy & Tourism"
                     style={{ textTransform: 'uppercase', fontFamily: 'monospace' }}
                     value={companyGst.pan}
                     onChange={e => setCompanyGst(prev => ({ ...prev, pan: e.target.value.toUpperCase() }))}
@@ -474,7 +474,7 @@ export default function Settings() {
                 <textarea 
                   className="input" 
                   rows={3}
-                  placeholder="Enter full statutory address for invoice footers..."
+                  placeholder="Enter full statutory address in UAE for invoice footers..."
                   value={companyGst.registeredAddress}
                   onChange={e => setCompanyGst(prev => ({ ...prev, registeredAddress: e.target.value }))}
                 />
@@ -485,7 +485,7 @@ export default function Settings() {
                 <div>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>Statutory Transaction Visibility</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                    Entering your GSTIN here will instantly dynamically embed the compliance header onto generated transactional summaries, receipts and order detail modals system-wide.
+                    Entering your TRN Number here will dynamically embed the UAE VAT compliance header onto generated transactional summaries, receipts and order detail modals system-wide.
                   </div>
                 </div>
               </div>
@@ -595,14 +595,14 @@ export default function Settings() {
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <h4 style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600, marginBottom: 10 }}>Global Exchange Rate Overrides (vs INR Base)</h4>
+              <h4 style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600, marginBottom: 10 }}>Global Exchange Rate Overrides (vs AED Base)</h4>
               <div className="grid-3" style={{ gap: 14 }}>
                 {Object.keys(exchangeRates).map(curr => (
                   <div key={curr} className="form-group" style={{ margin: 0 }}>
                     <label className="form-label">1 {curr} =</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <input className="input" type="number" step="0.01" value={exchangeRates[curr]} onChange={e => setExchangeRates(prev => ({...prev, [curr]: e.target.value}))} />
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>INR</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AED</span>
                     </div>
                   </div>
                 ))}
