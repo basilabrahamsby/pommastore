@@ -143,20 +143,10 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
       }
 
       const pin = (form.shipping_pincode || '').trim()
-      let baseShipping = 150 // Default national rate
-      let perItemShipping = 20
+      let baseShipping = 17 // Standard UAE base delivery charge
+      let perItemShipping = 0
 
-      if (pin.startsWith('11')) {
-        // Local Zone (New Delhi)
-        baseShipping = 50
-        perItemShipping = 10
-      } else if (pin.startsWith('40') || pin.startsWith('50') || pin.startsWith('56') || pin.startsWith('60') || pin.startsWith('70')) {
-        // Metro/Regional Zone (Mumbai, Chennai, Bengaluru, Kolkata, Hyderabad)
-        baseShipping = 90
-        perItemShipping = 15
-      }
-
-      const simulatedShipping = totalQty > 0 ? baseShipping + (totalQty - 1) * perItemShipping : 0
+      const simulatedShipping = totalQty > 0 ? baseShipping : 0
       set('shipping_amount', simulatedShipping)
     } else {
       set('shipping_amount', 0)
