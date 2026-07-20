@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, ChevronDown, User, DollarSign, CreditCard, Activity, Plus, TrendingUp, TrendingDown, Download, Filter, ArrowUpRight, ArrowDownRight, ShoppingBag, Users, Percent, Building, Clock, Check, X, Package, ShieldCheck, Smartphone, Mail } from 'lucide-react'
+import { Search, ChevronDown, User, DollarSign, CreditCard, Activity, Plus, TrendingUp, TrendingDown, Download, Filter, ArrowUpRight, ArrowDownRight, ShoppingBag, Users, Percent, Building, Clock, Check, X, Package, ShieldCheck, Smartphone, Mail, Truck } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import InfoButton from '../../components/ui/InfoButton'
@@ -1468,14 +1468,14 @@ export default function Orders() {
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                    {[
-                     { label: 'Razorpay (Cards/NetBanking)', method: 'razorpay', color: '#339af0' },
-                     { label: 'UPI Direct Settlement', method: 'upi', color: 'var(--success)' },
-                     { label: 'Cash on Delivery (COD)', method: 'cash', color: 'var(--gold)' }
+                     { label: 'Stripe (Cards / Apple Pay)', method: 'stripe', color: '#339af0' },
+                     { label: 'Cash on Delivery (COD)', method: 'cod', color: 'var(--gold)' },
+                     { label: 'Direct Bank Transfer', method: 'bank_transfer', color: 'var(--success)' }
                    ].map(pm => {
                       const methodOrders = orders.filter(o => o.payment_method === pm.method)
                       const volume = methodOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
                       const avgValue = methodOrders.length ? (volume / methodOrders.length) : 0
-                      const maxVol = Math.max(...['razorpay', 'upi', 'cash'].map(m => orders.filter(o => o.payment_method === m).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)), 1)
+                      const maxVol = Math.max(...['stripe', 'cod', 'bank_transfer'].map(m => orders.filter(o => o.payment_method === m).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)), 1)
                       const barWidth = `${(volume / maxVol) * 100}%`
                       
                       return (
