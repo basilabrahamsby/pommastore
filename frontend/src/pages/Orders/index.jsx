@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, ChevronDown, User, DollarSign, CreditCard, Activity, Plus, TrendingUp, TrendingDown, Download, Filter, ArrowUpRight, ArrowDownRight, ShoppingBag, Users, Percent, Building, Clock, Check, X, Package, ShieldCheck, Smartphone, Mail } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
@@ -739,12 +739,11 @@ function OrderModal({ onClose, onSaved, customers, variants }) {
                   <div>
                     <label className="label">Payment Method</label>
                     <select className="select" value={form.payment_method} onChange={e => set('payment_method', e.target.value)}>
-                      <option value="cash">Cash Checkout</option>
-                      <option value="card">Card Checkout</option>
-                      <option value="upi">UPI / QR Scan</option>
-                      <option value="cod">Cash On Delivery (COD)</option>
-                      <option value="razorpay">Razorpay Checkout</option>
-                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="cash">Cash Checkout (POS)</option>
+                      <option value="card">Card Checkout (POS Terminal)</option>
+                      <option value="cod">Cash / Card on Delivery (COD)</option>
+                      <option value="stripe">Stripe / Online Cards (Apple Pay)</option>
+                      <option value="bank_transfer">Direct Bank Transfer</option>
                     </select>
                   </div>
                   {(form.payment_method === 'card' || form.payment_method === 'upi' || form.payment_method === 'bank_transfer') && (
@@ -1434,9 +1433,9 @@ export default function Orders() {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[
-                  { label: 'Razorpay Merchant', icon: <CreditCard size={16} color="#339af0"/>, bg: 'rgba(51,154,240,0.1)', sub: 'Automatic Next-day Payouts', method: 'razorpay' },
-                  { label: 'UPI Direct QR Scan', icon: <TrendingUp size={16} color="var(--success)"/>, bg: 'rgba(16,185,129,0.1)', sub: 'Instant Settlement Active', method: 'upi' },
-                  { label: 'Cash Desk Drawer', icon: <Building size={16} color="var(--gold)"/>, bg: 'rgba(201,168,76,0.1)', sub: 'Physical EOD Bank Deposit Req', method: 'cash' }
+                  { label: 'Stripe Gateway (Cards/Apple Pay)', icon: <CreditCard size={16} color="#339af0"/>, bg: 'rgba(51,154,240,0.1)', sub: 'Automated Payouts Active', method: 'stripe' },
+                  { label: 'Cash / Card on Delivery (COD)', icon: <Truck size={16} color="var(--gold)"/>, bg: 'rgba(201,168,76,0.1)', sub: 'Doorstep Settlement Active', method: 'cod' },
+                  { label: 'Direct Bank Deposit', icon: <Building size={16} color="var(--success)"/>, bg: 'rgba(16,185,129,0.1)', sub: 'Physical EDC / Bank Transfer', method: 'bank_transfer' }
                 ].map(m => {
                   const methodRev = orders.filter(o => o.payment_method === m.method).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
                   const share = totalRevenue ? Math.round((methodRev / totalRevenue) * 100) : 0

@@ -31,7 +31,7 @@ export default function Checkout() {
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'cod'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card');
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
@@ -380,7 +380,7 @@ export default function Checkout() {
       const finalAmount = Math.max(0, totalPrice() + finalShippingFee - pointsToRedeem - promoDiscount);
 
       // ================= STRIPE INTEGRATION =================
-      if (paymentMethod === 'card' || paymentMethod === 'upi') {
+      if (paymentMethod === 'card') {
         let stripeSessionData: any = null;
         try {
           const createRes = await api.post('/orders/stripe/create', {
@@ -839,27 +839,6 @@ export default function Checkout() {
                   </div>
                 </div>
                 <CreditCard size={20} className="text-neutral-400" />
-              </label>
-
-              <label 
-                className={`border p-5 flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                  paymentMethod === 'upi' ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-400'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="radio" 
-                    name="payment_mode" 
-                    className="accent-black"
-                    checked={paymentMethod === 'upi'} 
-                    onChange={() => setPaymentMethod('upi')} 
-                  />
-                  <div>
-                    <p className="text-xs font-black tracking-widest uppercase text-neutral-900">{t('checkout_upi_title')}</p>
-                    <p className="text-[10px] text-neutral-400 font-medium">{t('checkout_upi_desc')}</p>
-                  </div>
-                </div>
-                <Smartphone size={20} className="text-neutral-400" />
               </label>
 
               <label 
