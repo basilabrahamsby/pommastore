@@ -500,24 +500,26 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     @media print {{
       @page {{
         size: A4 portrait;
-        margin: 12mm 15mm;
+        margin: 10mm auto;
       }}
       html, body {{
         background: #FFFFFF !important;
         color: #000000 !important;
         padding: 0 !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         width: 100% !important;
-        height: auto !important;
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
       }}
       .invoice-container {{
         width: 100% !important;
-        max-width: 100% !important;
+        max-width: 760px !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
+        padding: 20px 10px !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
         position: relative !important;
       }}
       .print-actions {{
