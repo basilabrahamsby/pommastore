@@ -291,45 +291,44 @@ const FinancialReports = ({ kpiData = null }) => (
     <div className="grid-4">
       <div className="stat-card" style={{ padding: 16 }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-          CGST COLLECTED <InfoButton text="Central Goods & Services Tax collected on intra-state sales." />
+          5.0% UAE VAT COLLECTED <InfoButton text="Total 5.0% UAE Value Added Tax collected on taxable product sales." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${kpiData.cgst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${(kpiData.total_tax_liability || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
       </div>
       <div className="stat-card" style={{ padding: 16 }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-          SGST COLLECTED <InfoButton text="State Goods & Services Tax collected on intra-state sales." />
+          ZERO-RATED EXEMPTIONS <InfoButton text="Exports and zero-rated catalog items exempt from UAE VAT." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${kpiData.sgst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>AED 0.00</div>
       </div>
       <div className="stat-card" style={{ padding: 16 }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-          IGST COLLECTED <InfoButton text="Integrated Goods & Services Tax applied to inter-state sales." />
+          REVERSE CHARGE VAT <InfoButton text="Imported goods or cross-border B2B reverse charge VAT liabilities." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>{kpiData ? `AED ${kpiData.igst_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: 4 }}>AED 0.00</div>
       </div>
       <div className="stat-card" style={{ padding: 16, border: '1px solid var(--gold)' }}>
         <span style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700 }}>
-          TOTAL TAX LIABILITY <InfoButton text="Cumulative GST burden calculated by adding all active output taxes across active orders." />
+          NET UAE VAT LIABILITY <InfoButton text="Cumulative 5.0% UAE VAT liability payable to the Federal Tax Authority (FTA)." />
         </span>
-        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)', marginTop: 4 }}>{kpiData ? `AED ${kpiData.total_tax_liability.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-bright)', marginTop: 4 }}>{kpiData ? `AED ${(kpiData.total_tax_liability || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Calculating...'}</div>
       </div>
     </div>
 
     <div className="table-container">
       <div className="table-header" style={{ padding: 20, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
-        <h4 style={{ margin: 0 }}>GSTR-1 Monthly Compatibility Ledger</h4>
+        <h4 style={{ margin: 0 }}>UAE VAT Statutory Audit Ledger (FTA Compliant)</h4>
         <button className="btn btn-sm btn-secondary" style={{ gap: 8 }}><Download size={14}/> Export Excel</button>
       </div>
       <table className="data-table">
         <thead>
           <tr>
             <th>Month</th>
-            <th>Taxable Value</th>
-            <th>GST Rate</th>
-            <th>CGST</th>
-            <th>SGST</th>
-            <th>IGST</th>
-            <th>Total GST</th>
+            <th>Taxable Subtotal</th>
+            <th>VAT Rate</th>
+            <th>UAE VAT (5.0%)</th>
+            <th>Exemptions</th>
+            <th>Total Payable Tax</th>
           </tr>
         </thead>
         <tbody>
@@ -337,16 +336,15 @@ const FinancialReports = ({ kpiData = null }) => (
             <tr key={index}>
               <td>{row.month}</td>
               <td>AED {row.taxable_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-              <td>{row.gst_rate}%</td>
-              <td>AED {row.cgst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-              <td>AED {row.sgst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-              <td>AED {row.igst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <td>5.0%</td>
+              <td>AED {row.total_gst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+              <td>AED 0.00</td>
               <td><strong style={{ color: 'var(--gold-bright)' }}>AED {row.total_gst.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
             </tr>
           ))}
           {(!kpiData || !kpiData.gstr1_ledger || kpiData.gstr1_ledger.length === 0) && (
             <tr>
-              <td colSpan={7} style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>
+              <td colSpan={6} style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>
                 No tax ledger transactions recorded for this period.
               </td>
             </tr>
