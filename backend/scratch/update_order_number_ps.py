@@ -13,7 +13,7 @@ async def main():
         orders = res.scalars().all()
         for idx, o in enumerate(orders, start=1):
             old_num = o.order_number
-            o.order_number = f"PS-{idx:05d}"
+            o.order_number = f"PS-2026-{idx:05d}"
             print(f"UPDATED ORDER {o.id}: {old_num} -> {o.order_number}")
         await db.commit()
 

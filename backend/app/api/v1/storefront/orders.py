@@ -45,18 +45,20 @@ class OrderTrackRequest(BaseModel):
     contact: str # email or phone
 
 async def generate_order_number(db: AsyncSession) -> str:
-    res = await db.execute(select(Order.order_number).where(Order.order_number.like("PS-%")))
+    now = datetime.now(timezone.utc)
+    prefix = f"PS-{now.year}-"
+    res = await db.execute(select(Order.order_number).where(Order.order_number.like(f"{prefix}%")))
     numbers = res.scalars().all()
     max_seq = 0
     for num in numbers:
         try:
-            seq = int(num.replace("PS-", "").replace("PS", "").strip())
+            seq = int(num.replace(prefix, "").strip())
             if seq > max_seq:
                 max_seq = seq
         except ValueError:
             pass
     next_seq = max_seq + 1
-    return f"PS-{next_seq:05d}"
+    return f"{prefix}{next_seq:05d}"
 
 def _enrich_order(order: Order) -> OrderOut:
     out = OrderOut.model_validate(order)
