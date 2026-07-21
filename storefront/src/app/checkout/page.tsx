@@ -374,10 +374,23 @@ export default function Checkout() {
         discount_amount: 0.0
       }));
 
+      // Calculate Exclusive Tax portion to add to final order amount
+      const vatRate = 0.05;
+      let exclusiveTaxAdded = 0;
+      items.forEach(item => {
+        const lineTotal = item.price * item.quantity;
+        const tt = ((item as any).taxType || (item as any).tax_type || 'Inclusive').toLowerCase();
+        if (tt === 'exclusive') {
+          exclusiveTaxAdded += lineTotal * vatRate;
+        }
+      });
+      const discountRatio = totalPrice() > 0 ? Math.min(1, promoDiscount / totalPrice()) : 0;
+      const netExclusiveTaxAdded = Math.max(0, exclusiveTaxAdded * (1 - discountRatio));
+
       const shippingLimit = cmsLayout?.free_shipping_limit || 999;
       const finalShippingFee = totalPrice() >= shippingLimit ? 0 : shippingFee; 
       const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
-      const finalAmount = Math.max(0, totalPrice() + finalShippingFee - pointsToRedeem - promoDiscount);
+      const finalAmount = Math.max(0, totalPrice() + netExclusiveTaxAdded + finalShippingFee - pointsToRedeem - promoDiscount);
 
       // ================= STRIPE INTEGRATION =================
       if (paymentMethod === 'card') {
@@ -394,7 +407,7 @@ export default function Checkout() {
             items: orderItems,
             loyalty_points_used: pointsToRedeem,
             shipping_amount: finalShippingFee,
-            tax_amount: 0.0,
+            tax_amount: netExclusiveTaxAdded,
             discount_amount: promoDiscount,
             coupon_code: appliedPromo ? appliedPromo.code : null
           });
@@ -461,7 +474,7 @@ export default function Checkout() {
             items: orderItems,
             loyalty_points_used: pointsToRedeem,
             shipping_amount: finalShippingFee,
-            tax_amount: 0.0,
+            tax_amount: netExclusiveTaxAdded,
             discount_amount: promoDiscount,
             coupon_code: appliedPromo ? appliedPromo.code : null,
             notes: 'Cash on Delivery'
@@ -971,21 +984,58 @@ export default function Checkout() {
                  </div>
                )}
 
-                {/* UAE VAT 5% Breakdown (Exclusive Mode) */}
+                {/* UAE VAT 5% Tax Breakdown (Inclusive vs Exclusive Aware) */}
                 {(() => {
-                  const subtotal = Math.max(0, totalPrice() - promoDiscount);
                   const vatRate = 0.05;
-                  const taxableVal = subtotal;
-                  const vatAmount = subtotal * vatRate;
+                  let totalTaxable = 0;
+                  let totalVat = 0;
+                  let exclusiveTaxAdded = 0;
+                  let inclusiveCount = 0;
+                  let exclusiveCount = 0;
+
+                  items.forEach(item => {
+                    const lineTotal = item.price * item.quantity;
+                    const tt = ((item as any).taxType || (item as any).tax_type || 'Inclusive').toLowerCase();
+                    if (tt === 'exclusive') {
+                      exclusiveCount++;
+                      totalTaxable += lineTotal;
+                      const vat = lineTotal * vatRate;
+                      totalVat += vat;
+                      exclusiveTaxAdded += vat;
+                    } else if (tt === 'zero-rated') {
+                      totalTaxable += lineTotal;
+                    } else {
+                      // Inclusive (default)
+                      inclusiveCount++;
+                      const taxable = lineTotal / (1 + vatRate);
+                      const vat = lineTotal - taxable;
+                      totalTaxable += taxable;
+                      totalVat += vat;
+                    }
+                  });
+
+                  const discountRatio = totalPrice() > 0 ? Math.min(1, promoDiscount / totalPrice()) : 0;
+                  const netTaxable = Math.max(0, totalTaxable * (1 - discountRatio));
+                  const netVat = Math.max(0, totalVat * (1 - discountRatio));
+
+                  const isAllInclusive = exclusiveCount === 0;
+                  const isAllExclusive = inclusiveCount === 0 && exclusiveCount > 0;
+
+                  const taxLabel = isAllInclusive 
+                    ? "UAE VAT (5.0% Included)" 
+                    : isAllExclusive 
+                    ? "UAE VAT (5.0% Exclusive)" 
+                    : "UAE VAT (5.0% Combined)";
+
                   return (
                     <div className="bg-neutral-50 border border-neutral-200/80 rounded-sm p-3.5 space-y-2 normal-case font-sans tracking-normal">
                       <div className="flex justify-between items-center text-[10px]">
                         <span className="text-neutral-500 font-medium uppercase tracking-wider">Taxable Amount (Base)</span>
-                        <span className="text-neutral-800 font-bold">AED {taxableVal.toFixed(2)}</span>
+                        <span className="text-neutral-800 font-bold">AED {netTaxable.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-neutral-500 font-medium uppercase tracking-wider">UAE VAT (5.0% Exclusive)</span>
-                        <span className="text-neutral-900 font-black">AED {vatAmount.toFixed(2)}</span>
+                        <span className="text-neutral-500 font-medium uppercase tracking-wider">{taxLabel}</span>
+                        <span className="text-neutral-900 font-black">AED {netVat.toFixed(2)}</span>
                       </div>
                     </div>
                   );
@@ -995,11 +1045,38 @@ export default function Checkout() {
                   <div className="flex justify-between text-neutral-900 text-sm">
                     <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
                     <span className="font-bold text-lg font-serif normal-case tracking-normal">
-                      AED {Math.max(0, totalPrice() + (totalPrice() * 0.05) + (totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee) - promoDiscount - (useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      AED {(() => {
+                        const vatRate = 0.05;
+                        let exclusiveTaxAdded = 0;
+                        items.forEach(item => {
+                          const lineTotal = item.price * item.quantity;
+                          const tt = ((item as any).taxType || (item as any).tax_type || 'Inclusive').toLowerCase();
+                          if (tt === 'exclusive') {
+                            exclusiveTaxAdded += lineTotal * vatRate;
+                          }
+                        });
+                        const discountRatio = totalPrice() > 0 ? Math.min(1, promoDiscount / totalPrice()) : 0;
+                        const netExclusiveTaxAdded = Math.max(0, exclusiveTaxAdded * (1 - discountRatio));
+                        const finalShippingFee = totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee;
+                        const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
+                        const grandTotal = Math.max(0, totalPrice() + netExclusiveTaxAdded + finalShippingFee - promoDiscount - pointsToRedeem);
+                        return grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      })()}
                     </span>
                   </div>
                   <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider text-right mt-1">
-                    VAT Exclusive (5% on Product Price)
+                    {(() => {
+                      let inclusiveCount = 0;
+                      let exclusiveCount = 0;
+                      items.forEach(item => {
+                        const tt = ((item as any).taxType || (item as any).tax_type || 'Inclusive').toLowerCase();
+                        if (tt === 'exclusive') exclusiveCount++;
+                        else inclusiveCount++;
+                      });
+                      if (exclusiveCount === 0) return "VAT INCLUSIVE (5% INCLUDED IN PRODUCT PRICE)";
+                      if (inclusiveCount === 0) return "VAT EXCLUSIVE (5% ON PRODUCT PRICE)";
+                      return "VAT (5% COMBINED INCLUSIVE & EXCLUSIVE)";
+                    })()}
                   </p>
                 </div>
              </div>
