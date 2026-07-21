@@ -243,7 +243,6 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
             trade_license = company_details.get("tradeLicense")
 
     trn_line = f'TRN: {trn}<br>' if trn else ""
-    license_line = f'Trade License: {trade_license}<br>' if trade_license else ""
     support_line = 'Support: +971 4 288 9200<br>'
 
     date_str = order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A"
@@ -539,7 +538,6 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
           <strong>{company_name}</strong><br>
           {company_address}<br>
           {trn_line}
-          {license_line}
           {support_line}
         </div>
       </div>
@@ -606,7 +604,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
       <p style="margin: 0 0 6px; font-size: 10px; color: #555555; font-weight: 700;">{company_name}</p>
       <p style="margin: 0 0 4px; font-size: 10px; color: #555555;">{company_address}</p>
-      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; Trade License: {trade_license} &nbsp;|&nbsp; <a href="mailto:support@pommastore.com" style="color: #D2168D; text-decoration: none;">support@pommastore.com</a> &nbsp;|&nbsp; www.pommaholidays.com</p>
+      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; <a href="mailto:support@pommastore.com" style="color: #D2168D; text-decoration: none;">support@pommastore.com</a> &nbsp;|&nbsp; www.pommaholidays.com</p>
     </div>
     <div class="bottom-bar"></div>
   </div>
@@ -747,7 +745,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         logo_flowable = Paragraph("POMMASTORE", title_style)
 
     # Left Header: Logo & Company Address info
-    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>TRN: {trn}<br/>Trade License: {trade_license}<br/>Support: +971 4 288 9200"
+    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>TRN: {trn}<br/>Support: +971 4 288 9200"
     
     left_header_data = [
         [logo_flowable],
