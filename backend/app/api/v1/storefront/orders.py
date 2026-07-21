@@ -228,8 +228,12 @@ async def storefront_checkout(
     body.channel = "storefront"
 
     if body.customer_phone and not customer.phone:
-        customer.phone = body.customer_phone
-        db.add(customer)
+        existing_phone = await db.execute(
+            select(Customer).where(Customer.phone == body.customer_phone, Customer.id != customer.id)
+        )
+        if not existing_phone.scalar_one_or_none():
+            customer.phone = body.customer_phone
+            db.add(customer)
 
     if not body.customer_phone or not body.customer_email:
         raise HTTPException(
@@ -832,8 +836,12 @@ async def create_stripe_order(
     body.payment_status = PaymentStatus.pending
 
     if body.customer_phone and not customer.phone:
-        customer.phone = body.customer_phone
-        db.add(customer)
+        existing_phone = await db.execute(
+            select(Customer).where(Customer.phone == body.customer_phone, Customer.id != customer.id)
+        )
+        if not existing_phone.scalar_one_or_none():
+            customer.phone = body.customer_phone
+            db.add(customer)
 
     if not body.customer_phone or not body.customer_email:
         raise HTTPException(
