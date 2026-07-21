@@ -694,9 +694,9 @@ async def get_kpis_report(
         organic_reach_change="↑ 8.4% vs last month" if total_successful_orders > 0 else "No change",
         ad_conversions=round(ad_conversions, 1),
         ad_conversions_change="↓ 0.5% vs last month" if total_successful_orders > 0 else "No change",
-        cgst_collected=round(cgst_collected, 2),
-        sgst_collected=round(sgst_collected, 2),
-        igst_collected=round(igst_collected, 2),
+        cgst_collected=round(total_tax_liability, 2),
+        sgst_collected=0.0,
+        igst_collected=0.0,
         total_tax_liability=round(total_tax_liability, 2),
         gstr1_ledger=gstr1_ledger,
         pipeline=pipeline
