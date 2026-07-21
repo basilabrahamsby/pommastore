@@ -879,6 +879,7 @@ async def create_stripe_order(
 
     amount_in_cents = int(round(total * 100))
     stripe_session_id = f"cs_test_mock_{uuid.uuid4().hex[:16]}"
+    stripe_url = None
     
     if settings.STRIPE_SECRET_KEY != "sk_test_placeholder":
         try:
@@ -915,8 +916,8 @@ async def create_stripe_order(
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
-                success_url="http://localhost:3000/checkout?success=true&session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://localhost:3000/checkout?canceled=true",
+                success_url="https://pommastore.com/checkout?success=true&session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="https://pommastore.com/checkout?canceled=true",
                 customer_email=customer.email,
                 metadata={
                     "customer_id": str(customer.id),
@@ -925,6 +926,7 @@ async def create_stripe_order(
                 }
             )
             stripe_session_id = session.id
+            stripe_url = session.url
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1009,6 +1011,7 @@ async def create_stripe_order(
     
     return {
         "stripe_session_id": stripe_session_id,
+        "url": stripe_url,
         "amount": amount_in_cents,
         "currency": "AED",
         "order_number": order.order_number,

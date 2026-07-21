@@ -405,7 +405,14 @@ export default function Checkout() {
         }
 
         const sessionId = stripeSessionData.stripe_session_id;
+        const stripeUrl = stripeSessionData.url;
         const publishableKey = stripeSessionData.stripe_publishable_key;
+
+        // If real Stripe Session URL returned by backend (live Stripe key configured)
+        if (stripeUrl) {
+          window.location.href = stripeUrl;
+          return;
+        }
 
         // If real Stripe keys are configured
         if (publishableKey && publishableKey !== 'pk_test_placeholder') {
