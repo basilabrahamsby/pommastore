@@ -588,29 +588,21 @@ async def get_kpis_report(
     actual_clicks = total_successful_orders * 5 + total_customers * 3
     ad_conversions = (total_successful_orders / actual_clicks * 100) if actual_clicks > 0 else 0.0
     
-    # 5. Compute GST Collected & Ledger
-    cgst_collected = 0.0
-    sgst_collected = 0.0
-    igst_collected = 0.0
-    
+    # 5. Compute UAE 5% VAT Collected & Monthly Ledger (Inclusive + Exclusive)
+    total_tax_liability = 0.0
     for o in all_orders:
         tax = float(o.tax_amount or 0.0)
-        addr = o.shipping_address or {}
-        state = str(addr.get("state", "")).strip().lower()
-        if state == "maharashtra" or not state:
-            cgst_collected += 0.5 * tax
-            sgst_collected += 0.5 * tax
+        subtotal = float(o.subtotal or 0.0)
+        if tax > 0:
+            total_tax_liability += tax
         else:
-            igst_collected += tax
+            # Inclusive VAT extraction (5% UAE VAT: Subtotal - (Subtotal / 1.05))
+            total_tax_liability += (subtotal - (subtotal / 1.05))
 
-    total_tax_liability = cgst_collected + sgst_collected + igst_collected
-
-    # Monthly GSTR-1 Ledger
+    # Monthly UAE VAT Ledger
     stmt_gstr = (
         select(
-            func.date_trunc('month', Order.created_at).label("month"),
-            func.sum(Order.subtotal).label("taxable_value"),
-            func.sum(Order.tax_amount).label("total_gst")
+            func.date_trunc('month', Order.created_at).label("month")
         )
         .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
         .group_by(text("month"))
@@ -622,32 +614,29 @@ async def get_kpis_report(
     gstr1_ledger = []
     for r in gstr_rows:
         month_dt = r[0]
-        taxable_value = float(r[1] or 0.0)
-        total_gst = float(r[2] or 0.0)
-        
-        # Split CGST/SGST/IGST specifically for this month
-        m_cgst = 0.0
-        m_sgst = 0.0
-        m_igst = 0.0
+        m_taxable_value = 0.0
+        m_total_vat = 0.0
+
         for o in all_orders:
             if o.created_at.year == month_dt.year and o.created_at.month == month_dt.month:
                 tax = float(o.tax_amount or 0.0)
-                addr = o.shipping_address or {}
-                state = str(addr.get("state", "")).strip().lower()
-                if state == "maharashtra" or not state:
-                    m_cgst += 0.5 * tax
-                    m_sgst += 0.5 * tax
+                subtotal = float(o.subtotal or 0.0)
+                if tax > 0:
+                    m_taxable_value += subtotal
+                    m_total_vat += tax
                 else:
-                    m_igst += tax
+                    taxable_base = subtotal / 1.05
+                    m_taxable_value += taxable_base
+                    m_total_vat += (subtotal - taxable_base)
                     
         gstr1_ledger.append(GSTR1LedgerRow(
             month=month_dt.strftime("%B %Y"),
-            taxable_value=round(taxable_value, 2),
+            taxable_value=round(m_taxable_value, 2),
             gst_rate=5,
             cgst=0.0,
             sgst=0.0,
             igst=0.0,
-            total_gst=round(total_gst, 2)
+            total_gst=round(m_total_vat, 2)
         ))
 
     # 6. Sales Pipeline stages - 100% Dynamic database-driven funnel
