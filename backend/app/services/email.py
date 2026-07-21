@@ -225,25 +225,26 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
 
 def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = None) -> str:
     """Generates a beautiful printable tax invoice HTML for an order."""
-    company_name = "POMMASTORE TRADING L.L.C"
-    company_address = "Business Bay, Dubai, United Arab Emirates"
-    trn = "100489201900003"
-    trade_license = "1184920"
+    company_name = "POSH NICHE PERFUMES & COSMETICS TRADING LLC"
+    company_address = "Office No. C-81, Al Muteena, Dubai, United Arab Emirates"
+    trn = "104349616300003"
+    phone = "+971 4 453 9119"
+    email = "sales@poshgallery.ae"
 
     if company_details and isinstance(company_details, dict):
-        c_name = company_details.get("companyName") or ""
-        c_addr = company_details.get("registeredAddress") or ""
-        if c_name and "COMMODITIES PRIVATE" not in c_name:
-            company_name = c_name
-        if c_addr and "Kochi" not in c_addr and "Kerala" not in c_addr:
-            company_address = c_addr
-        if company_details.get("trn"):
-            trn = company_details.get("trn")
-        if company_details.get("tradeLicense"):
-            trade_license = company_details.get("tradeLicense")
+        if company_details.get("companyName"):
+            company_name = company_details.get("companyName")
+        if company_details.get("registeredAddress"):
+            company_address = company_details.get("registeredAddress")
+        if company_details.get("gstin") or company_details.get("trn"):
+            trn = company_details.get("gstin") or company_details.get("trn")
+        if company_details.get("phone"):
+            phone = company_details.get("phone")
+        if company_details.get("email"):
+            email = company_details.get("email")
 
     trn_line = f'TRN: {trn}<br>' if trn else ""
-    support_line = 'Support: +971 4 288 9200<br>'
+    support_line = f'Support: {phone}<br>' if phone else ""
 
     date_str = order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A"
     payment_method = (order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A"
@@ -604,7 +605,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
       <p style="margin: 0 0 6px; font-size: 10px; color: #555555; font-weight: 700;">{company_name}</p>
       <p style="margin: 0 0 4px; font-size: 10px; color: #555555;">{company_address}</p>
-      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; <a href="mailto:support@pommastore.com" style="color: #D2168D; text-decoration: none;">support@pommastore.com</a> &nbsp;|&nbsp; www.pommaholidays.com</p>
+      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; <a href="mailto:{email}" style="color: #D2168D; text-decoration: none;">{email}</a> &nbsp;|&nbsp; www.pommaholidays.com</p>
     </div>
     <div class="bottom-bar"></div>
   </div>
@@ -745,7 +746,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         logo_flowable = Paragraph("POMMASTORE", title_style)
 
     # Left Header: Logo & Company Address info
-    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>TRN: {trn}<br/>Support: +971 4 288 9200"
+    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>TRN: {trn}<br/>Support: {phone}"
     
     left_header_data = [
         [logo_flowable],
