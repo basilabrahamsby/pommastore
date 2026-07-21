@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_, func
 from sqlalchemy.exc import IntegrityError
 from typing import List
 import random
@@ -253,9 +253,21 @@ async def list_my_orders(
             selectinload(Order.status_history)
         )
         .where(
-            Order.customer_id == customer.id,
-            # Exclude unpaid Razorpay draft orders (payment not completed)
             or_(
+                Order.customer_id == customer.id,
+                and_(
+                    Order.customer_email.isnot(None),
+                    func.lower(Order.customer_email) == func.lower(customer.email)
+                ),
+                and_(
+                    Order.customer_phone.isnot(None),
+                    customer.phone.isnot(None),
+                    Order.customer_phone == customer.phone
+                )
+            ),
+            # Exclude only unpaid Razorpay / online draft orders
+            or_(
+                Order.payment_gateway.is_(None),
                 Order.payment_gateway != "razorpay",
                 Order.payment_status != "pending"
             )
