@@ -225,30 +225,26 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
 
 def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = None) -> str:
     """Generates a beautiful printable tax invoice HTML for an order."""
-    if not company_details:
-        company_details = {
-            "companyName": "POMMASTORE COMMODITIES PRIVATE LIMITED",
-            "registeredAddress": "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
-            "gstin": "32AAHCK3784H1ZF",
-            "pan": "AAHCK3784H",
-            "stateCode": "32 (Kerala)"
-        }
+    company_name = "POMMASTORE TRADING L.L.C"
+    company_address = "Business Bay, Dubai, United Arab Emirates"
+    trn = "100489201900003"
+    trade_license = "1184920"
 
-    company_name = company_details.get("companyName") or "POMMASTORE COMMODITIES PRIVATE LIMITED"
-    company_address = company_details.get("registeredAddress") or "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
-    # Derive short address (city, state, pin) for header display
-    short_address = "Kochi, Kerala - 682026"
-    gstin = company_details.get("gstin") or "32AAHCK3784H1ZF"
-    pan = company_details.get("pan") or "AAHCK3784H"
-    state_code = company_details.get("stateCode") or "32 (Kerala)"
-    # Override incorrect state code if admin saved wrong value
-    if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
-        state_code = "32 (Kerala)"
+    if company_details and isinstance(company_details, dict):
+        c_name = company_details.get("companyName") or ""
+        c_addr = company_details.get("registeredAddress") or ""
+        if c_name and "COMMODITIES PRIVATE" not in c_name:
+            company_name = c_name
+        if c_addr and "Kochi" not in c_addr and "Kerala" not in c_addr:
+            company_address = c_addr
+        if company_details.get("trn"):
+            trn = company_details.get("trn")
+        if company_details.get("tradeLicense"):
+            trade_license = company_details.get("tradeLicense")
 
-    gstin_line = f'GSTIN: {gstin}<br>' if gstin else ""
-    pan_line = f'PAN: {pan}<br>' if pan else ""
-    state_line = f'State Code: {state_code}<br>' if state_code else ""
-    toll_free_line = 'Toll Free: 1800 890 2621<br>'
+    trn_line = f'TRN: {trn}<br>' if trn else ""
+    license_line = f'Trade License: {trade_license}<br>' if trade_license else ""
+    support_line = 'Support: +971 4 288 9200<br>'
 
     date_str = order.created_at.strftime("%d/%m/%Y, %H:%M") if order.created_at else "N/A"
     payment_method = (order.payment_method.value if hasattr(order.payment_method, 'value') else str(order.payment_method)).upper() if order.payment_method else "N/A"
@@ -538,14 +534,13 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     <div class="top-bar"></div>
     <div class="invoice-header">
       <div class="logo-block">
-        <img src="https://pommastore.com/logo.png" alt="Pommastore Logo">
+        <img src="https://pommaholidays.com/pommastore/logo.png" alt="POMMASTORE" style="height: 48px; max-width: 180px; object-fit: contain; margin-bottom: 12px;">
         <div class="company-address">
           <strong>{company_name}</strong><br>
-          {short_address}<br>
-          {gstin_line}
-          {pan_line}
-          {state_line}
-          {toll_free_line}
+          {company_address}<br>
+          {trn_line}
+          {license_line}
+          {support_line}
         </div>
       </div>
       <div class="invoice-title-block">
@@ -609,9 +604,9 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
 
     <div class="invoice-footer">
       <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
-      <p style="margin: 0 0 8px; font-size: 10px; color: #555555;">{company_name}</p>
+      <p style="margin: 0 0 6px; font-size: 10px; color: #555555; font-weight: 700;">{company_name}</p>
       <p style="margin: 0 0 4px; font-size: 10px; color: #555555;">{company_address}</p>
-      <p style="margin: 0; font-size: 10px; color: #555555;">Toll Free: 1800 890 2621 &nbsp;|&nbsp; <a href="mailto:info@pommastore.com" style="color: #D2168D; text-decoration: none;">info@pommastore.com</a> &nbsp;|&nbsp; www.pommastore.com</p>
+      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; Trade License: {trade_license} &nbsp;|&nbsp; <a href="mailto:support@pommastore.com" style="color: #D2168D; text-decoration: none;">support@pommastore.com</a> &nbsp;|&nbsp; www.pommaholidays.com</p>
     </div>
     <div class="bottom-bar"></div>
   </div>
@@ -742,7 +737,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     logo_flowable = None
     try:
         req = urllib.request.Request(
-            "https://pommastore.com/logo.png",
+            "https://pommaholidays.com/pommastore/logo.png",
             headers={'User-Agent': 'Mozilla/5.0'}
         )
         logo_data = urllib.request.urlopen(req, timeout=3).read()
@@ -752,11 +747,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         logo_flowable = Paragraph("POMMASTORE", title_style)
 
     # Left Header: Logo & Company Address info
-    left_header_text = f"<b>{company_name}</b><br/>{short_address}<br/>"
-    if gstin: left_header_text += f"GSTIN: {gstin}<br/>"
-    if pan: left_header_text += f"PAN: {pan}<br/>"
-    if state_code: left_header_text += f"State Code: {state_code}<br/>"
-    left_header_text += "Toll Free: 1800 890 2621"
+    left_header_text = f"<b>{company_name}</b><br/>{company_address}<br/>TRN: {trn}<br/>Trade License: {trade_license}<br/>Support: +971 4 288 9200"
     
     left_header_data = [
         [logo_flowable],
