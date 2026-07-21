@@ -599,45 +599,35 @@ async def get_kpis_report(
             # Inclusive VAT extraction (5% UAE VAT: Subtotal - (Subtotal / 1.05))
             total_tax_liability += (subtotal - (subtotal / 1.05))
 
-    # Monthly UAE VAT Ledger
-    stmt_gstr = (
-        select(
-            func.date_trunc('month', Order.created_at).label("month")
-        )
-        .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
-        .group_by(text("month"))
-        .order_by(desc("month"))
-    )
-    res_gstr = await db.execute(stmt_gstr)
-    gstr_rows = res_gstr.all()
-    
-    gstr1_ledger = []
-    for r in gstr_rows:
-        month_dt = r[0]
-        m_taxable_value = 0.0
-        m_total_vat = 0.0
+    # Monthly UAE VAT Audit Ledger
+    months_dict = {}
+    for o in all_orders:
+        if o.created_at:
+            m_key = o.created_at.strftime("%B %Y")
+            if m_key not in months_dict:
+                months_dict[m_key] = {"taxable": 0.0, "vat": 0.0}
+            tax = float(o.tax_amount or 0.0)
+            subtotal = float(o.subtotal or 0.0)
+            if tax > 0:
+                months_dict[m_key]["taxable"] += subtotal
+                months_dict[m_key]["vat"] += tax
+            else:
+                taxable_base = subtotal / 1.05
+                months_dict[m_key]["taxable"] += taxable_base
+                months_dict[m_key]["vat"] += (subtotal - taxable_base)
 
-        for o in all_orders:
-            if o.created_at.year == month_dt.year and o.created_at.month == month_dt.month:
-                tax = float(o.tax_amount or 0.0)
-                subtotal = float(o.subtotal or 0.0)
-                if tax > 0:
-                    m_taxable_value += subtotal
-                    m_total_vat += tax
-                else:
-                    taxable_base = subtotal / 1.05
-                    m_taxable_value += taxable_base
-                    m_total_vat += (subtotal - taxable_base)
-                    
-        gstr1_ledger.append(GSTR1LedgerRow(
-            month=month_dt.strftime("%B %Y"),
-            taxable_value=round(m_taxable_value, 2),
+    gstr1_ledger = [
+        GSTR1LedgerRow(
+            month=m_name,
+            taxable_value=round(m_val["taxable"], 2),
             gst_rate=5,
             cgst=0.0,
             sgst=0.0,
             igst=0.0,
-            total_gst=round(m_total_vat, 2)
-        ))
+            total_gst=round(m_val["vat"], 2)
+        )
+        for m_name, m_val in months_dict.items()
+    ]
 
     # 6. Sales Pipeline stages - 100% Dynamic database-driven funnel
     # Pending Orders represent active negotiations
