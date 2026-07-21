@@ -25,11 +25,11 @@ export default function Settings() {
   const [colorTheme, setColorTheme] = useState('classic')
   const [notifications, setNotifications] = useState({ stockAlert: true, orders: true, hazmat: false })
   const [companyGst, setCompanyGst] = useState({
-    companyName: 'Pommastore Commodities LLC',
-    gstin: '',
-    pan: '',
-    registeredAddress: '',
-    stateCode: 'Dubai'
+    companyName: 'POMMASTORE TRADING L.L.C',
+    gstin: '100489201900003',
+    phone: '+971 4 288 9200',
+    email: 'support@pommastore.com',
+    registeredAddress: 'Business Bay, Dubai, United Arab Emirates'
   })
   const [seoConfig, setSeoConfig] = useState({
     siteTitle: 'Pommastore | Luxury Perfume ERP',
@@ -444,27 +444,36 @@ export default function Settings() {
                 />
               </div>
 
-              <div className="grid-2" style={{ gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                 <div className="form-group">
                   <label className="form-label">TRN Number (Tax Registration Number) *</label>
                   <input 
                     type="text" 
                     className="input" 
-                    placeholder="e.g. 100234567800003"
+                    placeholder="e.g. 100489201900003"
                     style={{ textTransform: 'uppercase', fontFamily: 'monospace', fontWeight: 600, color: 'var(--gold-bright)' }}
                     value={companyGst.gstin}
                     onChange={e => setCompanyGst(prev => ({ ...prev, gstin: e.target.value.toUpperCase() }))}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Trade License Number</label>
+                  <label className="form-label">Support Phone Number</label>
                   <input 
                     type="text" 
                     className="input" 
-                    placeholder="e.g. 1234567 / Dubai Economy & Tourism"
-                    style={{ textTransform: 'uppercase', fontFamily: 'monospace' }}
-                    value={companyGst.pan}
-                    onChange={e => setCompanyGst(prev => ({ ...prev, pan: e.target.value.toUpperCase() }))}
+                    placeholder="e.g. +971 4 288 9200"
+                    value={companyGst.phone || ''}
+                    onChange={e => setCompanyGst(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Support Email Address</label>
+                  <input 
+                    type="email" 
+                    className="input" 
+                    placeholder="e.g. support@pommastore.com"
+                    value={companyGst.email || ''}
+                    onChange={e => setCompanyGst(prev => ({ ...prev, email: e.target.value }))}
                   />
                 </div>
               </div>
