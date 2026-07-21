@@ -126,7 +126,7 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
                     elif state_code in ["DL", "KA", "MH", "TN", "TS", "WB"] or district in ["bengaluru", "chennai", "mumbai", "hyderabad", "kolkata"]:
                         shipping_fee = 120.0 # Metro / Near National
                     else:
-                        shipping_fee = 150.0 # Rest of India / Far National
+                        shipping_fee = 17.0 # Default UAE Base Shipping
                         
                     # Fetch origin pincode from settings or db
                     origin_pin = 682026
@@ -158,13 +158,13 @@ async def check_pincode_serviceability(pincode: str) -> Dict[str, Any]:
         logger.error(f"Delhivery Pincode check error: {str(e)}")
         
     return {
-        "serviceable": False,
-        "cod_available": False,
-        "prepaid_available": False,
+        "serviceable": True,
+        "cod_available": True,
+        "prepaid_available": True,
         "district": "",
         "state": "",
-        "shipping_fee": 150.0,
-        "message": "Not serviceable or API error"
+        "shipping_fee": 17.0,
+        "message": "Standard UAE Shipping"
     }
 
 async def create_delhivery_shipment(order_data: Dict[str, Any]) -> Dict[str, Any]:

@@ -155,7 +155,7 @@ async def get_storefront_order_invoice_pdf(
 
 @router.get("/shipping/verify-pincode", status_code=200)
 async def verify_shipping_pincode(pincode: str):
-    if not pincode or len(pincode.strip()) < 6:
+    if not pincode or len(pincode.strip()) < 4:
         raise HTTPException(status_code=400, detail="Invalid pincode format.")
     return {
         "serviceable": True,
@@ -163,8 +163,8 @@ async def verify_shipping_pincode(pincode: str):
         "prepaid_available": True,
         "district": "",
         "state": "",
-        "shipping_fee": 150.0,
-        "message": "Serviceable via Panda Delivery"
+        "shipping_fee": 17.0,
+        "message": "Serviceable in UAE"
     }
 
 
