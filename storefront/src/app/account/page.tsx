@@ -64,12 +64,12 @@ export default function Account() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [ordersRes, addressesRes] = await Promise.all([
+        const [ordersRes, addressesRes] = await Promise.allSettled([
           api.get('/account/orders'),
           api.get('/account/addresses')
         ]);
-        setOrders(ordersRes.data);
-        setAddresses(addressesRes.data);
+        if (ordersRes.status === 'fulfilled') setOrders(ordersRes.value.data);
+        if (addressesRes.status === 'fulfilled') setAddresses(addressesRes.value.data);
       } catch (err) {
         console.error('Failed to fetch data', err);
       } finally {

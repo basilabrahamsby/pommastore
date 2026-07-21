@@ -243,6 +243,12 @@ async def list_my_orders(
     customer: Customer = Depends(get_current_customer),
     db: AsyncSession = Depends(get_db)
 ):
+    matching_conditions = [Order.customer_id == customer.id]
+    if customer.email:
+        matching_conditions.append(func.lower(Order.customer_email) == customer.email.lower())
+    if customer.phone:
+        matching_conditions.append(Order.customer_phone == customer.phone)
+
     result = await db.execute(
         select(Order)
         .options(
@@ -253,18 +259,7 @@ async def list_my_orders(
             selectinload(Order.status_history)
         )
         .where(
-            or_(
-                Order.customer_id == customer.id,
-                and_(
-                    Order.customer_email.isnot(None),
-                    func.lower(Order.customer_email) == func.lower(customer.email)
-                ),
-                and_(
-                    Order.customer_phone.isnot(None),
-                    customer.phone.isnot(None),
-                    Order.customer_phone == customer.phone
-                )
-            ),
+            or_(*matching_conditions),
             # Exclude only unpaid Razorpay / online draft orders
             or_(
                 Order.payment_gateway.is_(None),
