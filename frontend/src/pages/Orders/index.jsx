@@ -1122,11 +1122,20 @@ export default function Orders() {
   }
 
   // Enhanced Metric Derivations for Overview
-  const successfulPaymentOrders = orders.filter(o => ['paid', 'partially_paid', 'refunded'].includes(o.payment_status))
+  const activeOrders = orders.filter(o => !['cancelled', 'returned'].includes(o.status))
+  const successfulPaymentOrders = orders
   
   const filteredOrdersForStats = ovChannel === 'All Channels' 
-    ? successfulPaymentOrders 
-    : successfulPaymentOrders.filter(o => (o.channel || '').toLowerCase() === ovChannel.toLowerCase().replace(' pos', '').replace(' webstore', '').replace(' ordering', '').replace(' catalog shop', '').trim())
+    ? orders 
+    : orders.filter(o => {
+        const ch = (o.channel || '').toLowerCase()
+        const target = ovChannel.toLowerCase()
+        if (target.includes('pos')) return ch.includes('pos') || ch.includes('retail')
+        if (target.includes('webstore') || target.includes('online')) return ch.includes('storefront') || ch.includes('online') || ch.includes('web')
+        if (target.includes('whatsapp')) return ch.includes('whatsapp')
+        if (target.includes('instagram')) return ch.includes('instagram')
+        return ch.includes(target)
+      })
 
   const totalRevenue = filteredOrdersForStats.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
   const pendingShipments = filteredOrdersForStats.filter(o => ['pending', 'processing', 'packed', 'shipped'].includes(o.status)).length
@@ -1136,7 +1145,11 @@ export default function Orders() {
   const refundVolume = cancelledOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
   const netRevenue = totalRevenue - refundVolume
   
-  const totalTax = filteredOrdersForStats.reduce((sum, o) => sum + Number(o.tax_amount || 0), 0)
+  const totalTax = filteredOrdersForStats.reduce((sum, o) => {
+    const t = Number(o.tax_amount || 0)
+    const s = Number(o.subtotal || 0)
+    return sum + (t > 0 ? t : (s - (s / 1.05)))
+  }, 0)
   const totalShipping = filteredOrdersForStats.reduce((sum, o) => sum + Number(o.shipping_amount || 0), 0)
   
   const unpaidCount = filteredOrdersForStats.filter(o => !['paid', 'settled'].includes(o.payment_status || '') && o.payment_method === 'cod').length
@@ -1382,12 +1395,15 @@ export default function Orders() {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { label: 'POS', icon: '🏬', color: 'var(--gold)' },
-                  { label: 'Webstore', icon: '🌐', color: '#339af0' },
-                  { label: 'WhatsApp', icon: '💬', color: 'var(--success)' },
-                  { label: 'Instagram', icon: '📸', color: 'var(--error)' }
+                  { label: 'POS', icon: '🏬', color: 'var(--gold)', keys: ['pos', 'retail'] },
+                  { label: 'Webstore', icon: '🌐', color: '#339af0', keys: ['storefront', 'webstore', 'online', 'web'] },
+                  { label: 'WhatsApp', icon: '💬', color: 'var(--success)', keys: ['whatsapp'] },
+                  { label: 'Instagram', icon: '📸', color: 'var(--error)', keys: ['instagram'] }
                 ].map(ch => {
-                   const channelOrders = orders.filter(o => (o.channel || '').toLowerCase().includes(ch.label.toLowerCase()))
+                   const channelOrders = orders.filter(o => {
+                     const chStr = (o.channel || '').toLowerCase()
+                     return ch.keys.some(k => chStr.includes(k))
+                   })
                    const share = orders.length ? Math.round((channelOrders.length / orders.length) * 100) : 0
                    return (
                      <div 
@@ -1423,11 +1439,11 @@ export default function Orders() {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[
-                  { label: 'Stripe Gateway (Cards/Apple Pay)', icon: <CreditCard size={16} color="#339af0"/>, bg: 'rgba(51,154,240,0.1)', sub: 'Automated Payouts Active', method: 'stripe' },
-                  { label: 'Cash / Card on Delivery (COD)', icon: <Truck size={16} color="var(--gold)"/>, bg: 'rgba(201,168,76,0.1)', sub: 'Doorstep Settlement Active', method: 'cod' },
-                  { label: 'Direct Bank Deposit', icon: <Building size={16} color="var(--success)"/>, bg: 'rgba(16,185,129,0.1)', sub: 'Physical EDC / Bank Transfer', method: 'bank_transfer' }
+                  { label: 'Stripe Gateway (Cards/Apple Pay)', icon: <CreditCard size={16} color="#339af0"/>, bg: 'rgba(51,154,240,0.1)', sub: 'Automated Payouts Active', keys: ['stripe', 'card'] },
+                  { label: 'Cash / Card on Delivery (COD)', icon: <Truck size={16} color="var(--gold)"/>, bg: 'rgba(201,168,76,0.1)', sub: 'Doorstep Settlement Active', keys: ['cod', 'cash'] },
+                  { label: 'Direct Bank Deposit', icon: <Building size={16} color="var(--success)"/>, bg: 'rgba(16,185,129,0.1)', sub: 'Physical EDC / Bank Transfer', keys: ['bank_transfer', 'bank'] }
                 ].map(m => {
-                  const methodRev = orders.filter(o => o.payment_method === m.method).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+                  const methodRev = orders.filter(o => m.keys.some(k => (o.payment_method || '').toLowerCase().includes(k))).reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
                   const share = totalRevenue ? Math.round((methodRev / totalRevenue) * 100) : 0
                   return (
                     <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
