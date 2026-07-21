@@ -1,4 +1,4 @@
-'use client';
+1'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -385,6 +385,9 @@ export default function Checkout() {
         try {
           const createRes = await api.post('/orders/stripe/create', {
             payment_method: 'stripe',
+            customer_name: contactForm.full_name || customer?.full_name,
+            customer_email: contactForm.email || customer?.email,
+            customer_phone: contactForm.phone || customer?.phone,
             shipping_address: shippingAddressData,
             billing_address: shippingAddressData,
             payment_status: 'pending',
@@ -449,6 +452,9 @@ export default function Checkout() {
         try {
           const createRes = await api.post('/orders/checkout', {
             payment_method: 'cod',
+            customer_name: contactForm.full_name || customer?.full_name,
+            customer_email: contactForm.email || customer?.email,
+            customer_phone: contactForm.phone || customer?.phone,
             shipping_address: shippingAddressData,
             billing_address: shippingAddressData,
             payment_status: 'pending',

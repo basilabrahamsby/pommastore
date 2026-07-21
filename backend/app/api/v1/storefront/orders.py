@@ -222,15 +222,19 @@ async def storefront_checkout(
 ):
     # Explicitly override and set customer credentials securely from the logged-in session!
     body.customer_id = customer.id
-    body.customer_name = customer.full_name
-    body.customer_email = customer.email
-    body.customer_phone = customer.phone
+    body.customer_name = body.customer_name or customer.full_name
+    body.customer_email = body.customer_email or customer.email
+    body.customer_phone = body.customer_phone or customer.phone or (body.shipping_address.get("phone") if body.shipping_address else None)
     body.channel = "storefront"
+
+    if body.customer_phone and not customer.phone:
+        customer.phone = body.customer_phone
+        db.add(customer)
 
     if not body.customer_phone or not body.customer_email:
         raise HTTPException(
             status_code=400, 
-            detail="Mobile and email are compulsory to complete checkout. Please ensure both are registered in your account profile."
+            detail="Mobile and email are compulsory to complete checkout."
         )
     
     subtotal = sum(item.unit_price * item.quantity - item.discount_amount for item in body.items)
@@ -819,13 +823,17 @@ async def create_stripe_order(
     customer: Customer = Depends(get_current_customer)
 ):
     body.customer_id = customer.id
-    body.customer_name = customer.full_name
-    body.customer_email = customer.email
-    body.customer_phone = customer.phone
+    body.customer_name = body.customer_name or customer.full_name
+    body.customer_email = body.customer_email or customer.email
+    body.customer_phone = body.customer_phone or customer.phone or (body.shipping_address.get("phone") if body.shipping_address else None)
     body.channel = "storefront"
     body.payment_method = PaymentMethod.stripe
     body.payment_gateway = "stripe"
     body.payment_status = PaymentStatus.pending
+
+    if body.customer_phone and not customer.phone:
+        customer.phone = body.customer_phone
+        db.add(customer)
 
     if not body.customer_phone or not body.customer_email:
         raise HTTPException(
