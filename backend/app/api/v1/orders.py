@@ -38,10 +38,19 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 public_router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
-def generate_order_number() -> str:
-    now = datetime.now(timezone.utc)
-    suffix = str(uuid.uuid4().int)[:6]
-    return f"KZM-{now.year}-{suffix}"
+async def generate_order_number(db: AsyncSession) -> str:
+    res = await db.execute(select(Order.order_number).where(Order.order_number.like("PS-%")))
+    numbers = res.scalars().all()
+    max_seq = 0
+    for num in numbers:
+        try:
+            seq = int(num.replace("PS-", "").replace("PS", "").strip())
+            if seq > max_seq:
+                max_seq = seq
+        except ValueError:
+            pass
+    next_seq = max_seq + 1
+    return f"PS-{next_seq:05d}"
 
 
 @router.get("", response_model=list[OrderOut])
@@ -313,7 +322,7 @@ async def create_order(
                 db.add(new_addr)
 
     order = Order(
-        order_number=generate_order_number(),
+        order_number=await generate_order_number(db),
         customer_id=customer_id,
         processed_by=current_user.id,
         channel=body.channel,

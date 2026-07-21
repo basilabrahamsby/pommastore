@@ -44,10 +44,19 @@ class OrderTrackRequest(BaseModel):
     order_number: str
     contact: str # email or phone
 
-def generate_order_number() -> str:
-    now = datetime.now(timezone.utc)
-    suffix = str(uuid.uuid4().int)[:6]
-    return f"KZM-{now.year}-{suffix}"
+async def generate_order_number(db: AsyncSession) -> str:
+    res = await db.execute(select(Order.order_number).where(Order.order_number.like("PS-%")))
+    numbers = res.scalars().all()
+    max_seq = 0
+    for num in numbers:
+        try:
+            seq = int(num.replace("PS-", "").replace("PS", "").strip())
+            if seq > max_seq:
+                max_seq = seq
+        except ValueError:
+            pass
+    next_seq = max_seq + 1
+    return f"PS-{next_seq:05d}"
 
 def _enrich_order(order: Order) -> OrderOut:
     out = OrderOut.model_validate(order)
@@ -264,7 +273,7 @@ async def storefront_checkout(
 
     # Instantiate our main order record
     order = Order(
-        order_number=generate_order_number(),
+        order_number=await generate_order_number(db),
         customer_id=customer.id,
         processed_by=None, # Initiated by customer
         channel=body.channel,
@@ -542,7 +551,7 @@ async def create_razorpay_order(
                 db.add(new_addr)
 
     order = Order(
-        order_number=generate_order_number(),
+        order_number=await generate_order_number(db),
         customer_id=customer.id,
         processed_by=None,
         channel=body.channel,
@@ -948,7 +957,7 @@ async def create_stripe_order(
                 db.add(new_addr)
 
     order = Order(
-        order_number=generate_order_number(),
+        order_number=await generate_order_number(db),
         customer_id=customer.id,
         processed_by=None,
         channel=body.channel,
