@@ -1,12 +1,25 @@
-﻿'use client';
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send, Clock } from 'lucide-react';
+import api from '@/services/api';
 
 export default function ContactUs() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
+
+  useEffect(() => {
+    api.get('/settings/storefront_layout')
+      .then(res => setCompanyInfo(res.data))
+      .catch(err => console.warn('Failed to fetch layout on contact page', err));
+  }, []);
+
+  const phone = companyInfo?.footer_settings?.phone || companyInfo?.company?.phone || '+971 4 453 9119';
+  const email = companyInfo?.footer_settings?.email || companyInfo?.company?.email || 'sales@poshgallery.ae';
+  const companyName = companyInfo?.company?.companyName || 'POSH NICHE PERFUMES & COSMETICS TRADING LLC';
+  const registeredAddress = companyInfo?.company?.registeredAddress || 'Office No. C-81, Al Muteena, Dubai, United Arab Emirates';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +63,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <span className="text-[9px] font-black text-neutral-400 tracking-widest uppercase block mb-1">Telephone Concierge</span>
-                  <a href="tel:+919999999999" className="text-sm font-bold text-black hover:opacity-70 transition-opacity font-mono">+91 99999 99999</a>
+                  <a href={`tel:${phone.replace(/\s+/g, '')}`} className="text-sm font-bold text-black hover:opacity-70 transition-opacity font-mono">{phone}</a>
                 </div>
               </div>
 
@@ -60,7 +73,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <span className="text-[9px] font-black text-neutral-400 tracking-widest uppercase block mb-1">Digital Correspondence</span>
-                  <a href="mailto:concierge@pommastore.com" className="text-sm font-bold text-black hover:opacity-70 transition-opacity font-medium">concierge@pommastore.com</a>
+                  <a href={`mailto:${email}`} className="text-sm font-bold text-black hover:opacity-70 transition-opacity font-medium">{email}</a>
                 </div>
               </div>
             </div>
@@ -76,7 +89,7 @@ export default function ContactUs() {
                   <span className="text-[9px] font-black text-neutral-400 tracking-widest uppercase block mb-1">Operational Hours</span>
                   <p className="text-[12px] text-neutral-600 font-medium leading-relaxed">
                     Monday – Saturday <br/>
-                    <span className="text-black font-bold font-mono">10:00 AM – 07:00 PM IST</span>
+                    <span className="text-black font-bold font-mono">09:00 AM – 06:00 PM GST (Dubai Time)</span>
                   </p>
                   <p className="text-[10px] text-neutral-400 mt-2 font-medium italic">Closed on national holidays.</p>
                 </div>
@@ -92,9 +105,8 @@ export default function ContactUs() {
                 <div>
                   <span className="text-[9px] font-black text-neutral-400 tracking-widest uppercase block mb-1">Corporate Offices</span>
                   <p className="text-[12px] text-neutral-600 font-medium leading-relaxed">
-                    Pommastore Retail Private Limited <br/>
-                    Premium Logistics Zone, New Delhi, 110037 <br/>
-                    Republic of India.
+                    <span className="font-bold text-black">{companyName}</span> <br/>
+                    {registeredAddress}
                   </p>
                 </div>
               </div>

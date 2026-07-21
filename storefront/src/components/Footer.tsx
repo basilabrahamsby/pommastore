@@ -212,8 +212,8 @@ const Footer = () => {
                 <Phone size={15} className="text-accent mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">{locale === 'ar' ? 'الهاتف' : 'Phone'}</p>
-                  <a href={`tel:${footer.phone || '+919999999999'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
-                    {footer.phone || "+91 99999 99999"}
+                  <a href={`tel:${footer.phone || layout?.company?.phone || '+97144539119'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
+                    {footer.phone || layout?.company?.phone || "+971 4 453 9119"}
                   </a>
                 </div>
               </li>
@@ -221,8 +221,8 @@ const Footer = () => {
                 <Mail size={15} className="text-accent mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">{locale === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
-                  <a href={`mailto:${footer.email || 'support@pommastore.com'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
-                    {footer.email || "support@pommastore.com"}
+                  <a href={`mailto:${footer.email || layout?.company?.email || 'sales@poshgallery.ae'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
+                    {footer.email || layout?.company?.email || "sales@poshgallery.ae"}
                   </a>
                 </div>
               </li>

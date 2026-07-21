@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Shield, Award, Truck, Sparkles } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function AboutUs() {
               Pommastore was founded on a singular, uncompromising premise: that access to genuine, globally revered liquid art should be seamless and trustworthy. 
             </p>
             <p className="text-neutral-500 font-medium leading-relaxed tracking-wide text-[13px]">
-              In an ecosystem frequently clouded by uncertainty, we envisioned a secure conduit between prestigious fragrance houses in Europe and Middle East, and the discerning, olfactory connoisseurs of the Indian subcontinent. We curate only original masterpieces.
+              In an ecosystem frequently clouded by uncertainty, we envisioned a secure conduit between prestigious fragrance houses in Europe and the Middle East, and discerning olfactory connoisseurs worldwide. We curate only original masterpieces.
             </p>
           </div>
           <div className="relative h-[400px] lg:h-[600px] w-full overflow-hidden bg-neutral-100 border border-neutral-200">
@@ -90,7 +90,7 @@ export default function AboutUs() {
         </p>
         <div className="prose prose-neutral max-w-none text-[13px] tracking-wide text-neutral-500 font-medium leading-relaxed space-y-6 text-justify md:text-center">
           <p>
-            Our operations operate at a global scale but serve you individually. From the moment you click purchase, the bottle travels in climate regulated zones, passes multiple authenticity inspections at our primary Indian hub, is secured inside multi-layered bespoke packaging, and travels to your doorstep via express freight networks like Delhivery.
+            Our operations operate at a global scale but serve you individually. From the moment you click purchase, the bottle travels in climate regulated zones, passes multiple authenticity inspections at our primary hub, is secured inside multi-layered bespoke packaging, and travels to your doorstep via express logistics networks.
           </p>
           <p>
             Welcome to the Inner Sanctum. Welcome to Pommastore.
