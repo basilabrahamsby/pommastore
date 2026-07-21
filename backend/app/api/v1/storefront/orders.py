@@ -58,7 +58,7 @@ async def generate_order_number(db: AsyncSession) -> str:
         except ValueError:
             pass
     next_seq = max_seq + 1
-    return f"{prefix}{next_seq:05d}"
+    return f"{prefix}{next_seq:03d}"
 
 def _enrich_order(order: Order) -> OrderOut:
     out = OrderOut.model_validate(order)

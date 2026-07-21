@@ -52,7 +52,7 @@ async def generate_order_number(db: AsyncSession) -> str:
         except ValueError:
             pass
     next_seq = max_seq + 1
-    return f"{prefix}{next_seq:05d}"
+    return f"{prefix}{next_seq:03d}"
 
 
 @router.get("", response_model=list[OrderOut])
