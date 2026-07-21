@@ -3,9 +3,6 @@ import { useAuthStore } from '../store/authStore'
 
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return '/pommastore/api/v1'
-  }
   return '/api/v1'
 }
 
@@ -27,7 +24,7 @@ api.interceptors.response.use(
     if ((err.response?.status === 401 || err.response?.status === 403) && !isLoginRequest) {
       useAuthStore.getState().logout()
       // Use replace to prevent navigation loops in history
-      const loginPath = (import.meta.env.BASE_URL || '/pommastore/admin/').replace(/\/$/, '') + '/login'
+      const loginPath = (import.meta.env.BASE_URL || '/admin/').replace(/\/$/, '') + '/login'
       window.location.replace(loginPath)
     }
     return Promise.reject(err)

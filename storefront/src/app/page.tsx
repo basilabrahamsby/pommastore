@@ -134,7 +134,7 @@ export default function Home() {
       return (
          <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center font-sans">
             <div className="relative mb-8 text-center">
-               <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
+               <img src="/logo.png" alt="Pommastore Logo" className="h-16 md:h-20 object-contain animate-pulse mx-auto" />
                <div className="absolute -bottom-4 left-0 w-full h-[1px] bg-neutral-100 overflow-hidden">
                   <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
                </div>
@@ -1254,7 +1254,7 @@ export default function Home() {
              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-neutral-200/30 to-transparent pointer-events-none" />
              {/* Oversized watermark logo */}
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-                <img src="/pommastore/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.015] mix-blend-multiply" />
+                <img src="/logo.png" alt="" className="w-[50vw] max-w-[500px] object-contain opacity-[0.015] mix-blend-multiply" />
              </div>
              {/* Small corner ornaments */}
              <svg className="absolute top-4 left-4 w-8 h-8 text-neutral-300/60" viewBox="0 0 48 48" fill="none"><path d="M1 47V1h46" stroke="currentColor" strokeWidth="1"/></svg>

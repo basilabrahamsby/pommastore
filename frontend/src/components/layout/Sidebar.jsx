@@ -95,7 +95,7 @@ export default function Sidebar({ isOpen, onClose }) {
             src={`${import.meta.env.BASE_URL}logo.png`} 
             alt="Pommastore Logo" 
             style={{ height: '38px', objectFit: 'contain', display: 'block' }} 
-            onError={(e) => { e.target.onerror = null; e.target.src = '/pommastore/admin/logo.png' }}
+            onError={(e) => { e.target.onerror = null; e.target.src = '/admin/logo.png' }}
           />
           <span style={{ fontSize: '0.62rem', color: 'var(--gold)', letterSpacing: '0.18em', textTransform: 'uppercase', display: 'block', marginTop: 4, fontWeight: 800 }}>
             Admin ERP

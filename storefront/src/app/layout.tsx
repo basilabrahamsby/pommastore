@@ -53,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
       google: seo.googleConsoleId
     } : undefined,
     icons: {
-      icon: '/pommastore/logo.png'
+      icon: '/logo.png'
     }
   };
 }

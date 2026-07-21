@@ -11,7 +11,7 @@ const getBackendUrl = (): string => {
 const BACKEND_URL = getBackendUrl();
 
 export const getMediaUrl = (path: string | null | undefined): string => {
-  if (!path) return '/pommastore/placeholder-perfume.png';
+  if (!path) return '/placeholder-perfume.png';
   
   let cleanPath = path;
   
@@ -27,7 +27,7 @@ export const getMediaUrl = (path: string | null | undefined): string => {
 
   const prefix = isServer 
     ? 'http://api:8000' 
-    : (window.location.hostname === 'localhost' ? 'http://localhost:8030' : '/pommastore');
+    : (window.location.hostname === 'localhost' ? 'http://localhost:8030' : '');
 
   return `${prefix}${cleanPath}`;
 };

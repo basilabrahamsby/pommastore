@@ -21,7 +21,7 @@ export default function Layout() {
         {/* Mobile top bar with hamburger */}
         <div className="mobile-topbar">
           <div style={{ background: '#0a0a0f', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(201,168,76,0.3)' }}>
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Pommastore Logo" style={{ height: '30px', objectFit: 'contain', display: 'block' }} onError={(e) => { e.target.onerror = null; e.target.src = '/pommastore/admin/logo.png' }} />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Pommastore Logo" style={{ height: '30px', objectFit: 'contain', display: 'block' }} onError={(e) => { e.target.onerror = null; e.target.src = '/admin/logo.png' }} />
           </div>
           <button
             className="hamburger"

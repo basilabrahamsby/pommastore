@@ -129,7 +129,7 @@ const Footer = () => {
           {/* About Column */}
           <div>
             <div className="mb-6">
-              <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-9 object-contain" />
+              <img src="/logo.png" alt="Pommastore Logo" className="h-9 object-contain" />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed mb-8 font-medium">
               {defaultAbout}

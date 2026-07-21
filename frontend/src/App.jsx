@@ -19,7 +19,7 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
-  const baseName = import.meta.env.BASE_URL.replace(/\/$/, '') || '/pommastore/admin'
+  const baseName = import.meta.env.BASE_URL.replace(/\/$/, '') || '/admin'
   return (
     <BrowserRouter basename={baseName}>
       <Routes>

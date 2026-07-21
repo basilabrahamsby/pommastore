@@ -111,7 +111,7 @@ const Navbar = () => {
             {/* Left Logo Area */}
             <div className="flex-shrink-0 flex items-center">
                <Link href="/" className="flex items-center">
-                 <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-10 sm:h-12 md:h-14 object-contain" />
+                 <img src="/logo.png" alt="Pommastore Logo" className="h-10 sm:h-12 md:h-14 object-contain" />
                </Link>
             </div>
 
@@ -397,7 +397,7 @@ const Navbar = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-6 border-b border-gray-100">
-             <img src="/pommastore/logo.png" alt="Pommastore Logo" className="h-6 object-contain" />
+             <img src="/logo.png" alt="Pommastore Logo" className="h-6 object-contain" />
              <button onClick={() => setIsMobileMenuOpen(false)}><X size={20} /></button>
           </div>
           <nav className="flex flex-col p-6 font-black tracking-[0.2em] uppercase text-xs space-y-6">
