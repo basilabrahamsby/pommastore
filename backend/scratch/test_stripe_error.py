@@ -20,7 +20,7 @@ async def main():
             
         print(f"TESTING WITH CUSTOMER {c.email} and VARIANT {v.id}")
         body = OrderCreate(
-            items=[OrderItemCreate(variant_id=v.id, quantity=1, unit_price=float(v.price_aed or 100.0))],
+            items=[OrderItemCreate(variant_id=v.id, quantity=1, unit_price=float(v.selling_price or 100.0))],
             shipping_amount=17.0,
             payment_method='stripe',
             shipping_address={'address_line1': 'Test St', 'city': 'Dubai', 'pincode': '00000', 'country': 'UAE'}
