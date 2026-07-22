@@ -1043,27 +1043,34 @@ export default function Orders() {
   }
 
   const handleDispatchShipment = async () => {
-    if (!shipForm.tracking_number.trim() && shipForm.carrier !== 'Delhivery') {
-      toast.error('Please enter a tracking number')
-      return
-    }
     setShipLoading(true)
     try {
-      let awb = shipForm.tracking_number.trim()
-      if (shipForm.carrier === 'Delhivery' && !awb) {
-        awb = `DLVRY${Date.now().toString().slice(-10)}`
-        toast('📦 Delhivery AWB generated: ' + awb, { icon: '🚚' })
+      if (shipForm.carrier === 'Delivery Panda') {
+        const res = await api.post(`/orders/${shipModal.orderId}/dispatch/delivery-panda`)
+        const awb = res.data?.payment_details?.awb_number || res.data?.tracking_number || ''
+        const pdf = res.data?.payment_details?.awb_pdf || ''
+        toast.success(`🐼 Dispatched via Delivery Panda! AWB: ${awb}`)
+        if (pdf) {
+          window.open(pdf, '_blank')
+        }
+      } else {
+        let awb = shipForm.tracking_number.trim()
+        if (shipForm.carrier === 'Delhivery' && !awb) {
+          awb = `DLVRY${Date.now().toString().slice(-10)}`
+          toast('📦 Delhivery AWB generated: ' + awb, { icon: '🚚' })
+        }
+        await api.patch(`/orders/${shipModal.orderId}/status`, {
+          status: 'shipped',
+          tracking_number: awb,
+          carrier: shipForm.carrier,
+        })
+        toast.success(`✅ Shipment dispatched via ${shipForm.carrier}`)
       }
-      await api.patch(`/orders/${shipModal.orderId}/status`, {
-        status: 'shipped',
-        tracking_number: awb,
-        carrier: shipForm.carrier,
-      })
-      toast.success(`✅ Shipment dispatched via ${shipForm.carrier}`)
       loadOrders()
       setShipModal(null)
-    } catch {
-      toast.error('Dispatch failed. Please try again.')
+    } catch (err) {
+      const errMsg = err.response?.data?.detail || 'Dispatch failed. Please check order details.'
+      toast.error(errMsg)
     } finally {
       setShipLoading(false)
     }
@@ -1971,6 +1978,17 @@ export default function Orders() {
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {(selectedOrder.payment_details?.awb_pdf || (selectedOrder.carrier === 'Delivery Panda' && selectedOrder.tracking_number)) && (
+                  <a 
+                    href={selectedOrder.payment_details?.awb_pdf || `https://app.deliverypanda.me/webservice/GetPdf/${selectedOrder.tracking_number}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-primary btn-sm" 
+                    style={{ background: '#FF5722', color: '#fff', borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
+                  >
+                    🐼 Print Delivery Panda AWB
+                  </a>
+                )}
                 {selectedOrder.tracking_number && (
                   <a 
                     href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/delhivery-label`} 
@@ -2182,6 +2200,7 @@ export default function Orders() {
               <div>
                 <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Carrier / Courier Partner</label>
                 <select className="select" value={shipForm.carrier} onChange={e => setShipForm({ ...shipForm, carrier: e.target.value })} style={{ width: '100%' }}>
+                  <option value="Delivery Panda">🐼 Delivery Panda (Auto-generate AWB & Label)</option>
                   <option value="Delhivery">🚀 Delhivery (Auto-generate AWB)</option>
                   <option value="BlueDart">BlueDart</option>
                   <option value="DTDC">DTDC</option>

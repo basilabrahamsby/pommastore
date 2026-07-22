@@ -673,6 +673,82 @@ async def update_order_contact(
     return _enrich_order(order)
 
 
+@router.post("/{order_id}/dispatch/delivery-panda", response_model=OrderOut)
+async def dispatch_order_delivery_panda(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_manager),
+):
+    from app.services.delivery_panda import book_delivery_panda_shipment
+
+    try:
+        order_uuid = uuid.UUID(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid Order ID format")
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_uuid)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+            selectinload(Order.status_history),
+            joinedload(Order.customer),
+        )
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    ship_res = await book_delivery_panda_shipment(order)
+    if not ship_res.get("success"):
+        raise HTTPException(status_code=400, detail=ship_res.get("error") or "Delivery Panda dispatch failed")
+
+    awb_number = ship_res.get("awb_number")
+    awb_pdf = ship_res.get("awb_pdf")
+
+    order.carrier = "Delivery Panda"
+    order.tracking_number = awb_number
+    order.status = OrderStatus.shipped
+    order.shipped_at = datetime.now(timezone.utc)
+
+    pay_details = dict(order.payment_details or {})
+    pay_details["awb_number"] = awb_number
+    pay_details["awb_pdf"] = awb_pdf
+    pay_details["carrier"] = "Delivery Panda"
+    order.payment_details = pay_details
+
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=OrderStatus.shipped,
+        notes=f"Dispatched via Delivery Panda. AWB: {awb_number}. Label PDF: {awb_pdf}"
+    )
+    db.add(history)
+    await db.commit()
+    await db.refresh(order)
+
+    enriched = _enrich_order(order)
+    to_email = enriched.customer_email
+    if to_email:
+        background_tasks.add_task(
+            send_order_shipped_email,
+            to_email=to_email,
+            customer_name=enriched.customer_name or "Valued Customer",
+            order_number=enriched.order_number,
+            carrier="Delivery Panda",
+            tracking_number=awb_number,
+            tracking_url=awb_pdf,
+            items=order_items_to_email_list(order.items),
+        )
+
+    to_phone = enriched.customer_phone
+    if to_phone:
+        msg = f"Good news! Your order #{enriched.order_number} has been shipped via Delivery Panda. AWB: {awb_number}. Track: https://pommastore.com/track-order?order={enriched.order_number}"
+        background_tasks.add_task(sendsms_status, to_phone, msg)
+
+    return enriched
+
+
 def _enrich_order(order: Order) -> OrderOut:
     out = OrderOut.model_validate(order)
     if order.customer:

@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     DELHIVERY_SANDBOX: bool = True
     DELHIVERY_PICKUP_LOCATION: str = "Pommastore Warehouse"
 
+    # Delivery Panda Settings
+    DELIVERY_PANDA_API_KEY: str = "bb08cfb8cd65100b97885c08bb3740c8"
+    DELIVERY_PANDA_COMPANY_CODE: str = "SW1232"
+    DELIVERY_PANDA_BRANCH: str = "Dubai"
+    DELIVERY_PANDA_URL: str = "https://app.deliverypanda.me/webservice/CustomerBooking"
+
     # SMTP Settings
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
