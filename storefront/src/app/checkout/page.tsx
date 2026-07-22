@@ -62,6 +62,7 @@ export default function Checkout() {
   const [processingStripe, setProcessingStripe] = useState(false);
   const [stripeModalError, setStripeModalError] = useState<string | null>(null);
   const [verifyingOtps, setVerifyingOtps] = useState(false);
+  const [verifyingStripe, setVerifyingStripe] = useState(false);
   const [verifyEmailNeeded, setVerifyEmailNeeded] = useState(false);
   const [verifyPhoneNeeded, setVerifyPhoneNeeded] = useState(false);
 
@@ -150,77 +151,44 @@ export default function Checkout() {
     if (emailChanged || phoneChanged) {
       setUpdatingContact(true);
       try {
-        if (phoneChanged) {
-          const patchRes = await api.patch('/account/me', { phone: contactForm.phone.trim() });
-          useAuthStore.setState({ customer: patchRes.data });
-        }
-
-        if (emailChanged) {
-          await api.post('/account/verify/send', {
-            email: contactForm.email.trim()
-          });
-          setVerifyEmailNeeded(true);
-          setVerifyPhoneNeeded(false);
-          setEmailOtp('');
-          setPhoneOtp('');
+        const payload: any = {
+          email: contactForm.email,
+          phone: contactForm.phone,
+          full_name: contactForm.full_name
+        };
+        const res = await api.put('/account/profile', payload);
+        useAuthStore.setState({ customer: res.data });
+        
+        if (res.data.verify_email_needed || res.data.verify_phone_needed) {
+          setVerifyEmailNeeded(!!res.data.verify_email_needed);
+          setVerifyPhoneNeeded(!!res.data.verify_phone_needed);
           setShowVerifyModal(true);
         } else {
-          // If only phone was updated
-          alert('Phone number updated successfully!');
+          alert('Contact details updated successfully!');
         }
       } catch (err: any) {
-        const detail = err.response?.data?.detail;
-        alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to update contact details.');
+        alert(err.response?.data?.detail || 'Failed to update contact info');
       } finally {
         setUpdatingContact(false);
       }
     } else {
-      // If only name changed (or nothing changed)
-      setUpdatingContact(true);
-      try {
-        const res = await api.patch('/account/me', {
-          full_name: contactForm.full_name.trim()
-        });
-        useAuthStore.setState({ customer: res.data });
-        alert('Contact details updated successfully!');
-      } catch (err: any) {
-        const detail = err.response?.data?.detail;
-        alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Failed to update contact details.');
-      } finally {
-        setUpdatingContact(false);
-      }
+      alert('Contact details saved.');
     }
   };
 
-  const handleConfirmVerification = async (e: React.FormEvent) => {
+  const handleVerifyOtps = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (verifyEmailNeeded && !emailOtp.trim()) {
-      alert('Please enter the Email verification code.');
-      return;
-    }
-    if (verifyPhoneNeeded && !phoneOtp.trim()) {
-      alert('Please enter the Mobile verification code.');
-      return;
-    }
-
     setVerifyingOtps(true);
     try {
-      const res = await api.post('/account/verify/confirm', {
-        email_otp: verifyEmailNeeded ? emailOtp.trim() : undefined,
-        phone_otp: verifyPhoneNeeded ? phoneOtp.trim() : undefined,
-        full_name: contactForm.full_name.trim()
+      const res = await api.post('/account/verify-contact-otps', {
+        email_otp: verifyEmailNeeded ? emailOtp : null,
+        phone_otp: verifyPhoneNeeded ? phoneOtp : null
       });
-      useAuthStore.setState({ 
-        customer: res.data.customer,
-        token: res.data.access_token
-      });
+      useAuthStore.setState({ customer: res.data.customer });
       setShowVerifyModal(false);
-      setEmailOtp('');
-      setPhoneOtp('');
-      alert('Contact details verified and merged successfully!');
+      alert('Contact details verified successfully!');
     } catch (err: any) {
-      const detail = err.response?.data?.detail;
-      alert(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Verification failed. Please try again.');
+      alert(err.response?.data?.detail || 'Verification failed. Please check OTP codes.');
     } finally {
       setVerifyingOtps(false);
     }
@@ -236,36 +204,33 @@ export default function Checkout() {
   }, []);
 
   const [addressForm, setAddressForm] = useState({
-    label: 'Delivery Address',
+    label: 'Home',
     address_line1: '',
     address_line2: '',
-    city: '',
-    state: '',
-    pincode: '',
+    city: 'Dubai',
+    state: 'Dubai',
+    pincode: '00000',
     phone: '',
-    country: 'India'
+    country: 'United Arab Emirates'
   });
 
-  const [shippingFee, setShippingFee] = useState(17);
+  const [shippingFee, setShippingFee] = useState(0);
 
   useEffect(() => {
     const updateShippingRate = async () => {
-      let targetCity = '';
-      let targetPin = '';
-      if (selectedAddressId === 'new') {
-        targetCity = addressForm.city || addressForm.state || '';
-        targetPin = addressForm.pincode || '';
-      } else {
-        const addr = addresses.find(a => a.id === selectedAddressId);
-        if (addr) {
-          targetCity = addr.city || addr.state || '';
-          targetPin = addr.pincode || '';
+      let targetCity = addressForm.city;
+      let targetPin = addressForm.pincode;
+
+      if (selectedAddressId !== 'new') {
+        const matched = addresses.find((a) => a.id === selectedAddressId);
+        if (matched) {
+          targetCity = matched.city;
+          targetPin = matched.pincode;
         }
       }
 
-      const clean = targetCity.toLowerCase().trim();
-      if (clean.includes('abu dhabi') || clean.includes('al ain') || clean.includes('remote')) {
-        setShippingFee(25);
+      if (targetCity && (targetCity.toLowerCase().includes('dubai') || targetCity.toLowerCase().includes('sharjah') || targetCity.toLowerCase().includes('ajman'))) {
+        setShippingFee(0);
       } else {
         setShippingFee(17);
       }
@@ -297,6 +262,8 @@ export default function Checkout() {
     const isSuccess = urlParams.get('success');
 
     if (sessionId && isSuccess === 'true') {
+      setVerifyingStripe(true);
+      setLoading(true);
       const verifyStripePaymentOnReturn = async () => {
         try {
           const res = await api.post('/orders/stripe/verify', {
@@ -305,9 +272,16 @@ export default function Checkout() {
           if (res.data && res.data.order) {
             setOrderSuccess(res.data.order);
             clearCart();
+          } else {
+            setCheckoutError('Payment verification completed but order details were not returned.');
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Failed to verify Stripe return payment:', err);
+          const detail = err.response?.data?.detail;
+          setCheckoutError(detail ? (typeof detail === 'string' ? detail : JSON.stringify(detail)) : 'Stripe payment verification failed. Please contact support.');
+        } finally {
+          setVerifyingStripe(false);
+          setLoading(false);
         }
       };
       verifyStripePaymentOnReturn();
@@ -322,8 +296,7 @@ export default function Checkout() {
     const isStripeReturn = !!(urlParams2?.get('session_id') && urlParams2?.get('success') === 'true');
 
     if (isStripeReturn) {
-      // On Stripe return, just show loading — the verify useEffect will set orderSuccess
-      setLoading(false);
+      // On Stripe return, stay in loading state until verifyStripePaymentOnReturn finishes
       return;
     }
 
@@ -550,12 +523,14 @@ export default function Checkout() {
     }
   };
 
-  if ((!isHydrated || loading) && !orderSuccess) {
+  if ((!isHydrated || loading || verifyingStripe) && !orderSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-xs font-bold tracking-widest uppercase text-gray-400">Loading checkout...</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-gray-400">
+            {verifyingStripe ? 'Verifying payment status...' : 'Loading checkout...'}
+          </p>
         </div>
       </div>
     );

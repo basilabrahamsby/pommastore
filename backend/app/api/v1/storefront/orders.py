@@ -1226,7 +1226,7 @@ async def verify_stripe_payment(
         .where(Order.id == order.id)
         .options(joinedload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product))
     )
-    enriched = final_result.scalar_one()
+    enriched = final_result.unique().scalar_one()
 
     # Trigger emails
     background_tasks.add_task(
