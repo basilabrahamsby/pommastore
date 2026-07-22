@@ -55,11 +55,15 @@ async def generate_order_number(db: AsyncSession) -> str:
     return f"{prefix}{next_seq:03d}"
 
 
+from sqlalchemy import not_, and_
+from app.models.order import PaymentMethod, PaymentStatus
+
 @router.get("", response_model=list[OrderOut])
 async def list_orders(
     status: str | None = Query(None),
     channel: str | None = Query(None),
     search: str | None = Query(None),
+    include_unpaid: bool = Query(False),
     start_date: datetime | None = Query(None),
     end_date: datetime | None = Query(None),
     skip: int = 0,
@@ -72,6 +76,16 @@ async def list_orders(
         selectinload(Order.status_history),
         joinedload(Order.customer),
     )
+    if not include_unpaid:
+        # Hide un-paid online card checkout attempts (Stripe/Card/Razorpay orders with payment_status == 'pending')
+        q = q.where(
+            not_(
+                and_(
+                    Order.payment_method.in_([PaymentMethod.stripe, PaymentMethod.razorpay, PaymentMethod.card]),
+                    Order.payment_status == PaymentStatus.pending
+                )
+            )
+        )
     if status:
         q = q.where(Order.status == status)
     if channel:

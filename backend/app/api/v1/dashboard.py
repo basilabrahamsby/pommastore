@@ -57,10 +57,21 @@ async def get_dashboard_stats(
     week_start = today_start - timedelta(days=6)
     month_start = today_start - timedelta(days=30)
 
+    from sqlalchemy import not_, and_
+    from app.models.order import PaymentMethod, PaymentStatus
+
+    # Exclude un-paid online card checkout attempts from metrics
+    valid_order_cond = not_(
+        and_(
+            Order.payment_method.in_([PaymentMethod.stripe, PaymentMethod.razorpay, PaymentMethod.card]),
+            Order.payment_status == PaymentStatus.pending
+        )
+    )
+
     # Total revenue & orders
     rev_result = await db.execute(
         select(func.sum(Order.total_amount), func.count(Order.id))
-        .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
+        .where(Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]), valid_order_cond)
     )
     row = rev_result.one()
     safe_revenue = float(row[0] or 0)
@@ -69,7 +80,7 @@ async def get_dashboard_stats(
     # Today
     today_result = await db.execute(
         select(func.sum(Order.total_amount), func.count(Order.id))
-        .where(Order.created_at >= today_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
+        .where(Order.created_at >= today_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]), valid_order_cond)
     )
     today_row = today_result.one()
     revenue_today = float(today_row[0] or 0)
@@ -77,7 +88,7 @@ async def get_dashboard_stats(
 
     # Pending orders
     pending_result = await db.execute(
-        select(func.count(Order.id)).where(Order.status == OrderStatus.pending)
+        select(func.count(Order.id)).where(Order.status == OrderStatus.pending, valid_order_cond)
     )
     orders_pending = pending_result.scalar() or 0
 
@@ -104,7 +115,7 @@ async def get_dashboard_stats(
             func.sum(Order.total_amount).label("revenue"),
             func.count(Order.id).label("orders"),
         )
-        .where(Order.created_at >= week_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]))
+        .where(Order.created_at >= week_start, Order.status.notin_([OrderStatus.cancelled, OrderStatus.returned]), valid_order_cond)
         .group_by(text("day"))
         .order_by(text("day"))
     )
@@ -115,7 +126,7 @@ async def get_dashboard_stats(
 
     # Recent orders (last 5)
     recent_result = await db.execute(
-        select(Order).order_by(Order.created_at.desc()).limit(5)
+        select(Order).where(valid_order_cond).order_by(Order.created_at.desc()).limit(5)
     )
     recent_orders = [
         {

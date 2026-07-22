@@ -978,7 +978,17 @@ export default function Orders() {
       start_date,
       limit: 200 
     } })
-      .then(r => setOrders(r.data))
+      .then(r => {
+        const validOrders = (r.data || []).filter(o => {
+          const pm = (o.payment_method || '').toLowerCase();
+          const ps = (o.payment_status || '').toLowerCase();
+          if (['stripe', 'card', 'razorpay'].includes(pm) && ps === 'pending') {
+            return false;
+          }
+          return true;
+        });
+        setOrders(validOrders);
+      })
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoadingOrders(false))
   }
