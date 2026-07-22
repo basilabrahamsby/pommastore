@@ -544,7 +544,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     <div class="top-bar"></div>
     <div class="invoice-header">
       <div class="logo-block">
-        <img src="https://pommaholidays.com/pommastore/logo.png" alt="POMMASTORE" style="height: 48px; max-width: 180px; object-fit: contain; margin-bottom: 12px;">
+        <img src="https://pommastore.com/logo.png" alt="POMMASTORE" style="height: 48px; max-width: 180px; object-fit: contain; margin-bottom: 12px;">
         <div class="company-address">
           <strong>{company_name}</strong><br>
           {company_address}<br>
@@ -748,10 +748,10 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     logo_flowable = None
     try:
         req = urllib.request.Request(
-            "https://pommaholidays.com/pommastore/logo.png",
+            "https://pommastore.com/logo.png",
             headers={'User-Agent': 'Mozilla/5.0'}
         )
-        logo_data = urllib.request.urlopen(req, timeout=3).read()
+        logo_data = urllib.request.urlopen(req, timeout=5).read()
         logo_flowable = Image(BytesIO(logo_data), width=1.8*inch, height=0.4*inch)
     except Exception as img_err:
         print(f"Skipping remote logo loading: {img_err}")
