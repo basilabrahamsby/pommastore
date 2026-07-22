@@ -1977,27 +1977,15 @@ export default function Orders() {
             </div>
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {(selectedOrder.payment_details?.awb_pdf || (selectedOrder.carrier === 'Delivery Panda' && selectedOrder.tracking_number)) && (
-                  <a 
-                    href={selectedOrder.payment_details?.awb_pdf || `https://app.deliverypanda.me/webservice/GetPdf/${selectedOrder.tracking_number}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn btn-primary btn-sm" 
-                    style={{ background: '#FF5722', color: '#fff', borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
-                  >
-                    🐼 Print Delivery Panda AWB
-                  </a>
-                )}
                 {selectedOrder.tracking_number && (
                   <a 
-                    href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/delhivery-label`} 
+                    href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/shipping-label`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="btn btn-primary btn-sm" 
-                    style={{ background: 'var(--gold)', color: '#000', borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
+                    style={{ background: '#FF5722', color: '#fff', borderRadius: 4, padding: '6px 14px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
                   >
-                    🏷️ Print/Download Label
+                    🐼 Print Delivery Panda Label
                   </a>
                 )}
                 {selectedOrder.tracking_number && (
@@ -2200,14 +2188,8 @@ export default function Orders() {
               <div>
                 <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Carrier / Courier Partner</label>
                 <select className="select" value={shipForm.carrier} onChange={e => setShipForm({ ...shipForm, carrier: e.target.value })} style={{ width: '100%' }}>
-                  <option value="Delivery Panda">🐼 Delivery Panda (Auto-generate AWB & Label)</option>
-                  <option value="Delhivery">🚀 Delhivery (Auto-generate AWB)</option>
-                  <option value="BlueDart">BlueDart</option>
-                  <option value="DTDC">DTDC</option>
-                  <option value="Ekart">Ekart Logistics</option>
-                  <option value="XpressBees">XpressBees</option>
-                  <option value="IndiaPost">India Post / Speed Post</option>
-                  <option value="Manual">Other / Manual</option>
+                  <option value="Delivery Panda">🐼 Delivery Panda (UAE Domestic Courier)</option>
+                  <option value="Manual">Other / Manual Courier</option>
                 </select>
               </div>
 

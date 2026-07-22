@@ -232,8 +232,9 @@ class DelhiveryPickupRequest(BaseModel):
     pickup_location: str
     expected_package_count: int = 1
 
+@public_router.get("/{order_id}/shipping-label", response_class=HTMLResponse)
 @public_router.get("/{order_id}/delhivery-label", response_class=HTMLResponse)
-async def get_delhivery_label(
+async def get_shipping_label(
     order_id: str,
     db: AsyncSession = Depends(get_db)
 ):
@@ -254,13 +255,8 @@ async def get_delhivery_label(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    from app.services.delhivery import fetch_delhivery_packing_slip, generate_delhivery_label_html
-    
-    pkg = None
-    if order.tracking_number:
-        pkg = await fetch_delhivery_packing_slip(order.tracking_number)
-        
-    html_content = generate_delhivery_label_html(order, pkg)
+    from app.services.delivery_panda import generate_delivery_panda_label_html
+    html_content = generate_delivery_panda_label_html(order)
     return HTMLResponse(content=html_content)
 
 @router.post("/delhivery-pickup")
