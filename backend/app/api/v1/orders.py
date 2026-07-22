@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +8,10 @@ from datetime import datetime, timezone
 from decimal import Decimal
 import uuid
 
+from app.core.config import settings
 from app.core.database import get_db
+
+logger = logging.getLogger(__name__)
 from app.core.deps import get_current_user, require_manager
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, OrderStatusHistory
 from app.models.customer import Customer, CustomerAddress
