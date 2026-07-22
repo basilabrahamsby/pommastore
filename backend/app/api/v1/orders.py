@@ -71,6 +71,42 @@ async def list_orders(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    # Auto-reconcile pending Stripe checkout sessions with Stripe API
+    try:
+        if settings.STRIPE_SECRET_KEY and settings.STRIPE_SECRET_KEY.startswith("sk_live_"):
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            
+            pending_stripe_q = select(Order).where(
+                Order.payment_method.in_(["stripe", "card"]),
+                Order.payment_status == PaymentStatus.pending
+            )
+            p_res = await db.execute(pending_stripe_q)
+            pending_orders = p_res.scalars().all()
+            
+            reconciled = False
+            for p_order in pending_orders:
+                s_id = (p_order.payment_details or {}).get("stripe_session_id")
+                if s_id and s_id.startswith("cs_live_"):
+                    try:
+                        s_sess = stripe.checkout.Session.retrieve(s_id)
+                        if s_sess and (s_sess.payment_status == "paid" or s_sess.status == "complete"):
+                            p_order.payment_status = PaymentStatus.paid
+                            p_order.status = OrderStatus.confirmed
+                            p_order.payment_details = {
+                                **(p_order.payment_details or {}),
+                                "stripe_payment_intent": getattr(s_sess, "payment_intent", None),
+                                "verified_at": datetime.now(timezone.utc).isoformat()
+                            }
+                            db.add(p_order)
+                            reconciled = True
+                    except Exception as s_err:
+                        logger.warning(f"Failed to check Stripe session {s_id}: {s_err}")
+            if reconciled:
+                await db.commit()
+    except Exception as e:
+        logger.warning(f"Stripe auto-reconciliation skipped: {e}")
+
     q = select(Order).options(
         selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
         selectinload(Order.status_history),

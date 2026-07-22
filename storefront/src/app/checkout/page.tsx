@@ -289,6 +289,31 @@ export default function Checkout() {
     setIsHydrated(true);
   }, []);
 
+  // Automatic verification when returning from Stripe Hosted Checkout
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const isSuccess = urlParams.get('success');
+
+    if (sessionId && isSuccess === 'true') {
+      const verifyStripePaymentOnReturn = async () => {
+        try {
+          const res = await api.post('/orders/stripe/verify', {
+            stripe_session_id: sessionId
+          });
+          if (res.data && res.data.order) {
+            setOrderSuccess(res.data.order);
+            clearCart();
+          }
+        } catch (err) {
+          console.error('Failed to verify Stripe return payment:', err);
+        }
+      };
+      verifyStripePaymentOnReturn();
+    }
+  }, []);
+
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -297,7 +322,10 @@ export default function Checkout() {
       return;
     }
 
-    if (items.length === 0 && !orderSuccess) {
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const hasStripeReturn = urlParams?.get('session_id');
+
+    if (items.length === 0 && !orderSuccess && !hasStripeReturn) {
       router.push('/cart');
       return;
     }
