@@ -165,17 +165,24 @@ async def get_storefront_order_invoice_pdf(
 
 
 @router.get("/shipping/verify-pincode", status_code=200)
-async def verify_shipping_pincode(pincode: str):
-    if not pincode or len(pincode.strip()) < 4:
-        raise HTTPException(status_code=400, detail="Invalid pincode format.")
+async def verify_shipping_pincode(pincode: str = Query(""), city: str = Query("")):
+    clean_target = f"{city} {pincode}".strip().lower()
+    
+    # Abu Dhabi & Remote Area rate: 25 AED. All other Emirates: 17 AED.
+    if any(k in clean_target for k in ["abu dhabi", "abudhabi", "al ain", "alain", "remote"]):
+        fee = 25.0
+    else:
+        fee = 17.0
+        
     return {
         "serviceable": True,
         "cod_available": True,
         "prepaid_available": True,
-        "district": "",
-        "state": "",
-        "shipping_fee": 17.0,
-        "message": "Serviceable in UAE"
+        "district": city or "Dubai",
+        "state": "United Arab Emirates",
+        "shipping_fee": fee,
+        "courier": "Delivery Panda",
+        "message": f"Serviceable via Delivery Panda (AED {fee:.2f})"
     }
 
 

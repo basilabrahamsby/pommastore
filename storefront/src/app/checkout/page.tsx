@@ -250,37 +250,40 @@ export default function Checkout() {
 
   useEffect(() => {
     const updateShippingRate = async () => {
-      let pinToCheck = '';
+      let targetCity = '';
+      let targetPin = '';
       if (selectedAddressId === 'new') {
-        if (addressForm.pincode.length === 6 && /^\d+$/.test(addressForm.pincode)) {
-          pinToCheck = addressForm.pincode;
-        }
+        targetCity = addressForm.city || addressForm.state || '';
+        targetPin = addressForm.pincode || '';
       } else {
         const addr = addresses.find(a => a.id === selectedAddressId);
-        if (addr && addr.pincode) {
-          pinToCheck = addr.pincode;
+        if (addr) {
+          targetCity = addr.city || addr.state || '';
+          targetPin = addr.pincode || '';
         }
       }
 
-      if (pinToCheck) {
-        try {
-          const res = await api.get(`/orders/shipping/verify-pincode?pincode=${pinToCheck}`);
-          if (res.data && res.data.serviceable) {
-            setShippingFee(res.data.shipping_fee || 17);
-          } else {
-            setShippingFee(17);
-          }
-        } catch (err) {
-          console.warn('Failed to verify shipping fee for pincode', err);
-          setShippingFee(17);
-        }
+      const clean = targetCity.toLowerCase().trim();
+      if (clean.includes('abu dhabi') || clean.includes('al ain') || clean.includes('remote')) {
+        setShippingFee(25);
       } else {
         setShippingFee(17);
+      }
+
+      if (targetCity || targetPin) {
+        try {
+          const res = await api.get(`/orders/shipping/verify-pincode?city=${encodeURIComponent(targetCity)}&pincode=${encodeURIComponent(targetPin)}`);
+          if (res.data && res.data.shipping_fee) {
+            setShippingFee(res.data.shipping_fee);
+          }
+        } catch (err) {
+          console.warn('Failed to verify shipping fee', err);
+        }
       }
     };
 
     updateShippingRate();
-  }, [selectedAddressId, addressForm.pincode, addresses]);
+  }, [selectedAddressId, addressForm.city, addressForm.state, addressForm.pincode, addresses]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -790,15 +793,24 @@ export default function Checkout() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="col-span-1 sm:col-span-2">
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_city')}</label>
-                    <input 
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_city')} / Emirate</label>
+                    <select 
                       required={selectedAddressId === 'new'}
-                      type="text"
-                      placeholder={t('checkout_city_placeholder')}
                       value={addressForm.city}
-                      onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
-                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
-                    />
+                      onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value})}
+                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none bg-white font-medium"
+                    >
+                      <option value="">Select Emirate / City...</option>
+                      <option value="Dubai">Dubai (AED 17.00)</option>
+                      <option value="Abu Dhabi">Abu Dhabi (AED 25.00)</option>
+                      <option value="Al Ain">Al Ain (AED 25.00)</option>
+                      <option value="Sharjah">Sharjah (AED 17.00)</option>
+                      <option value="Ajman">Ajman (AED 17.00)</option>
+                      <option value="Ras Al Khaimah">Ras Al Khaimah (AED 17.00)</option>
+                      <option value="Fujairah">Fujairah (AED 17.00)</option>
+                      <option value="Umm Al Quwain">Umm Al Quwain (AED 17.00)</option>
+                      <option value="Remote Area">Abu Dhabi Remote Area (AED 25.00)</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_state')}</label>
