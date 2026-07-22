@@ -1124,14 +1124,29 @@ def send_admin_invoice_email(
     except Exception as e:
         print(f"Failed to generate PDF for admin email: {e}")
 
-    return send_smtp_email(
-        "info@pommastore.com", 
-        subject, 
-        html, 
-        body_text,
-        attachment_bytes=pdf_bytes,
-        attachment_filename=f"invoice_{order_number}.pdf"
-    )
+    ADMIN_RECIPIENTS = [
+        "sales@poshgallery.ae",
+        "admin@poshgallery.ae",
+        "info@pommastore.com"
+    ]
+    
+    success = False
+    for recipient in ADMIN_RECIPIENTS:
+        try:
+            res = send_smtp_email(
+                recipient, 
+                subject, 
+                html, 
+                body_text,
+                attachment_bytes=pdf_bytes,
+                attachment_filename=f"invoice_{order_number}.pdf"
+            )
+            if res:
+                success = True
+        except Exception as err:
+            print(f"Failed to send admin order email to {recipient}: {err}")
+
+    return success
 
 
 def send_order_confirmation_email(
