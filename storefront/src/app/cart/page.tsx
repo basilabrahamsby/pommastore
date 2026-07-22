@@ -49,7 +49,7 @@ export default function Cart() {
     fetchDefaultAddressShipping();
   }, [customer]);
 
-  const shippingLimit = cmsLayout?.free_shipping_limit || 999;
+  const shippingLimit = cmsLayout?.free_shipping_limit ?? 100;
   const isFreeShipping = totalPrice() >= shippingLimit;
   const amountToFreeShipping = shippingLimit - totalPrice();
   const shippingProgressPct = Math.min(100, (totalPrice() / shippingLimit) * 100);

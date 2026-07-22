@@ -395,7 +395,7 @@ export default function Checkout() {
       const discountRatio = totalPrice() > 0 ? Math.min(1, promoDiscount / totalPrice()) : 0;
       const netExclusiveTaxAdded = Math.max(0, exclusiveTaxAdded * (1 - discountRatio));
 
-      const shippingLimit = cmsLayout?.free_shipping_limit || 999;
+      const shippingLimit = cmsLayout?.free_shipping_limit ?? 100;
       const finalShippingFee = totalPrice() >= shippingLimit ? 0 : shippingFee; 
       const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
       const finalAmount = Math.max(0, totalPrice() + netExclusiveTaxAdded + finalShippingFee - pointsToRedeem - promoDiscount);
@@ -799,23 +799,28 @@ export default function Checkout() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_city')} / Emirate</label>
-                    <select 
-                      required={selectedAddressId === 'new'}
-                      value={addressForm.city}
-                      onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value, country: 'United Arab Emirates', pincode: '00000'})}
-                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none bg-white font-medium"
-                    >
-                      <option value="">Select Emirate / City...</option>
-                      <option value="Dubai">Dubai (AED 17.00)</option>
-                      <option value="Abu Dhabi">Abu Dhabi (AED 25.00)</option>
-                      <option value="Al Ain">Al Ain (AED 25.00)</option>
-                      <option value="Sharjah">Sharjah (AED 17.00)</option>
-                      <option value="Ajman">Ajman (AED 17.00)</option>
-                      <option value="Ras Al Khaimah">Ras Al Khaimah (AED 17.00)</option>
-                      <option value="Fujairah">Fujairah (AED 17.00)</option>
-                      <option value="Umm Al Quwain">Umm Al Quwain (AED 17.00)</option>
-                      <option value="Remote Area">Abu Dhabi Remote Area (AED 25.00)</option>
-                    </select>
+                    {(() => {
+                      const isFreeEligible = totalPrice() >= (cmsLayout?.free_shipping_limit ?? 100);
+                      return (
+                        <select 
+                          required={selectedAddressId === 'new'}
+                          value={addressForm.city}
+                          onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value, country: 'United Arab Emirates', pincode: '00000'})}
+                          className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none bg-white font-medium"
+                        >
+                          <option value="">Select Emirate / City...</option>
+                          <option value="Dubai">Dubai ({isFreeEligible ? 'FREE' : 'AED 17.00'})</option>
+                          <option value="Abu Dhabi">Abu Dhabi ({isFreeEligible ? 'FREE' : 'AED 25.00'})</option>
+                          <option value="Al Ain">Al Ain ({isFreeEligible ? 'FREE' : 'AED 25.00'})</option>
+                          <option value="Sharjah">Sharjah ({isFreeEligible ? 'FREE' : 'AED 17.00'})</option>
+                          <option value="Ajman">Ajman ({isFreeEligible ? 'FREE' : 'AED 17.00'})</option>
+                          <option value="Ras Al Khaimah">Ras Al Khaimah ({isFreeEligible ? 'FREE' : 'AED 17.00'})</option>
+                          <option value="Fujairah">Fujairah ({isFreeEligible ? 'FREE' : 'AED 17.00'})</option>
+                          <option value="Umm Al Quwain">Umm Al Quwain ({isFreeEligible ? 'FREE' : 'AED 17.00'})</option>
+                          <option value="Remote Area">Abu Dhabi Remote Area ({isFreeEligible ? 'FREE' : 'AED 25.00'})</option>
+                        </select>
+                      );
+                    })()}
                   </div>
                   <div>
                     <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Delivery Contact Number</label>
@@ -962,8 +967,8 @@ export default function Checkout() {
                </div>
                <div className="flex justify-between text-neutral-500">
                  <span>{t('checkout_logistics')}</span>
-                 <span className={totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? "text-green-600 font-bold" : "text-neutral-900 font-bold"}>
-                   {totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? t('free') : `AED ${shippingFee}`}
+                 <span className={totalPrice() >= (cmsLayout?.free_shipping_limit ?? 100) ? "text-green-600 font-bold" : "text-neutral-900 font-bold"}>
+                   {totalPrice() >= (cmsLayout?.free_shipping_limit ?? 100) ? t('free') : `AED ${shippingFee}`}
                  </span>
                </div>
                {appliedPromo && promoDiscount > 0 && (
@@ -1052,7 +1057,7 @@ export default function Checkout() {
                         });
                         const discountRatio = totalPrice() > 0 ? Math.min(1, promoDiscount / totalPrice()) : 0;
                         const netExclusiveTaxAdded = Math.max(0, exclusiveTaxAdded * (1 - discountRatio));
-                        const finalShippingFee = totalPrice() >= (cmsLayout?.free_shipping_limit || 999) ? 0 : shippingFee;
+                        const finalShippingFee = totalPrice() >= (cmsLayout?.free_shipping_limit ?? 100) ? 0 : shippingFee;
                         const pointsToRedeem = useLoyaltyPoints ? Math.min(customer?.loyalty_points || 0, Math.floor(totalPrice() - promoDiscount)) : 0;
                         const grandTotal = Math.max(0, totalPrice() + netExclusiveTaxAdded + finalShippingFee - promoDiscount - pointsToRedeem);
                         return grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

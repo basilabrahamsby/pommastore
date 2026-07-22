@@ -73,7 +73,7 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const freeShippingLimit = cmsLayout?.free_shipping_limit || 999;
+  const freeShippingLimit = cmsLayout?.free_shipping_limit ?? 100;
 
   // Filter live suggestions based on searchQuery
   const filteredBrands = searchQuery.trim().length > 0

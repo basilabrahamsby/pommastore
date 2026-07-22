@@ -799,7 +799,7 @@ export default function ProductClient({
                       {locale === 'ar' ? 'الوجهة' : 'Destination'}: {pinResult.district}, {pinResult.state || 'India'}
                     </p>
                     <p className="text-[11px] text-green-800 mt-1">
-                      • {t('shipping_fee')}: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit || 999) ? t('free') : 'AED ' + (pinResult.shipping_fee || 150) + ' (' + t('free_on_orders_over') + ' AED ' + (cmsLayout?.free_shipping_limit || 999) + ')'}
+                      • {t('shipping_fee')}: {selectedVariant && selectedVariant.selling_price >= (cmsLayout?.free_shipping_limit ?? 100) ? t('free') : 'AED ' + (pinResult.shipping_fee || 15) + ' (' + t('free_on_orders_over') + ' AED ' + (cmsLayout?.free_shipping_limit ?? 100) + ')'}
                     </p>
                   </div>
                 </div>
@@ -833,7 +833,7 @@ export default function ProductClient({
                 <Truck size={18} className="text-neutral-400 flex-shrink-0" />
                 <div>
                   <p className="text-[9px] text-neutral-900 font-semibold tracking-widest uppercase">{t('badge_shipping')}</p>
-                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">{t('badge_shipping_sub').replace('{limit}', String(cmsLayout?.free_shipping_limit || '999'))}</p>
+                  <p className="text-[8px] text-neutral-400 font-medium tracking-wider uppercase mt-0.5">{t('badge_shipping_sub').replace('{limit}', String(cmsLayout?.free_shipping_limit ?? 100))}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
