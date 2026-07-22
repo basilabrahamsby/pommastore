@@ -310,7 +310,7 @@ export default function Account() {
                       <p className="text-sm text-gray-500 mb-4 leading-relaxed">
                         {address.address_line1}<br />
                         {address.address_line2 && <>{address.address_line2}<br /></>}
-                        {address.city}, {address.state} {address.pincode}<br />
+                        {[address.city, address.state && address.state !== address.city ? address.state : ''].filter(Boolean).join(', ')}{address.pincode && address.pincode !== '00000' && address.pincode !== '0' ? ` - ${address.pincode}` : ''}<br />
                         {address.phone && <span className="block mt-1 text-black font-bold">📞 {address.phone}</span>}
                         {address.country}
                       </p>
@@ -426,7 +426,7 @@ export default function Account() {
                       </p>
                       <p>{selectedOrder.shipping_address.address_line1}</p>
                       {selectedOrder.shipping_address.address_line2 && <p>{selectedOrder.shipping_address.address_line2}</p>}
-                      <p>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.pincode}</p>
+                      <p>{[selectedOrder.shipping_address.city, selectedOrder.shipping_address.state && selectedOrder.shipping_address.state !== selectedOrder.shipping_address.city ? selectedOrder.shipping_address.state : ''].filter(Boolean).join(', ')}{selectedOrder.shipping_address.pincode && selectedOrder.shipping_address.pincode !== '00000' && selectedOrder.shipping_address.pincode !== '0' ? ` - ${selectedOrder.shipping_address.pincode}` : ''}</p>
                       <p>Phone: {selectedOrder.shipping_address.phone || selectedOrder.customer_phone}</p>
                     </div>
                   </div>

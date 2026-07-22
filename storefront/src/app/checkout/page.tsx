@@ -706,7 +706,7 @@ export default function Checkout() {
           <>
             <span className="block">{addr.label}</span>
             <span className="block">{addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ''}</span>
-            <span className="block">{addr.city}, {addr.state} - {addr.pincode}</span>
+            <span className="block">{[addr.city, addr.state && addr.state !== addr.city ? addr.state : ''].filter(Boolean).join(', ')}{addr.pincode && addr.pincode !== '00000' && addr.pincode !== '0' ? ` - ${addr.pincode}` : ''}</span>
             <span className="block flex items-center"><Smartphone size={10} className="mr-1"/>{addr.phone}</span>
           </>
         );
@@ -738,7 +738,7 @@ export default function Checkout() {
                       <p className="text-xs text-neutral-500 leading-relaxed font-medium">
                         {a.address_line1}<br />
                         {a.address_line2 && <>{a.address_line2}<br /></>}
-                        {a.city}, {a.state} - {a.pincode}<br />
+                        {[a.city, a.state && a.state !== a.city ? a.state : ''].filter(Boolean).join(', ')}{a.pincode && a.pincode !== '00000' && a.pincode !== '0' ? ` - ${a.pincode}` : ''}<br />
                         {a.phone && <span className="flex items-center mt-1"><Smartphone size={10} className="mr-1" /> {a.phone}</span>}
                       </p>
                     </div>
@@ -796,7 +796,7 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_city')} / Emirate</label>
                     {(() => {
@@ -805,7 +805,7 @@ export default function Checkout() {
                         <select 
                           required={selectedAddressId === 'new'}
                           value={addressForm.city}
-                          onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value, country: 'United Arab Emirates', pincode: '00000'})}
+                          onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value, country: 'United Arab Emirates'})}
                           className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none bg-white font-medium"
                         >
                           <option value="">Select Emirate / City...</option>
@@ -821,6 +821,16 @@ export default function Checkout() {
                         </select>
                       );
                     })()}
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">P.O. Box / Postal Code (Optional)</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. 00000 or P.O. Box"
+                      value={addressForm.pincode}
+                      onChange={(e) => setAddressForm({...addressForm, pincode: e.target.value})}
+                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
+                    />
                   </div>
                   <div>
                     <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Delivery Contact Number</label>
