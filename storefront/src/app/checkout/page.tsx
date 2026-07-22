@@ -349,13 +349,18 @@ export default function Checkout() {
       // Determine final delivery address metadata
       let shippingAddressData = {};
       if (selectedAddressId === 'new') {
-        // Validate new address
-        if (!addressForm.address_line1 || !addressForm.city || !addressForm.pincode) {
-          alert('Please complete the new delivery address details.');
+        // Validate new address for UAE
+        if (!addressForm.address_line1 || !addressForm.city) {
+          alert('Please complete the delivery address details (Address line 1 & Emirate/City).');
           setPlacingOrder(false);
           return;
         }
-        shippingAddressData = { ...addressForm };
+        shippingAddressData = { 
+          ...addressForm, 
+          country: addressForm.country || 'United Arab Emirates',
+          pincode: addressForm.pincode || '00000',
+          state: addressForm.state || addressForm.city
+        };
       } else {
         const matched = addresses.find((a) => a.id === selectedAddressId);
         shippingAddressData = matched ? {
@@ -764,7 +769,7 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* NEW ADDRESS DYNAMIC FORM */}
+            {/* NEW ADDRESS DYNAMIC FORM (UAE Tailored) */}
             {selectedAddressId === 'new' && (
               <div className="p-6 bg-neutral-50 border border-neutral-100 space-y-4 animate-in fade-in duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -773,17 +778,17 @@ export default function Checkout() {
                     <input 
                       required={selectedAddressId === 'new'}
                       type="text"
-                      placeholder={t('checkout_address1_placeholder')}
+                      placeholder="Building / Villa / House No., Street Address"
                       value={addressForm.address_line1}
                       onChange={(e) => setAddressForm({...addressForm, address_line1: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_address2')}</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Area / Location / Landmark (Optional)</label>
                     <input 
                       type="text"
-                      placeholder={t('checkout_address2_placeholder')}
+                      placeholder="e.g. Al Karama / Business Bay / Near Park"
                       value={addressForm.address_line2}
                       onChange={(e) => setAddressForm({...addressForm, address_line2: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
@@ -791,13 +796,13 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="col-span-1 sm:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
                     <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_city')} / Emirate</label>
                     <select 
                       required={selectedAddressId === 'new'}
                       value={addressForm.city}
-                      onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value})}
+                      onChange={(e) => setAddressForm({...addressForm, city: e.target.value, state: e.target.value, country: 'United Arab Emirates', pincode: '00000'})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none bg-white font-medium"
                     >
                       <option value="">Select Emirate / City...</option>
@@ -813,36 +818,14 @@ export default function Checkout() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_state')}</label>
-                    <input 
-                      required={selectedAddressId === 'new'}
-                      type="text"
-                      placeholder={t('checkout_state_placeholder')}
-                      value={addressForm.state}
-                      onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
-                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_pincode')}</label>
-                    <input 
-                      required={selectedAddressId === 'new'}
-                      type="text"
-                      placeholder="e.g. 400001"
-                      value={addressForm.pincode}
-                      onChange={(e) => setAddressForm({...addressForm, pincode: e.target.value})}
-                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">{t('checkout_phone')}</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Delivery Contact Number</label>
                     <input 
                       required={selectedAddressId === 'new'}
                       type="tel"
                       placeholder="e.g. +971 50 123 4567"
                       value={addressForm.phone}
                       onChange={(e) => setAddressForm({...addressForm, phone: e.target.value})}
-                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
+                      className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none font-mono"
                     />
                   </div>
                 </div>
