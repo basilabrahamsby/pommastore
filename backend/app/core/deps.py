@@ -41,6 +41,23 @@ async def get_current_customer(
     return customer
 
 
+async def get_optional_customer(
+    token: str | None = Depends(OAuth2PasswordBearer(tokenUrl="/api/v1/storefront/auth/login", auto_error=False)),
+    db: AsyncSession = Depends(get_db),
+) -> Customer | None:
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        customer_id = payload.get("sub")
+        if not customer_id:
+            return None
+        result = await db.execute(select(Customer).where(Customer.id == customer_id))
+        return result.scalar_one_or_none()
+    except Exception:
+        return None
+
+
 async def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role not in (UserRole.superadmin, UserRole.admin):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")

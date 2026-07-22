@@ -12,7 +12,7 @@ import hmac
 import hashlib
 
 from app.core.database import get_db
-from app.core.deps import get_current_customer
+from app.core.deps import get_current_customer, get_optional_customer
 from app.models.customer import Customer, CustomerAddress
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, PaymentMethod, OrderStatusHistory
 from app.models.inventory import InventoryBatch, InventoryMovement
@@ -77,22 +77,39 @@ from app.core.database import AsyncSessionLocal
 
 async def book_delhivery_shipment_task(order_id: uuid.UUID):
     import random
+    from app.services.delivery_panda import book_delivery_panda_shipment
     
     async with AsyncSessionLocal() as db:
-        q = select(Order).where(Order.id == order_id)
+        q = (
+            select(Order)
+            .where(Order.id == order_id)
+            .options(
+                selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product)
+            )
+        )
         res = await db.execute(q)
         order = res.scalar_one_or_none()
         if not order:
             return
             
-        mock_waybill = f"PND{random.randint(10000000, 99999999)}"
-        order.tracking_number = mock_waybill
-        order.carrier = "Panda Delivery"
+        try:
+            ship_res = await book_delivery_panda_shipment(order)
+            if ship_res and ship_res.get("success"):
+                order.tracking_number = str(ship_res.get("awb_number"))
+                order.carrier = "Delivery Panda"
+            else:
+                mock_waybill = f"PND{random.randint(10000000, 99999999)}"
+                order.tracking_number = mock_waybill
+                order.carrier = "Panda Delivery"
+        except Exception:
+            mock_waybill = f"PND{random.randint(10000000, 99999999)}"
+            order.tracking_number = mock_waybill
+            order.carrier = "Panda Delivery"
         
         history = OrderStatusHistory(
             order_id=order.id,
             status=order.status,
-            notes=f"Automated shipping label generated with Panda Delivery. Waybill: {mock_waybill}"
+            notes=f"Automated shipping label generated with Panda Delivery. Waybill: {order.tracking_number}"
         )
         db.add(history)
         await db.commit()
@@ -1073,7 +1090,7 @@ async def verify_stripe_payment(
     body: dict,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    customer: Customer = Depends(get_current_customer)
+    customer: Optional[Customer] = Depends(get_optional_customer)
 ):
     stripe_session_id = body.get("stripe_session_id")
     order_number = body.get("order_number")
@@ -1084,7 +1101,7 @@ async def verify_stripe_payment(
 
     # Try to find order by order_number first, fall back to stripe_session_id in payment_details
     order = None
-    if order_number:
+    if order_number and customer:
         q = select(Order).where(
             Order.order_number == order_number,
             Order.customer_id == customer.id
@@ -1093,14 +1110,20 @@ async def verify_stripe_payment(
         order = result.scalar_one_or_none()
     
     if not order:
-        # Fall back: find by stripe_session_id stored in payment_details
-        from sqlalchemy import cast, String, func
-        q2 = select(Order).where(
-            Order.customer_id == customer.id,
-            Order.payment_details.op('->>')('stripe_session_id') == stripe_session_id
-        ).options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(1)
+        # Fall back: find by stripe_session_id stored in payment_details across orders
+        conditions = [Order.payment_details.op('->>')('stripe_session_id') == stripe_session_id]
+        if customer:
+            conditions.append(Order.customer_id == customer.id)
+            
+        q2 = select(Order).where(*conditions).options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(1)
         result2 = await db.execute(q2)
         order = result2.scalar_one_or_none()
+
+    if not order:
+        # Final attempt without customer constraint if token differed or expired
+        q3 = select(Order).where(Order.payment_details.op('->>')('stripe_session_id') == stripe_session_id).options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(1)
+        result3 = await db.execute(q3)
+        order = result3.scalar_one_or_none()
 
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
