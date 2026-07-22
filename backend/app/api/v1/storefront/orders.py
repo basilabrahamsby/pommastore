@@ -1079,15 +1079,29 @@ async def verify_stripe_payment(
     order_number = body.get("order_number")
     transaction_id = body.get("transaction_id") or stripe_session_id
     
-    if not stripe_session_id or not order_number:
-        raise HTTPException(status_code=400, detail="Missing session ID or order number")
+    if not stripe_session_id:
+        raise HTTPException(status_code=400, detail="Missing session ID")
 
-    q = select(Order).where(
-        Order.order_number == order_number,
-        Order.customer_id == customer.id
-    ).options(joinedload(Order.customer))
-    result = await db.execute(q)
-    order = result.scalar_one_or_none()
+    # Try to find order by order_number first, fall back to stripe_session_id in payment_details
+    order = None
+    if order_number:
+        q = select(Order).where(
+            Order.order_number == order_number,
+            Order.customer_id == customer.id
+        ).options(joinedload(Order.customer))
+        result = await db.execute(q)
+        order = result.scalar_one_or_none()
+    
+    if not order:
+        # Fall back: find by stripe_session_id stored in payment_details
+        from sqlalchemy import cast, String, func
+        q2 = select(Order).where(
+            Order.customer_id == customer.id,
+            Order.payment_details.op('->>')('stripe_session_id') == stripe_session_id
+        ).options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(1)
+        result2 = await db.execute(q2)
+        order = result2.scalar_one_or_none()
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 

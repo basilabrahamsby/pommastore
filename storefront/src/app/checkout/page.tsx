@@ -317,13 +317,22 @@ export default function Checkout() {
   useEffect(() => {
     if (!isHydrated) return;
 
+    // Don't redirect if returning from Stripe payment (let the verify useEffect handle it)
+    const urlParams2 = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const isStripeReturn = !!(urlParams2?.get('session_id') && urlParams2?.get('success') === 'true');
+
+    if (isStripeReturn) {
+      // On Stripe return, just show loading — the verify useEffect will set orderSuccess
+      setLoading(false);
+      return;
+    }
+
     if (!token) {
       router.push('/login');
       return;
     }
 
-    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const hasStripeReturn = urlParams?.get('session_id');
+    const hasStripeReturn = urlParams2?.get('session_id');
 
     if (items.length === 0 && !orderSuccess && !hasStripeReturn) {
       router.push('/cart');
