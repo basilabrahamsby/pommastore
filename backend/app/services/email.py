@@ -649,6 +649,8 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     short_address = "Kochi, Kerala - 682026"
     gstin = company_details.get("gstin") or "32AAHCK3784H1ZF"
     pan = company_details.get("pan") or "AAHCK3784H"
+    trn = company_details.get("trn") or company_details.get("TRN") or ""
+    phone = company_details.get("phone") or company_details.get("supportPhone") or "+91-484-POMMASTORE"
     state_code = company_details.get("stateCode") or "32 (Kerala)"
     # Override incorrect state code if admin saved wrong value
     if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
