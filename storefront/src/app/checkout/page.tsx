@@ -176,7 +176,7 @@ export default function Checkout() {
     }
   };
 
-  const handleVerifyOtps = async (e: React.FormEvent) => {
+  const handleConfirmVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setVerifyingOtps(true);
     try {
