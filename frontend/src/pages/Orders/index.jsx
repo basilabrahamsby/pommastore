@@ -1977,6 +1977,7 @@ export default function Orders() {
             </div>
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 {selectedOrder.tracking_number && (
                   <a 
                     href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/shipping-label`} 
