@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Query, Body
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
@@ -643,7 +643,7 @@ async def create_razorpay_order(
 
 @router.post("/razorpay/cancel")
 async def cancel_pending_order(
-    body: dict,
+    body: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     customer: Customer = Depends(get_current_customer)
 ):
@@ -672,8 +672,8 @@ async def cancel_pending_order(
 
 @router.post("/razorpay/verify")
 async def verify_razorpay_payment(
-    body: dict,
     background_tasks: BackgroundTasks,
+    body: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     customer: Customer = Depends(get_current_customer)
 ):
@@ -1060,7 +1060,7 @@ async def create_stripe_order(
 
 @router.post("/stripe/cancel")
 async def cancel_stripe_order(
-    body: dict,
+    body: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     customer: Customer = Depends(get_current_customer)
 ):
@@ -1087,8 +1087,8 @@ async def cancel_stripe_order(
 
 @router.post("/stripe/verify")
 async def verify_stripe_payment(
-    body: dict,
     background_tasks: BackgroundTasks,
+    body: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     customer: Optional[Customer] = Depends(get_optional_customer)
 ):
