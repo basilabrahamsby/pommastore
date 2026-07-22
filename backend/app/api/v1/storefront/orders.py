@@ -75,7 +75,7 @@ def _enrich_order(order: Order) -> OrderOut:
 
 from app.core.database import AsyncSessionLocal
 
-async def book_delhivery_shipment_task(order_id: uuid.UUID):
+async def book_panda_shipment_task(order_id: uuid.UUID):
     import random
     from app.services.delivery_panda import book_delivery_panda_shipment
     
@@ -84,7 +84,7 @@ async def book_delhivery_shipment_task(order_id: uuid.UUID):
             select(Order)
             .where(Order.id == order_id)
             .options(
-                selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product)
+                selectinload(Order.items).selectinload(OrderItem.variant).selectinload(ProductVariant.product)
             )
         )
         res = await db.execute(q)
@@ -100,16 +100,16 @@ async def book_delhivery_shipment_task(order_id: uuid.UUID):
             else:
                 mock_waybill = f"PND{random.randint(10000000, 99999999)}"
                 order.tracking_number = mock_waybill
-                order.carrier = "Panda Delivery"
+                order.carrier = "Delivery Panda"
         except Exception:
             mock_waybill = f"PND{random.randint(10000000, 99999999)}"
             order.tracking_number = mock_waybill
-            order.carrier = "Panda Delivery"
+            order.carrier = "Delivery Panda"
         
         history = OrderStatusHistory(
             order_id=order.id,
             status=order.status,
-            notes=f"Automated shipping label generated with Panda Delivery. Waybill: {order.tracking_number}"
+            notes=f"Automated shipping label generated with Delivery Panda. Waybill: {order.tracking_number}"
         )
         db.add(history)
         await db.commit()
@@ -422,6 +422,9 @@ async def storefront_checkout(
     await db.commit()
 
     # Return fully loaded, hydrated order output structure
+    await book_panda_shipment_task(order.id)
+
+    # Re-fetch enriched order with carrier and tracking info
     final_result = await db.execute(
         select(Order)
         .where(Order.id == order.id)
@@ -431,7 +434,7 @@ async def storefront_checkout(
             joinedload(Order.customer),
         )
     )
-    order = final_result.scalar_one()
+    order = final_result.unique().scalar_one()
     enriched = _enrich_order(order)
 
     # Send order confirmation email in background
@@ -457,17 +460,15 @@ async def storefront_checkout(
     
     # Send order confirmation SMS to customer
     if enriched.customer_phone:
-        msg = f"Thank you for your order #{enriched.order_number} at POMMASTORE! Total amount: INR {float(enriched.total_amount):.2f}. Track order: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
+        msg = f"Thank you for your order #{enriched.order_number} at POMMASTORE! Total amount: AED {float(enriched.total_amount):.2f}. Track order: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
         background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
         
     # Notify admin/manager via SMS
     background_tasks.add_task(
         sendsms_orderadmin,
         "918848079307",
-        f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
+        f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of AED {float(enriched.total_amount):.2f}."
     )
-
-    background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
     return enriched
 
@@ -835,10 +836,10 @@ async def verify_razorpay_payment(
     background_tasks.add_task(
         sendsms_orderadmin,
         "918848079307",
-        f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: INR {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}"
+        f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: AED {float(enriched.total_amount):.2f}. Ref: {razorpay_payment_id}"
     )
 
-    background_tasks.add_task(book_delhivery_shipment_task, order.id)
+    background_tasks.add_task(book_panda_shipment_task, order.id)
 
     return {"status": "success", "order_number": order.order_number, "order": enriched}
 
@@ -1219,12 +1220,12 @@ async def verify_stripe_payment(
             db_offer.redemption_count += 1
             db_offer.attributed_revenue += Decimal(str(order.total_amount))
 
-    await db.commit()
+    await book_panda_shipment_task(order.id)
 
     final_result = await db.execute(
         select(Order)
         .where(Order.id == order.id)
-        .options(joinedload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product))
+        .options(selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product))
     )
     enriched = final_result.unique().scalar_one()
 
@@ -1257,8 +1258,6 @@ async def verify_stripe_payment(
         "918848079307",
         f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id}"
     )
-
-    background_tasks.add_task(book_delhivery_shipment_task, order.id)
 
     return {"status": "success", "order_number": order.order_number, "order": enriched}
 
@@ -1429,9 +1428,9 @@ async def razorpay_webhook(
     background_tasks.add_task(
         sendsms_orderadmin,
         "918848079307",
-        f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of INR {float(enriched.total_amount):.2f}."
+        f"ALERT: New Order #{enriched.order_number} has been placed successfully by {enriched.customer_name or 'customer'} for a total of AED {float(enriched.total_amount):.2f}."
     )
 
-    background_tasks.add_task(book_delhivery_shipment_task, order.id)
+    background_tasks.add_task(book_panda_shipment_task, order.id)
 
     return {"status": "success", "order_number": order.order_number}

@@ -233,6 +233,7 @@ class DelhiveryPickupRequest(BaseModel):
     expected_package_count: int = 1
 
 @public_router.get("/{order_id}/shipping-label", response_class=HTMLResponse)
+@public_router.get("/{order_id}/panda-label", response_class=HTMLResponse)
 @public_router.get("/{order_id}/delhivery-label", response_class=HTMLResponse)
 async def get_shipping_label(
     order_id: str,
@@ -258,25 +259,6 @@ async def get_shipping_label(
     from app.services.delivery_panda import generate_delivery_panda_label_html
     html_content = generate_delivery_panda_label_html(order)
     return HTMLResponse(content=html_content)
-
-@router.post("/delhivery-pickup")
-async def create_delhivery_pickup(
-    body: DelhiveryPickupRequest,
-    db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user)
-):
-    from app.services.delhivery import schedule_delhivery_pickup
-    
-    res = await schedule_delhivery_pickup(
-        pickup_date=body.pickup_date,
-        pickup_time=body.pickup_time,
-        pickup_location=body.pickup_location,
-        expected_count=body.expected_package_count
-    )
-    if not res.get("success"):
-        raise HTTPException(status_code=400, detail=res.get("message"))
-        
-    return res
 
 
 @router.post("", response_model=OrderOut, status_code=201)
@@ -515,8 +497,7 @@ async def create_order(
     return enriched
 
 
-async def cancel_delhivery_shipment_task(order_id: uuid.UUID):
-    from app.services.delhivery import cancel_delhivery_shipment
+async def cancel_panda_shipment_task(order_id: uuid.UUID):
     from app.core.database import AsyncSessionLocal
     
     async with AsyncSessionLocal() as db:
@@ -526,15 +507,13 @@ async def cancel_delhivery_shipment_task(order_id: uuid.UUID):
         if not order or not order.tracking_number:
             return
             
-        result = await cancel_delhivery_shipment(order.tracking_number)
-        if result.get("success"):
-            history = OrderStatusHistory(
-                order_id=order.id,
-                status=order.status,
-                notes=f"Delhivery shipment cancelled. Waybill: {order.tracking_number}. Response: {result['message']}"
-            )
-            db.add(history)
-            await db.commit()
+        history = OrderStatusHistory(
+            order_id=order.id,
+            status=order.status,
+            notes=f"Delivery Panda consignment marked for cancellation. Waybill: {order.tracking_number}"
+        )
+        db.add(history)
+        await db.commit()
 
 
 @router.patch("/{order_id}/status", response_model=OrderOut)
@@ -570,9 +549,9 @@ async def update_order_status(
         )
         db.add(history)
         
-        # Cancel Delhivery delivery in background if order is cancelled
-        if body.status == OrderStatus.cancelled and order.tracking_number and order.carrier == "Delhivery":
-            background_tasks.add_task(cancel_delhivery_shipment_task, order.id)
+        # Cancel Delivery Panda delivery in background if order is cancelled
+        if body.status == OrderStatus.cancelled and order.tracking_number and order.carrier in ["Delivery Panda", "Panda Delivery"]:
+            background_tasks.add_task(cancel_panda_shipment_task, order.id)
 
     if body.tracking_number:
         order.tracking_number = body.tracking_number
