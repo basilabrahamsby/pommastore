@@ -1082,7 +1082,7 @@ export default function Checkout() {
                 <div className="border-t border-neutral-200 pt-4">
                   <div className="flex justify-between text-neutral-900 text-sm">
                     <span className="font-serif normal-case font-bold tracking-normal text-base">{t('checkout_grand_total')}</span>
-                    <span className="font-bold text-lg font-serif normal-case tracking-normal">
+                    <span className="font-light text-xl font-serif normal-case tracking-wide text-neutral-800">
                       AED {(() => {
                         const vatRate = 0.05;
                         let exclusiveTaxAdded = 0;
