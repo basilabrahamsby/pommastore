@@ -58,13 +58,19 @@ async def book_delivery_panda_shipment(order: Order) -> Dict[str, Any]:
         # Calculate Pieces & Item Description
         total_pieces = 0
         item_names = []
-        if order.items:
-            for item in order.items:
-                total_pieces += item.quantity
-                if item.variant and item.variant.product:
-                    item_names.append(f"{item.variant.product.name} ({item.quantity}x)")
+        try:
+            items_list = getattr(order, "items", []) or []
+            for item in items_list:
+                total_pieces += getattr(item, "quantity", 1)
+                variant = getattr(item, "variant", None)
+                product = getattr(variant, "product", None) if variant else None
+                p_name = getattr(product, "name", None) if product else None
+                if p_name:
+                    item_names.append(f"{p_name} ({getattr(item, 'quantity', 1)}x)")
                 else:
-                    item_names.append(f"Perfume ({item.quantity}x)")
+                    item_names.append(f"Perfume ({getattr(item, 'quantity', 1)}x)")
+        except Exception as err:
+            logger.warning(f"Could not read order items for delivery panda description: {err}")
         
         pieces_str = str(max(1, total_pieces))
         items_desc = ", ".join(item_names)[:250] if item_names else "Luxury Perfume / Fragrance"
