@@ -615,7 +615,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
       <p style="margin: 0 0 6px; font-style: italic;">Thank you for your business!</p>
       <p style="margin: 0 0 6px; font-size: 10px; color: #555555; font-weight: 700;">{company_name}</p>
       <p style="margin: 0 0 4px; font-size: 10px; color: #555555;">{company_address}</p>
-      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; <a href="mailto:{email}" style="color: #D2168D; text-decoration: none;">{email}</a> &nbsp;|&nbsp; www.pommaholidays.com</p>
+      <p style="margin: 0; font-size: 10px; color: #555555;">TRN: {trn} &nbsp;|&nbsp; <a href="mailto:{email}" style="color: #D2168D; text-decoration: none;">{email}</a> &nbsp;|&nbsp; www.pommastore.com</p>
     </div>
     <div class="bottom-bar"></div>
   </div>
@@ -872,8 +872,8 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
         table_data.append([
             Paragraph(desc, table_cell_style),
             Paragraph(str(item.quantity), ParagraphStyle('TdRight', parent=table_cell_style, alignment=1)),
-            Paragraph(f"Rs. {float(item.unit_price):,.2f}", ParagraphStyle('TdRight2', parent=table_cell_style, alignment=2)),
-            Paragraph(f"Rs. {float(item.unit_price * item.quantity):,.2f}", ParagraphStyle('TdRight3', parent=table_cell_bold_style, alignment=2))
+            Paragraph(f"AED {float(item.unit_price):,.2f}", ParagraphStyle('TdRight2', parent=table_cell_style, alignment=2)),
+            Paragraph(f"AED {float(item.unit_price * item.quantity):,.2f}", ParagraphStyle('TdRight3', parent=table_cell_bold_style, alignment=2))
         ])
 
     items_table = Table(table_data, colWidths=[4.0*inch, 0.7*inch, 1.1*inch, 1.2*inch])
@@ -899,30 +899,36 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     payment_info_text = f"<b>Payment & Shipping Info:</b><br/>{pm_text}<br/>{tracking_text}{carrier_text}"
     payment_info_para = Paragraph(payment_info_text, ParagraphStyle('PayInfoText', parent=body_style, fontSize=8, leading=12, textColor=colors.HexColor('#555555')))
 
-    subtotal = float(order.subtotal or 0)
+    subtotal = float(order.subtotal or order.total_amount or 0)
     vat_rate = 0.05
     taxable_val = subtotal / (1 + vat_rate)
     total_vat = subtotal - taxable_val
+    shipping_amount = float(order.shipping_amount or 0)
+    discount_amount = float(order.discount_amount or 0)
+    total_amount = float(order.total_amount or subtotal)
 
     gst_label_style = ParagraphStyle('GstLabel', parent=body_style, fontSize=7, leading=10, textColor=colors.HexColor('#666666'))
     gst_val_style = ParagraphStyle('GstVal', parent=body_style, fontSize=7, leading=10, textColor=colors.HexColor('#666666'), alignment=2)
 
     summary_data = [
-        [Paragraph("Subtotal (VAT Incl.):", body_style), Paragraph(f"AED {subtotal:,.2f}", body_style)],
-        [Paragraph("Taxable Value:", gst_label_style), Paragraph(f"AED {taxable_val:,.2f}", gst_val_style)],
-        [Paragraph("UAE VAT (5.0%):", gst_label_style), Paragraph(f"AED {total_vat:,.2f}", gst_val_style)],
+        [Paragraph("Subtotal:", body_style), Paragraph(f"AED {subtotal:,.2f}", ParagraphStyle('SvRight', parent=body_style, alignment=2))],
     ]
 
-    if order.discount_amount and float(order.discount_amount) > 0:
-        summary_data.append([Paragraph("Discount:", body_style), Paragraph(f"-AED {float(order.discount_amount):,.2f}", body_style)])
-    if order.shipping_amount and float(order.shipping_amount) > 0:
-        summary_data.append([Paragraph("Shipping:", body_style), Paragraph(f"AED {float(order.shipping_amount):,.2f}", body_style)])
+    if discount_amount > 0:
+        summary_data.append([Paragraph("Discount:", body_style), Paragraph(f"-AED {discount_amount:,.2f}", ParagraphStyle('DiscRight', parent=body_style, alignment=2))])
+
+    if shipping_amount > 0:
+        shipping_label = getattr(order, 'shipping_method', None) or 'Logistics'
+        summary_data.append([Paragraph(f"{shipping_label}:", body_style), Paragraph(f"AED {shipping_amount:,.2f}", ParagraphStyle('ShipRight', parent=body_style, alignment=2))])
     else:
-        summary_data.append([Paragraph("Shipping:", body_style), Paragraph("FREE", body_style)])
+        summary_data.append([Paragraph("Logistics (Standard):", body_style), Paragraph("FREE", ParagraphStyle('FreeRight', parent=body_style, alignment=2, textColor=colors.HexColor('#D2168D')))])
+
+    summary_data.append([Paragraph("Taxable Value:", gst_label_style), Paragraph(f"AED {taxable_val:,.2f}", gst_val_style)])
+    summary_data.append([Paragraph("UAE VAT (5.0%):", gst_label_style), Paragraph(f"AED {total_vat:,.2f}", gst_val_style)])
 
     summary_data.append([
         Paragraph("<b>Total:</b>", ParagraphStyle('TotalLabel', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'))),
-        Paragraph(f"<b>AED {float(order.total_amount):,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'), alignment=2))
+        Paragraph(f"<b>AED {total_amount:,.2f}</b>", ParagraphStyle('TotalVal', parent=bold_body_style, textColor=colors.HexColor('#1A1A1A'), alignment=2))
     ])
 
     summary_table = Table(summary_data, colWidths=[2.2*inch, 1.2*inch])
@@ -977,8 +983,10 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     story.append(Spacer(1, 2))
     story.append(Paragraph(clean_address, footer_addr_style))
     story.append(Spacer(1, 2))
+    trn_footer = f"TRN: {trn}  |  " if trn else ""
+    phone_footer = f"{phone}  |  " if phone else ""
     story.append(Paragraph(
-        "Toll Free: 1800 890 2621  \u2502  Email: info@pommastore.com  \u2502  www.pommastore.com",
+        f"{trn_footer}{phone_footer}sales@poshniche.ae  |  www.pommastore.com",
         footer_addr_style
     ))
 
