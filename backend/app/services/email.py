@@ -42,13 +42,18 @@ def send_smtp_email(
         msg.attach(part)
 
     try:
+        import ssl
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
         if settings.SMTP_SSL:
-            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
+            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, context=context)
         else:
             server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
 
         if settings.SMTP_TLS:
-            server.starttls()
+            server.starttls(context=context)
 
         if settings.SMTP_USER and settings.SMTP_PASSWORD:
             smtp_pass = (settings.SMTP_PASSWORD or "").strip('"').strip("'")
