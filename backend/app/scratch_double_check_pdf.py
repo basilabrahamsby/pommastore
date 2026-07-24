@@ -54,22 +54,26 @@ pdf_bytes = pdf_buffer.getvalue()
 
 import zlib
 import re
+from reportlab.lib import ascii85
 
 pdf_text = ""
-# Find all FlateDecode streams
 stream_matches = re.findall(b'stream[\r\n]+(.*?)[\r\n]+endstream', pdf_bytes, re.DOTALL)
 for s in stream_matches:
     try:
-        decompressed = zlib.decompress(s)
+        # Strip trailing ~> if present
+        clean_s = s.strip()
+        if clean_s.endswith(b'~>'):
+            clean_s = clean_s[:-2]
+        decoded = ascii85.ascii85decode(clean_s)
+        decompressed = zlib.decompress(decoded)
         pdf_text += decompressed.decode('latin-1', errors='ignore') + "\n"
-    except Exception:
+    except Exception as e:
         pass
 
-# Also add uncompressed parts
 pdf_text += pdf_bytes.decode('latin-1', errors='ignore')
 
-print("EXTRACTED PDF TEXT SAMPLES:")
-print(pdf_text[:500])
+print("DECOMPRESSED STREAM TEXT SAMPLES:")
+print(pdf_text[:1000])
 
 print("=== PDF INVOICE CHECK ===")
 assert "POSH NICHE PERFUMES" in pdf_text
