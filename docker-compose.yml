@@ -35,10 +35,10 @@ services:
       DATABASE_URL: postgresql+asyncpg://pommastore:pommastore_dev_2026@postgres:5432/pommastore
       DATABASE_URL_SYNC: postgresql://pommastore:pommastore_dev_2026@postgres:5432/pommastore
       REDIS_URL: redis://redis:6379/0
-      SMTP_HOST: ${SMTP_HOST:-mail.poshgallery.ae}
+      SMTP_HOST: ${SMTP_HOST:-smtp.titan.email}
       SMTP_PORT: ${SMTP_PORT:-465}
       SMTP_USER: ${SMTP_USER:-sales@poshgallery.ae}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-"pomma@posh&sales!"}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-"Delmon@posh&sales!"}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-sales@poshgallery.ae}
       SMTP_FROM_NAME: "Pommastore"
       SMTP_TLS: ${SMTP_TLS:-false}
