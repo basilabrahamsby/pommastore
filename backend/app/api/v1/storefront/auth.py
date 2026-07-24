@@ -55,7 +55,7 @@ async def verify_otp(body: OTPVerifyRequest, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=400, detail="Email or phone is required")
     
     stored_otp = await redis_service.get_otp(identifier)
-    if not stored_otp or stored_otp != body.otp:
+    if not stored_otp or str(stored_otp).strip() != str(body.otp).strip():
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     
     # OTP verified, delete it
