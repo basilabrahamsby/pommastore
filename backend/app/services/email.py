@@ -51,7 +51,8 @@ def send_smtp_email(
             server.starttls()
 
         if settings.SMTP_USER and settings.SMTP_PASSWORD:
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp_pass = (settings.SMTP_PASSWORD or "").strip('"').strip("'")
+            server.login(settings.SMTP_USER, smtp_pass)
 
         server.sendmail(settings.SMTP_FROM_EMAIL or settings.SMTP_USER, to_email, msg.as_string())
         server.quit()
