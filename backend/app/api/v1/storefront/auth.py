@@ -20,7 +20,11 @@ router = APIRouter(prefix="/auth", tags=["Storefront Auth"])
 
 @router.post("/otp/send")
 async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
-    identifier = body.email or body.phone
+    target_email = body.email
+    if not target_email and body.phone and "@" in body.phone:
+        target_email = body.phone.strip()
+    
+    identifier = target_email or body.phone
     if not identifier:
         raise HTTPException(status_code=400, detail="Email or phone is required")
     
@@ -33,8 +37,8 @@ async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: 
     # Send via SMS/Email
     print(f"OTP for {identifier}: {otp}")
     
-    if body.email:
-        background_tasks.add_task(send_otp_email, body.email, otp)
+    if target_email:
+        background_tasks.add_task(send_otp_email, target_email, otp)
     elif body.phone:
         raise HTTPException(
             status_code=400,
