@@ -50,13 +50,27 @@ print("✓ HTML Invoice Verified Clean!")
 
 # 2. Check PDF Invoice
 pdf_buffer = generate_invoice_pdf(wrapper)
-pdf_bytes = pdf_buffer.getvalue()
 
-# Extract text using PyPDF2 / pdfplumber / reportlab or raw inspect
-pdf_text_str = str(pdf_bytes)
+try:
+    from pypdf import PdfReader
+    reader = PdfReader(pdf_buffer)
+    pdf_text = ""
+    for page in reader.pages:
+        pdf_text += page.extract_text() or ""
+except Exception:
+    import pypdf
+    reader = pypdf.PdfReader(pdf_buffer)
+    pdf_text = ""
+    for page in reader.pages:
+        pdf_text += page.extract_text() or ""
+
+print("EXTRACTED PDF TEXT:")
+print(pdf_text)
 
 print("=== PDF INVOICE CHECK ===")
-assert "POSH NICHE PERFUMES" in pdf_text_str or "Al Muteena" in pdf_text_str or "104349616300003" in pdf_text_str
-assert "Elamakkara" not in pdf_text_str
-assert "Kerala" not in pdf_text_str
-print(f"✓ PDF Invoice Generated Successfully ({len(pdf_bytes)} bytes) and Verified Clean!")
+assert "POSH NICHE PERFUMES" in pdf_text
+assert "Al Muteena" in pdf_text or "Dubai" in pdf_text
+assert "104349616300003" in pdf_text
+assert "Elamakkara" not in pdf_text
+assert "Kerala" not in pdf_text
+print("✓ PDF Invoice Extracted Text Verified 100% Clean!")

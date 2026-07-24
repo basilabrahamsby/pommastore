@@ -989,7 +989,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     trn_footer = f"TRN: {trn}  |  " if trn else ""
     phone_footer = f"{phone}  |  " if phone else ""
     story.append(Paragraph(
-        f"{trn_footer}{phone_footer}sales@poshniche.ae  |  www.pommastore.com",
+        f"{trn_footer}{phone_footer}sales@poshgallery.ae  |  www.pommastore.com",
         footer_addr_style
     ))
 
