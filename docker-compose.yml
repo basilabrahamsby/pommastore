@@ -38,7 +38,7 @@ services:
       SMTP_HOST: ${SMTP_HOST:-smtp.titan.email}
       SMTP_PORT: ${SMTP_PORT:-465}
       SMTP_USER: ${SMTP_USER:-sales@poshgallery.ae}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-"Delmon@posh&sales!"}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-Delmon@posh&sales!}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-sales@poshgallery.ae}
       SMTP_FROM_NAME: "Pommastore"
       SMTP_TLS: ${SMTP_TLS:-false}
