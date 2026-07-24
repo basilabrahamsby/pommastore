@@ -49,31 +49,15 @@ assert "Kerala" not in html
 print("✓ HTML Invoice Verified Clean!")
 
 # 2. Check PDF Invoice
+import reportlab.rl_config
+reportlab.rl_config.pageCompression = 0
+
 pdf_buffer = generate_invoice_pdf(wrapper)
 pdf_bytes = pdf_buffer.getvalue()
+pdf_text = pdf_bytes.decode('latin-1', errors='ignore')
 
-import zlib
-import re
-from reportlab.lib import ascii85
-
-pdf_text = ""
-stream_matches = re.findall(b'stream[\r\n]+(.*?)[\r\n]+endstream', pdf_bytes, re.DOTALL)
-for s in stream_matches:
-    try:
-        # Strip trailing ~> if present
-        clean_s = s.strip()
-        if clean_s.endswith(b'~>'):
-            clean_s = clean_s[:-2]
-        decoded = ascii85.ascii85decode(clean_s)
-        decompressed = zlib.decompress(decoded)
-        pdf_text += decompressed.decode('latin-1', errors='ignore') + "\n"
-    except Exception as e:
-        pass
-
-pdf_text += pdf_bytes.decode('latin-1', errors='ignore')
-
-print("DECOMPRESSED STREAM TEXT SAMPLES:")
-print(pdf_text[:1000])
+print("UNCOMPRESSED PDF TEXT SAMPLE:")
+print(pdf_text[500:2000])
 
 print("=== PDF INVOICE CHECK ===")
 assert "POSH NICHE PERFUMES" in pdf_text
@@ -81,4 +65,4 @@ assert "Al Muteena" in pdf_text or "Dubai" in pdf_text
 assert "104349616300003" in pdf_text
 assert "Elamakkara" not in pdf_text
 assert "Kerala" not in pdf_text
-print("✓ PDF Invoice Extracted Text Verified 100% Clean!")
+print("✓ PDF Invoice Plain Text Verified 100% Clean!")
