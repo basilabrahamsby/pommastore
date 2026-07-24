@@ -4,26 +4,39 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 user = "sales@poshgallery.ae"
-pw = "pomma@posh&sales!"
-host = "smtp.titan.email"
-port = 465
+pw = "Delmon@posh&sales!"
 
-print(f"Connecting to Titan Email SMTP: {host}:{port} (SSL)...")
+hosts = [
+    ("smtp.titan.email", 465, True, False),
+    ("smtp.titan.email", 587, False, True),
+    ("mail.poshgallery.ae", 465, True, False),
+    ("mail.poshgallery.ae", 587, False, True)
+]
 
-try:
-    context = ssl.create_default_context()
-    server = smtplib.SMTP_SSL(host, port, context=context, timeout=10)
-    server.login(user, pw)
-    print("🎉 SUCCESS! Authenticated cleanly with Titan Email!")
-    
-    msg = MIMEMultipart()
-    msg['Subject'] = "Pommastore Titan SMTP Verification"
-    msg['From'] = f"Pommastore <{user}>"
-    msg['To'] = user
-    msg.attach(MIMEText("Pommastore Titan Email SMTP transmission verified 100%!", "html"))
-    
-    server.send_message(msg)
-    server.quit()
-    print("✅ TEST EMAIL SENT SUCCESSFULLY VIA TITAN EMAIL!")
-except Exception as e:
-    print(f"❌ Titan SMTP Test Failed: {e}")
+context = ssl.create_default_context()
+
+for host, port, use_ssl, use_tls in hosts:
+    print(f"\nTesting {host}:{port} (SSL={use_ssl}, TLS={use_tls})...")
+    try:
+        if use_ssl:
+            server = smtplib.SMTP_SSL(host, port, context=context, timeout=10)
+        else:
+            server = smtplib.SMTP(host, port, timeout=10)
+            if use_tls:
+                server.starttls(context=context)
+        
+        server.login(user, pw)
+        print(f"🎉 SUCCESS! Authenticated cleanly on {host}:{port}")
+        
+        msg = MIMEMultipart()
+        msg['Subject'] = "Pommastore Titan Email Verification"
+        msg['From'] = f"Pommastore <{user}>"
+        msg['To'] = user
+        msg.attach(MIMEText("Pommastore SMTP transmission verified 100%!", "html"))
+        
+        server.send_message(msg)
+        server.quit()
+        print("✅ TEST EMAIL DELIVERED SUCCESSFULLY!")
+        break
+    except Exception as e:
+        print(f"❌ Failed for {host}:{port}: {e}")
