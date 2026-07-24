@@ -1,22 +1,36 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
-from app.services.email import send_smtp_email
-from app.core.config import settings
+user = "sales@poshgallery.ae"
+pw = "pomma@posh&sales!"
+hosts = [
+    ("mail.poshgallery.ae", 587, "TLS"),
+    ("mail.poshgallery.ae", 465, "SSL"),
+    ("poshgallery.ae", 587, "TLS"),
+    ("poshgallery.ae", 465, "SSL"),
+]
 
-print("SMTP HOST:", settings.SMTP_HOST)
-print("SMTP PORT:", settings.SMTP_PORT)
-print("SMTP USER:", settings.SMTP_USER)
-print("SMTP FROM EMAIL:", settings.SMTP_FROM_EMAIL)
-print("SMTP SSL:", settings.SMTP_SSL)
-print("SMTP TLS:", settings.SMTP_TLS)
-
-res = send_smtp_email(
-    to_email="sales@poshgallery.ae",
-    subject="Pommastore Email Verification",
-    body_html="<h2>Pommastore Email System</h2><p>This email confirms that SMTP transmission from sales@poshgallery.ae is working 100% cleanly.</p>",
-    body_text="Pommastore Email System - SMTP transmission verified."
-)
-
-print("EMAIL TRANSMISSION RESULT:", res)
+for host, port, mode in hosts:
+    print(f"\n--- Testing {host}:{port} ({mode}) ---")
+    try:
+        if mode == "SSL":
+            server = smtplib.SMTP_SSL(host, port, timeout=10)
+        else:
+            server = smtplib.SMTP(host, port, timeout=10)
+            server.starttls()
+        
+        server.login(user, pw)
+        print(f"SUCCESS AUTHENTICATING ON {host}:{port} ({mode})!")
+        
+        msg = MIMEMultipart()
+        msg['Subject'] = "Pommastore SMTP Test"
+        msg['From'] = f"Pommastore <{user}>"
+        msg['To'] = user
+        msg.attach(MIMEText("SMTP connection successful!", "plain"))
+        server.send_message(msg)
+        server.quit()
+        print("EMAIL SENT SUCCESSFULLY!")
+        break
+    except Exception as e:
+        print(f"FAILED on {host}:{port} ({mode}): {e}")
