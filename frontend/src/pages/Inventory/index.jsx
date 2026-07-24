@@ -474,6 +474,10 @@ function BatchDetailsModal({ batch, onClose }) {
 
 function MovementDetailsModal({ movement, onClose }) {
   if (!movement) return null
+  const qty = movement.qty ?? movement.quantity ?? 0
+  const dateVal = movement.date || movement.created_at
+  const dateFormatted = dateVal ? new Date(dateVal).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 460, border: '1px solid var(--border)', background: '#0a0a0c' }} onClick={e => e.stopPropagation()}>
@@ -492,8 +496,8 @@ function MovementDetailsModal({ movement, onClose }) {
               {movement.type === 'Restock' ? '📥' : '📤'}
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: '#fff', fontSize: '1.05rem' }}>{movement.product_name}</div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>SKU: {movement.sku}</span>
+              <div style={{ fontWeight: 700, color: '#fff', fontSize: '1.05rem' }}>{movement.product_name || 'Item'}</div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>SKU: {movement.sku || 'N/A'}</span>
             </div>
           </div>
 
@@ -504,20 +508,20 @@ function MovementDetailsModal({ movement, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Quantity Shift</span>
-              <strong style={{ color: movement.qty > 0 ? 'var(--success)' : 'var(--error)' }}>
-                {movement.qty > 0 ? `+${movement.qty.toLocaleString()}` : movement.qty.toLocaleString()} units
+              <strong style={{ color: qty > 0 ? 'var(--success)' : 'var(--error)' }}>
+                {qty > 0 ? `+${qty.toLocaleString()}` : qty.toLocaleString()} units
               </strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Transaction Date</span>
-              <strong style={{ color: '#fff' }}>{new Date(movement.date).toLocaleDateString('en-US')}</strong>
+              <strong style={{ color: '#fff' }}>{dateFormatted}</strong>
             </div>
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', padding: 12, borderRadius: 8 }}>
             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Log Reason & Description</span>
             <p style={{ fontSize: '0.8rem', color: '#fff', margin: '4px 0 0 0', lineHeight: '1.4', fontWeight: 600 }}>
-              {movement.reason}
+              {movement.reason || 'No description provided.'}
             </p>
           </div>
         </div>
@@ -657,7 +661,13 @@ export default function Inventory() {
       setStock(s.data || [])
       setBatches(b.data || [])
       setSuppliers(sup.data || [])
-      setMovements(m.data || [])
+      const rawMovements = m.data || []
+      const formattedMovements = rawMovements.map(item => ({
+        ...item,
+        qty: item.qty ?? item.quantity ?? 0,
+        date: item.date || item.created_at
+      }))
+      setMovements(formattedMovements)
       setDashboardStats(ds.data || null)
     })
     .catch(() => toast.error('Failed to load inventory data'))
@@ -668,10 +678,10 @@ export default function Inventory() {
   const lowCount = stock.filter(s => s.is_low_stock).length
 
   const filteredMovements = movements.filter(m =>
-    m.id.toLowerCase().includes(movementSearch.toLowerCase()) ||
-    m.sku.toLowerCase().includes(movementSearch.toLowerCase()) ||
-    m.product_name.toLowerCase().includes(movementSearch.toLowerCase()) ||
-    m.reason.toLowerCase().includes(movementSearch.toLowerCase())
+    (m.id || '').toLowerCase().includes(movementSearch.toLowerCase()) ||
+    (m.sku || '').toLowerCase().includes(movementSearch.toLowerCase()) ||
+    (m.product_name || '').toLowerCase().includes(movementSearch.toLowerCase()) ||
+    (m.reason || '').toLowerCase().includes(movementSearch.toLowerCase())
   )
 
   const filteredSuppliers = suppliers.filter(s =>
@@ -808,7 +818,10 @@ export default function Inventory() {
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
             <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Today's Activity</span>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold-bright)', marginTop: 2 }}>
-              {movements.filter(m => new Date(m.date).toDateString() === new Date().toDateString()).length} entries
+              {movements.filter(m => {
+                const d = m.date || m.created_at
+                return d && new Date(d).toDateString() === new Date().toDateString()
+              }).length} entries
             </div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
@@ -819,8 +832,8 @@ export default function Inventory() {
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 10 }}>
             <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 'bold' }}>Net Unit Variance</span>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: movements.reduce((acc, m) => acc + m.qty, 0) >= 0 ? 'var(--success)' : 'var(--error)', marginTop: 2 }}>
-              {movements.reduce((acc, m) => acc + m.qty, 0).toLocaleString()} units
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: movements.reduce((acc, m) => acc + (m.qty ?? m.quantity ?? 0), 0) >= 0 ? 'var(--success)' : 'var(--error)', marginTop: 2 }}>
+              {movements.reduce((acc, m) => acc + (m.qty ?? m.quantity ?? 0), 0).toLocaleString()} units
             </div>
           </div>
         </div>
@@ -1292,18 +1305,34 @@ export default function Inventory() {
               {filteredMovements.length === 0 ? (
                 <tr><td colSpan={7} className="table-empty">No stock movements found.</td></tr>
               ) : (
-                filteredMovements.map(m => (
-                  <tr key={m.id} onClick={() => setSelectedMovement(m)} style={{ cursor: 'pointer' }}>
-                    <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--gold)' }}>{m.id}</span></td><td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#fff' }}>{m.sku}</span></td><td style={{ fontWeight: 600 }}>{m.product_name}</td><td><span className="badge" style={{
-                        background: m.type === 'Restock' ? 'rgba(16,185,129,0.15)' : (m.type === 'Deduction' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'),
-                        color: m.type === 'Restock' ? 'var(--success)' : (m.type === 'Deduction' ? 'var(--error)' : '#f59e0b'),
-                        fontWeight: 700, fontSize: '0.68rem'
-                      }}>
-                        {m.type}
-                      </span></td><td><strong style={{ color: m.qty > 0 ? 'var(--success)' : 'var(--error)' }}>
-                        {m.qty > 0 ? `+${m.qty}` : m.qty}
-                      </strong></td><td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.reason}</td><td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.date).toLocaleDateString('en-US')}</td></tr>
-                ))
+                filteredMovements.map(m => {
+                  const qty = m.qty ?? m.quantity ?? 0
+                  const dateVal = m.date || m.created_at
+                  const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('en-US') : '—'
+                  return (
+                    <tr key={m.id} onClick={() => setSelectedMovement(m)} style={{ cursor: 'pointer' }}>
+                      <td><span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--gold)' }}>{m.id}</span></td>
+                      <td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#fff' }}>{m.sku || '—'}</span></td>
+                      <td style={{ fontWeight: 600 }}>{m.product_name || '—'}</td>
+                      <td>
+                        <span className="badge" style={{
+                          background: m.type === 'Restock' ? 'rgba(16,185,129,0.15)' : (m.type === 'Deduction' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'),
+                          color: m.type === 'Restock' ? 'var(--success)' : (m.type === 'Deduction' ? 'var(--error)' : '#f59e0b'),
+                          fontWeight: 700, fontSize: '0.68rem'
+                        }}>
+                          {m.type}
+                        </span>
+                      </td>
+                      <td>
+                        <strong style={{ color: qty > 0 ? 'var(--success)' : 'var(--error)' }}>
+                          {qty > 0 ? `+${qty}` : qty}
+                        </strong>
+                      </td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.reason || '—'}</td>
+                      <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{dateStr}</td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
