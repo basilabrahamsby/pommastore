@@ -112,7 +112,7 @@ def _base_template(title_line: str, tagline: str, content_html: str, cta_url: st
         <tr>
           <td bgcolor="#FAF8F5" style="padding:24px 20px;text-align:center;border-top:1px solid #EAE6DF;">
             <p style="margin:0;font-size:9px;color:#999999;letter-spacing:0.18em;text-transform:uppercase;line-height:1.8;">
-              © 2026 Pommastore Luxury Fragrances &nbsp;|&nbsp; info@pommastore.com<br>
+              © 2026 Pommastore Luxury Fragrances &nbsp;|&nbsp; sales@poshgallery.ae<br>
               You are receiving this because you placed an order on Pommastore.
             </p>
           </td>
@@ -1126,8 +1126,7 @@ def send_admin_invoice_email(
 
     ADMIN_RECIPIENTS = [
         "sales@poshgallery.ae",
-        "admin@poshgallery.ae",
-        "info@pommastore.com"
+        "admin@poshgallery.ae"
     ]
     
     success = False
@@ -1199,7 +1198,7 @@ def send_order_confirmation_email(
                           cta_url="https://pommastore.com/track-order",
                           cta_label="Track My Order")
     
-    # Always send detailed invoice copy with full customer details to info@pommastore.com
+    # Always send detailed invoice copy with full customer details to sales@poshgallery.ae
     send_admin_invoice_email(
         customer_name=customer_name,
         customer_email=customer_email or to_email or "",
@@ -1319,7 +1318,7 @@ def send_order_shipped_email(
     {tracking_block}
     {items_html}
     <p style="margin:16px 0 0;font-size:12px;color:#888;line-height:1.7;">
-      If you have any questions, contact us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
+      If you have any questions, contact us at <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;text-decoration:none;">sales@poshgallery.ae</a>.
     </p>"""
 
     html = _base_template(f"Order Shipped — {order_number}", "Your Fragrance is En Route", content,
@@ -1354,7 +1353,7 @@ def send_out_for_delivery_email(
     </div>
     {address_html}
     <p style="margin:16px 0 0;font-size:12px;color:#888;line-height:1.7;">
-      If you are unavailable, please contact the delivery partner. Reach us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
+      If you are unavailable, please contact the delivery partner. Reach us at <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;text-decoration:none;">sales@poshgallery.ae</a>.
     </p>"""
 
     html = _base_template(f"Out for Delivery — {order_number}", "Arriving Today", content)
@@ -1385,7 +1384,7 @@ def send_order_delivered_email(
     {items_html}
     <div style="background:#FAF8F5;border:1px solid #EAE6DF;border-radius:3px;padding:16px 20px;margin:20px 0;text-align:center;">
       <p style="margin:0 0 6px;font-size:12px;color:#555;line-height:1.6;">We'd love to hear from you. Share your experience and earn loyalty points.</p>
-      <p style="margin:0;font-size:11px;color:#888;">Contact: <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a></p>
+      <p style="margin:0;font-size:11px;color:#888;">Contact: <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;text-decoration:none;">sales@poshgallery.ae</a></p>
     </div>
     <p style="margin:0;font-size:11px;color:#888;line-height:1.7;">
       If you have any concerns about your delivery, please reach out to us within 48 hours.
@@ -1423,7 +1422,7 @@ def send_order_cancelled_email(
     {reason_block}
     {refund_block}
     <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
-      If you believe this is an error or need assistance, please contact us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
+      If you believe this is an error or need assistance, please contact us at <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;text-decoration:none;">sales@poshgallery.ae</a>.
     </p>"""
 
     html = _base_template(f"Order Cancelled — {order_number}", "We're Sorry", content,
@@ -1473,7 +1472,7 @@ def send_order_completed_email(to_email: str, customer_name: str, order_number: 
       Dear <strong>{customer_name}</strong>, your order <strong>{order_number}</strong> is now marked as complete. We hope you're enjoying your fragrance. Your loyalty points have been updated.
     </p>
     <div style="background:#FFF5F9;border-left:3px solid #D2168D;border-radius:2px;padding:14px 18px;margin:20px 0;">
-      <p style="margin:0;font-size:12px;color:#D2168D;font-weight:700;line-height:1.6;">We'd love to hear your thoughts — write to us at <a href="mailto:info@pommastore.com" style="color:#D2168D;">info@pommastore.com</a></p>
+      <p style="margin:0;font-size:12px;color:#D2168D;font-weight:700;line-height:1.6;">We'd love to hear your thoughts — write to us at <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;">sales@poshgallery.ae</a></p>
     </div>"""
 
     html = _base_template(f"Order Complete — {order_number}", "Luxury Fragrance House", content,
@@ -1503,7 +1502,7 @@ def send_return_requested_email(to_email: str, customer_name: str, order_number:
       <p style="margin:0;font-size:12px;color:#555;line-height:1.6;">Please keep the items in their original packaging until our team confirms the pickup.</p>
     </div>
     <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
-      For queries, contact us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
+      For queries, contact us at <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;text-decoration:none;">sales@poshgallery.ae</a>.
     </p>"""
 
     html = _base_template(f"Return Request — {order_number}", "We're Here to Help", content)
@@ -1528,7 +1527,7 @@ def send_order_returned_email(to_email: str, customer_name: str, order_number: s
     </p>
     {refund_block}
     <p style="margin:0;font-size:12px;color:#888;line-height:1.7;">
-      Thank you for your patience. If you have questions, reach us at <a href="mailto:info@pommastore.com" style="color:#D2168D;text-decoration:none;">info@pommastore.com</a>.
+      Thank you for your patience. If you have questions, reach us at <a href="mailto:sales@poshgallery.ae" style="color:#D2168D;text-decoration:none;">sales@poshgallery.ae</a>.
     </p>"""
 
     html = _base_template(f"Return Confirmed — {order_number}", "Refund Initiated", content,
