@@ -642,25 +642,22 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
 
     if not company_details:
         company_details = {
-            "companyName": "POMMASTORE COMMODITIES PRIVATE LIMITED",
-            "registeredAddress": "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026",
-            "gstin": "32AAHCK3784H1ZF",
-            "pan": "AAHCK3784H",
-            "stateCode": "32 (Kerala)"
+            "companyName": "POSH NICHE PERFUMES & COSMETICS TRADING LLC",
+            "registeredAddress": "Office No. C-81, Al Muteena, Dubai, United Arab Emirates",
+            "trn": "104349616300003",
+            "phone": "+971 4 453 9119",
+            "email": "sales@poshgallery.ae"
         }
 
-    company_name = company_details.get("companyName") or "POMMASTORE COMMODITIES PRIVATE LIMITED"
-    company_address = company_details.get("registeredAddress") or "71/826, B.T.S RRA-283, BTS Road, Keerthi Nagar, Elamakkara P.O, Kochi, Kerala - 682026"
-    # Short address for header (city/state only)
-    short_address = "Kochi, Kerala - 682026"
-    gstin = company_details.get("gstin") or "32AAHCK3784H1ZF"
-    pan = company_details.get("pan") or "AAHCK3784H"
-    trn = company_details.get("trn") or company_details.get("TRN") or ""
-    phone = company_details.get("phone") or company_details.get("supportPhone") or "+91-484-POMMASTORE"
-    state_code = company_details.get("stateCode") or "32 (Kerala)"
-    # Override incorrect state code if admin saved wrong value
-    if state_code and ("delhi" in state_code.lower() or state_code.strip() in ("07", "07 (Delhi)", "37", "37 (Delhi)")):
-        state_code = "32 (Kerala)"
+    company_name = company_details.get("companyName") or "POSH NICHE PERFUMES & COSMETICS TRADING LLC"
+    company_address = company_details.get("registeredAddress") or "Office No. C-81, Al Muteena, Dubai, United Arab Emirates"
+    # Short address for header (city only)
+    short_address = "Dubai, United Arab Emirates"
+    gstin = company_details.get("gstin") or ""
+    pan = company_details.get("pan") or ""
+    trn = company_details.get("trn") or company_details.get("TRN") or "104349616300003"
+    phone = company_details.get("phone") or company_details.get("supportPhone") or "+971 4 453 9119"
+    state_code = company_details.get("stateCode") or ""
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
