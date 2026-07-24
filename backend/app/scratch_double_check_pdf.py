@@ -50,22 +50,26 @@ print("✓ HTML Invoice Verified Clean!")
 
 # 2. Check PDF Invoice
 pdf_buffer = generate_invoice_pdf(wrapper)
+pdf_bytes = pdf_buffer.getvalue()
 
-try:
-    from pypdf import PdfReader
-    reader = PdfReader(pdf_buffer)
-    pdf_text = ""
-    for page in reader.pages:
-        pdf_text += page.extract_text() or ""
-except Exception:
-    import pypdf
-    reader = pypdf.PdfReader(pdf_buffer)
-    pdf_text = ""
-    for page in reader.pages:
-        pdf_text += page.extract_text() or ""
+import zlib
+import re
 
-print("EXTRACTED PDF TEXT:")
-print(pdf_text)
+pdf_text = ""
+# Find all FlateDecode streams
+stream_matches = re.findall(b'stream[\r\n]+(.*?)[\r\n]+endstream', pdf_bytes, re.DOTALL)
+for s in stream_matches:
+    try:
+        decompressed = zlib.decompress(s)
+        pdf_text += decompressed.decode('latin-1', errors='ignore') + "\n"
+    except Exception:
+        pass
+
+# Also add uncompressed parts
+pdf_text += pdf_bytes.decode('latin-1', errors='ignore')
+
+print("EXTRACTED PDF TEXT SAMPLES:")
+print(pdf_text[:500])
 
 print("=== PDF INVOICE CHECK ===")
 assert "POSH NICHE PERFUMES" in pdf_text
