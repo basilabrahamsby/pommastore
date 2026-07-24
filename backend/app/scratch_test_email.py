@@ -1,22 +1,23 @@
 import smtplib
 
-host = "mail.poshgallery.ae"
-port = 465
+user = "sales@poshgallery.ae"
 pw = "pomma@posh&sales!"
-usernames = [
-    "sales@poshgallery.ae",
-    "sales+poshgallery.ae",
-    "sales",
-    "poshgallery"
+
+hosts = [
+    "mail.poshgallery.ae",
+    "poshgallery.ae",
+    "cpanel-002-syd.hosting.onlydomains.com",
+    "syd-cpanel002.onlydomains.com",
+    "cpanel.poshgallery.ae"
 ]
 
-for user in usernames:
-    print(f"Testing username: '{user}' on {host}:{port}...")
+for host in hosts:
+    print(f"Testing host: {host}:465...")
     try:
-        server = smtplib.SMTP_SSL(host, port, timeout=5)
+        server = smtplib.SMTP_SSL(host, 465, timeout=5)
         server.login(user, pw)
-        print(f"✅ SUCCESS! Correct Username is: '{user}'")
+        print(f"✅ SUCCESS! Connected & Authenticated on: {host}")
         server.quit()
         break
     except Exception as e:
-        print(f"❌ Failed for '{user}': {e}")
+        print(f"❌ Failed for {host}: {e}")
