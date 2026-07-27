@@ -11,6 +11,7 @@ import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/image_lightbox.dart';
 import '../../core/widgets/product_card.dart';
 import '../../core/widgets/animated_background.dart';
+import '../../core/locale/locale_provider.dart';
 final homeScrollTargetProvider = StateProvider<String?>((ref) => null);
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -309,6 +310,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                   ),
 
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final localeNotifier = ref.watch(localeProvider.notifier);
+                      final isAr = localeNotifier.isArabic;
+                      return _drawerTile(
+                        icon: Icons.language_outlined,
+                        title: isAr ? 'اللغة: English' : 'Language: العربية',
+                        onTap: () {
+                          localeNotifier.toggleLocale();
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    },
+                  ),
+
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: Divider(color: AppTheme.borderLight),
@@ -500,52 +516,81 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildMyntraHeader(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      top: true,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(6, 4, 12, 4),
-        color: Colors.white,
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.menu, color: AppTheme.textNeutral, size: 24),
-              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              height: 48,
-              child: Image.asset(
-                'assets/logo.png',
-                height: 48,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Text(
-                  'POMMASTORE',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.primaryRose,
-                    letterSpacing: 2,
+    return Consumer(
+      builder: (context, ref, child) {
+        final localeNotifier = ref.watch(localeProvider.notifier);
+        final isAr = localeNotifier.isArabic;
+
+        return SafeArea(
+          bottom: false,
+          top: true,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(4, 4, 6, 4),
+            color: Colors.white,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.menu, color: AppTheme.textNeutral, size: 24),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+                InkWell(
+                  onTap: () => localeNotifier.toggleLocale(),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.borderLight, width: 0.8),
+                    ),
+                    child: Text(
+                      isAr ? 'EN' : 'عربي',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primaryRose,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Expanded(
+                  child: Center(
+                    child: SizedBox(
+                      height: 44,
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 44,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Text(
+                          'POMMASTORE',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.primaryRose,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.search, color: AppTheme.textNeutral, size: 22),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const SearchScreen(autoFocus: true)),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 22),
+                  onPressed: () => context.push('/account'),
+                ),
+              ],
             ),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.search, color: AppTheme.textNeutral, size: 24),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const SearchScreen(autoFocus: true)),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 24),
-              onPressed: () => context.push('/account'),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

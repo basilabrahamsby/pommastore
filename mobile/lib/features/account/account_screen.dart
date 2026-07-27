@@ -13,6 +13,7 @@ import '../catalog/rewards_gallery_screen.dart';
 import 'account_subpages.dart';
 import '../../core/widgets/logo_loader.dart';
 import '../../core/widgets/animated_background.dart';
+import '../../core/locale/locale_provider.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
@@ -360,6 +361,19 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                           },
                           iconColor: AppTheme.accentGold,
                           subtitle: 'Redeem loyalty points for exclusive gifts',
+                        ),
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final localeNotifier = ref.watch(localeProvider.notifier);
+                            final isAr = localeNotifier.isArabic;
+                            return _buildMenuItem(
+                              Icons.language_rounded,
+                              isAr ? 'اللغة / Language' : 'Language / اللغة',
+                              () => localeNotifier.toggleLocale(),
+                              iconColor: AppTheme.primaryRose,
+                              subtitle: isAr ? 'التغيير إلى الإنجليزية (English)' : 'Switch to Arabic (العربية)',
+                            );
+                          },
                         ),
                         _buildMenuItem(
                           Icons.headset_mic_rounded,

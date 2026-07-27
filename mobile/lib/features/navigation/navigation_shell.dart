@@ -87,27 +87,27 @@ class NavigationShell extends ConsumerWidget {
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.home, size: iconSize),
               activeIcon: Icon(LucideIcons.home, size: iconSize, color: AppTheme.primaryRose),
-              label: 'Home',
+              label: localeNotifier.tr('nav_home'),
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.layoutGrid, size: iconSize),
               activeIcon: Icon(LucideIcons.layoutGrid, size: iconSize, color: AppTheme.primaryRose),
-              label: 'Categories',
+              label: localeNotifier.tr('nav_categories'),
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.search, size: iconSize),
               activeIcon: Icon(LucideIcons.search, size: iconSize, color: AppTheme.primaryRose),
-              label: 'Search',
+              label: localeNotifier.tr('nav_search'),
             ),
             BottomNavigationBarItem(
               icon: bagIcon(),
               activeIcon: bagIcon(active: true),
-              label: 'Bag',
+              label: localeNotifier.tr('nav_bag'),
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.user, size: iconSize),
               activeIcon: Icon(LucideIcons.user, size: iconSize, color: AppTheme.primaryRose),
-              label: 'Profile',
+              label: localeNotifier.tr('nav_account'),
             ),
           ],
         ),
