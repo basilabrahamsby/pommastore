@@ -10,6 +10,7 @@ import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/product_card.dart';
 import '../../core/widgets/animated_background.dart';
 import '../../core/api/api_client.dart';
+import '../../core/locale/locale_provider.dart';
 import 'product_detail_screen.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
