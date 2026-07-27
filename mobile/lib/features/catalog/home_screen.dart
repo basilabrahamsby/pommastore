@@ -495,7 +495,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'Exquisite Collection': 'تشكيلة فاخرة',
       'Top Curated Fragrances': 'أفضل العطور المختارة',
       'Prestige Selection': 'تشكيلة مرموقة',
-      'Premium Fragrances': 'عطور متميزة',
+      'THE ELITE LIST': 'قائمة النخبة',
+      'HOUSE FAVORITES': 'المفضلة لدى الدار',
+      'REFINED & BOLD': 'أنيق وجذاب',
+      'ELEGANT & SWEET': 'أنيقة وناعمة',
+      'THE PRIVILEGE COLLECTION.': 'مجموعة الامتياز الفاخرة',
       '100% Authentic Luxury': 'فخامة أصلي 100٪',
       'Sourced directly from global brand houses': 'مستورد مباشرة من دور العطور العالمية',
       'Express UAE & Gulf Delivery': 'توصيل سريع للإمارات والخليج',
@@ -507,7 +511,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Section Header ────────────────────────────────────────────────────────
   Widget _buildSectionHeader(String title, String subtitle, {VoidCallback? onViewAll}) {
-    final isAr = ref.watch(localeProvider.notifier).isArabic;
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     final localizedTitle = _locText(title, isAr);
     final localizedSubtitle = _locText(subtitle, isAr);
     final viewAllText = isAr ? 'عرض الكل' : 'VIEW ALL';
@@ -567,8 +571,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildMyntraHeader(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
-        final localeNotifier = ref.watch(localeProvider.notifier);
-        final isAr = localeNotifier.isArabic;
+        final localeNotifier = ref.read(localeProvider.notifier);
+        final currentLocale = ref.watch(localeProvider);
+        final isAr = currentLocale.languageCode == 'ar';
 
         return SafeArea(
           bottom: false,
@@ -602,36 +607,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Center(
-                    child: SizedBox(
-                      height: 44,
-                      child: Image.asset(
-                        'assets/logo.png',
-                        height: 44,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Text(
-                          'POMMASTORE',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.primaryRose,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.search, color: AppTheme.textNeutral, size: 22),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const SearchScreen(autoFocus: true)),
-                    );
-                  },
-                ),
-                IconButton(
                   icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 22),
                   onPressed: () => context.push('/account'),
                 ),
@@ -839,6 +814,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── In-Between Ad Banner (left+right split card) ──────────────────────────
   Widget _buildAdBanner(Map<String, dynamic> slide, {bool isAd3 = false}) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
     final leftImgRaw = (slide['left_image_mobile'] ?? slide['left_image'])?.toString();
     final leftImg = _getMediaUrl(leftImgRaw != null && leftImgRaw.isNotEmpty 
         ? leftImgRaw 
@@ -881,6 +858,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     Widget bannerCard(
         String imgUrl, String subtitle, String title, String desc, Color bg, String linkTarget) {
+      final locSub = _locText(subtitle, isAr);
+      final locTitle = _locText(title, isAr);
+      final locDesc = _locText(desc, isAr);
+      final ctaText = isAr ? 'شراء الآن' : 'BUY NOW';
+
       return Container(
         height: 170,
         clipBehavior: Clip.antiAlias,
@@ -921,9 +903,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (subtitle.isNotEmpty)
+                    if (locSub.isNotEmpty)
                       Text(
-                        subtitle.toUpperCase(),
+                        locSub.toUpperCase(),
                         style: GoogleFonts.montserrat(
                           fontSize: 7,
                           fontWeight: FontWeight.w700,
@@ -935,7 +917,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     const SizedBox(height: 4),
                     Text(
-                      title.toUpperCase(),
+                      locTitle.toUpperCase(),
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 14,
                         color: Colors.white,
@@ -946,10 +928,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (desc.isNotEmpty) ...[
+                    if (locDesc.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
-                        desc,
+                        locDesc,
                         style: GoogleFonts.poppins(
                           fontSize: 9,
                           color: Colors.white70,
@@ -972,7 +954,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: Text(
-                          'BUY NOW',
+                          ctaText,
                           style: GoogleFonts.montserrat(
                             fontSize: 7,
                             fontWeight: FontWeight.w700,
@@ -1015,6 +997,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ── Elite Brand Houses Section ─────────────────────────────────────────────
   Widget _buildBrandsSection(List<dynamic> brands) {
     if (brands.isEmpty) return const SizedBox.shrink();
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1030,10 +1013,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             itemCount: brands.length,
             itemBuilder: (context, index) {
               final brand = brands[index] as Map<String, dynamic>;
-              final name = brand['name'] ?? '';
+              final nameEn = brand['name'] ?? '';
+              final nameAr = brand['name_ar'] ?? brand['nameAr'];
+              final name = (isAr && nameAr != null && nameAr.toString().isNotEmpty) ? nameAr.toString() : nameEn.toString();
               final logoUrl = _getMediaUrl(brand['logo_url']?.toString());
               final bannerUrl = _getMediaUrl((brand['brand_banner'] ?? brand['banner_url'])?.toString());
-              final desc = brand['description'] ?? 'Discover the signature collections and exclusive raw extractions crafted by the luxury house of $name.';
+              final descEn = brand['description'] ?? 'Discover the signature collections and exclusive raw extractions crafted by the luxury house of $name.';
+              final descAr = brand['description_ar'] ?? brand['descriptionAr'];
+              final desc = (isAr && descAr != null && descAr.toString().isNotEmpty) ? descAr.toString() : descEn.toString();
 
               final brandId = brand['id']?.toString();
               final brandTitle = name.toString().toUpperCase();
@@ -1044,7 +1031,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     MaterialPageRoute(
                       builder: (context) => SearchScreen(
                         brandId: brandId,
-                        title: brandTitle.isNotEmpty ? brandTitle : 'BRAND COLLECTION',
+                        title: brandTitle.isNotEmpty ? brandTitle : (isAr ? 'تشكيلة الماركة' : 'BRAND COLLECTION'),
                       ),
                     ),
                   );
@@ -1126,7 +1113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   child: Column(
                                     children: [
                                       Text(
-                                        'SIGNATURE HOUSE',
+                                        isAr ? 'دار متميزة' : 'SIGNATURE HOUSE',
                                         style: GoogleFonts.montserrat(
                                           color: AppTheme.accentGold,
                                           fontSize: 7,
@@ -1172,7 +1159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        'EXPLORE HOUSE',
+                                        isAr ? 'استكشف الدار' : 'EXPLORE HOUSE',
                                         style: GoogleFonts.montserrat(
                                           fontSize: 7,
                                           fontWeight: FontWeight.w700,
@@ -1203,6 +1190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Editorial (For Him, Privilege Collection, For Her) Section ─────────────
   Widget _buildEditorialSection(List<dynamic> loyaltyRewards, Map<String, dynamic> layout) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     final splitBanners = layout['split_banners'] as Map<String, dynamic>? ?? {};
     final menImg = _getMediaUrl((splitBanners['men_mobile'] ?? splitBanners['men'])?.toString() ?? '/banner-men.png');
     final womenImg = _getMediaUrl((splitBanners['women_mobile'] ?? splitBanners['women'])?.toString() ?? '/banner-women.png');
@@ -1243,7 +1231,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+                  builder: (context) => SearchScreen(gender: 'Men', title: isAr ? 'عطور رجالية' : 'MEN FRAGRANCES'),
                 ),
               );
             },
@@ -1270,7 +1258,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'REFINED & BOLD',
+                          isAr ? 'أنيق وجذاب' : 'REFINED & BOLD',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
@@ -1280,7 +1268,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'FOR HIM',
+                          isAr ? 'للرجال' : 'FOR HIM',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 28,
                             fontWeight: FontWeight.normal,
@@ -1296,7 +1284,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'SHOP MEN',
+                            isAr ? 'تسوق للرجال' : 'SHOP MEN',
                             style: GoogleFonts.montserrat(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
@@ -1329,7 +1317,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               children: [
                 Text(
-                  'POMMA REWARDS',
+                  isAr ? 'مكافآت بوما' : 'POMMA REWARDS',
                   style: GoogleFonts.montserrat(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
@@ -1339,7 +1327,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'THE PRIVILEGE COLLECTION.',
+                  isAr ? 'مجموعة الامتياز الفاخرة.' : 'THE PRIVILEGE COLLECTION.',
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1360,9 +1348,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Builder(builder: (context) {
                     final reward = loyaltyRewards[0] as Map<String, dynamic>;
                     final rewardImg = _getMediaUrl(reward['image_url']?.toString() ?? '');
-                    final rewardName = reward['name']?.toString() ?? 'Exclusive Reward';
+                    final rewardNameEn = reward['name']?.toString() ?? 'Exclusive Reward';
+                    final rewardNameAr = reward['name_ar']?.toString() ?? reward['nameAr']?.toString();
+                    final rewardName = (isAr && rewardNameAr != null && rewardNameAr.isNotEmpty) ? rewardNameAr : rewardNameEn;
+
                     final rewardType = reward['reward_type']?.toString() ?? 'MEMBERSHIP';
-                    final rewardDesc = reward['description']?.toString() ?? '';
+                    final rewardDescEn = reward['description']?.toString() ?? '';
+                    final rewardDescAr = reward['description_ar']?.toString() ?? reward['descriptionAr']?.toString();
+                    final rewardDesc = (isAr && rewardDescAr != null && rewardDescAr.isNotEmpty) ? rewardDescAr : rewardDescEn;
+
                     final pointCost = reward['point_cost']?.toString() ?? '';
 
                     return GestureDetector(
@@ -1433,7 +1427,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          pointCost.isNotEmpty ? '$pointCost POINTS' : 'EXPLORE',
+                                          pointCost.isNotEmpty ? (isAr ? '$pointCost نقطة' : '$pointCost POINTS') : (isAr ? 'استكشف' : 'EXPLORE'),
                                           style: GoogleFonts.montserrat(
                                             fontSize: 8,
                                             fontWeight: FontWeight.w900,
@@ -1470,7 +1464,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'VIEW FULL GALLERY',
+                          isAr ? 'عرض المعرض كامل' : 'VIEW FULL GALLERY',
                           style: GoogleFonts.montserrat(
                             fontSize: 8,
                             fontWeight: FontWeight.w900,
@@ -1498,7 +1492,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+                  builder: (context) => SearchScreen(gender: 'Women', title: isAr ? 'عطور نسائية' : 'WOMEN FRAGRANCES'),
                 ),
               );
             },
@@ -1525,7 +1519,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'ELEGANT & SWEET',
+                          isAr ? 'أنيقة وناعمة' : 'ELEGANT & SWEET',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
@@ -1535,7 +1529,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'FOR HER',
+                          isAr ? 'للنساء' : 'FOR HER',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 28,
                             fontWeight: FontWeight.normal,
@@ -1551,7 +1545,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'SHOP WOMEN',
+                            isAr ? 'تسوق للنساء' : 'SHOP WOMEN',
                             style: GoogleFonts.montserrat(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,

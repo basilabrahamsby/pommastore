@@ -402,8 +402,8 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                   SizedBox(height: R.pad(context, 4)),
                   // Pricing Row (Selling Price | MRP Strikethrough | Discount                   // Pricing Row (Selling Price | MRP Strikethrough | Discount Tag)
                   Builder(builder: (context) {
-                    final isAr = ref.watch(localeProvider.notifier).isArabic;
-                    final curr = isAr ? 'د.إ ' : '₹';
+                    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+                    final curr = isAr ? 'د.إ ' : 'AED ';
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -442,7 +442,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                   SizedBox(height: R.pad(context, 8)),
                   // Add to Bag & Buy Now steppers
                   Builder(builder: (context) {
-                    final isAr = ref.watch(localeProvider.notifier).isArabic;
+                    final isAr = ref.watch(localeProvider).languageCode == 'ar';
                     // Compute variant ID for cart lookup
                     final vId = variants.isNotEmpty
                         ? variants[0]['id']?.toString() ?? id
