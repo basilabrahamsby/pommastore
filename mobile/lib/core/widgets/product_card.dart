@@ -114,10 +114,36 @@ class _ProductCardState extends ConsumerState<ProductCard> {
     final name = widget.product['name']?.toString() ?? '';
     final brand = (widget.product['brand_name'] ?? widget.product['brand'] ?? '').toString();
     
+    String extractUrlStr(dynamic e) {
+      if (e == null) return '';
+      if (e is String) return e;
+      if (e is Map) {
+        return (e['url'] ?? e['image_url'] ?? e['image'] ?? e['src'])?.toString() ?? '';
+      }
+      return e.toString();
+    }
+
     final List<dynamic> rawImages = widget.product['images'] as List<dynamic>? ??
-        (widget.product['gallery_images'] as List<dynamic>? ?? [widget.product['image_url'] ?? '']);
-    final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
-    final resolvedImg = images.isNotEmpty ? images[_currentImageIndex] : '';
+        (widget.product['gallery_images'] as List<dynamic>? ?? []);
+    final List<String> images = rawImages
+        .map((e) => _getMediaUrl(extractUrlStr(e)))
+        .where((url) => url.isNotEmpty)
+        .toList();
+
+    if (images.isEmpty) {
+      final fallbackRaw = widget.product['image_url'] ??
+          widget.product['image'] ??
+          widget.product['banner_url'] ??
+          '';
+      final fallbackUrl = _getMediaUrl(extractUrlStr(fallbackRaw));
+      if (fallbackUrl.isNotEmpty) {
+        images.add(fallbackUrl);
+      }
+    }
+
+    final resolvedImg = (images.isNotEmpty && _currentImageIndex < images.length)
+        ? images[_currentImageIndex]
+        : (images.isNotEmpty ? images[0] : '');
 
     final variants = widget.product['variants'] as List? ?? [];
     double price = 0.0;
@@ -200,10 +226,31 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                     child: CachedImage(
                       key: ValueKey<int>(_currentImageIndex),
                       imageUrl: resolvedImg,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       errorWidget: Container(
-                        color: const Color(0xFFF5F5F5),
-                        child: const Icon(Icons.image_not_supported, color: Colors.black12),
+                        color: const Color(0xFFFAF7F8),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.local_mall_outlined,
+                                size: 36,
+                                color: AppTheme.primaryRose.withValues(alpha: 0.35),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'POMMASTORE',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.8,
+                                  color: Colors.black26,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
