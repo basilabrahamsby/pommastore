@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_responsive.dart';
+import '../../core/locale/locale_provider.dart';
 import '../../features/cart/cart_provider.dart';
 
 class NavigationShell extends ConsumerWidget {
@@ -20,6 +21,7 @@ class NavigationShell extends ConsumerWidget {
     final labelSize = R.font(context, 10);
     final cartItems = ref.watch(cartProvider);
     final cartCount = cartItems.fold<int>(0, (sum, i) => sum + i.quantity);
+    final localeNotifier = ref.watch(localeProvider.notifier);
 
     Widget bagIcon({bool active = false}) {
       final icon = Icon(
