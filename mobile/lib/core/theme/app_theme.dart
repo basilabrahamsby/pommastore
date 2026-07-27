@@ -19,6 +19,8 @@ class AppTheme {
   // Playfair  → font-serif / font-cormorant (headings, section titles)
   // Montserrat→ font-montserrat             (buttons, tags, tracking text)
 
+  static const List<String> _arabicFallback = ['Cairo', 'Tajawal', 'Segoe UI', 'Arial', 'sans-serif'];
+
   // Convenience accessors used by individual widgets
   static TextStyle poppins({
     double fontSize = 14,
@@ -33,7 +35,7 @@ class AppTheme {
         color: color,
         letterSpacing: letterSpacing,
         height: height,
-      );
+      ).copyWith(fontFamilyFallback: _arabicFallback);
 
   static TextStyle playfair({
     double fontSize = 20,
@@ -50,7 +52,7 @@ class AppTheme {
         fontStyle: fontStyle,
         letterSpacing: letterSpacing,
         height: height,
-      );
+      ).copyWith(fontFamilyFallback: _arabicFallback);
 
   static TextStyle montserrat({
     double fontSize = 11,
@@ -63,7 +65,7 @@ class AppTheme {
         fontWeight: fontWeight,
         color: color,
         letterSpacing: letterSpacing,
-      );
+      ).copyWith(fontFamilyFallback: _arabicFallback);
 
   // ── TextTheme (Tailwind-equivalent size scale) ─────────────────────────────
   // xs=10, sm=12, base=14, lg=16, xl=18, 2xl=20, 3xl=24, 4xl=30, 5xl=36, 6xl=48

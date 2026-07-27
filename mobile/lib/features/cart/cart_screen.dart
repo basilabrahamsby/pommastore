@@ -11,6 +11,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/token_manager.dart';
 import '../auth/login_screen.dart';
 import '../checkout/checkout_screen.dart';
+import '../../core/locale/locale_provider.dart';
 import 'cart_provider.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
@@ -244,6 +245,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
+
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: R.pad(context, 32.0)),
@@ -268,7 +271,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'SHOPPING BAG',
+              isAr ? 'حقيبة التسوق' : 'SHOPPING BAG',
               style: GoogleFonts.montserrat(
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
@@ -278,7 +281,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Your bag is empty',
+              isAr ? 'حقيبتك فارغة' : 'Your bag is empty',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 22,
                 fontWeight: FontWeight.normal,
@@ -287,7 +290,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              "Looks like you haven't added any fragrances yet. Explore our curated collection.",
+              isAr
+                  ? 'يبدو أنك لم تضف أي عطور بعد. استكشف مجموعتنا الفاخرة.'
+                  : "Looks like you haven't added any fragrances yet. Explore our curated collection.",
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 11,
@@ -309,7 +314,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
                 icon: const Icon(Icons.arrow_forward, size: 14),
                 label: Text(
-                  'EXPLORE COLLECTION',
+                  isAr ? 'استكشف المجموعة' : 'EXPLORE COLLECTION',
                   style: GoogleFonts.montserrat(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -625,6 +630,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     required int totalLoyaltyPoints,
     required double total,
   }) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -651,7 +658,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'ORDER SUMMARY',
+                  isAr ? 'ملخص الطلب' : 'ORDER SUMMARY',
                   style: GoogleFonts.montserrat(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -660,7 +667,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   ),
                 ),
                 Text(
-                  '${cartItems.length} ${cartItems.length == 1 ? 'item' : 'items'}',
+                  '${cartItems.length} ${cartItems.length == 1 ? (isAr ? 'منتج' : 'item') : (isAr ? 'منتجات' : 'items')}',
                   style: GoogleFonts.montserrat(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -698,7 +705,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Qty: ${item.quantity}',
+                                  isAr ? 'الكمية: ${item.quantity}' : 'Qty: ${item.quantity}',
                                   style: GoogleFonts.poppins(
                                     fontSize: 8.5,
                                     color: Colors.black45,
@@ -708,14 +715,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             ),
                           ),
                           Text(
-                            '₹${(item.price * item.quantity).toInt()}',
+                            '${isAr ? 'د.إ' : 'AED'} ${(item.price * item.quantity).toInt()}',
                             style: GoogleFonts.montserrat(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
-                              textStyle: const TextStyle(
-                                fontFamilyFallback: ['Roboto'],
-                              ),
                             ),
                           ),
                         ],
@@ -723,59 +727,34 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     )),
                 const Divider(color: AppTheme.borderLight, height: 16, thickness: 0.5),
                 // Subtotal
-                _summaryRow('Subtotal',
-                    '₹${subtotal.toInt()}', Colors.black87, isBold: false),
+                _summaryRow(isAr ? 'المجموع الفرعي' : 'Subtotal',
+                    '${isAr ? 'د.إ' : 'AED'} ${subtotal.toInt()}', Colors.black87, isBold: false),
                 const SizedBox(height: 4),
 
-                // GST Breakdown matching backend (18% inclusive)
+                // GST / Tax
                 _summaryRow(
-                  'Taxable Value',
-                  '₹${(subtotal / 1.18).toStringAsFixed(2)}',
+                  isAr ? 'القيمة الخاضعة للضريبة' : 'Taxable Value',
+                  '${isAr ? 'د.إ' : 'AED'} ${(subtotal / 1.18).toStringAsFixed(2)}',
                   AppTheme.textMuted,
                   isBold: false,
                 ),
                 const SizedBox(height: 4),
-                if (_hasAddress) ...[
-                  if (_isKerala) ...[
-                    _summaryRow(
-                      'CGST (9.0% Incl.)',
-                      '₹${((subtotal - (subtotal / 1.18)) / 2).toStringAsFixed(2)}',
-                      AppTheme.textMuted,
-                      isBold: false,
-                    ),
-                    const SizedBox(height: 4),
-                    _summaryRow(
-                      'SGST (9.0% Incl.)',
-                      '₹${((subtotal - (subtotal / 1.18)) / 2).toStringAsFixed(2)}',
-                      AppTheme.textMuted,
-                      isBold: false,
-                    ),
-                  ] else ...[
-                    _summaryRow(
-                      'IGST (18.0% Incl.)',
-                      '₹${(subtotal - (subtotal / 1.18)).toStringAsFixed(2)}',
-                      AppTheme.textMuted,
-                      isBold: false,
-                    ),
-                  ],
-                ] else ...[
-                  _summaryRow(
-                    'GST (18.0% Incl.)',
-                    '₹${(subtotal - (subtotal / 1.18)).toStringAsFixed(2)}',
-                    AppTheme.textMuted,
-                    isBold: false,
-                  ),
-                ],
+                _summaryRow(
+                  isAr ? 'ضريبة القيمة المضافة (18٪)' : 'VAT (18.0% Incl.)',
+                  '${isAr ? 'د.إ' : 'AED'} ${(subtotal - (subtotal / 1.18)).toStringAsFixed(2)}',
+                  AppTheme.textMuted,
+                  isBold: false,
+                ),
                 const SizedBox(height: 4),
 
                 // Shipping
                 _summaryRow(
-                  'Shipping',
+                  isAr ? 'الشحن' : 'Shipping',
                   isFreeShipping
-                      ? 'FREE'
+                      ? (isAr ? 'مجاني' : 'FREE')
                       : (!_hasAddress
-                          ? 'Calculated at checkout'
-                          : '₹${_shippingFee.toInt()}'),
+                          ? (isAr ? 'يتم حسابه عند إتمام الطلب' : 'Calculated at checkout')
+                          : '${isAr ? 'د.إ' : 'AED'} ${_shippingFee.toInt()}'),
                   isFreeShipping
                       ? const Color(0xFF4CAF50)
                       : (!_hasAddress ? AppTheme.textMuted : Colors.black87),
@@ -797,7 +776,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             size: 13, color: Color(0xFFFFB300)),
                         const SizedBox(width: 6),
                         Text(
-                          'POINTS TO EARN',
+                          isAr ? 'نقاط مكتسبة' : 'POINTS TO EARN',
                           style: GoogleFonts.montserrat(
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
@@ -824,7 +803,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'TOTAL',
+                      isAr ? 'الإجمالي' : 'TOTAL',
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.bold,
                         fontSize: R.font(context, 11),
@@ -832,14 +811,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ),
                     ),
                     Text(
-                      '₹${total.toInt()}',
+                      '${isAr ? 'د.إ' : 'AED'} ${total.toInt()}',
                       style: GoogleFonts.montserrat(
                         color: AppTheme.primaryRose,
                         fontWeight: FontWeight.bold,
                         fontSize: R.font(context, 16),
-                        textStyle: const TextStyle(
-                          fontFamilyFallback: ['Roboto'],
-                        ),
                       ),
                     ),
                   ],
@@ -854,19 +830,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       if (!mounted) return;
                       if (token == null || token.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please sign in to complete checkout')),
+                          SnackBar(content: Text(isAr ? 'يرجى تسجيل الدخول لمتابعة الدفع' : 'Please sign in to complete checkout')),
                         );
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (context) => const LoginScreen()),
                         ).then((_) {
-                          // Refresh cart or addresses state if needed on return
                           _fetchShippingFee();
                         });
                       } else {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (context) => const CheckoutScreen()),
                         ).then((_) {
-                          // Reload pincode check on return
                           _fetchShippingFee();
                         });
                       }
@@ -884,7 +858,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         const Icon(Icons.shield_outlined, size: 14),
                         const SizedBox(width: 8),
                         Text(
-                          'PROCEED TO CHECKOUT',
+                          isAr ? 'المتابعة لإتمام الطلب' : 'PROCEED TO CHECKOUT',
                           style: GoogleFonts.montserrat(
                             fontSize: R.font(context, 9.5),
                             fontWeight: FontWeight.bold,

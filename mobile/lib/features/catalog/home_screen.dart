@@ -464,19 +464,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
   }
 
+  String _locText(String text, bool isAr) {
+    if (!isAr) return text;
+    final String key = text.trim();
+    final Map<String, String> dict = {
+      'SHOP BY CATEGORY': 'التسوق حسب الفئة',
+      'JUST ARRIVED': 'وصل حديثاً',
+      'NEW ARRIVALS': 'المنتجات الجديدة',
+      'BESTSELLERS': 'الأكثر مبيعاً',
+      'POPULAR PICK': 'الاختيار الشهير',
+      'FAVORITE SELECTION': 'المفضلة المختارة',
+      'PREMIUM BRANDS': 'العلامات التجارية المتميزة',
+      'EXCLUSIVE OFFERS': 'العروض الحصرية',
+      'VIEW ALL': 'عرض الكل',
+      'BUY NOW': 'شراء الآن',
+      'SHOP NOW': 'تسوق الآن',
+      'ADD TO BAG': 'إضافة للحقيبة',
+      'FOR HIM': 'للرجال',
+      'FOR HER': 'للنساء',
+      'SHOP MEN': 'تسوق للرجال',
+      'SHOP WOMEN': 'تسوق للنساء',
+      'POMMA REWARDS': 'مكافآت بوما',
+      'THE PRIVILEGE COLLECTION': 'مجموعة الامتياز الفاخرة',
+      'EXPLORE REWARDS': 'استكشف المكافآت',
+      'ELITE PERFUMERY': 'عطور النخبة',
+      'THE GLOBAL HOUSES': 'دور العطور العالمية',
+      'SIGNATURE HOUSE': 'دار العطور الشهيرة',
+      'EXPLORE HOUSE': 'استكشف الدار',
+      'Exclusive Fragrance': 'عطور حصرية',
+      'Exquisite Collection': 'تشكيلة فاخرة',
+      'Top Curated Fragrances': 'أفضل العطور المختارة',
+      'Prestige Selection': 'تشكيلة مرموقة',
+      'Premium Fragrances': 'عطور متميزة',
+      '100% Authentic Luxury': 'فخامة أصلي 100٪',
+      'Sourced directly from global brand houses': 'مستورد مباشرة من دور العطور العالمية',
+      'Express UAE & Gulf Delivery': 'توصيل سريع للإمارات والخليج',
+      'Compliments & Samples': 'عينات وهدايا مجانية',
+      '24/7 Perfumery Concierge': 'خدمة عملاء العطور 24/7',
+    };
+    return dict[key] ?? dict[key.toUpperCase()] ?? key;
+  }
+
   // ── Section Header ────────────────────────────────────────────────────────
   Widget _buildSectionHeader(String title, String subtitle, {VoidCallback? onViewAll}) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
+    final localizedTitle = _locText(title, isAr);
+    final localizedSubtitle = _locText(subtitle, isAr);
+    final viewAllText = isAr ? 'عرض الكل' : 'VIEW ALL';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            subtitle.toUpperCase(),
+            localizedSubtitle.toUpperCase(),
             style: GoogleFonts.montserrat(
               fontSize: 8,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF8E8E93), // textMuted
+              color: const Color(0xFF8E8E93),
               letterSpacing: 2.0,
             ),
           ),
@@ -485,7 +531,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                title.toUpperCase(),
+                localizedTitle.toUpperCase(),
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 22,
                   fontWeight: FontWeight.normal,
@@ -501,7 +547,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 GestureDetector(
                   onTap: onViewAll,
                   child: Text(
-                    'VIEW ALL',
+                    viewAllText,
                     style: GoogleFonts.montserrat(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
@@ -598,57 +644,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildStoryCategoryBubbles(List<dynamic> categories) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
     final List<Map<String, dynamic>> items = [
       {
-        'name': 'MEN',
+        'name': isAr ? 'رجالي' : 'MEN',
         'icon': Icons.male_outlined,
         'gradient': [AppTheme.primaryRose, const Color(0xFFFF905A)],
         'onTap': () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+              builder: (context) => SearchScreen(gender: 'Men', title: isAr ? 'عطور رجالية' : 'MEN FRAGRANCES'),
             ),
           );
         },
       },
       {
-        'name': 'WOMEN',
+        'name': isAr ? 'نسائي' : 'WOMEN',
         'icon': Icons.female_outlined,
         'gradient': [const Color(0xFFEC4899), const Color(0xFFF472B6)],
         'onTap': () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+              builder: (context) => SearchScreen(gender: 'Women', title: isAr ? 'عطور نسائية' : 'WOMEN FRAGRANCES'),
             ),
           );
         },
       },
       {
-        'name': 'UNISEX',
+        'name': isAr ? 'الجنسين' : 'UNISEX',
         'icon': Icons.wc_outlined,
         'gradient': [const Color(0xFF8B5CF6), const Color(0xFFC084FC)],
         'onTap': () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+              builder: (context) => SearchScreen(gender: 'Unisex', title: isAr ? 'عطور للجنسين' : 'UNISEX FRAGRANCES'),
             ),
           );
         },
       },
       {
-        'name': 'ALL',
+        'name': isAr ? 'الكل' : 'ALL',
         'icon': Icons.grid_view_outlined,
         'gradient': [AppTheme.primaryRose, AppTheme.accentGold],
         'onTap': () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+              builder: (context) => SearchScreen(title: isAr ? 'جميع المنتجات' : 'ALL PRODUCTS'),
             ),
           );
         },
       },
       {
-        'name': 'REWARDS',
+        'name': isAr ? 'المكافآت' : 'REWARDS',
         'icon': Icons.workspace_premium_outlined,
         'gradient': [const Color(0xFFF59E0B), const Color(0xFFFCD34D)],
         'onTap': () {
@@ -660,27 +707,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
       },
       {
-        'name': 'BRANDS',
+        'name': isAr ? 'الماركات' : 'BRANDS',
         'icon': Icons.diamond_outlined,
         'gradient': [const Color(0xFF10B981), const Color(0xFF34D399)],
         'onTap': () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(title: 'OFFICIAL BRAND COLLECTIONS'),
+              builder: (context) => SearchScreen(title: isAr ? 'تشكيلة الماركات الرسمية' : 'OFFICIAL BRAND COLLECTIONS'),
             ),
           );
         },
       },
       {
-        'name': 'OFFERS',
+        'name': isAr ? 'العروض' : 'OFFERS',
         'icon': Icons.local_offer_outlined,
         'gradient': [const Color(0xFFEF4444), const Color(0xFFF87171)],
         'onTap': () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(
+              builder: (context) => SearchScreen(
                 onSale: true,
-                title: 'EXCLUSIVE OFFERS & DEALS',
+                title: isAr ? 'عروض وصفقات حصرية' : 'EXCLUSIVE OFFERS & DEALS',
               ),
             ),
           );
@@ -752,12 +799,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCenteredSectionHeader(String title, String subtitle) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
+    final localizedTitle = _locText(title, isAr);
+    final localizedSubtitle = _locText(subtitle, isAr);
+
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            subtitle.toUpperCase(),
+            localizedSubtitle.toUpperCase(),
             style: GoogleFonts.montserrat(
               fontSize: 8,
               fontWeight: FontWeight.w700,
@@ -767,7 +818,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            title.toUpperCase(),
+            localizedTitle.toUpperCase(),
             style: GoogleFonts.playfairDisplay(
               fontSize: 22,
               fontWeight: FontWeight.normal,

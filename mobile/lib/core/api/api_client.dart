@@ -12,17 +12,13 @@ class ApiClient {
   /// - Native Android/iOS: absolute https://pommastore.com/api/v1 (no CORS restrictions)
   static String get baseUrl {
     if (kIsWeb) {
-      // On web, check if we are running on the production domain
-      // Uri.base.host will be 'pommastore.com' in production, 'localhost' in dev
       final host = Uri.base.host;
       final isLocalhost = host == 'localhost' || host == '127.0.0.1';
       if (!isLocalhost) {
-        // Deployed on pommastore.com — use relative path (no CORS, same origin as storefront)
-        return '/api/v1';
+        return '/api/v1/';
       }
     }
-    // Local dev web OR native mobile — use absolute production URL
-    return 'https://pommastore.com/api/v1';
+    return 'https://pommastore.com/api/v1/';
   }
 
   ApiClient() {
@@ -45,6 +41,14 @@ class ApiClient {
           }
           options.headers['Content-Type'] = 'application/json';
           options.headers['Accept-Language'] = currentLanguage;
+
+          // Normalize relative endpoint paths so Dio appends cleanly to baseUrl
+          if (!options.path.startsWith('http')) {
+            if (options.path.startsWith('/')) {
+              options.path = options.path.substring(1);
+            }
+          }
+
           return handler.next(options);
         },
         onError: (DioException e, handler) {
