@@ -105,6 +105,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

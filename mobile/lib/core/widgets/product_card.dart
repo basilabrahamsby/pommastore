@@ -626,8 +626,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                               ],
                             ),
                     );
-                  }),       }),
-
+                  }),
                 ],
               ),
             ),
