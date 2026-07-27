@@ -21,7 +21,8 @@ class NavigationShell extends ConsumerWidget {
     final labelSize = R.font(context, 10);
     final cartItems = ref.watch(cartProvider);
     final cartCount = cartItems.fold<int>(0, (sum, i) => sum + i.quantity);
-    final localeNotifier = ref.watch(localeProvider.notifier);
+    final currentLocale = ref.watch(localeProvider);
+    final isAr = currentLocale.languageCode == 'ar';
 
     Widget bagIcon({bool active = false}) {
       final icon = Icon(
@@ -89,27 +90,27 @@ class NavigationShell extends ConsumerWidget {
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.home, size: iconSize),
               activeIcon: Icon(LucideIcons.home, size: iconSize, color: AppTheme.primaryRose),
-              label: localeNotifier.tr('nav_home'),
+              label: isAr ? 'الرئيسية' : 'Home',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.layoutGrid, size: iconSize),
               activeIcon: Icon(LucideIcons.layoutGrid, size: iconSize, color: AppTheme.primaryRose),
-              label: localeNotifier.tr('nav_categories'),
+              label: isAr ? 'الفئات' : 'Categories',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.search, size: iconSize),
               activeIcon: Icon(LucideIcons.search, size: iconSize, color: AppTheme.primaryRose),
-              label: localeNotifier.tr('nav_search'),
+              label: isAr ? 'البحث' : 'Search',
             ),
             BottomNavigationBarItem(
               icon: bagIcon(),
               activeIcon: bagIcon(active: true),
-              label: localeNotifier.tr('nav_bag'),
+              label: isAr ? 'الحقيبة' : 'Bag',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.user, size: iconSize),
               activeIcon: Icon(LucideIcons.user, size: iconSize, color: AppTheme.primaryRose),
-              label: localeNotifier.tr('nav_account'),
+              label: isAr ? 'حسابي' : 'Account',
             ),
           ],
         ),
