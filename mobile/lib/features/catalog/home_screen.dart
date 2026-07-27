@@ -386,7 +386,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     ...categories.map((cat) {
-                      final name = cat['name']?.toString() ?? '';
+                      final isAr = ref.watch(localeProvider.notifier).isArabic;
+                      final nameEn = cat['name']?.toString() ?? '';
+                      final nameAr = cat['name_ar']?.toString() ?? cat['nameAr']?.toString();
+                      final name = (isAr && nameAr != null && nameAr.isNotEmpty) ? nameAr : nameEn;
                       final catId = cat['id']?.toString();
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),

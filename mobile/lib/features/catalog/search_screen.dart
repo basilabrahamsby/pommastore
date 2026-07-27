@@ -99,6 +99,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       final Map<String, dynamic> params = {
         'skip': _currentPage * 50,
         'limit': 50,
+        'lang': ApiClient.currentLanguage,
       };
       if (widget.isFeatured != null) params['is_featured'] = widget.isFeatured;
       if (widget.isNewArrival != null) params['is_new_arrival'] = widget.isNewArrival;

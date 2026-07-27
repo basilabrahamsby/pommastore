@@ -4,6 +4,7 @@ import 'token_manager.dart';
 
 class ApiClient {
   late final Dio dio;
+  static String currentLanguage = 'en';
 
   /// URL strategy matching the storefront api.ts approach:
   /// - Flutter Web on production domain (pommastore.com): relative /api/v1 → Nginx proxies it
@@ -43,6 +44,7 @@ class ApiClient {
             options.headers['Authorization'] = 'Bearer $token';
           }
           options.headers['Content-Type'] = 'application/json';
+          options.headers['Accept-Language'] = currentLanguage;
           return handler.next(options);
         },
         onError: (DioException e, handler) {

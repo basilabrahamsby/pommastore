@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../api/api_client.dart';
 import 'app_translations.dart';
 
 const String _kLocaleKey = 'pommastore_locale_lang';
@@ -19,12 +20,14 @@ class LocaleNotifier extends StateNotifier<Locale> {
       } else {
         state = const Locale('en');
       }
+      ApiClient.currentLanguage = state.languageCode;
     } catch (_) {}
   }
 
   Future<void> toggleLocale() async {
     final nextLang = state.languageCode == 'en' ? 'ar' : 'en';
     state = Locale(nextLang);
+    ApiClient.currentLanguage = nextLang;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kLocaleKey, nextLang);
@@ -34,6 +37,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
   Future<void> setLocale(String langCode) async {
     if (state.languageCode == langCode) return;
     state = Locale(langCode);
+    ApiClient.currentLanguage = langCode;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kLocaleKey, langCode);

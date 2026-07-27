@@ -9,6 +9,7 @@ import 'cached_image.dart';
 import '../../features/catalog/product_detail_screen.dart';
 import '../../features/cart/cart_provider.dart';
 import '../../features/wishlist/wishlist_provider.dart';
+import '../locale/locale_provider.dart';
 
 class ProductCard extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
@@ -111,7 +112,10 @@ class _ProductCardState extends ConsumerState<ProductCard> {
     final wishlist = ref.watch(wishlistProvider);
     final id = widget.product['id']?.toString() ?? '';
     final isWishlisted = wishlist.any((item) => (item['id']?.toString() ?? '') == id);
-    final name = widget.product['name']?.toString() ?? '';
+    final nameEn = widget.product['name']?.toString() ?? widget.product['title']?.toString() ?? '';
+    final nameAr = widget.product['name_ar']?.toString() ?? widget.product['title_ar']?.toString() ?? widget.product['nameAr']?.toString();
+    final localeNotifier = ref.watch(localeProvider.notifier);
+    final name = localeNotifier.dynamicText(nameEn, nameAr);
     final brand = (widget.product['brand_name'] ?? widget.product['brand'] ?? '').toString();
     
     String extractUrlStr(dynamic e) {

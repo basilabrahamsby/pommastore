@@ -2,14 +2,17 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/api_client.dart';
+import '../../core/locale/locale_provider.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
 final homepageDataProvider = StreamProvider<Map<String, dynamic>>((ref) async* {
+  final currentLocale = ref.watch(localeProvider);
+  final lang = currentLocale.languageCode;
   final prefs = await SharedPreferences.getInstance();
 
-  // 1. Try to load cached data first for instant start
-  final cachedString = prefs.getString('cached_homepage_data');
+  final cacheKey = 'cached_homepage_data_$lang';
+  final cachedString = prefs.getString(cacheKey);
   bool hasValidCache = false;
   if (cachedString != null) {
     try {
@@ -21,20 +24,18 @@ final homepageDataProvider = StreamProvider<Map<String, dynamic>>((ref) async* {
     }
   }
 
-  // 2. Fetch fresh data from network in background
   try {
     final client = ref.read(apiClientProvider);
-    final res = await client.dio.get('/storefront/homepage');
+    final res = await client.dio.get(
+      '/storefront/homepage',
+      queryParameters: {'lang': lang},
+    );
     final data = res.data as Map<String, dynamic>;
 
-    // 3. Cache the fresh data
-    await prefs.setString('cached_homepage_data', jsonEncode(data));
+    await prefs.setString(cacheKey, jsonEncode(data));
 
-    // 4. Yield the fresh data
     yield data;
   } catch (e) {
-    // If network fetch fails (e.g. CORS block on localhost web or offline mode),
-    // retain cached data if available instead of crashing into error screen
     if (!hasValidCache) {
       rethrow;
     }

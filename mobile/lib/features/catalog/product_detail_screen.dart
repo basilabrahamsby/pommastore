@@ -11,6 +11,7 @@ import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/product_card.dart';
 import '../../core/widgets/image_lightbox.dart';
 import '../../core/widgets/animated_background.dart';
+import '../../core/locale/locale_provider.dart';
 import '../cart/cart_provider.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -356,7 +357,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final List<dynamic> rawImages = activeProd['images'] as List<dynamic>? ?? [activeProd['image_url'] ?? ''];
     final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
     
-    final name = activeProd['name'] ?? 'Luxury Fragrance';
+    final nameEn = activeProd['name'] ?? activeProd['title'] ?? 'Luxury Fragrance';
+    final nameAr = activeProd['name_ar'] ?? activeProd['title_ar'] ?? activeProd['nameAr'];
+    final localeNotifier = ref.watch(localeProvider.notifier);
+    final name = localeNotifier.dynamicText(nameEn?.toString(), nameAr?.toString());
     
     final variants = activeProd['variants'] as List? ?? [];
     double sellingPrice = 0.0;
