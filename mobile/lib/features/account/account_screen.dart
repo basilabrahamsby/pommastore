@@ -184,7 +184,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                                 
                                 // Customer Name
                                 Text(
-                                  _isLoggedIn ? _name : 'Welcome to Pommastore',
+                                  _isLoggedIn ? _name : (isAr ? 'مرحباً بك في بوما ستور' : 'Welcome to Pommastore'),
                                   style: GoogleFonts.montserrat(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
@@ -197,7 +197,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                                 
                                 // Customer Email/Phone details
                                 Text(
-                                  _isLoggedIn ? _email : 'Sign in to unlock personalized fragrance matching',
+                                  _isLoggedIn ? _email : (isAr ? 'سجل الدخول لاكتشاف العطور المناسبة لك' : 'Sign in to unlock personalized fragrance matching'),
                                   style: GoogleFonts.poppins(
                                     color: AppTheme.textMuted,
                                     fontSize: 11,
@@ -222,7 +222,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                                         const Icon(Icons.star, color: Color(0xFFD4AF37), size: 14),
                                         const SizedBox(width: 6),
                                         Text(
-                                          'ELITE MEMBER  |  $_loyaltyPoints PTS',
+                                          isAr ? 'عضو متميز  |  $_loyaltyPoints نقطة' : 'ELITE MEMBER  |  $_loyaltyPoints PTS',
                                           style: GoogleFonts.montserrat(
                                             fontSize: 9,
                                             fontWeight: FontWeight.bold,
@@ -244,7 +244,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                     ),
                                     child: Text(
-                                      'SIGN OUT',
+                                      isAr ? 'تسجيل الخروج' : 'SIGN OUT',
                                       style: GoogleFonts.montserrat(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.bold,
@@ -270,7 +270,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                                       shadowColor: const Color(0x3DD2168D),
                                     ),
                                     child: Text(
-                                      'SIGN IN / REGISTER',
+                                      isAr ? 'تسجيل الدخول / إنشاء حساب' : 'SIGN IN / REGISTER',
                                       style: GoogleFonts.montserrat(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.bold,
@@ -285,7 +285,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                         ),
                         
                         // Quick Perks Banner Grid
-                        _buildQuickPerksGrid(),
+                        _buildQuickPerksGrid(isAr),
                         
                         const SizedBox(height: 8),
                         
@@ -295,7 +295,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                           child: Row(
                             children: [
                               Text(
-                                'ACCOUNT PREFERENCES',
+                                isAr ? 'تفضيلات الحساب' : 'ACCOUNT PREFERENCES',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
@@ -305,7 +305,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                               ),
                               const Spacer(),
                               Text(
-                                'POMMASTORE VIP',
+                                isAr ? 'كبار الشخصيات بوما' : 'POMMASTORE VIP',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w800,
@@ -320,71 +320,65 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                         // Action Menu Items with luxury card styling
                         _buildMenuItem(
                           Icons.favorite_rounded,
-                          'My Wishlist',
+                          isAr ? 'قائمة رغباتي' : 'My Wishlist',
                           () {
                             Navigator.of(context).push(
                               MaterialPageRoute(builder: (context) => const WishlistScreen()),
                             ).then((_) => _loadProfile());
                           },
                           iconColor: AppTheme.primaryRose,
-                          subtitle: 'Saved fragrance favorites & collections',
+                          subtitle: isAr ? 'العطور والمجموعات المفضلة المحفوظة' : 'Saved fragrance favorites & collections',
                         ),
                         _buildMenuItem(
                           Icons.local_shipping_rounded,
-                          'My Orders & Returns',
+                          isAr ? 'طلباتي والمرتجعات' : 'My Orders & Returns',
                           () {
                             Navigator.of(context).push(
                               MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
                             );
                           },
                           iconColor: const Color(0xFF3B82F6),
-                          subtitle: 'Track active shipments & order history',
+                          subtitle: isAr ? 'تتبع الشحنات وسجل الطلبات' : 'Track active shipments & order history',
                         ),
                         _buildMenuItem(
                           Icons.location_on_rounded,
-                          'Shipping Addresses',
+                          isAr ? 'عناوين الشحن' : 'Shipping Addresses',
                           () {
                             Navigator.of(context).push(
                               MaterialPageRoute(builder: (context) => const ShippingAddressesScreen()),
                             );
                           },
                           iconColor: const Color(0xFF10B981),
-                          subtitle: 'Manage delivery addresses & pincodes',
+                          subtitle: isAr ? 'إدارة عناوين التوصيل والرمز البريدي' : 'Manage delivery addresses & pincodes',
                         ),
                         _buildMenuItem(
                           Icons.workspace_premium_rounded,
-                          'Insider VIP Rewards',
+                          isAr ? 'مكافآت VIP الحصرية' : 'Insider VIP Rewards',
                           () {
                             Navigator.of(context).push(
                               MaterialPageRoute(builder: (context) => const RewardsGalleryScreen()),
                             );
                           },
                           iconColor: AppTheme.accentGold,
-                          subtitle: 'Redeem loyalty points for exclusive gifts',
+                          subtitle: isAr ? 'استبدل نقاط الولاء بهدايا حصرية' : 'Redeem loyalty points for exclusive gifts',
                         ),
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final localeNotifier = ref.watch(localeProvider.notifier);
-                            final isAr = localeNotifier.isArabic;
-                            return _buildMenuItem(
-                              Icons.language_rounded,
-                              isAr ? 'اللغة / Language' : 'Language / اللغة',
-                              () => localeNotifier.toggleLocale(),
-                              iconColor: AppTheme.primaryRose,
-                              subtitle: isAr ? 'التغيير إلى الإنجليزية (English)' : 'Switch to Arabic (العربية)',
-                            );
-                          },
+                        _buildMenuItem(
+                          Icons.language_rounded,
+                          isAr ? 'اللغة / Language' : 'Language / اللغة',
+                          () => ref.read(localeProvider.notifier).toggleLocale(),
+                          iconColor: AppTheme.primaryRose,
+                          subtitle: isAr ? 'التغيير إلى الإنجليزية (English)' : 'Switch to Arabic (العربية)',
                         ),
                         _buildMenuItem(
                           Icons.headset_mic_rounded,
-                          '24/7 Customer Support',
+                          isAr ? 'خدمة العملاء 24/7' : '24/7 Customer Support',
                           () {
                             Navigator.of(context).push(
                               MaterialPageRoute(builder: (context) => const CustomerSupportScreen()),
                             );
                           },
                           iconColor: const Color(0xFF8B5CF6),
-                          subtitle: 'Live perfumery concierge & help desk',
+                          subtitle: isAr ? 'مساعدة وخدمة عملاء العطور المباشرة' : 'Live perfumery concierge & help desk',
                         ),
                         
                         const SizedBox(height: 32),
@@ -427,12 +421,12 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     );
   }
 
-  Widget _buildQuickPerksGrid() {
+  Widget _buildQuickPerksGrid(bool isAr) {
     final perks = [
-      {'icon': Icons.local_shipping_outlined, 'title': 'EXPRESS SHIPPING', 'subtitle': 'Free on ₹999+'},
-      {'icon': Icons.verified_outlined, 'title': '100% ORIGINAL', 'subtitle': 'Direct House'},
-      {'icon': Icons.card_giftcard_outlined, 'title': 'FREE SAMPLES', 'subtitle': 'Every Order'},
-      {'icon': Icons.lock_outline_rounded, 'title': 'SECURE PAY', 'subtitle': 'COD & UPI'},
+      {'icon': Icons.local_shipping_outlined, 'title': isAr ? 'توصيل سريع' : 'EXPRESS SHIPPING', 'subtitle': isAr ? 'مجاني فوق 999 د.إ' : 'Free on ₹999+'},
+      {'icon': Icons.verified_outlined, 'title': isAr ? 'أصلي 100٪' : '100% ORIGINAL', 'subtitle': isAr ? 'من الدار مباشرة' : 'Direct House'},
+      {'icon': Icons.card_giftcard_outlined, 'title': isAr ? 'عينات مجانية' : 'FREE SAMPLES', 'subtitle': isAr ? 'مع كل طلب' : 'Every Order'},
+      {'icon': Icons.lock_outline_rounded, 'title': isAr ? 'دفع آمن' : 'SECURE PAY', 'subtitle': isAr ? 'عند الاستلام والباقات' : 'COD & UPI'},
     ];
 
     return Container(

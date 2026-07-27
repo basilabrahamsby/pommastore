@@ -270,7 +270,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                         ),
                         color: AppTheme.primaryRose,
                         child: Text(
-                          '$discountPercentage% OFF',
+                          ref.watch(localeProvider.notifier).isArabic ? 'خصم $discountPercentage٪' : '$discountPercentage% OFF',
                           style: GoogleFonts.montserrat(
                             color: Colors.white,
                             fontSize: R.font(context, 7.5),
@@ -400,50 +400,49 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: R.pad(context, 4)),
-                  // Pricing Row (Selling Price | MRP Strikethrough | Discount Tag)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '₹${price.toInt()}',
-                        style: GoogleFonts.montserrat(
-                          fontSize: R.font(context, 11),
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textNeutral,
-                          textStyle: const TextStyle(
-                            fontFamilyFallback: ['Roboto', 'sans-serif'],
+                  // Pricing Row (Selling Price | MRP Strikethrough | Discount                   // Pricing Row (Selling Price | MRP Strikethrough | Discount Tag)
+                  Builder(builder: (context) {
+                    final isAr = ref.watch(localeProvider.notifier).isArabic;
+                    final curr = isAr ? 'د.إ ' : '₹';
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$curr${price.toInt()}',
+                          style: GoogleFonts.montserrat(
+                            fontSize: R.font(context, 11),
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textNeutral,
                           ),
                         ),
-                      ),
-                      if (oldPrice != null && oldPrice > price) ...[
-                        SizedBox(width: R.pad(context, 4)),
-                        Text(
-                          '₹${oldPrice.toInt()}',
-                          style: GoogleFonts.montserrat(
-                            fontSize: R.font(context, 8.5),
-                            color: AppTheme.textMuted,
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: AppTheme.textMuted,
-                            textStyle: const TextStyle(
-                              fontFamilyFallback: ['Roboto', 'sans-serif'],
+                        if (oldPrice != null && oldPrice > price) ...[
+                          SizedBox(width: R.pad(context, 4)),
+                          Text(
+                            '$curr${oldPrice.toInt()}',
+                            style: GoogleFonts.montserrat(
+                              fontSize: R.font(context, 8.5),
+                              color: AppTheme.textMuted,
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: AppTheme.textMuted,
                             ),
                           ),
-                        ),
-                        SizedBox(width: R.pad(context, 4)),
-                        Text(
-                          '(${discountPercentage > 0 ? discountPercentage : 20}% OFF)',
-                          style: GoogleFonts.montserrat(
-                            fontSize: R.font(context, 8.5),
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.discountOrange,
+                          SizedBox(width: R.pad(context, 4)),
+                          Text(
+                            isAr ? '(خصم ${discountPercentage > 0 ? discountPercentage : 20}٪)' : '(${discountPercentage > 0 ? discountPercentage : 20}% OFF)',
+                            style: GoogleFonts.montserrat(
+                              fontSize: R.font(context, 8.5),
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.discountOrange,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
+                    );
+                  }),
                   SizedBox(height: R.pad(context, 8)),
-                                     // Add to Bag & Buy Now steppers
+                  // Add to Bag & Buy Now steppers
                   Builder(builder: (context) {
+                    final isAr = ref.watch(localeProvider.notifier).isArabic;
                     // Compute variant ID for cart lookup
                     final vId = variants.isNotEmpty
                         ? variants[0]['id']?.toString() ?? id
@@ -527,7 +526,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                                         ],
                                       ),
                                       child: Text(
-                                        'BUY NOW',
+                                        isAr ? 'شراء الآن' : 'BUY NOW',
                                         style: GoogleFonts.poppins(
                                           color: Colors.white,
                                           fontSize: R.font(context, 7.5),
@@ -554,7 +553,6 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                                                       : widget.product['loyalty_points'])
                                                   ?.toString() ?? '0') ??
                                           0;
-                                      print('ProductCard: ADD TO BAG tapped! Name: $name, vId: $vId, Price: $price, Image: $resolvedImg');
                                       ref.read(cartProvider.notifier).addItem(
                                             id: vId,
                                             name: name,
@@ -566,7 +564,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                                           );
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('$name added to bag!'),
+                                          content: Text(isAr ? 'تمت إضافة $name إلى الحقيبة!' : '$name added to bag!'),
                                           duration: const Duration(seconds: 1),
                                         ),
                                       );
@@ -579,7 +577,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                                         color: Colors.white,
                                       ),
                                       child: Text(
-                                        'ADD TO BAG',
+                                        isAr ? 'إضافة للحقيبة' : 'ADD TO BAG',
                                         style: GoogleFonts.poppins(
                                           color: Colors.black,
                                           fontSize: R.font(context, 7.5),
@@ -614,7 +612,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                                         ],
                                       ),
                                       child: Text(
-                                        'BUY NOW',
+                                        isAr ? 'شراء الآن' : 'BUY NOW',
                                         style: GoogleFonts.poppins(
                                           color: Colors.white,
                                           fontSize: R.font(context, 7.5),
@@ -628,7 +626,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                               ],
                             ),
                     );
-                  }),
+                  }),       }),
 
                 ],
               ),

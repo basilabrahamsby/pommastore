@@ -885,10 +885,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildTopCategoryNavBar() {
+   Widget _buildTopCategoryNavBar(bool isAr) {
     final navItems = [
       {
-        'name': 'HOME',
+        'name': isAr ? 'الرئيسية' : 'HOME',
+        'key': 'HOME',
         'action': () {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).popUntil((route) => route.isFirst);
@@ -898,70 +899,76 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         }
       },
       {
-        'name': 'MEN',
+        'name': isAr ? 'رجالي' : 'MEN',
+        'key': 'MEN',
         'action': () {
           if (widget.gender == 'Men') return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+              builder: (context) => SearchScreen(gender: 'Men', title: isAr ? 'عطور رجالية' : 'MEN FRAGRANCES'),
             ),
           );
         }
       },
       {
-        'name': 'WOMEN',
+        'name': isAr ? 'نسائي' : 'WOMEN',
+        'key': 'WOMEN',
         'action': () {
           if (widget.gender == 'Women') return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+              builder: (context) => SearchScreen(gender: 'Women', title: isAr ? 'عطور نسائية' : 'WOMEN FRAGRANCES'),
             ),
           );
         }
       },
       {
-        'name': 'UNISEX',
+        'name': isAr ? 'الجنسين' : 'UNISEX',
+        'key': 'UNISEX',
         'action': () {
           if (widget.gender == 'Unisex') return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+              builder: (context) => SearchScreen(gender: 'Unisex', title: isAr ? 'عطور للجنسين' : 'UNISEX FRAGRANCES'),
             ),
           );
         }
       },
       {
-        'name': 'BRANDS',
+        'name': isAr ? 'الماركات' : 'BRANDS',
+        'key': 'BRANDS',
         'action': () {
           if (widget.title == 'OFFICIAL BRAND COLLECTIONS') return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(title: 'OFFICIAL BRAND COLLECTIONS'),
+              builder: (context) => SearchScreen(title: isAr ? 'تشكيلة العلامات التجارية' : 'OFFICIAL BRAND COLLECTIONS'),
             ),
           );
         }
       },
       {
-        'name': 'OFFERS',
+        'name': isAr ? 'العروض' : 'OFFERS',
+        'key': 'OFFERS',
         'action': () {
           if (widget.onSale == true) return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(
+              builder: (context) => SearchScreen(
                 onSale: true,
-                title: 'EXCLUSIVE OFFERS & DEALS',
+                title: isAr ? 'عروض وتخفيضات حصرية' : 'EXCLUSIVE OFFERS & DEALS',
               ),
             ),
           );
         }
       },
       {
-        'name': 'PRODUCTS',
+        'name': isAr ? 'المنتجات' : 'PRODUCTS',
+        'key': 'PRODUCTS',
         'action': () {
           if (widget.title == 'ALL PRODUCTS' && widget.gender == null && widget.categoryId == null && widget.brandId == null) return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+              builder: (context) => SearchScreen(title: isAr ? 'جميع المنتجات' : 'ALL PRODUCTS'),
             ),
           );
         }
@@ -985,14 +992,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           final item = navItems[index];
           
           bool isActive = false;
-          final name = item['name'].toString();
-          if (name == 'MEN' && widget.gender == 'Men') {
+          final key = item['key'].toString();
+          if (key == 'MEN' && widget.gender == 'Men') {
             isActive = true;
-          } else if (name == 'WOMEN' && widget.gender == 'Women') {
+          } else if (key == 'WOMEN' && widget.gender == 'Women') {
             isActive = true;
-          } else if (name == 'UNISEX' && widget.gender == 'Unisex') {
+          } else if (key == 'UNISEX' && widget.gender == 'Unisex') {
             isActive = true;
-          } else if (name == 'PRODUCTS' && widget.title == 'ALL PRODUCTS' && widget.gender == null && widget.categoryId == null && widget.brandId == null) {
+          } else if (key == 'PRODUCTS' && widget.title == 'ALL PRODUCTS' && widget.gender == null && widget.categoryId == null && widget.brandId == null) {
             isActive = true;
           }
 
@@ -1003,7 +1010,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               margin: const EdgeInsets.only(right: 4),
               child: Text(
-                name,
+                item['name'].toString(),
                 softWrap: false,
                 maxLines: 1,
                 overflow: TextOverflow.visible,
@@ -1023,6 +1030,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = ref.watch(localeProvider.notifier).isArabic;
+
     // Find category name if active
     String? activeCategoryName;
     if (_selectedCategories.isNotEmpty) {
@@ -1033,7 +1042,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         orElse: () => null,
       );
       if (match != null) {
-        activeCategoryName = match['name']?.toString();
+        final catAr = match['name_ar']?.toString() ?? match['nameAr']?.toString();
+        activeCategoryName = (isAr && catAr != null && catAr.isNotEmpty) ? catAr : match['name']?.toString();
       }
     }
     activeCategoryName ??= widget.title;
@@ -1059,7 +1069,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildTopCategoryNavBar(),
+                    _buildTopCategoryNavBar(isAr),
                     // Search Input Header
                     if (widget.categoryId == null && widget.brandId == null)
                       Padding(
@@ -1081,7 +1091,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             });
                           },
                           decoration: InputDecoration(
-                            hintText: 'Search for scent families, notes, or titles...',
+                            hintText: isAr ? 'البحث عن عطور، مكونات، أو علامات...' : 'Search for scent families, notes, or titles...',
                             prefixIcon: const Icon(Icons.search, color: AppTheme.textMuted),
                             suffixIcon: _query.isNotEmpty
                                 ? IconButton(
@@ -1137,7 +1147,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   const Icon(Icons.swap_vert, size: 14, color: Colors.black87),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Sort: $_selectedSort',
+                                    isAr ? 'الفرز: $_selectedSort' : 'Sort: $_selectedSort',
                                     style: GoogleFonts.montserrat(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w600,
@@ -1161,7 +1171,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'HOME',
+                                isAr ? 'الرئيسية' : 'HOME',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w500,
@@ -1173,7 +1183,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
                               const SizedBox(width: 4),
                               Text(
-                                'SHOP',
+                                isAr ? 'المتجر' : 'SHOP',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w500,
@@ -1199,7 +1209,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_products.length} FRAGRANCES MATCH FILTERS',
+                            isAr ? '${_products.length} عطور تطابق التصفية' : '${_products.length} FRAGRANCES MATCH FILTERS',
                             style: GoogleFonts.montserrat(
                               fontSize: 8,
                               fontWeight: FontWeight.w700,
@@ -1222,13 +1232,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           itemCount: _categories.length,
                           itemBuilder: (context, index) {
                             final cat = _categories[index] as Map<String, dynamic>;
-                            final name = cat['name'] ?? '';
+                            final nameEn = cat['name'] ?? '';
+                            final nameAr = cat['name_ar'] ?? cat['nameAr'];
+                            final catName = (isAr && nameAr != null && nameAr.toString().isNotEmpty) ? nameAr.toString() : nameEn.toString();
                             final catImg = cat['image_url'] ??
                                 (cat['images'] is List && (cat['images'] as List).isNotEmpty
                                     ? cat['images'][0]
                                     : cat['banner_url']);
                             final imageResolved = _getMediaUrl(catImg?.toString());
-                            final isSelected = _selectedCategories.contains(name.toString());
+                            final isSelected = _selectedCategories.contains(nameEn.toString());
 
                             return GestureDetector(
                               onTap: () {
@@ -1237,7 +1249,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                     _selectedCategories.clear();
                                   } else {
                                     _selectedCategories.clear();
-                                    _selectedCategories.add(name.toString());
+                                    _selectedCategories.add(nameEn.toString());
                                   }
                                   _applyFilters();
                                 });
@@ -1288,7 +1300,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      name.toString().toUpperCase(),
+                                      catName.toUpperCase(),
                                       style: GoogleFonts.montserrat(
                                         fontSize: 8,
                                         fontWeight: FontWeight.w700,
@@ -1312,7 +1324,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         onPressed: _showFilterEngineBottomSheet,
                         icon: const Icon(Icons.tune_outlined, size: 14, color: Colors.black87),
                         label: Text(
-                          'INTERACTIVE FILTER ENGINE',
+                          isAr ? 'محرك التصفية التفاعلي' : 'INTERACTIVE FILTER ENGINE',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
