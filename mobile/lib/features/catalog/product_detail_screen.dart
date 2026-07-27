@@ -452,7 +452,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         elevation: 0,
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
-        title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
+        title: Image.asset('assets/logo.png', height: 42, fit: BoxFit.contain),
         shape: const Border(
           bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
         ),

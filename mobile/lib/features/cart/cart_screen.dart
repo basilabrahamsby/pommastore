@@ -180,7 +180,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: Image.asset('assets/logo.png', height: R.pad(context, 26), fit: BoxFit.contain),
+        title: Image.asset('assets/logo.png', height: 42, fit: BoxFit.contain),
         shape: const Border(
           bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
         ),

@@ -107,7 +107,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
+        title: Image.asset('assets/logo.png', height: 42, fit: BoxFit.contain),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,

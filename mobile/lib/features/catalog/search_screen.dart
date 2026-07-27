@@ -1046,7 +1046,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ? const BackButton(color: Colors.black)
             : null,
         centerTitle: true,
-        title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
+        title: Image.asset('assets/logo.png', height: 42, fit: BoxFit.contain),
       ),
       body: AnimatedBackground(
         child: SafeArea(

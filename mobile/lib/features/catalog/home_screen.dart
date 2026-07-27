@@ -172,10 +172,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SizedBox(
-                        height: 32,
+                        height: 44,
                         child: Image.asset(
                           'assets/logo.png',
-                          height: 32,
+                          height: 44,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return Text(
@@ -504,75 +504,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottom: false,
       top: true,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+        padding: const EdgeInsets.fromLTRB(6, 4, 12, 4),
         color: Colors.white,
-        child: Column(
+        child: Row(
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.menu, color: AppTheme.textNeutral, size: 22),
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
-                SizedBox(
-                  height: 24,
-                  child: Image.asset(
-                    'assets/logo.png',
-                    height: 24,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Text(
-                      'POMMASTORE',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.primaryRose,
-                        letterSpacing: 2,
-                      ),
-                    ),
+            IconButton(
+              icon: const Icon(Icons.menu, color: AppTheme.textNeutral, size: 24),
+              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
+            const SizedBox(width: 4),
+            SizedBox(
+              height: 48,
+              child: Image.asset(
+                'assets/logo.png',
+                height: 48,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Text(
+                  'POMMASTORE',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.primaryRose,
+                    letterSpacing: 2,
                   ),
                 ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 22),
-                  onPressed: () => context.push('/account'),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 2),
-            // Myntra-style Search Pill
-            GestureDetector(
-              onTap: () {
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.search, color: AppTheme.textNeutral, size: 24),
+              onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const SearchScreen(autoFocus: true)),
                 );
               },
-              child: Container(
-                height: 38,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceLight,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.borderLight, width: 0.8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search, size: 18, color: AppTheme.textMuted),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Search for Perfumes, Oud, Attar & Gift Sets...',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: AppTheme.textMuted,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const Icon(Icons.camera_alt_outlined, size: 16, color: AppTheme.textMuted),
-                  ],
-                ),
-              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 24),
+              onPressed: () => context.push('/account'),
             ),
           ],
         ),
