@@ -1,13 +1,16 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import 'homepage_provider.dart';
 import 'product_detail_screen.dart';
 import 'search_screen.dart';
+import 'rewards_gallery_screen.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/image_lightbox.dart';
 import '../../core/widgets/product_card.dart';
+import '../../core/widgets/animated_background.dart';
 final homeScrollTargetProvider = StateProvider<String?>((ref) => null);
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -18,6 +21,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final PageController _bannerController = PageController();
   final ScrollController _scrollController = ScrollController();
   int _currentBannerIndex = 0;
@@ -45,11 +49,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://pommastore.com$cleanPath';
+    return 'https://kozmocart.com$cleanPath';
   }
 
   void _handleSlideNavigation(Map<String, dynamic> slide) {
@@ -84,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (customLink.isNotEmpty) {
-      final cleanLink = customLink.replaceAll('https://pommastore.com', '');
+      final cleanLink = customLink.replaceAll('https://kozmocart.com', '');
       final uri = Uri.tryParse(cleanLink);
       if (uri != null) {
         if (uri.path.contains('/product/')) {
@@ -145,107 +149,274 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Widget _buildTopCategoryNavBar() {
-    final navItems = [
-      {
-        'name': 'HOME',
-        'action': () {
-          _scrollController.animateTo(
-            0,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-          );
-        }
-      },
-      {
-        'name': 'MEN',
-        'action': () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
-            ),
-          );
-        }
-      },
-      {
-        'name': 'WOMEN',
-        'action': () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
-            ),
-          );
-        }
-      },
-      {
-        'name': 'UNISEX',
-        'action': () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
-            ),
-          );
-        }
-      },
-      {
-        'name': 'BRANDS',
-        'action': () {
-          _scrollToSection(_brandsKey);
-        }
-      },
-      {
-        'name': 'OFFERS',
-        'action': () {
-          _scrollToSection(_offersKey);
-        }
-      },
-      {
-        'name': 'PRODUCTS',
-        'action': () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
-            ),
-          );
-        }
-      },
-    ];
-
-    return Container(
-      height: 48,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
-        ),
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: navItems.length,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        itemBuilder: (context, index) {
-          final item = navItems[index];
-          final isHome = item['name'] == 'HOME';
-          return GestureDetector(
-            onTap: item['action'] as VoidCallback,
-            child: Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              margin: const EdgeInsets.only(right: 8),
-              child: Text(
-                item['name'].toString(),
-                style: GoogleFonts.montserrat(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2.0,
-                  color: isHome ? AppTheme.primaryRose : Colors.black87,
+  Widget _buildNavSideDrawer(BuildContext context, List<dynamic> categories) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drawer Luxury Header with Logo
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
                 ),
               ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        height: 32,
+                        child: Image.asset(
+                          'assets/logo.png',
+                          height: 32,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Text(
+                              'KOZMOCART',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryRose,
+                                letterSpacing: 2.0,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.black87, size: 22),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'LUXURY FRAGRANCE HOUSE',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryRose,
+                      letterSpacing: 2.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+
+            // Navigation Links List
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  _drawerTile(
+                    icon: Icons.home_outlined,
+                    title: 'HOME',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      if (_scrollController.hasClients) {
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.male_outlined,
+                    title: 'MEN FRAGRANCES',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+                        ),
+                      );
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.female_outlined,
+                    title: 'WOMEN FRAGRANCES',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+                        ),
+                      );
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.wc_outlined,
+                    title: 'UNISEX FRAGRANCES',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+                        ),
+                      );
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.grid_view_outlined,
+                    title: 'ALL PRODUCTS',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+                        ),
+                      );
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.workspace_premium_outlined,
+                    title: 'REWARDS GALLERY',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const RewardsGalleryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.diamond_outlined,
+                    title: 'ELITE BRAND HOUSES',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      _scrollToSection(_brandsKey);
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.local_offer_outlined,
+                    title: 'PROMOTIONAL OFFERS',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      _scrollToSection(_offersKey);
+                    },
+                  ),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: Divider(color: AppTheme.borderLight),
+                  ),
+
+                  // Account & Shopping Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    child: Text(
+                      'ACCOUNT & SHOPPING',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textMuted,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                  ),
+                  _drawerTile(
+                    icon: Icons.person_outline,
+                    title: 'MY ACCOUNT',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.push('/account');
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.favorite_border,
+                    title: 'MY WISHLIST',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.push('/wishlist');
+                    },
+                  ),
+                  _drawerTile(
+                    icon: Icons.shopping_bag_outlined,
+                    title: 'SHOPPING BAG',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.push('/cart');
+                    },
+                  ),
+
+                  if (categories.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      child: Divider(color: AppTheme.borderLight),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      child: Text(
+                        'EXPLORE CATEGORIES',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textMuted,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                    ),
+                    ...categories.map((cat) {
+                      final name = cat['name']?.toString() ?? '';
+                      final catId = cat['id']?.toString();
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                        dense: true,
+                        title: Text(
+                          name,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 10, color: Colors.black38),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => SearchScreen(categoryId: catId, title: name),
+                            ),
+                          );
+                        },
+                      );
+                    }),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _drawerTile({required IconData icon, required String title, required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon, size: 18, color: Colors.black87),
+      title: Text(
+        title,
+        style: GoogleFonts.montserrat(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5,
+          color: Colors.black87,
+        ),
+      ),
+      onTap: onTap,
     );
   }
 
@@ -324,6 +495,241 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMyntraHeader(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      top: true,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+        color: Colors.white,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.menu, color: AppTheme.textNeutral, size: 22),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+                SizedBox(
+                  height: 24,
+                  child: Image.asset(
+                    'assets/logo.png',
+                    height: 24,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Text(
+                      'KOZMOCART',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.primaryRose,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 22),
+                  onPressed: () => context.push('/account'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            // Myntra-style Search Pill
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SearchScreen(autoFocus: true)),
+                );
+              },
+              child: Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceLight,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppTheme.borderLight, width: 0.8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, size: 18, color: AppTheme.textMuted),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Search for Perfumes, Oud, Attar & Gift Sets...',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: AppTheme.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.camera_alt_outlined, size: 16, color: AppTheme.textMuted),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStoryCategoryBubbles(List<dynamic> categories) {
+    final List<Map<String, dynamic>> items = [
+      {
+        'name': 'MEN',
+        'icon': Icons.male_outlined,
+        'gradient': [AppTheme.primaryRose, const Color(0xFFFF905A)],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+            ),
+          );
+        },
+      },
+      {
+        'name': 'WOMEN',
+        'icon': Icons.female_outlined,
+        'gradient': [const Color(0xFFEC4899), const Color(0xFFF472B6)],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+            ),
+          );
+        },
+      },
+      {
+        'name': 'UNISEX',
+        'icon': Icons.wc_outlined,
+        'gradient': [const Color(0xFF8B5CF6), const Color(0xFFC084FC)],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+            ),
+          );
+        },
+      },
+      {
+        'name': 'ALL',
+        'icon': Icons.grid_view_outlined,
+        'gradient': [AppTheme.primaryRose, AppTheme.accentGold],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+            ),
+          );
+        },
+      },
+      {
+        'name': 'REWARDS',
+        'icon': Icons.workspace_premium_outlined,
+        'gradient': [const Color(0xFFF59E0B), const Color(0xFFFCD34D)],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const RewardsGalleryScreen(),
+            ),
+          );
+        },
+      },
+      {
+        'name': 'BRANDS',
+        'icon': Icons.diamond_outlined,
+        'gradient': [const Color(0xFF10B981), const Color(0xFF34D399)],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(title: 'OFFICIAL BRAND COLLECTIONS'),
+            ),
+          );
+        },
+      },
+      {
+        'name': 'OFFERS',
+        'icon': Icons.local_offer_outlined,
+        'gradient': [const Color(0xFFEF4444), const Color(0xFFF87171)],
+        'onTap': () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(
+                onSale: true,
+                title: 'EXCLUSIVE OFFERS & DEALS',
+              ),
+            ),
+          );
+        },
+      },
+    ];
+
+    return Container(
+      height: 96,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final gradientColors = item['gradient'] as List<Color>;
+          final void Function() onTapAction = item['onTap'] as void Function();
+          return GestureDetector(
+            onTap: onTapAction,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: gradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: AppTheme.surfaceLight,
+                        child: Icon(
+                          item['icon'] as IconData,
+                          size: 18,
+                          color: gradientColors[0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item['name'] as String,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textNeutral,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -561,147 +967,162 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               final bannerUrl = _getMediaUrl((brand['brand_banner'] ?? brand['banner_url'])?.toString());
               final desc = brand['description'] ?? 'Discover the signature collections and exclusive raw extractions crafted by the luxury house of $name.';
 
-              return Container(
-                width: 250,
-                margin: const EdgeInsets.only(right: 16, bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.borderLight),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Banner Image
-                      Container(
-                        height: 100,
-                        color: const Color(0xFFF5F5F5),
-                        child: CachedImage(
-                          imageUrl: bannerUrl,
-                          fit: BoxFit.cover,
-                          errorWidget: const Icon(Icons.image_outlined, color: Colors.black12, size: 30),
-                        ),
+              final brandId = brand['id']?.toString();
+              final brandTitle = name.toString().toUpperCase();
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SearchScreen(
+                        brandId: brandId,
+                        title: brandTitle.isNotEmpty ? brandTitle : 'BRAND COLLECTION',
                       ),
-                      // Content details
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Small logo circle (floating style)
-                              Transform.translate(
-                                offset: const Offset(0, -32),
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 4,
-                                      )
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: CachedImage(
-                                      imageUrl: logoUrl,
-                                      fit: BoxFit.contain,
-                                      errorWidget: Center(
-                                        child: Text(
-                                          name.isNotEmpty ? name[0] : '✦',
-                                          style: GoogleFonts.playfairDisplay(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.accentGold,
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 250,
+                  margin: const EdgeInsets.only(right: 16, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.borderLight),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Banner Image
+                        Container(
+                          height: 100,
+                          color: const Color(0xFFF5F5F5),
+                          child: CachedImage(
+                            imageUrl: bannerUrl,
+                            fit: BoxFit.cover,
+                            errorWidget: const Icon(Icons.image_outlined, color: Colors.black12, size: 30),
+                          ),
+                        ),
+                        // Content details
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Small logo circle (floating style)
+                                Transform.translate(
+                                  offset: const Offset(0, -32),
+                                  child: Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.1),
+                                          blurRadius: 4,
+                                        )
+                                      ],
+                                    ),
+                                    child: ClipOval(
+                                      child: CachedImage(
+                                        imageUrl: logoUrl,
+                                        fit: BoxFit.contain,
+                                        errorWidget: Center(
+                                          child: Text(
+                                            name.isNotEmpty ? name[0] : '✦',
+                                            style: GoogleFonts.playfairDisplay(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.accentGold,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Transform.translate(
-                                offset: const Offset(0, -20),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'SIGNATURE HOUSE',
-                                      style: GoogleFonts.montserrat(
-                                        color: AppTheme.accentGold,
-                                        fontSize: 7,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.5,
+                                Transform.translate(
+                                  offset: const Offset(0, -20),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'SIGNATURE HOUSE',
+                                        style: GoogleFonts.montserrat(
+                                          color: AppTheme.accentGold,
+                                          fontSize: 7,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.5,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      name.toString().toUpperCase(),
-                                      style: GoogleFonts.playfairDisplay(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.normal,
-                                        color: Colors.black,
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        name.toString().toUpperCase(),
+                                        style: GoogleFonts.playfairDisplay(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.normal,
+                                          color: Colors.black,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      desc,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 9,
-                                        color: AppTheme.textMuted,
-                                        height: 1.4,
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        desc,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 9,
+                                          color: AppTheme.textMuted,
+                                          height: 1.4,
+                                        ),
+                                        maxLines: 2,
+                                        textAlign: TextAlign.center,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 2,
-                                      textAlign: TextAlign.center,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const Spacer(),
-                              // Explore House Button
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFFE5E5EA)),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'EXPLORE HOUSE',
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 7,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.0,
-                                        color: Colors.black87,
+                                const Spacer(),
+                                // Explore House Button
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'EXPLORE HOUSE',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 7,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.0,
+                                          color: Colors.black87,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.chevron_right, size: 10, color: Colors.black54),
-                                  ],
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.chevron_right, size: 10, color: Colors.black54),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -718,6 +1139,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final menImg = _getMediaUrl((splitBanners['men_mobile'] ?? splitBanners['men'])?.toString() ?? '/banner-men.png');
     final womenImg = _getMediaUrl((splitBanners['women_mobile'] ?? splitBanners['women'])?.toString() ?? '/banner-women.png');
 
+    final List<String> galleryUrls = [];
+    for (final r in loyaltyRewards) {
+      if (r is Map) {
+        final img = _getMediaUrl(r['image_url']?.toString() ?? '');
+        if (img.isNotEmpty) galleryUrls.add(img);
+      }
+    }
+    if (galleryUrls.isEmpty) {
+      galleryUrls.addAll([
+        _getMediaUrl('/model-banner-1.png'),
+        _getMediaUrl('/model-banner-2.png'),
+        _getMediaUrl('/model-banner-3.png'),
+      ]);
+    }
+
+    void openRewardsGallery() {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => RewardsGalleryScreen(
+            initialRewards: loyaltyRewards,
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -725,68 +1171,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // 1. Column 1: For Him
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            height: 240,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: Colors.grey.shade900,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedImage(
-                  imageUrl: menImg,
-                  fit: BoxFit.cover,
-                  errorWidget: Container(color: Colors.black26),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
                 ),
-                Container(color: Colors.black38),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'REFINED & BOLD',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white70,
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'FOR HIM',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 28,
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'SHOP MEN',
+              );
+            },
+            child: Container(
+              height: 240,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.grey.shade900,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CachedImage(
+                    imageUrl: menImg,
+                    fit: BoxFit.cover,
+                    errorWidget: Container(color: Colors.black26),
+                  ),
+                  Container(color: Colors.black38),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'REFINED & BOLD',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: Colors.white70,
                             letterSpacing: 2.0,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Text(
+                          'FOR HIM',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 28,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'SHOP MEN',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -842,102 +1297,123 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final rewardDesc = reward['description']?.toString() ?? '';
                     final pointCost = reward['point_cost']?.toString() ?? '';
 
-                    return Container(
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade900,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          CachedImage(
-                            imageUrl: rewardImg,
-                            fit: BoxFit.cover,
-                            opacity: 0.5,
-                            errorWidget: Container(color: Colors.black26),
-                          ),
-                          Container(color: Colors.black38),
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  rewardType.toUpperCase(),
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFC9A84C), // accentGold
-                                    letterSpacing: 2.0,
+                    return GestureDetector(
+                      onTap: () => openRewardsGallery(),
+                      child: Container(
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade900,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            CachedImage(
+                              imageUrl: rewardImg,
+                              fit: BoxFit.cover,
+                              opacity: 0.5,
+                              errorWidget: Container(color: Colors.black26),
+                            ),
+                            Container(color: Colors.black38),
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    rewardType.toUpperCase(),
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFFC9A84C), // accentGold
+                                      letterSpacing: 2.0,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  rewardName,
-                                  style: GoogleFonts.playfairDisplay(
-                                    fontSize: 14,
-                                    fontStyle: FontStyle.italic,
-                                    color: Colors.white,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (rewardDesc.isNotEmpty) ...[
                                   const SizedBox(height: 4),
                                   Text(
-                                    rewardDesc,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 9,
-                                      color: Colors.white70,
-                                      height: 1.4,
+                                    rewardName,
+                                    style: GoogleFonts.playfairDisplay(
+                                      fontSize: 14,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.white,
                                     ),
-                                    maxLines: 2,
+                                    maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  decoration: const BoxDecoration(
-                                    border: Border(top: BorderSide(color: Colors.white10)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        pointCost.isNotEmpty ? '$pointCost POINTS' : 'EXPLORE',
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                          letterSpacing: 1.5,
-                                        ),
+                                  if (rewardDesc.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      rewardDesc,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 9,
+                                        color: Colors.white70,
+                                        height: 1.4,
                                       ),
-                                      const SizedBox(width: 4),
-                                      const Icon(Icons.arrow_forward, size: 8, color: Colors.white),
-                                    ],
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    decoration: const BoxDecoration(
+                                      border: Border(top: BorderSide(color: Colors.white10)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          pointCost.isNotEmpty ? '$pointCost POINTS' : 'EXPLORE',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.white,
+                                            letterSpacing: 1.5,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(Icons.arrow_forward, size: 8, color: Colors.white),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   }),
                 ],
 
                 const SizedBox(height: 20),
-                Text(
-                  'VIEW FULL GALLERY',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
-                    color: Colors.black,
+                GestureDetector(
+                  onTap: () => openRewardsGallery(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black12),
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'VIEW FULL GALLERY',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.0,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward, size: 10, color: Colors.black87),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -950,68 +1426,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // 3. Column 3: For Her
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            height: 240,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: Colors.grey.shade900,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedImage(
-                  imageUrl: womenImg,
-                  fit: BoxFit.cover,
-                  errorWidget: Container(color: Colors.black26),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
                 ),
-                Container(color: Colors.black38),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'ELEGANT & SWEET',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white70,
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'FOR HER',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 28,
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'SHOP WOMEN',
+              );
+            },
+            child: Container(
+              height: 240,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.grey.shade900,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CachedImage(
+                    imageUrl: womenImg,
+                    fit: BoxFit.cover,
+                    errorWidget: Container(color: Colors.black26),
+                  ),
+                  Container(color: Colors.black38),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'ELEGANT & SWEET',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: Colors.white70,
                             letterSpacing: 2.0,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Text(
+                          'FOR HER',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 28,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'SHOP WOMEN',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1268,7 +1753,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.55,
+        childAspectRatio: 0.66,
       ),
       itemCount: products.length,
       itemBuilder: (context, index) => ProductCard(product: products[index]),
@@ -1284,7 +1769,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.55,
+        childAspectRatio: 0.66,
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
@@ -1720,31 +2205,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final homepageAsync = ref.watch(homepageDataProvider);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: AnimatedOpacity(
-          opacity: _appBarVisible ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 200),
-          child: IgnorePointer(
-            ignoring: !_appBarVisible,
-            child: AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              centerTitle: true,
-              title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
-              shape: const Border(
-                bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: Colors.black, size: 20),
-                  onPressed: () => ref.invalidate(homepageDataProvider),
-                ),
-              ],
-            ),
-          ),
-        ),
+      key: _scaffoldKey,
+      drawer: homepageAsync.when(
+        data: (data) => _buildNavSideDrawer(context, (data['categories'] as List?) ?? []),
+        loading: () => _buildNavSideDrawer(context, []),
+        error: (_, __) => _buildNavSideDrawer(context, []),
       ),
       body: homepageAsync.when(
         loading: () => Center(
@@ -1797,6 +2262,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final brands = (data['brands'] as List?) ?? [];
           final rewards = (data['rewards'] as List?) ?? [];
           final houseFavorites = (layout['house_favorites'] as List?) ?? [];
+          final apiBadges = (layout['trust_badges'] as List?) ?? [];
+
+          // Pre-cache hero slides for instant first-time image rendering
+          if (heroSlides.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                for (final slide in heroSlides.take(4)) {
+                  if (slide is Map) {
+                    final raw = (slide['banner_url'] ?? slide['image'] ?? slide['banner_url_mobile'] ?? slide['image_mobile'])?.toString();
+                    if (raw != null && raw.isNotEmpty) {
+                      final url = _getMediaUrl(raw);
+                      if (url.isNotEmpty) {
+                        precacheImage(NetworkImage(url), context);
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
 
           // Between-product ad banners from CMS layout (with web fallbacks)
           final gridAds1Raw = layout['grid_ads_1'];
@@ -1845,62 +2330,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   'right_product_id': '',
                 };
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(homepageDataProvider);
-              await ref.read(homepageDataProvider.future);
-            },
-            color: AppTheme.primaryRose,
-            child: SingleChildScrollView(
+          return AnimatedBackground(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(homepageDataProvider);
+                await ref.read(homepageDataProvider.future);
+              },
+              color: AppTheme.primaryRose,
+              child: SingleChildScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTopCategoryNavBar(),
-                      ),
-                      Container(
-                        height: 48,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          border: Border(
-                            bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
-                          ),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.search, color: Colors.black87, size: 22),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const SearchScreen(autoFocus: true),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+                  // ── Myntra Top Header (Search Pill + Actions) ──
+                  _buildMyntraHeader(context),
+                  
+                  // ── Myntra Story Category Bubbles ──
+                  _buildStoryCategoryBubbles(categories),
+
+
                   if (heroSlides.isNotEmpty)
                     AspectRatio(
-                      aspectRatio: 3 / 4,
+                      aspectRatio: 16 / 9,
                       child: Stack(
                         children: [
                           PageView.builder(
                             controller: _bannerController,
-                                      onPageChanged: (i) =>
-                                        setState(() => _currentBannerIndex = i),
+                            onPageChanged: (i) =>
+                                setState(() => _currentBannerIndex = i),
                             itemCount: heroSlides.length,
                             itemBuilder: (context, index) {
                               final slide =
                                   heroSlides[index] as Map<String, dynamic>;
                               final imageResolved = _getMediaUrl(
-                                  (slide['image_mobile'] ??
+                                  (slide['banner_url'] ??
+                                          slide['image'] ??
                                           slide['banner_url_mobile'] ??
-                                          slide['banner_url'] ??
-                                          slide['image'])
+                                          slide['image_mobile'])
                                       ?.toString());
                               final title =
                                   slide['title'] ?? 'The Signature Scent';
@@ -1917,10 +2384,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       for (final s in heroSlides) {
                                         if (s is Map) {
                                           allSlideUrls.add(_getMediaUrl(
-                                            (s['image_mobile'] ??
+                                            (s['banner_url'] ??
+                                             s['image'] ??
                                              s['banner_url_mobile'] ??
-                                             s['banner_url'] ??
-                                             s['image'])?.toString()
+                                             s['image_mobile'])?.toString()
                                           ));
                                         }
                                       }
@@ -1940,73 +2407,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ),
                                   Container(
-                                      color: const Color(0x66000000)),
-                                  SafeArea(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          24, 16, 24, 24),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            subtitle.toString().toUpperCase(),
-                                            style: GoogleFonts.montserrat(
-                                                color: AppTheme.accentGold,
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 3.5),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            title.toString().toUpperCase(),
-                                            style: GoogleFonts.playfairDisplay(
-                                                color: Colors.white,
-                                                fontSize: 32,
-                                                fontWeight: FontWeight.normal,
-                                                letterSpacing: 1.5,
-                                                height: 1.1),
-                                          ),
-                                          if (desc.toString().isNotEmpty) ...[
-                                            const SizedBox(height: 8),
-                                            Text(desc.toString(),
-                                                style: GoogleFonts.poppins(
-                                                    color: Colors.white70,
-                                                    fontSize: 11,
-                                                    height: 1.5),
-                                                maxLines: 2,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ],
-                                          const SizedBox(height: 16),
-                                          OutlinedButton(
-                                            onPressed: () {
-                                              _handleSlideNavigation(slide);
-                                            },
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor: Colors.white,
-                                              side: const BorderSide(
-                                                  color: Colors.white70),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 8),
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          24)),
-                                            ),
-                                            child: Text('SHOP NOW',
-                                                style: GoogleFonts.montserrat(
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.w700,
-                                                    letterSpacing: 2.5,
-                                                    color: Colors.white)),
-                                          ),
+                                      color: const Color(0x55000000)),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16, 12, 16, 16),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          subtitle.toString().toUpperCase(),
+                                          style: GoogleFonts.montserrat(
+                                              color: AppTheme.accentGold,
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 2.5),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          title.toString().toUpperCase(),
+                                          style: GoogleFonts.playfairDisplay(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.normal,
+                                              letterSpacing: 1.0,
+                                              height: 1.1),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (desc.toString().isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(desc.toString(),
+                                              style: GoogleFonts.poppins(
+                                                  color: Colors.white70,
+                                                  fontSize: 9.5,
+                                                  height: 1.3),
+                                              maxLines: 1,
+                                              overflow:
+                                                  TextOverflow.ellipsis),
                                         ],
-                                      ),
+                                        const SizedBox(height: 8),
+                                        OutlinedButton(
+                                          onPressed: () {
+                                            _handleSlideNavigation(slide);
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            side: const BorderSide(
+                                                color: Colors.white70, width: 0.8),
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 14,
+                                                    vertical: 4),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        16)),
+                                          ),
+                                          child: Text('SHOP NOW',
+                                              style: GoogleFonts.montserrat(
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 1.8,
+                                                  color: Colors.white)),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -2014,13 +2483,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             },
                           ),
                           Positioned(
-                            bottom: 16,
-                            right: 20,
+                            bottom: 12,
+                            right: 16,
                             child: Row(
                               children: List.generate(heroSlides.length, (idx) {
                                 return AnimatedContainer(
                                   duration: const Duration(milliseconds: 250),
-                                  width: _currentBannerIndex == idx ? 20 : 8,
+                                  width: _currentBannerIndex == idx ? 16 : 6,
                                   height: 2,
                                   margin:
                                       const EdgeInsets.symmetric(horizontal: 2),
@@ -2038,99 +2507,189 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
 
-
-
-                  // ── Categories ────────────────────────────────────────────
+                  // ── Shop By Category (Below Hero Banner) ──
                   if (categories.isNotEmpty) ...[
-                    _buildCenteredSectionHeader('Signature Categories', 'Discover More'),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: categories.length,
-                        itemBuilder: (context, index) {
-                          final cat =
-                              categories[index] as Map<String, dynamic>;
-                          final name = cat['name'] ?? '';
-                          final catImg = cat['image_url'] ??
-                              (cat['images'] is List &&
-                                      (cat['images'] as List).isNotEmpty
-                                  ? cat['images'][0]
-                                  : cat['banner_url']);
-                          final imageResolved =
-                              _getMediaUrl(catImg?.toString());
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            'SHOP BY CATEGORY',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.textNeutral,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Divider(color: AppTheme.borderLight, thickness: 1)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    categories.length <= 4
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: categories.map((c) {
+                                final cat = c as Map<String, dynamic>;
+                                final name = cat['name']?.toString() ?? 'Category';
+                                final catId = cat['id']?.toString();
+                                final catImg = cat['image_url'] ??
+                                    (cat['images'] is List && (cat['images'] as List).isNotEmpty
+                                        ? cat['images'][0]
+                                        : cat['banner_url']);
+                                final imageResolved = _getMediaUrl(catImg?.toString());
 
-                          return GestureDetector(
-                            onTap: () {
-                              final catId = cat['id']?.toString();
-                              final catName = cat['name']?.toString() ?? 'Category';
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => SearchScreen(
-                                    categoryId: catId,
-                                    title: catName,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(2.5),
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Color(0xFFFFB300),
-                                          Color(0xFFE91E63),
-                                          AppTheme.primaryRose
+                                return Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => SearchScreen(
+                                            categoryId: catId,
+                                            title: name,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: 62,
+                                            height: 62,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: AppTheme.surfaceLight,
+                                              border: Border.all(color: AppTheme.borderLight, width: 1.5),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.04),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                )
+                                              ],
+                                            ),
+                                            child: ClipOval(
+                                              child: CachedImage(
+                                                imageUrl: imageResolved,
+                                                fit: BoxFit.cover,
+                                                errorWidget: Container(
+                                                  color: AppTheme.surfaceLight,
+                                                  child: const Icon(Icons.category_outlined, color: AppTheme.primaryRose, size: 22),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            name.toUpperCase(),
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 8.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppTheme.textNeutral,
+                                              letterSpacing: 0.3,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ],
-                                        begin: Alignment.bottomLeft,
-                                        end: Alignment.topRight,
                                       ),
                                     ),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white),
-                                      child: ClipOval(
-                                        child: SizedBox(
-                                          width: 68,
-                                          height: 68,
-                                          child: CachedImage(
-                                            imageUrl: imageResolved,
-                                            fit: BoxFit.cover,
-                                            errorWidget: Container(
-                                              color: const Color(0xFFF5F5F5),
-                                              child: const Icon(Icons.image_outlined, color: Colors.black12, size: 20),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          )
+                        : SizedBox(
+                            height: 100,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: categories.length,
+                              itemBuilder: (context, index) {
+                                final cat = categories[index] as Map<String, dynamic>;
+                                final name = cat['name']?.toString() ?? 'Category';
+                                final catId = cat['id']?.toString();
+                                final catImg = cat['image_url'] ??
+                                    (cat['images'] is List && (cat['images'] as List).isNotEmpty
+                                        ? cat['images'][0]
+                                        : cat['banner_url']);
+                                final imageResolved = _getMediaUrl(catImg?.toString());
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => SearchScreen(
+                                          categoryId: catId,
+                                          title: name,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 86,
+                                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 64,
+                                          height: 64,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppTheme.surfaceLight,
+                                            border: Border.all(color: AppTheme.borderLight, width: 1.5),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(alpha: 0.04),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 2),
+                                              )
+                                            ],
+                                          ),
+                                          child: ClipOval(
+                                            child: CachedImage(
+                                              imageUrl: imageResolved,
+                                              fit: BoxFit.cover,
+                                              errorWidget: Container(
+                                                color: AppTheme.surfaceLight,
+                                                child: const Icon(Icons.category_outlined, color: AppTheme.primaryRose, size: 22),
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          name.toUpperCase(),
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.textNeutral,
+                                            letterSpacing: 0.5,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(name.toString().toUpperCase(),
-                                      style: GoogleFonts.montserrat(
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.black87,
-                                          letterSpacing: 0.5)),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    ),
+                          ),
                   ],
+
+
+
+
 
                    // ── New Arrivals (Part 1: Products 1-10) ──────────────────
                   if (newArrivals.isNotEmpty) ...[
@@ -2220,9 +2779,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // ── House Favorites Section (Arches) ───────────────────────
                   _buildHouseFavorites(houseFavorites),
 
-                  // ── Promotional Offers ────────────────────────────────────
-                  if (offers.isNotEmpty)
-                    Container(
+                  // ── Promotional Offers (Matching Storefront Offer Banners) ───────────────
+                  (() {
+                    final displayOffers = offers.isNotEmpty
+                        ? offers
+                        : [
+                            {
+                              'title': 'EXCLUSIVE SIGNATURE PROMO',
+                              'code': 'KOZMO999',
+                              'discount_value': 'FLAT 15% OFF',
+                              'description': 'Enjoy flat discounts across all luxury fragrance collections using code KOZMO999 at checkout.'
+                            }
+                          ];
+
+                    return Container(
                       key: _offersKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2234,52 +2804,124 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: offers.length,
+                            itemCount: displayOffers.length,
                             itemBuilder: (context, index) {
-                              final offer =
-                                  offers[index] as Map<String, dynamic>;
-                              final title = offer['title'] ?? 'Exclusive Deal';
-                              final code = offer['code'] ?? '';
-                              final discountVal = offer['discount_value'] ?? '';
-                              final type = offer['discount_type'] ?? '';
+                              final offer = displayOffers[index] as Map<String, dynamic>;
+                              final title = offer['title']?.toString() ?? 'Exclusive Deal';
+                              final code = offer['code']?.toString() ?? 'KOZMO999';
+                              final discountVal = offer['discount_value']?.toString() ?? 'SPECIAL DEAL';
+                              final desc = offer['description']?.toString() ?? 'Enjoy exclusive promotional discounts on luxury perfumes.';
 
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                color: AppTheme.surfaceLight,
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16),
-                                  title: Text(title.toString().toUpperCase(),
-                                      style: GoogleFonts.montserrat(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 12,
-                                          letterSpacing: 1.0)),
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 6.0),
-                                    child: Text(
-                                      type.toString().isNotEmpty
-                                          ? '$type Discount • Code: $code'
-                                          : 'Promo Code: $code',
-                                      style: GoogleFonts.poppins(
-                                          color: AppTheme.textMuted,
-                                          fontSize: 11),
-                                    ),
+                              return Container(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppTheme.primaryRose.withValues(alpha: 0.2)),
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFFFF0F5), Color(0xFFFFE4E6)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  trailing: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primaryRose,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      discountVal.toString().isNotEmpty
-                                          ? '$discountVal OFF'
-                                          : 'CLAIM',
-                                      style: GoogleFonts.montserrat(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700),
-                                    ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.primaryRose,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              discountVal.toUpperCase(),
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                                letterSpacing: 1.0,
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(color: AppTheme.primaryRose),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.confirmation_number_outlined, size: 12, color: AppTheme.primaryRose),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  code,
+                                                  style: GoogleFonts.montserrat(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: AppTheme.primaryRose,
+                                                    letterSpacing: 1.2,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        title.toUpperCase(),
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 12.5,
+                                          color: Colors.black87,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        desc,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: Colors.black54,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 14),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) => const SearchScreen(
+                                                  onSale: true,
+                                                  title: 'OFFERS & PROMOTIONS',
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.black,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(vertical: 10),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                          ),
+                                          child: Text(
+                                            'CLAIM OFFER & SHOP DEALS',
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               );
@@ -2287,13 +2929,127 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ],
                       ),
-                    ),
+                    );
+                  })(),
+
+                  // ── Luxury Trust Badges Section ────────────────────────────
+                  _buildTrustBadgesSection(apiBadges),
 
                   // ── Footer ────────────────────────────────────────────────
                   const _HomeFooter(),
                 ],
               ),
             ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+  Widget _buildTrustBadgesSection([List<dynamic> apiBadges = const []]) {
+    // Icon mapping from admin icon_name string -> Flutter IconData
+    IconData iconFor(String? name) {
+      switch (name) {
+        case 'local_shipping_outlined': return Icons.local_shipping_outlined;
+        case 'verified_outlined':       return Icons.verified_outlined;
+        case 'lock_outline':            return Icons.lock_outline;
+        case 'card_giftcard_outlined':  return Icons.card_giftcard_outlined;
+        case 'replay_outlined':         return Icons.replay_outlined;
+        case 'support_agent':           return Icons.support_agent;
+        case 'emoji_events_outlined':   return Icons.emoji_events_outlined;
+        case 'eco_outlined':            return Icons.eco_outlined;
+        case 'gps_fixed':               return Icons.gps_fixed;
+        case 'track_changes':           return Icons.track_changes;
+        default:                        return Icons.verified_outlined;
+      }
+    }
+
+    // Use API badges if available, otherwise fall back to hardcoded defaults
+    final badges = apiBadges.isNotEmpty
+        ? apiBadges.map((b) {
+            final m = b as Map<String, dynamic>;
+            return {
+              'icon': iconFor(m['icon_name']?.toString()),
+              'title': m['title']?.toString() ?? '',
+              'desc': m['sub']?.toString() ?? '',
+            };
+          }).toList()
+        : [
+            {'icon': Icons.verified_outlined,       'title': '100% AUTHENTIC',  'desc': 'Directly from Brands'},
+            {'icon': Icons.gps_fixed,               'title': 'LIVE TRACKING',   'desc': 'Live Delivery Tracking'},
+            {'icon': Icons.lock_outline,             'title': 'SECURE PAYMENT',  'desc': 'Safe transactions'},
+            {'icon': Icons.local_shipping_outlined,  'title': 'FREE SHIPPING',   'desc': 'On orders above ₹2999'},
+          ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 2.6,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemCount: badges.length,
+        itemBuilder: (context, index) {
+          final b = badges[index];
+          return Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryRose.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(b['icon'] as IconData, size: 20, color: AppTheme.primaryRose),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      b['title'] as String,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textNeutral,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      b['desc'] as String,
+                      style: GoogleFonts.poppins(
+                        fontSize: 8,
+                        color: AppTheme.textMuted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -2385,7 +3141,7 @@ class _HomeFooter extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // About
-                Text('POMMASTORE',
+                Text('KOZMOCART',
                     style: GoogleFonts.playfairDisplay(
                         fontSize: 20,
                         color: Colors.white,
@@ -2504,7 +3260,7 @@ class _HomeFooter extends StatelessWidget {
 
                 // Copyright
                 Text(
-                  '© ${DateTime.now().year} Pommastore Fragrances. All rights reserved.',
+                  '© ${DateTime.now().year} Kozmocart Fragrances. All rights reserved.',
                   style: GoogleFonts.montserrat(
                       fontSize: 8,
                       fontWeight: FontWeight.w700,

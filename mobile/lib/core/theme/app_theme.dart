@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // ── Brand Colors (matches storefront globals.css) ───────────────────────────
-  static const Color primaryRose = Color(0xFFD2168D);   // --color-accent
-  static const Color accentGold = Color(0xFFC9A84C);    // hero gold
-  static const Color ratingAmber = Color(0xFFFFA41C);   // --color-rating
+  // ── Brand Tokens (Matched directly to Kozmocart Logo) ──────────────────────
+  static const Color primaryRose = Color(0xFFD2168D);   // Kozmocart logo magenta rose
+  static const Color accentGold = Color(0xFFC9A84C);    // Kozmocart brand gold
+  static const Color ratingAmber = Color(0xFFFFA41C);   // rating star amber
+  static const Color ratingGreen = Color(0xFF14B8A6);   // rating badge green
+  static const Color discountOrange = Color(0xFFFF905A);// discount tag orange
   static const Color backgroundLight = Color(0xFFFFFFFF);
-  static const Color surfaceLight = Color(0xFFF9F9F9);
-  static const Color borderLight = Color(0xFFE5E5EA);
-  static const Color textMuted = Color(0xFF8E8E93);
-  static const Color textNeutral = Color(0xFF404040);   // neutral-700
+  static const Color surfaceLight = Color(0xFFF5F5F6);   // Myntra light gray surface
+  static const Color borderLight = Color(0xFFEAEAEC);    // Subtle borders
+  static const Color textMuted = Color(0xFF94969F);      // Secondary text
+  static const Color textNeutral = Color(0xFF282C3F);    // Primary dark text
 
   // ── Font Families (mirrors storefront layout.tsx) ──────────────────────────
   // Poppins   → font-sans / font-spectral  (body, UI labels)

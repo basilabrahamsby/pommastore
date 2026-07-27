@@ -1,4 +1,5 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -121,6 +122,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     super.dispose();
   }
 
+  double _calculatedShippingFee = 85.0;
+
+  Future<void> _verifyShippingFeeForPincode(String pincode) async {
+    if (pincode.length < 6) return;
+    try {
+      final res = await _api.dio.get('/storefront/orders/shipping/verify-pincode?pincode=$pincode');
+      if (res.statusCode == 200 && res.data != null) {
+        final fee = double.tryParse(res.data['shipping_fee']?.toString() ?? '85') ?? 85.0;
+        if (mounted) {
+          setState(() {
+            _calculatedShippingFee = fee;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadAddresses() async {
     setState(() => _isLoading = true);
     try {
@@ -136,6 +154,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             orElse: () => list.first,
           );
           _showNewAddressForm = false;
+          if (_selectedAddress != null && _selectedAddress!['pincode'] != null) {
+            _verifyShippingFeeForPincode(_selectedAddress!['pincode'].toString());
+          }
         } else {
           _showNewAddressForm = true;
         }
@@ -251,11 +272,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         subtotal += item.price * item.quantity;
       }
       final isFreeShipping = subtotal >= _freeShippingLimit;
-      final shippingFee = isFreeShipping ? 0.0 : 150.0;
+      final shippingFee = isFreeShipping ? 0.0 : _calculatedShippingFee;
 
       // Construct order payload matching backend's OrderCreate
       final body = {
-        'payment_method': 'prepaid',
+        'payment_method': 'razorpay',
         'payment_gateway': 'razorpay',
         'payment_status': 'pending',
         'channel': 'storefront',
@@ -290,7 +311,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         final options = {
           'key': razorpayKeyId,
           'amount': amountInPaise,
-          'name': 'Pommastore',
+          'name': 'Kozmocart',
           'order_id': razorpayOrderId,
           'description': 'Secure Order Payment for $orderNumber',
           'prefill': {
@@ -302,9 +323,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
-      final errorMsg = e.toString().contains('400')
-          ? 'Failed to verify checkout. Adjust details/check stock.'
-          : 'Checkout failed. Please try again.';
+      String errorMsg = 'Checkout failed. Please try again.';
+      if (e is DioException && e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data.containsKey('detail')) {
+          errorMsg = data['detail'].toString();
+        }
+      }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg)));
     }
   }
@@ -517,6 +542,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             setState(() {
                               _selectedAddress = addr;
                               _showNewAddressForm = false;
+                              if (addr['pincode'] != null) {
+                                _verifyShippingFeeForPincode(addr['pincode'].toString());
+                              }
                             });
                             Navigator.of(context).pop();
                           },
@@ -606,7 +634,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       subtotal += item.price * item.quantity;
     }
     final isFreeShipping = subtotal >= _freeShippingLimit;
-    final shippingFee = isFreeShipping ? 0.0 : 150.0;
+    final shippingFee = isFreeShipping ? 0.0 : _calculatedShippingFee;
     final total = subtotal + shippingFee;
 
     return Scaffold(
@@ -840,6 +868,55 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           // 4. ORDER SUMMARY ROW
                           _buildSummaryLine('Subtotal', '₹${subtotal.toInt()}', isBold: false),
                           const SizedBox(height: 6),
+                          
+                          // Taxable Value & GST split (18% inclusive)
+                          (() {
+                            final String stateLower = (_showNewAddressForm
+                                    ? _stateController.text
+                                    : (_selectedAddress?['state']?.toString() ?? ''))
+                                .toLowerCase();
+                            final bool isKerala = stateLower.contains('kerala') ||
+                                stateLower.contains(' kl') ||
+                                stateLower.contains('32');
+                            final double taxableVal = subtotal / 1.18;
+                            final double totalGst = subtotal - taxableVal;
+
+                            return Column(
+                              children: [
+                                _buildSummaryLine(
+                                  'Taxable Value',
+                                  '₹${taxableVal.toStringAsFixed(2)}',
+                                  color: AppTheme.textMuted,
+                                  isBold: false,
+                                ),
+                                const SizedBox(height: 6),
+                                if (isKerala) ...[
+                                  _buildSummaryLine(
+                                    'CGST (9.0% Incl.)',
+                                    '₹${(totalGst / 2).toStringAsFixed(2)}',
+                                    color: AppTheme.textMuted,
+                                    isBold: false,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildSummaryLine(
+                                    'SGST (9.0% Incl.)',
+                                    '₹${(totalGst / 2).toStringAsFixed(2)}',
+                                    color: AppTheme.textMuted,
+                                    isBold: false,
+                                  ),
+                                ] else ...[
+                                  _buildSummaryLine(
+                                    'IGST (18.0% Incl.)',
+                                    '₹${totalGst.toStringAsFixed(2)}',
+                                    color: AppTheme.textMuted,
+                                    isBold: false,
+                                  ),
+                                ],
+                                const SizedBox(height: 6),
+                              ],
+                            );
+                          })(),
+
                           _buildSummaryLine(
                             'Shipping',
                             isFreeShipping ? 'FREE' : '₹${shippingFee.toInt()}',

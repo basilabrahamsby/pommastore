@@ -40,6 +40,13 @@ class CachedImage extends StatelessWidget {
         fit: fit,
         alignment: alignment,
         opacity: AlwaysStoppedAnimation(opacity),
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) return child;
+          return placeholder ??
+              Container(
+                color: Colors.grey.shade100,
+              );
+        },
         errorBuilder: (context, error, stackTrace) =>
             errorWidget ?? Container(color: Colors.grey.shade200),
       );
@@ -52,8 +59,9 @@ class CachedImage extends StatelessWidget {
       height: height,
       fit: fit,
       alignment: alignment,
-      memCacheWidth: width != null ? (width! * 2).toInt() : null,
-      memCacheHeight: height != null ? (height! * 2).toInt() : null,
+      fadeInDuration: const Duration(milliseconds: 150),
+      placeholder: (context, url) =>
+          placeholder ?? Container(color: Colors.grey.shade100),
       errorWidget: (context, url, error) =>
           errorWidget ?? Container(color: Colors.grey.shade200),
     );

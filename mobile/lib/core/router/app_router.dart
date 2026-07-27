@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/navigation/navigation_shell.dart';
 import '../../features/catalog/home_screen.dart';
+import '../../features/catalog/categories_screen.dart';
 import '../../features/catalog/search_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../features/account/account_screen.dart';
@@ -9,6 +10,7 @@ import '../../features/auth/login_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorHomeKey = GlobalKey<NavigatorState>(debugLabel: 'shellHome');
+final GlobalKey<NavigatorState> _shellNavigatorCategoriesKey = GlobalKey<NavigatorState>(debugLabel: 'shellCategories');
 final GlobalKey<NavigatorState> _shellNavigatorSearchKey = GlobalKey<NavigatorState>(debugLabel: 'shellSearch');
 final GlobalKey<NavigatorState> _shellNavigatorCartKey = GlobalKey<NavigatorState>(debugLabel: 'shellCart');
 final GlobalKey<NavigatorState> _shellNavigatorAccountKey = GlobalKey<NavigatorState>(debugLabel: 'shellAccount');
@@ -23,13 +25,13 @@ final GoRouter appRouter = GoRouter(
       builder: (BuildContext context, GoRouterState state) => const LoginScreen(),
     ),
     
-    // Tab Layout Shell
+    // 5-Tab Shell Navigation (Myntra-style)
     StatefulShellRoute.indexedStack(
       builder: (BuildContext context, GoRouterState state, StatefulNavigationShell navigationShell) {
         return NavigationShell(navigationShell: navigationShell);
       },
       branches: <StatefulShellBranch>[
-        // Home Branch
+        // 1. Home
         StatefulShellBranch(
           navigatorKey: _shellNavigatorHomeKey,
           routes: <RouteBase>[
@@ -39,7 +41,17 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Search Branch
+        // 2. Categories
+        StatefulShellBranch(
+          navigatorKey: _shellNavigatorCategoriesKey,
+          routes: <RouteBase>[
+            GoRoute(
+              path: '/categories',
+              builder: (BuildContext context, GoRouterState state) => const CategoriesScreen(),
+            ),
+          ],
+        ),
+        // 3. Search / Catalog
         StatefulShellBranch(
           navigatorKey: _shellNavigatorSearchKey,
           routes: <RouteBase>[
@@ -49,7 +61,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Cart Branch
+        // 4. Bag
         StatefulShellBranch(
           navigatorKey: _shellNavigatorCartKey,
           routes: <RouteBase>[
@@ -59,7 +71,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Account Branch
+        // 5. Account / Profile
         StatefulShellBranch(
           navigatorKey: _shellNavigatorAccountKey,
           routes: <RouteBase>[

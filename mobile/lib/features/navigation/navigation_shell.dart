@@ -16,8 +16,8 @@ class NavigationShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final iconSize = R.icon(context, 20);
-    final labelSize = R.font(context, 11);
+    final iconSize = R.icon(context, 19);
+    final labelSize = R.font(context, 10);
     final cartItems = ref.watch(cartProvider);
     final cartCount = cartItems.fold<int>(0, (sum, i) => sum + i.quantity);
 
@@ -25,7 +25,7 @@ class NavigationShell extends ConsumerWidget {
       final icon = Icon(
         LucideIcons.shoppingBag,
         size: iconSize,
-        color: active ? AppTheme.primaryRose : AppTheme.textMuted,
+        color: active ? AppTheme.primaryRose : AppTheme.textNeutral,
       );
       if (cartCount == 0) return icon;
       return Stack(
@@ -63,18 +63,20 @@ class NavigationShell extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
+          color: Colors.white,
           border: Border(
-            top: BorderSide(color: AppTheme.borderLight, width: 1),
+            top: BorderSide(color: AppTheme.borderLight, width: 0.8),
           ),
         ),
         child: BottomNavigationBar(
           currentIndex: navigationShell.currentIndex,
-          backgroundColor: AppTheme.backgroundLight,
+          backgroundColor: Colors.white,
           selectedItemColor: AppTheme.primaryRose,
-          unselectedItemColor: AppTheme.textMuted,
+          unselectedItemColor: AppTheme.textNeutral,
           selectedFontSize: labelSize,
           unselectedFontSize: labelSize,
           type: BottomNavigationBarType.fixed,
+          elevation: 0,
           onTap: (index) {
             navigationShell.goBranch(
               index,
@@ -83,13 +85,18 @@ class NavigationShell extends ConsumerWidget {
           },
           items: [
             BottomNavigationBarItem(
-              icon: Icon(LucideIcons.compass, size: iconSize),
-              activeIcon: Icon(LucideIcons.compass, size: iconSize),
-              label: 'Explore',
+              icon: Icon(LucideIcons.home, size: iconSize),
+              activeIcon: Icon(LucideIcons.home, size: iconSize, color: AppTheme.primaryRose),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(LucideIcons.layoutGrid, size: iconSize),
+              activeIcon: Icon(LucideIcons.layoutGrid, size: iconSize, color: AppTheme.primaryRose),
+              label: 'Categories',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.search, size: iconSize),
-              activeIcon: Icon(LucideIcons.search, size: iconSize),
+              activeIcon: Icon(LucideIcons.search, size: iconSize, color: AppTheme.primaryRose),
               label: 'Search',
             ),
             BottomNavigationBarItem(
@@ -99,8 +106,8 @@ class NavigationShell extends ConsumerWidget {
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.user, size: iconSize),
-              activeIcon: Icon(LucideIcons.user, size: iconSize),
-              label: 'Account',
+              activeIcon: Icon(LucideIcons.user, size: iconSize, color: AppTheme.primaryRose),
+              label: 'Profile',
             ),
           ],
         ),

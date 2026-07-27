@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,11 +69,11 @@ class _ProductCardState extends ConsumerState<ProductCard> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://pommastore.com$cleanPath';
+    return 'https://kozmocart.com$cleanPath';
   }
 
   List<String> _getScentNotes(Map<String, dynamic> product) {
@@ -266,30 +266,48 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                       ),
                     ),
                   ),
-                  // Star Rating Overlay
+                  // Star Rating Overlay (Myntra-style rating pill: 4.5 ★ | 1.2k)
                   Positioned(
                     bottom: R.pad(context, 8),
                     left: R.pad(context, 8),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: R.pad(context, 5),
-                        vertical: R.pad(context, 2.5),
+                        horizontal: R.pad(context, 6),
+                        vertical: R.pad(context, 3),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(2),
+                        color: Colors.white.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 3,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.star, color: AppTheme.ratingAmber, size: R.icon(context, 9)),
-                          SizedBox(width: R.pad(context, 2)),
                           Text(
-                            '$rating ($reviews)',
+                            rating,
                             style: GoogleFonts.montserrat(
-                              fontSize: R.font(context, 7.5),
-                              fontWeight: FontWeight.w700,
+                              fontSize: R.font(context, 8.5),
+                              fontWeight: FontWeight.w800,
                               color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.star, color: AppTheme.ratingGreen, size: 10),
+                          const SizedBox(width: 3),
+                          Container(width: 1, height: 8, color: Colors.black26),
+                          const SizedBox(width: 3),
+                          Text(
+                            reviews,
+                            style: GoogleFonts.montserrat(
+                              fontSize: R.font(context, 8),
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textMuted,
                             ),
                           ),
                         ],
@@ -300,61 +318,47 @@ class _ProductCardState extends ConsumerState<ProductCard> {
               ),
             ),
             
-            // Text details section
+            // Text details section (Myntra Style Hierarchy)
             Padding(
               padding: EdgeInsets.all(R.pad(context, 8)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Brand (Montserrat bold, all-caps)
+                  // Brand (Myntra Bold Brand Title)
                   Text(
-                    brand.toUpperCase(),
+                    brand.isEmpty ? 'KOZMOCART' : brand.toUpperCase(),
                     style: GoogleFonts.montserrat(
-                      fontSize: R.font(context, 8),
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textMuted,
-                      letterSpacing: 0.5,
+                      fontSize: R.font(context, 9.5),
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.textNeutral,
+                      letterSpacing: 0.3,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: R.pad(context, 2)),
-                  // Product Name (Montserrat bold)
+                  SizedBox(height: R.pad(context, 1.5)),
+                  // Product Subtitle / Short Name
                   Text(
-                    name.toUpperCase(),
-                    style: GoogleFonts.montserrat(
-                      fontSize: R.font(context, 10),
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      letterSpacing: 0.5,
+                    name,
+                    style: GoogleFonts.poppins(
+                      fontSize: R.font(context, 9.5),
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF535766),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: R.pad(context, 2)),
-                  // Scent Notes Family
-                  Text(
-                    notesList.join(' · ').toUpperCase(),
-                    style: GoogleFonts.montserrat(
-                      fontSize: R.font(context, 7.5),
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primaryRose,
-                      letterSpacing: 0.5,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: R.pad(context, 6)),
-                  // Pricing Row
+                  SizedBox(height: R.pad(context, 4)),
+                  // Pricing Row (Selling Price | MRP Strikethrough | Discount Tag)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        '\u20B9${price.toInt()}',
+                        '₹${price.toInt()}',
                         style: GoogleFonts.montserrat(
                           fontSize: R.font(context, 11),
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: AppTheme.textNeutral,
                           textStyle: const TextStyle(
                             fontFamilyFallback: ['Roboto', 'sans-serif'],
                           ),
@@ -363,15 +367,24 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                       if (oldPrice != null && oldPrice > price) ...[
                         SizedBox(width: R.pad(context, 4)),
                         Text(
-                          '\u20B9${oldPrice.toInt()}',
+                          '₹${oldPrice.toInt()}',
                           style: GoogleFonts.montserrat(
-                            fontSize: R.font(context, 8),
-                            color: Colors.black38,
+                            fontSize: R.font(context, 8.5),
+                            color: AppTheme.textMuted,
                             decoration: TextDecoration.lineThrough,
-                            decorationColor: Colors.black38,
+                            decorationColor: AppTheme.textMuted,
                             textStyle: const TextStyle(
                               fontFamilyFallback: ['Roboto', 'sans-serif'],
                             ),
+                          ),
+                        ),
+                        SizedBox(width: R.pad(context, 4)),
+                        Text(
+                          '(${discountPercentage > 0 ? discountPercentage : 20}% OFF)',
+                          style: GoogleFonts.montserrat(
+                            fontSize: R.font(context, 8.5),
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.discountOrange,
                           ),
                         ),
                       ],

@@ -1,6 +1,6 @@
-﻿{
-    "name": "pommastore_app",
-    "short_name": "pommastore_app",
+{
+    "name": "kozmocart_app",
+    "short_name": "kozmocart_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

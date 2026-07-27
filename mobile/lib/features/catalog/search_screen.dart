@@ -1,12 +1,14 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'home_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/product_card.dart';
+import '../../core/widgets/animated_background.dart';
 import '../../core/api/api_client.dart';
 import 'product_detail_screen.dart';
 
@@ -17,6 +19,7 @@ class SearchScreen extends ConsumerStatefulWidget {
   final String? gender;
   final bool? isFeatured;
   final bool? isNewArrival;
+  final bool? onSale;
   final String? title;
   final bool autoFocus;
 
@@ -28,6 +31,7 @@ class SearchScreen extends ConsumerStatefulWidget {
     this.gender,
     this.isFeatured,
     this.isNewArrival,
+    this.onSale,
     this.title,
     this.autoFocus = false,
   });
@@ -56,6 +60,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final List<String> _selectedFamilies = [];
   final List<String> _selectedConcentrations = [];
 
+  final ScrollController _scrollController = ScrollController();
+  bool _isFetchingMore = false;
+  bool _hasMoreProducts = true;
+  int _currentPage = 1;
+
   @override
   void initState() {
     super.initState();
@@ -67,24 +76,68 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       if (formatted == 'women') _selectedGenders.add('Women');
       if (formatted == 'unisex') _selectedGenders.add('Unisex');
     }
+    _scrollController.addListener(_onScroll);
     _loadProducts();
     _loadCategories();
     _loadBrands();
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+      _loadMoreProducts();
+    }
+  }
+
+  Future<void> _loadMoreProducts() async {
+    if (_isFetchingMore || !_hasMoreProducts || _isLoading) return;
+
+    setState(() {
+      _isFetchingMore = true;
+    });
+
+    try {
+      final Map<String, dynamic> params = {
+        'skip': _currentPage * 50,
+        'limit': 50,
+      };
+      if (widget.isFeatured != null) params['is_featured'] = widget.isFeatured;
+      if (widget.isNewArrival != null) params['is_new_arrival'] = widget.isNewArrival;
+
+      final res = await _apiClient.dio.get('/storefront/products', queryParameters: params);
+      final List<dynamic> newItems = res.data as List? ?? [];
+
+      if (newItems.isEmpty) {
+        _hasMoreProducts = false;
+      } else {
+        _currentPage++;
+        _allProducts.addAll(newItems);
+        _applyFilters();
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingMore = false;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://pommastore.com$cleanPath';
+    return 'https://kozmocart.com$cleanPath';
   }
 
   Future<void> _loadCategories() async {
@@ -130,10 +183,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     });
     try {
       final Map<String, dynamic> params = {
-        'limit': 100,
+        'limit': 200,
       };
       if (widget.isFeatured != null) params['is_featured'] = widget.isFeatured;
       if (widget.isNewArrival != null) params['is_new_arrival'] = widget.isNewArrival;
+      if (widget.onSale != null) params['on_sale'] = widget.onSale;
 
       final res = await _apiClient.dio.get('/storefront/products', queryParameters: params);
       setState(() {
@@ -152,14 +206,42 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _applyFilters() {
     List<dynamic> results = List.from(_allProducts);
 
-    // 0. Discovery Search Check
-    if (_query.isNotEmpty) {
-      final q = _query.toLowerCase();
+    // 0. On-Sale / Offers Check
+    if (widget.onSale == true) {
+      results = results.where((p) {
+        final variants = p['variants'] as List?;
+        if (variants != null && variants.isNotEmpty) {
+          for (var v in variants) {
+            final sell = double.tryParse(v['selling_price']?.toString() ?? '0') ?? 0;
+            final comp = double.tryParse(v['compare_at_price']?.toString() ?? '0') ?? 0;
+            if (comp > sell && sell > 0) return true;
+          }
+        }
+        final disc = (p['discount'] ?? p['discount_percentage'] ?? '').toString();
+        return disc.isNotEmpty && disc != '0';
+      }).toList();
+      if (results.isEmpty && _allProducts.isNotEmpty) {
+        results = List.from(_allProducts);
+      }
+    }
+
+    // 0b. Discovery Search Check
+    if (_query.trim().isNotEmpty) {
+      final q = _query.trim().toLowerCase();
       results = results.where((p) {
         final name = (p['name']?.toString() ?? '').toLowerCase();
-        final brand = (p['brand_name']?.toString() ?? '').toLowerCase();
-        final desc = (p['short_description']?.toString() ?? '').toLowerCase();
-        return name.contains(q) || brand.contains(q) || desc.contains(q);
+        final title = (p['title']?.toString() ?? '').toLowerCase();
+        final brand = (p['brand_name']?.toString() ?? p['brand']?['name']?.toString() ?? '').toLowerCase();
+        final cat = (p['category_name']?.toString() ?? p['category']?['name']?.toString() ?? '').toLowerCase();
+        final desc = (p['description']?.toString() ?? p['short_description']?.toString() ?? '').toLowerCase();
+        final notes = (p['fragrance_notes']?.toString() ?? '').toLowerCase();
+
+        return name.contains(q) ||
+            title.contains(q) ||
+            brand.contains(q) ||
+            cat.contains(q) ||
+            desc.contains(q) ||
+            notes.contains(q);
       }).toList();
     }
 
@@ -542,10 +624,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  List<Map<String, String>> _getSearchSuggestions(String text) {
-    if (text.isEmpty) return [];
-    final q = text.toLowerCase();
-    final List<Map<String, String>> suggestions = [];
+  List<Map<String, dynamic>> _getSearchSuggestions(String text) {
+    if (text.trim().isEmpty) return [];
+    final q = text.trim().toLowerCase();
+    final List<Map<String, dynamic>> suggestions = [];
 
     // 1. Check matching Brands
     for (final b in _brands) {
@@ -577,10 +659,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     for (final p in _allProducts) {
       if (p is Map) {
         final pName = p['name']?.toString() ?? '';
-        if (pName.toLowerCase().contains(q)) {
+        final bName = p['brand_name']?.toString() ?? p['brand']?['name']?.toString() ?? '';
+        if (pName.toLowerCase().contains(q) || bName.toLowerCase().contains(q)) {
+          String imgUrl = '';
+          final images = p['images'] as List?;
+          if (images != null && images.isNotEmpty) {
+            imgUrl = _getMediaUrl(images[0]['url']?.toString());
+          }
+          final variants = p['variants'] as List?;
+          double price = 0.0;
+          if (variants != null && variants.isNotEmpty) {
+            price = double.tryParse(variants[0]['selling_price']?.toString() ?? '0') ?? 0.0;
+          }
+
           suggestions.add({
             'type': 'Product',
             'value': pName,
+            'brand': bName,
+            'price': price,
+            'imageUrl': imgUrl,
+            'product': p,
           });
         }
       }
@@ -614,12 +712,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       });
     }
 
-    return suggestions.take(8).toList();
+    return suggestions.take(10).toList();
   }
 
-  void _onSuggestionTap(Map<String, String> sug) {
-    final value = sug['value'] ?? '';
-    final type = sug['type'] ?? '';
+  void _onSuggestionTap(Map<String, dynamic> sug) {
+    final value = sug['value']?.toString() ?? '';
+    final type = sug['type']?.toString() ?? '';
+
+    if (type == 'Product' && sug['product'] != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ProductDetailScreen(
+            product: sug['product'] as Map<String, dynamic>,
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _searchController.text = value;
@@ -696,15 +805,52 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   );
                 }
 
-                final sug = suggestions[index - 1];
-                final value = sug['value'] ?? '';
-                final type = sug['type'] ?? '';
+                final sugIndex = index - 1;
+                if (sugIndex < 0 || sugIndex >= suggestions.length) {
+                  return const SizedBox.shrink();
+                }
+                final sug = suggestions[sugIndex];
+                final value = sug['value']?.toString() ?? '';
+                final type = sug['type']?.toString() ?? '';
+                final brand = sug['brand']?.toString() ?? '';
+                final price = (sug['price'] as num?)?.toDouble() ?? 0.0;
+                final imageUrl = sug['imageUrl']?.toString() ?? '';
+
+                if (type == 'Product') {
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Container(
+                      width: 42,
+                      height: 42,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: const Color(0xFFF9F9FB),
+                      ),
+                      child: imageUrl.isNotEmpty
+                          ? CachedImage(imageUrl: imageUrl, fit: BoxFit.cover)
+                          : const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.black38),
+                    ),
+                    title: Text(
+                      value,
+                      style: GoogleFonts.montserrat(color: Colors.black87, fontSize: 12.5, fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      brand.isNotEmpty ? '$brand • ₹${price.toStringAsFixed(0)}' : '₹${price.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(color: AppTheme.primaryRose, fontSize: 11, fontWeight: FontWeight.w500),
+                    ),
+                    trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.black26),
+                    onTap: () => _onSuggestionTap(sug),
+                  );
+                }
 
                 IconData icon;
                 Color iconColor;
                 if (type == 'Brand') {
-                  icon = Icons.domain_outlined;
-                  iconColor = const Color(0xFFE91E63);
+                  icon = Icons.diamond_outlined;
+                  iconColor = const Color(0xFF10B981);
                 } else if (type == 'Category') {
                   icon = Icons.grid_view_outlined;
                   iconColor = const Color(0xFF007AFF);
@@ -743,7 +889,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       {
         'name': 'HOME',
         'action': () {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          } else {
+            context.go('/');
+          }
         }
       },
       {
@@ -782,15 +932,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       {
         'name': 'BRANDS',
         'action': () {
-          ref.read(homeScrollTargetProvider.notifier).state = 'brands';
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          if (widget.title == 'OFFICIAL BRAND COLLECTIONS') return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(title: 'OFFICIAL BRAND COLLECTIONS'),
+            ),
+          );
         }
       },
       {
         'name': 'OFFERS',
         'action': () {
-          ref.read(homeScrollTargetProvider.notifier).state = 'offers';
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          if (widget.onSale == true) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const SearchScreen(
+                onSale: true,
+                title: 'EXCLUSIVE OFFERS & DEALS',
+              ),
+            ),
+          );
         }
       },
       {
@@ -818,7 +979,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: navItems.length,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         itemBuilder: (context, index) {
           final item = navItems[index];
           
@@ -838,14 +999,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onTap: item['action'] as VoidCallback,
             child: Container(
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              margin: const EdgeInsets.only(right: 4),
               child: Text(
                 name,
+                softWrap: false,
+                maxLines: 1,
+                overflow: TextOverflow.visible,
                 style: GoogleFonts.montserrat(
-                  fontSize: 10.5,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 2.0,
+                  letterSpacing: 1.2,
                   color: isActive ? AppTheme.primaryRose : Colors.black87,
                 ),
               ),
@@ -860,7 +1024,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     // Find category name if active
     String? activeCategoryName;
-    if (widget.categoryId != null && _categories.isNotEmpty) {
+    if (_selectedCategories.isNotEmpty) {
+      activeCategoryName = _selectedCategories.first;
+    } else if (widget.categoryId != null && _categories.isNotEmpty) {
       final match = _categories.firstWhere(
         (c) => c['id']?.toString() == widget.categoryId,
         orElse: () => null,
@@ -882,297 +1048,301 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         centerTitle: true,
         title: Image.asset('assets/logo.png', height: 26, fit: BoxFit.contain),
       ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildTopCategoryNavBar(),
-            // Search Input Header
-            if (widget.categoryId == null && widget.brandId == null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 12.0),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: widget.autoFocus,
-                  textInputAction: TextInputAction.search,
-                  onChanged: (val) {
-                    setState(() {});
-                  },
-                  onSubmitted: (val) {
-                    setState(() {
-                      _query = val;
-                      _applyFilters();
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search for scent families, notes, or titles...',
-                    prefixIcon: const Icon(Icons.search, color: AppTheme.textMuted),
-                    suffixIcon: _query.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, color: AppTheme.textMuted),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _query = '';
-                                _applyFilters();
-                              });
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: const Color(0xFFF9F9FB),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Color(0xFFE5E5EA)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: AppTheme.primaryRose),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-
-            Expanded(
-              child: Stack(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Sorting Trigger Bar
-                      Container(
-              height: 48,
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFF0F0F2), width: 1),
-                ),
-              ),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                children: [
-                  // Sort Trigger Button
-                  InkWell(
-                    onTap: _showSortBottomSheet,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE5E5EA)),
-                        borderRadius: BorderRadius.circular(20),
+      body: AnimatedBackground(
+        child: SafeArea(
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTopCategoryNavBar(),
+                    // Search Input Header
+                    if (widget.categoryId == null && widget.brandId == null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 12.0),
+                        child: TextField(
+                          controller: _searchController,
+                          autofocus: widget.autoFocus,
+                          textInputAction: TextInputAction.search,
+                          onChanged: (val) {
+                            setState(() {
+                              _query = val;
+                              _applyFilters();
+                            });
+                          },
+                          onSubmitted: (val) {
+                            setState(() {
+                              _query = val;
+                              _applyFilters();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search for scent families, notes, or titles...',
+                            prefixIcon: const Icon(Icons.search, color: AppTheme.textMuted),
+                            suffixIcon: _query.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, color: AppTheme.textMuted),
+                                    onPressed: () {
+                                      setState(() {
+                                        _searchController.clear();
+                                        _query = '';
+                                        _applyFilters();
+                                      });
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: const Color(0xFFF9F9FB),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: Color(0xFFE5E5EA)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: AppTheme.primaryRose),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+
+                    // Sorting Trigger Bar
+                    Container(
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFF0F0F2), width: 1),
+                        ),
+                      ),
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         children: [
-                          const Icon(Icons.swap_vert, size: 14, color: Colors.black87),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Sort: $_selectedSort',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                          // Sort Trigger Button
+                          InkWell(
+                            onTap: _showSortBottomSheet,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: const Color(0xFFE5E5EA)),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.swap_vert, size: 14, color: Colors.black87),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Sort: $_selectedSort',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Breadcrumbs & Item Count block (Compacted to maximize product grid space)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'HOME',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF8E8E93),
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
-                      const SizedBox(width: 4),
-                      Text(
-                        'SHOP',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF8E8E93),
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      if (activeCategoryName != null) ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
-                        const SizedBox(width: 4),
-                        Text(
-                          activeCategoryName.toUpperCase(),
-                          style: GoogleFonts.montserrat(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryRose,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_products.length} FRAGRANCES MATCH FILTERS',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8E8E93),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Horizontal Categories Scroll View
-            if (_categories.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              SizedBox(
-                height: 92,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = _categories[index] as Map<String, dynamic>;
-                    final catId = cat['id']?.toString();
-                    final name = cat['name'] ?? '';
-                    final catImg = cat['image_url'] ??
-                        (cat['images'] is List && (cat['images'] as List).isNotEmpty
-                            ? cat['images'][0]
-                            : cat['banner_url']);
-                    final imageResolved = _getMediaUrl(catImg?.toString());
-                    final isSelected = widget.categoryId == catId || _selectedCategories.contains(name.toString());
-
-                    return GestureDetector(
-                      onTap: () {
-                        if (isSelected) {
-                          setState(() {
-                            _selectedCategories.remove(name.toString());
-                            _applyFilters();
-                          });
-                        } else {
-                          setState(() {
-                            _selectedCategories.add(name.toString());
-                            _applyFilters();
-                          });
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(2.5),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: isSelected
-                                      ? const [
-                                          Color(0xFFFFB300),
-                                          Color(0xFFE91E63),
-                                          AppTheme.primaryRose
-                                        ]
-                                      : const [
-                                          Color(0xFFE5E5EA),
-                                          Color(0xFFE5E5EA),
-                                        ],
-                                  begin: Alignment.bottomLeft,
-                                  end: Alignment.topRight,
+                    // Breadcrumbs & Item Count block
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'HOME',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF8E8E93),
+                                  letterSpacing: 1.0,
                                 ),
                               ),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white),
-                                child: ClipOval(
-                                  child: SizedBox(
-                                    width: 60,
-                                    height: 60,
-                                    child: CachedImage(
-                                      imageUrl: imageResolved,
-                                      fit: BoxFit.cover,
-                                      errorWidget: Container(
-                                        color: const Color(0xFFF5F5F5),
-                                        child: const Icon(Icons.image_outlined, color: Colors.black12, size: 20),
-                                      ),
-                                    ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
+                              const SizedBox(width: 4),
+                              Text(
+                                'SHOP',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF8E8E93),
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              if (activeCategoryName != null) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.chevron_right, size: 10, color: Color(0xFF8E8E93)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  activeCategoryName.toUpperCase(),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryRose,
+                                    letterSpacing: 1.0,
                                   ),
                                 ),
-                              ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_products.length} FRAGRANCES MATCH FILTERS',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF8E8E93),
+                              letterSpacing: 1.2,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              name.toString().toUpperCase(),
-                              style: GoogleFonts.montserrat(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected ? AppTheme.primaryRose : Colors.black87,
-                                letterSpacing: 0.5,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Horizontal Categories Scroll View
+                    if (_categories.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        height: 92,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            final cat = _categories[index] as Map<String, dynamic>;
+                            final name = cat['name'] ?? '';
+                            final catImg = cat['image_url'] ??
+                                (cat['images'] is List && (cat['images'] as List).isNotEmpty
+                                    ? cat['images'][0]
+                                    : cat['banner_url']);
+                            final imageResolved = _getMediaUrl(catImg?.toString());
+                            final isSelected = _selectedCategories.contains(name.toString());
+
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedCategories.clear();
+                                  } else {
+                                    _selectedCategories.clear();
+                                    _selectedCategories.add(name.toString());
+                                  }
+                                  _applyFilters();
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(2.5),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: isSelected
+                                              ? const [
+                                                  Color(0xFFFFB300),
+                                                  Color(0xFFE91E63),
+                                                  AppTheme.primaryRose
+                                                ]
+                                              : const [
+                                                  Color(0xFFE5E5EA),
+                                                  Color(0xFFE5E5EA),
+                                                ],
+                                          begin: Alignment.bottomLeft,
+                                          end: Alignment.topRight,
+                                        ),
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white),
+                                        child: ClipOval(
+                                          child: SizedBox(
+                                            width: 60,
+                                            height: 60,
+                                            child: CachedImage(
+                                              imageUrl: imageResolved,
+                                              fit: BoxFit.cover,
+                                              errorWidget: Container(
+                                                color: const Color(0xFFF5F5F5),
+                                                child: const Icon(Icons.image_outlined, color: Colors.black12, size: 20),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      name.toString().toUpperCase(),
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w700,
+                                        color: isSelected ? AppTheme.primaryRose : Colors.black87,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                    ],
 
-            // Interactive Filter Engine Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: OutlinedButton.icon(
-                onPressed: _showFilterEngineBottomSheet,
-                icon: const Icon(Icons.tune_outlined, size: 14, color: Colors.black87),
-                label: Text(
-                  'INTERACTIVE FILTER ENGINE',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  side: const BorderSide(color: Colors.black12),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                ),
-              ),
-            ),
-
-            // Products Grid or Loader
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.primaryRose,
+                    // Interactive Filter Engine Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: OutlinedButton.icon(
+                        onPressed: _showFilterEngineBottomSheet,
+                        icon: const Icon(Icons.tune_outlined, size: 14, color: Colors.black87),
+                        label: Text(
+                          'INTERACTIVE FILTER ENGINE',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: const BorderSide(color: Colors.black12),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero,
+                          ),
+                        ),
                       ),
-                    )
-                  : _error.isNotEmpty
-                      ? Center(
+                    ),
+
+                    // Products Grid or Loader
+                    if (_isLoading)
+                      const SizedBox(
+                        height: 250,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primaryRose,
+                          ),
+                        ),
+                      )
+                    else if (_error.isNotEmpty)
+                      SizedBox(
+                        height: 250,
+                        child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -1186,38 +1356,61 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               ),
                             ],
                           ),
-                        )
-                      : _products.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No fragrances found matching filters.',
-                                style: TextStyle(color: AppTheme.textMuted),
-                              ),
-                            )
-                          : GridView.builder(
-                              padding: const EdgeInsets.all(16),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.55,
-                              ),
-                              itemCount: _products.length,
-                              itemBuilder: (context, index) => ProductCard(product: _products[index] as Map<String, dynamic>),
-                            ),
+                        ),
+                      )
+                    else if (_products.isEmpty)
+                      const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text(
+                            'No fragrances found matching filters.',
+                            style: TextStyle(color: AppTheme.textMuted),
+                          ),
+                        ),
+                      )
+                    else
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.55,
+                        ),
+                        itemCount: _products.length,
+                        itemBuilder: (context, index) {
+                          if (index < 0 || index >= _products.length) {
+                            return const SizedBox.shrink();
+                          }
+                          return ProductCard(product: _products[index] as Map<String, dynamic>);
+                        },
                       ),
-                    ],
-                  ),
-                  if (_searchController.text.isNotEmpty &&
-                      _searchController.text != _query &&
-                      (_searchController.text.length >= 2 || _getSearchSuggestions(_searchController.text).isNotEmpty))
-                    _buildSuggestionsOverlay(),
-                ],
+                    if (_isFetchingMore)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: CircularProgressIndicator(color: AppTheme.primaryRose, strokeWidth: 2.5),
+                        ),
+                      ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+              if (_searchController.text.isNotEmpty &&
+                  _searchController.text != _query &&
+                  (_searchController.text.length >= 2 || _getSearchSuggestions(_searchController.text).isNotEmpty))
+                Positioned(
+                  top: 90,
+                  left: 16,
+                  right: 16,
+                  child: _buildSuggestionsOverlay(),
+                ),
+            ],
+          ),
       ),
+    ),
     );
   }
 

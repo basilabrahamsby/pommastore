@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_responsive.dart';
+import '../../core/widgets/animated_background.dart';
+import '../../core/widgets/cached_image.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/token_manager.dart';
 import '../auth/login_screen.dart';
@@ -23,8 +25,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   double _shippingFee = 150.0;
   double _freeShippingLimit = 999.0;
   bool _hasAddress = false;
+  bool _isKerala = false;
   // Track which item is being removed for animation
   String? _removingId;
+
+  String _getMediaUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    final cleanPath = path.startsWith('/') ? path : '/$path';
+    return 'https://kozmocart.com$cleanPath';
+  }
 
   @override
   void initState() {
@@ -108,6 +118,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       );
       if (defaultAddr != null && defaultAddr['pincode'] != null) {
         if (mounted) setState(() => _hasAddress = true);
+        final stateStr = (defaultAddr['state']?.toString() ?? '').toLowerCase();
+        final isKl = stateStr.contains('kerala') || stateStr.contains(' kl') || stateStr.contains('32');
+        if (mounted) {
+          setState(() {
+            _isKerala = isKl;
+          });
+        }
         final verifyRes = await dioClient.get(
             '/storefront/orders/shipping/verify-pincode?pincode=${defaultAddr['pincode']}');
         if (verifyRes.statusCode == 200 && verifyRes.data != null) {
@@ -120,7 +137,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           }
         }
       } else {
-        if (mounted) setState(() => _hasAddress = false);
+        if (mounted) {
+          setState(() {
+            _hasAddress = false;
+            _isKerala = false;
+          });
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _hasAddress = false);
@@ -174,7 +196,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           )
         ],
       ),
-      body: SafeArea(
+      body: AnimatedBackground(
+        child: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: R.maxContent(context),
@@ -216,7 +239,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -402,12 +426,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   onTap: () => context.go('/product/${item.slug}'),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(2),
-                    child: Image.network(
-                      item.imageUrl,
+                    child: CachedImage(
+                      imageUrl: _getMediaUrl(item.imageUrl),
                       width: 72,
                       height: 88,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
+                      errorWidget: Container(
                         width: 72,
                         height: 88,
                         color: const Color(0xFFF5F5F5),
@@ -702,6 +726,48 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 _summaryRow('Subtotal',
                     '₹${subtotal.toInt()}', Colors.black87, isBold: false),
                 const SizedBox(height: 4),
+
+                // GST Breakdown matching backend (18% inclusive)
+                _summaryRow(
+                  'Taxable Value',
+                  '₹${(subtotal / 1.18).toStringAsFixed(2)}',
+                  AppTheme.textMuted,
+                  isBold: false,
+                ),
+                const SizedBox(height: 4),
+                if (_hasAddress) ...[
+                  if (_isKerala) ...[
+                    _summaryRow(
+                      'CGST (9.0% Incl.)',
+                      '₹${((subtotal - (subtotal / 1.18)) / 2).toStringAsFixed(2)}',
+                      AppTheme.textMuted,
+                      isBold: false,
+                    ),
+                    const SizedBox(height: 4),
+                    _summaryRow(
+                      'SGST (9.0% Incl.)',
+                      '₹${((subtotal - (subtotal / 1.18)) / 2).toStringAsFixed(2)}',
+                      AppTheme.textMuted,
+                      isBold: false,
+                    ),
+                  ] else ...[
+                    _summaryRow(
+                      'IGST (18.0% Incl.)',
+                      '₹${(subtotal - (subtotal / 1.18)).toStringAsFixed(2)}',
+                      AppTheme.textMuted,
+                      isBold: false,
+                    ),
+                  ],
+                ] else ...[
+                  _summaryRow(
+                    'GST (18.0% Incl.)',
+                    '₹${(subtotal - (subtotal / 1.18)).toStringAsFixed(2)}',
+                    AppTheme.textMuted,
+                    isBold: false,
+                  ),
+                ],
+                const SizedBox(height: 4),
+
                 // Shipping
                 _summaryRow(
                   'Shipping',

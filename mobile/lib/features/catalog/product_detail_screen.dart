@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_responsive.dart';
 import '../../core/api/api_client.dart';
+import '../../core/api/token_manager.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/product_card.dart';
 import '../../core/widgets/image_lightbox.dart';
+import '../../core/widgets/animated_background.dart';
 import '../cart/cart_provider.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -26,6 +28,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _isCheckingPincode = false;
   String? _pincodeStatus;
   double? _deliveryCharge;
+  double _freeShippingLimit = 999.0;
   int _selectedImageIndex = 0;
 
   // Recommendations & Enriched Product States (Next.js alignment)
@@ -39,6 +42,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   void initState() {
     super.initState();
     _loadProductDetailsAndRecommendations();
+    _autoFillAndCheckPincode();
+  }
+
+  Future<void> _autoFillAndCheckPincode() async {
+    try {
+      final token = await TokenManager.getToken();
+      if (token == null || token.isEmpty) return;
+
+      final res = await _apiClient.dio.get('/storefront/account/addresses');
+      if (res.statusCode == 200 && res.data != null) {
+        final addresses = res.data as List<dynamic>;
+        if (addresses.isNotEmpty) {
+          final firstAddress = addresses.first as Map<String, dynamic>;
+          final pin = firstAddress['pincode']?.toString().trim() ?? '';
+          if (pin.isNotEmpty && pin.length >= 6) {
+            _pincodeController.text = pin;
+            // Wait slightly for recommendations to load before triggering check pincode
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _checkPincode();
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to autofill pincode: $e');
+    }
   }
 
   @override
@@ -49,11 +80,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://pommastore.com$cleanPath';
+    return 'https://kozmocart.com$cleanPath';
   }
 
   Future<void> _loadProductDetailsAndRecommendations() async {
@@ -153,6 +184,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     });
 
     try {
+      // 1. Fetch free shipping limit settings from storefront layout settings
+      double freeLimit = 999.0;
+      try {
+        final settingsRes = await _apiClient.dio.get('/storefront/settings/storefront_layout');
+        if (settingsRes.statusCode == 200 && settingsRes.data != null) {
+          freeLimit = double.tryParse(settingsRes.data['free_shipping_limit']?.toString() ?? '999') ?? 999.0;
+          setState(() {
+            _freeShippingLimit = freeLimit;
+          });
+        }
+      } catch (_) {}
+
+      // 2. Verify pincode with backend Delhivery lookup
       final res = await _apiClient.dio.get('/storefront/orders/shipping/verify-pincode', queryParameters: {
         'pincode': pin,
       });
@@ -161,8 +205,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         final data = res.data;
         setState(() {
           if (data['serviceable'] == true) {
-            _pincodeStatus = 'Delivering to $pin • COD Available';
-            _deliveryCharge = double.tryParse(data['delivery_charge']?.toString() ?? '150');
+            // Retrieve dynamic shipping fee from Delhivery API response
+            final double rawFee = double.tryParse(data['shipping_fee']?.toString() ?? '150') ?? 150.0;
+            
+            // Check if product price qualifies for free shipping
+            final product = _enrichedProduct ?? widget.product;
+            final variants = product['variants'] as List? ?? [];
+            final double price = variants.isNotEmpty 
+                ? double.tryParse(variants[0]['selling_price']?.toString() ?? '0.0') ?? 0.0
+                : 0.0;
+
+            final isFree = price >= freeLimit;
+            _deliveryCharge = isFree ? 0.0 : rawFee;
+            _pincodeStatus = 'Delivering to $pin';
           } else {
             _pincodeStatus = 'Sorry, service is not available at $pin';
           }
@@ -302,7 +357,31 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
     
     final name = activeProd['name'] ?? 'Luxury Fragrance';
-    final price = activeProd['price'] ?? 999;
+    
+    final variants = activeProd['variants'] as List? ?? [];
+    double sellingPrice = 0.0;
+    double? mrpPrice;
+
+    if (variants.isNotEmpty) {
+      sellingPrice = double.tryParse(variants[0]['selling_price']?.toString() ?? '0.0') ?? 0.0;
+      final cp = variants[0]['compare_at_price'];
+      if (cp != null) mrpPrice = double.tryParse(cp.toString());
+    } else {
+      sellingPrice = double.tryParse(activeProd['price']?.toString() ?? '0.0') ?? 0.0;
+      final mrpVal = activeProd['mrp'] ?? activeProd['compare_at_price'];
+      if (mrpVal != null) mrpPrice = double.tryParse(mrpVal.toString());
+    }
+
+    if (sellingPrice == 0.0) {
+      sellingPrice = 999.0;
+    }
+
+    if (mrpPrice == null || mrpPrice <= sellingPrice) {
+      mrpPrice = (sellingPrice * 1.55).roundToDouble();
+    }
+
+    final discountPercent = (((mrpPrice - sellingPrice) / mrpPrice) * 100).round();
+    final savings = (mrpPrice - sellingPrice).round();
 
     // Scent notes parsing
     final rawScentNotes = activeProd['scent_notes'];
@@ -348,11 +427,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     // Gallery images parsing
     final List<dynamic> galleryList = activeProd['gallery_images'] as List? ?? [];
 
-    final shortDescription = activeProd['short_description']?.toString().isNotEmpty == true
-        ? activeProd['short_description']?.toString()
-        : 'An immersive sensory journey crafted by world-class perfumers. This signature masterpiece balances rare raw extracts with cutting-edge molecular engineering, producing a timeless scent trail that adapts dynamically to your skin chemistry. Designed for connoisseurs of authentic luxury.';
+    final rawShort = activeProd['short_description']?.toString().trim();
+    final rawFull = activeProd['full_description']?.toString().trim();
+    final rawDesc = activeProd['description']?.toString().trim();
 
-    final fullDescription = activeProd['full_description']?.toString() ?? '';
+    final shortDescription = (rawShort != null && rawShort.isNotEmpty)
+        ? rawShort
+        : (rawDesc != null && rawDesc.isNotEmpty)
+            ? rawDesc
+            : 'An immersive sensory journey crafted by world-class perfumers. This signature masterpiece balances rare raw extracts with cutting-edge molecular engineering, producing a timeless scent trail that adapts dynamically to your skin chemistry. Designed for connoisseurs of authentic luxury.';
+
+    final fullDescription = (rawFull != null && rawFull.isNotEmpty)
+        ? rawFull
+        : (rawDesc != null && rawDesc.isNotEmpty && rawShort != null && rawShort.isNotEmpty)
+            ? rawDesc
+            : (rawDesc != null && rawDesc.isNotEmpty && rawDesc != shortDescription)
+                ? rawDesc
+                : '';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -366,7 +457,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
         ),
       ),
-      body: _isLoadingProduct
+      body: AnimatedBackground(
+        child: _isLoadingProduct
           ? const Center(
               child: CircularProgressIndicator(
                 color: AppTheme.primaryRose,
@@ -381,7 +473,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     children: [
                   // Interactive Horizontal Zoom Gallery
                   SizedBox(
-                    height: 320,
+                    height: 440,
                     child: Stack(
                       children: [
                         PageView.builder(
@@ -493,14 +585,65 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             color: Colors.black,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '₹${price.toString()}',
-                          style: GoogleFonts.montserrat(
-                            color: AppTheme.primaryRose,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        const SizedBox(height: 10),
+                        // Luxury Price Comparison Row
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '₹${sellingPrice.toStringAsFixed(0)}',
+                              style: GoogleFonts.montserrat(
+                                color: AppTheme.primaryRose,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'MRP ₹${mrpPrice.toStringAsFixed(0)}',
+                              style: GoogleFonts.montserrat(
+                                color: AppTheme.textMuted,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: AppTheme.textMuted,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryRose.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: AppTheme.primaryRose.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                '$discountPercent% OFF',
+                                style: GoogleFonts.montserrat(
+                                  color: AppTheme.primaryRose,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.verified_outlined, size: 13, color: AppTheme.ratingGreen),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Inclusive of all taxes • Save ₹$savings on this order',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.ratingGreen,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 18),
                         
@@ -771,9 +914,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               if (_deliveryCharge != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Shipping Charge: ₹${_deliveryCharge!.toInt()}',
-                                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.black87, fontWeight: FontWeight.bold),
+                                  _deliveryCharge == 0.0
+                                      ? 'Shipping Charge: FREE'
+                                      : 'Shipping Charge: ₹${_deliveryCharge!.toInt()}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: _deliveryCharge == 0.0 ? Colors.green : Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                                if (_deliveryCharge != 0.0) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '(FREE on orders over ₹${_freeShippingLimit.toInt()})',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      color: Colors.black45,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ]
                             ],
                           ),
@@ -1124,6 +1284,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ),
           ),
         ),
+      ),
     );
   }
 }
