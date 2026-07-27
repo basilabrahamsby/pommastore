@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // ── Brand Tokens (Matched directly to Kozmocart Logo) ──────────────────────
-  static const Color primaryRose = Color(0xFFD2168D);   // Kozmocart logo magenta rose
-  static const Color accentGold = Color(0xFFC9A84C);    // Kozmocart brand gold
+  // ── Brand Tokens (Matched directly to Pommastore Logo) ──────────────────────
+  static const Color primaryRose = Color(0xFFD2168D);   // Pommastore logo magenta rose
+  static const Color accentGold = Color(0xFFC9A84C);    // Pommastore brand gold
   static const Color ratingAmber = Color(0xFFFFA41C);   // rating star amber
   static const Color ratingGreen = Color(0xFF14B8A6);   // rating badge green
   static const Color discountOrange = Color(0xFFFF905A);// discount tag orange

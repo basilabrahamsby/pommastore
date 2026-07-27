@@ -69,11 +69,11 @@ class _ProductCardState extends ConsumerState<ProductCard> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   List<String> _getScentNotes(Map<String, dynamic> product) {
@@ -326,7 +326,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                 children: [
                   // Brand (Myntra Bold Brand Title)
                   Text(
-                    brand.isEmpty ? 'KOZMOCART' : brand.toUpperCase(),
+                    brand.isEmpty ? 'POMMASTORE' : brand.toUpperCase(),
                     style: GoogleFonts.montserrat(
                       fontSize: R.font(context, 9.5),
                       fontWeight: FontWeight.w900,

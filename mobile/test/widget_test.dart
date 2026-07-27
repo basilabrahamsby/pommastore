@@ -7,17 +7,17 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kozmocart_app/main.dart';
+import 'package:pommastore_app/main.dart';
 
 void main() {
-  testWidgets('Kozmocart app launches and loads home', (WidgetTester tester) async {
+  testWidgets('Pommastore app launches and loads home', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: KozmocartApp(),
+        child: PommastoreApp(),
       ),
     );
 
     // Verify that the title of our shell appears
-    expect(find.text('KOZMOCART'), findsWidgets);
+    expect(find.text('POMMASTORE'), findsWidgets);
   });
 }

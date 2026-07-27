@@ -311,7 +311,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         final options = {
           'key': razorpayKeyId,
           'amount': amountInPaise,
-          'name': 'Kozmocart',
+          'name': 'Pommastore',
           'order_id': razorpayOrderId,
           'description': 'Secure Order Payment for $orderNumber',
           'prefill': {

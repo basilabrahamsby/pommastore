@@ -49,11 +49,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
-    String cleanPath = path.replaceAll(RegExp(r'^/kozmocart'), '');
+    String cleanPath = path.replaceAll(RegExp(r'^/pommastore'), '');
     if (cleanPath.startsWith('http')) return cleanPath;
     if (cleanPath.startsWith('data:')) return cleanPath;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : '/$cleanPath';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   void _handleSlideNavigation(Map<String, dynamic> slide) {
@@ -88,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (customLink.isNotEmpty) {
-      final cleanLink = customLink.replaceAll('https://kozmocart.com', '');
+      final cleanLink = customLink.replaceAll('https://pommastore.com', '');
       final uri = Uri.tryParse(cleanLink);
       if (uri != null) {
         if (uri.path.contains('/product/')) {
@@ -179,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return Text(
-                              'KOZMOCART',
+                              'POMMASTORE',
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -521,7 +521,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     height: 24,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Text(
-                      'KOZMOCART',
+                      'POMMASTORE',
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -1261,7 +1261,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               children: [
                 Text(
-                  'KOZMO REWARDS',
+                  'POMMA REWARDS',
                   style: GoogleFonts.montserrat(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
@@ -2786,9 +2786,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         : [
                             {
                               'title': 'EXCLUSIVE SIGNATURE PROMO',
-                              'code': 'KOZMO999',
+                              'code': 'POMMA999',
                               'discount_value': 'FLAT 15% OFF',
-                              'description': 'Enjoy flat discounts across all luxury fragrance collections using code KOZMO999 at checkout.'
+                              'description': 'Enjoy flat discounts across all luxury fragrance collections using code POMMA999 at checkout.'
                             }
                           ];
 
@@ -2808,7 +2808,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             itemBuilder: (context, index) {
                               final offer = displayOffers[index] as Map<String, dynamic>;
                               final title = offer['title']?.toString() ?? 'Exclusive Deal';
-                              final code = offer['code']?.toString() ?? 'KOZMO999';
+                              final code = offer['code']?.toString() ?? 'POMMA999';
                               final discountVal = offer['discount_value']?.toString() ?? 'SPECIAL DEAL';
                               final desc = offer['description']?.toString() ?? 'Enjoy exclusive promotional discounts on luxury perfumes.';
 
@@ -3141,7 +3141,7 @@ class _HomeFooter extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // About
-                Text('KOZMOCART',
+                Text('POMMASTORE',
                     style: GoogleFonts.playfairDisplay(
                         fontSize: 20,
                         color: Colors.white,
@@ -3260,7 +3260,7 @@ class _HomeFooter extends StatelessWidget {
 
                 // Copyright
                 Text(
-                  '© ${DateTime.now().year} Kozmocart Fragrances. All rights reserved.',
+                  '© ${DateTime.now().year} Pommastore Fragrances. All rights reserved.',
                   style: GoogleFonts.montserrat(
                       fontSize: 8,
                       fontWeight: FontWeight.w700,

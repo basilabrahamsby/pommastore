@@ -20,18 +20,18 @@ void main() {
 
   runApp(
     const ProviderScope(
-      child: KozmocartApp(),
+      child: PommastoreApp(),
     ),
   );
 }
 
-class KozmocartApp extends StatelessWidget {
-  const KozmocartApp({super.key});
+class PommastoreApp extends StatelessWidget {
+  const PommastoreApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Kozmocart',
+      title: 'Pommastore',
       theme: AppTheme.lightTheme,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,

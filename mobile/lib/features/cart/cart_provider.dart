@@ -105,7 +105,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     _init();
   }
 
-  static const _prefsKey = 'kozmocart_cart_items';
+  static const _prefsKey = 'pommastore_cart_items';
   final _api = ApiClient();
 
   Future<void> _init() async {

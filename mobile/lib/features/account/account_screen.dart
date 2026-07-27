@@ -183,7 +183,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                                 
                                 // Customer Name
                                 Text(
-                                  _isLoggedIn ? _name : 'Welcome to Kozmocart',
+                                  _isLoggedIn ? _name : 'Welcome to Pommastore',
                                   style: GoogleFonts.montserrat(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
@@ -304,7 +304,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                               ),
                               const Spacer(),
                               Text(
-                                'KOZMOCART VIP',
+                                'POMMASTORE VIP',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w800,
@@ -375,7 +375,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                         
                         const SizedBox(height: 32),
 
-                        // Kozmocart Luxury Brand Footer
+                        // Pommastore Luxury Brand Footer
                         Center(
                           child: Column(
                             children: [
@@ -392,7 +392,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'v2.4.0 • Kozmocart Inc.',
+                                'v2.4.0 • Pommastore Inc.',
                                 style: GoogleFonts.poppins(
                                   fontSize: 9,
                                   color: Colors.black26,

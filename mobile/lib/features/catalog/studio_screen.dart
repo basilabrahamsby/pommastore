@@ -68,7 +68,7 @@ class StudioScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 image: const DecorationImage(
-                  image: NetworkImage('https://kozmocart.com/media/banners/banner_hero_main.png'),
+                  image: NetworkImage('https://pommastore.com/media/banners/banner_hero_main.png'),
                   fit: BoxFit.cover,
                 ),
               ),

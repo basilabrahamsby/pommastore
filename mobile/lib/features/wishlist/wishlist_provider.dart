@@ -7,7 +7,7 @@ class WishlistNotifier extends StateNotifier<List<Map<String, dynamic>>> {
     _loadFromPrefs();
   }
 
-  static const _prefsKey = 'kozmocart_wishlist_items';
+  static const _prefsKey = 'pommastore_wishlist_items';
 
   Future<void> _loadFromPrefs() async {
     try {

@@ -33,7 +33,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     if (path == null || path.isEmpty) return '';
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     final cleanPath = path.startsWith('/') ? path : '/$path';
-    return 'https://kozmocart.com$cleanPath';
+    return 'https://pommastore.com$cleanPath';
   }
 
   @override

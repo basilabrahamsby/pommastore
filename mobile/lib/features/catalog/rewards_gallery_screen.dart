@@ -109,7 +109,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
   String _getMediaUrl(String? path) {
     if (path == null || path.isEmpty) return '';
     if (path.startsWith('http')) return path;
-    return 'https://kozmocart.com$path';
+    return 'https://pommastore.com$path';
   }
 
   @override
@@ -281,7 +281,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Join the Kozmocart Inner Circle.',
+                      'Join the Pommastore Inner Circle.',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 20,
                         fontWeight: FontWeight.normal,
