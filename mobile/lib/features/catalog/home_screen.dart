@@ -2899,20 +2899,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // ── House Favorites Section (Arches) ───────────────────────
                   _buildHouseFavorites(houseFavorites),
 
-                  // ── Promotional Offers (Matching Storefront Offer Banners) ───────────────
-                  (() {
-                    final displayOffers = offers.isNotEmpty
-                        ? offers
-                        : [
-                            {
-                              'title': 'EXCLUSIVE SIGNATURE PROMO',
-                              'code': 'POMMA999',
-                              'discount_value': 'FLAT 15% OFF',
-                              'description': 'Enjoy flat discounts across all luxury fragrance collections using code POMMA999 at checkout.'
-                            }
-                          ];
-
-                    return Container(
+                  // ── Promotional Offers (Only shown if real offers exist in backend) ──
+                  if (offers.isNotEmpty)
+                    Container(
                       key: _offersKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2924,13 +2913,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: displayOffers.length,
+                            itemCount: offers.length,
                             itemBuilder: (context, index) {
-                              final offer = displayOffers[index] as Map<String, dynamic>;
-                              final title = offer['title']?.toString() ?? 'Exclusive Deal';
-                              final code = offer['code']?.toString() ?? 'POMMA999';
+                              final offer = offers[index] as Map<String, dynamic>;
+                              final title = (isAr ? (offer['title_ar'] ?? offer['titleAr'] ?? offer['title']) : offer['title'])?.toString() ?? 'Exclusive Deal';
+                              final code = offer['code']?.toString() ?? '';
                               final discountVal = offer['discount_value']?.toString() ?? 'SPECIAL DEAL';
-                              final desc = offer['description']?.toString() ?? 'Enjoy exclusive promotional discounts on luxury perfumes.';
+                              final desc = (isAr ? (offer['description_ar'] ?? offer['descriptionAr'] ?? offer['description']) : offer['description'])?.toString() ?? '';
 
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 8),
@@ -2967,29 +2956,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               ),
                                             ),
                                           ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(20),
-                                              border: Border.all(color: AppTheme.primaryRose),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                const Icon(Icons.confirmation_number_outlined, size: 12, color: AppTheme.primaryRose),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  code,
-                                                  style: GoogleFonts.montserrat(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: AppTheme.primaryRose,
-                                                    letterSpacing: 1.2,
+                                          if (code.isNotEmpty)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(color: AppTheme.primaryRose),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(Icons.confirmation_number_outlined, size: 12, color: AppTheme.primaryRose),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    code,
+                                                    style: GoogleFonts.montserrat(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: AppTheme.primaryRose,
+                                                      letterSpacing: 1.2,
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 12),
@@ -3002,15 +2992,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           letterSpacing: 0.5,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        desc,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: Colors.black54,
-                                          height: 1.4,
+                                      if (desc.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          desc,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11,
+                                            color: Colors.black54,
+                                            height: 1.4,
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                       const SizedBox(height: 14),
                                       SizedBox(
                                         width: double.infinity,
@@ -3032,7 +3024,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                           ),
                                           child: Text(
-                                            'CLAIM OFFER & SHOP DEALS',
+                                            isAr ? 'احصل على العرض وتصفح المنتجات' : 'CLAIM OFFER & SHOP DEALS',
                                             style: GoogleFonts.montserrat(
                                               fontSize: 9.5,
                                               fontWeight: FontWeight.bold,
@@ -3049,8 +3041,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ],
                       ),
-                    );
-                  })(),
+                    ),
 
                   // ── Luxury Trust Badges Section ────────────────────────────
                   _buildTrustBadgesSection(apiBadges),
