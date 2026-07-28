@@ -498,10 +498,49 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black),
-        centerTitle: true,
-        title: Image.asset('assets/logo.png', height: 42, fit: BoxFit.contain),
+        elevation: 0.5,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppTheme.textNeutral),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Row(
+          children: [
+            InkWell(
+              onTap: () => ref.read(localeProvider.notifier).toggleLocale(),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.borderLight, width: 0.8),
+                ),
+                child: Text(
+                  isAr ? 'EN' : 'عربي',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primaryRose,
+                  ),
+                ),
+              ),
+            ),
+            const Spacer(),
+            Image.asset('assets/logo.png', height: 36, fit: BoxFit.contain),
+            const Spacer(),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: AppTheme.textNeutral, size: 20),
+            onPressed: () => context.push('/search'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 20),
+            onPressed: () => context.push('/wishlist'),
+          ),
+        ],
         shape: const Border(
           bottom: BorderSide(color: AppTheme.borderLight, width: 1.0),
         ),

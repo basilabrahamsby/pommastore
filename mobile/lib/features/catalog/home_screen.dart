@@ -2428,23 +2428,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 };
 
           return AnimatedBackground(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(homepageDataProvider);
-                await ref.read(homepageDataProvider.future);
-              },
-              color: AppTheme.primaryRose,
-              child: SingleChildScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Myntra Top Header (Search Pill + Actions) ──
-                  _buildMyntraHeader(context),
-                  
-                  // ── Myntra Story Category Bubbles ──
-                  _buildStoryCategoryBubbles(categories),
+            child: Column(
+              children: [
+                // ── Myntra Top Header (Fixed/Sticky Header) ──
+                _buildMyntraHeader(context),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(homepageDataProvider);
+                      await ref.read(homepageDataProvider.future);
+                    },
+                    color: AppTheme.primaryRose,
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // ── Myntra Story Category Bubbles ──
+                          _buildStoryCategoryBubbles(categories),
 
 
                   if (heroSlides.isNotEmpty)
@@ -3048,8 +3050,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-        );
-      },
+        ),
+      ],
     ),
   );
 }
