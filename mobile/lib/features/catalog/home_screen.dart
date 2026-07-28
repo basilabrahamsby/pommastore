@@ -3054,6 +3054,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     ),
   );
+},
+),
+);
 }
 
   Widget _buildTrustBadgesSection([List<dynamic> apiBadges = const []]) {
