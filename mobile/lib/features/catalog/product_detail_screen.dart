@@ -461,12 +461,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       sellingPrice = 999.0;
     }
 
-    if (mrpPrice == null || mrpPrice <= sellingPrice) {
-      mrpPrice = (sellingPrice * 1.55).roundToDouble();
-    }
-
-    final discountPercent = (((mrpPrice - sellingPrice) / mrpPrice) * 100).round();
-    final savings = (mrpPrice - sellingPrice).round();
+    final bool hasDiscount = mrpPrice != null && mrpPrice > sellingPrice;
+    final discountPercent = hasDiscount ? (((mrpPrice - sellingPrice) / mrpPrice) * 100).round() : 0;
+    final savings = hasDiscount ? (mrpPrice - sellingPrice).round() : 0;
 
     // Scent notes parsing
     final rawScentNotes = activeProd['scent_notes'];
@@ -603,12 +600,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                  // Interactive Horizontal Zoom Gallery
-                  SizedBox(
-                    height: 440,
-                    child: Stack(
-                      children: [
-                        PageView.builder(
+                  // Interactive Horizontal Zoom Gallery Card
+                  Container(
+                    height: 420,
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.borderLight, width: 0.8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        children: [
+                          PageView.builder(
                           itemCount: images.length,
                           onPageChanged: (index) {
                             setState(() {
@@ -666,6 +678,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ],
                     ),
                   ),
+                ),
                   
                   Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -731,35 +744,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              isAr ? '${mrpPrice.toStringAsFixed(0)} د.إ' : 'AED ${mrpPrice.toStringAsFixed(0)}',
-                              style: GoogleFonts.montserrat(
-                                color: AppTheme.textMuted,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                decoration: TextDecoration.lineThrough,
-                                decorationColor: AppTheme.textMuted,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryRose.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: AppTheme.primaryRose.withValues(alpha: 0.3)),
-                              ),
-                              child: Text(
-                                isAr ? 'خصم $discountPercent%' : '$discountPercent% OFF',
+                            if (hasDiscount) ...[
+                              const SizedBox(width: 10),
+                              Text(
+                                isAr ? '${mrpPrice.toStringAsFixed(0)} د.إ' : 'AED ${mrpPrice.toStringAsFixed(0)}',
                                 style: GoogleFonts.montserrat(
-                                  color: AppTheme.primaryRose,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
+                                  color: AppTheme.textMuted,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppTheme.textMuted,
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryRose.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: AppTheme.primaryRose.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  isAr ? 'خصم $discountPercent%' : '$discountPercent% OFF',
+                                  style: GoogleFonts.montserrat(
+                                    color: AppTheme.primaryRose,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -769,8 +784,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             const SizedBox(width: 4),
                             Text(
                               isAr 
-                                  ? 'شامل جميع الضرائب • وفر $savings د.إ في هذا الطلب'
-                                  : 'Inclusive of all taxes • Save AED $savings on this order',
+                                  ? (hasDiscount
+                                      ? 'شامل جميع الضرائب • وفر $savings د.إ في هذا الطلب'
+                                      : 'شامل جميع الضرائب • توصيل سريع متوفر')
+                                  : (hasDiscount
+                                      ? 'Inclusive of all taxes • Save AED $savings on this order'
+                                      : 'Inclusive of all taxes • Express Delivery Available'),
                               style: GoogleFonts.poppins(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w500,
