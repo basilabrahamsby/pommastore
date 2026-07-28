@@ -3068,6 +3068,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
   Widget _buildTrustBadgesSection([List<dynamic> apiBadges = const []]) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
     // Icon mapping from admin icon_name string -> Flutter IconData
     IconData iconFor(String? name) {
       switch (name) {
@@ -3089,17 +3091,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final badges = apiBadges.isNotEmpty
         ? apiBadges.map((b) {
             final m = b as Map<String, dynamic>;
+            final tEn = m['title']?.toString() ?? '';
+            final tAr = m['title_ar'] ?? m['titleAr'];
+            final t = (isAr && tAr != null && tAr.toString().isNotEmpty) ? tAr.toString() : tEn;
+            final dEn = m['sub']?.toString() ?? '';
+            final dAr = m['sub_ar'] ?? m['subAr'];
+            final d = (isAr && dAr != null && dAr.toString().isNotEmpty) ? dAr.toString() : dEn;
+
             return {
               'icon': iconFor(m['icon_name']?.toString()),
-              'title': m['title']?.toString() ?? '',
-              'desc': m['sub']?.toString() ?? '',
+              'title': t,
+              'desc': d,
             };
           }).toList()
         : [
-            {'icon': Icons.verified_outlined,       'title': '100% AUTHENTIC',  'desc': 'Directly from Brands'},
-            {'icon': Icons.gps_fixed,               'title': 'LIVE TRACKING',   'desc': 'Live Delivery Tracking'},
-            {'icon': Icons.lock_outline,             'title': 'SECURE PAYMENT',  'desc': 'Safe transactions'},
-            {'icon': Icons.local_shipping_outlined,  'title': 'FREE SHIPPING',   'desc': 'On orders above ₹2999'},
+            {'icon': Icons.verified_outlined,       'title': isAr ? 'أصلي 100٪' : '100% AUTHENTIC',  'desc': isAr ? 'مباشرة من الماركات العالمية' : 'Directly from Brands'},
+            {'icon': Icons.gps_fixed,               'title': isAr ? 'تتبع مباشر' : 'LIVE TRACKING',   'desc': isAr ? 'تتبع الشحنة مباشرة' : 'Live Delivery Tracking'},
+            {'icon': Icons.lock_outline,             'title': isAr ? 'دفع آمن' : 'SECURE PAYMENT',  'desc': isAr ? 'معاملات آمنة ومشفرة' : 'Safe transactions'},
+            {'icon': Icons.local_shipping_outlined,  'title': isAr ? 'توصيل مجاني' : 'FREE SHIPPING',   'desc': isAr ? 'للطلبات فوق 100 د.إ' : 'On orders above AED 100'},
           ];
 
     return Container(
@@ -3180,11 +3189,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 // ═════════════════════════════════════════════════════════════════════════════
 // Home Footer — mirrors storefront Footer.tsx
 // ═════════════════════════════════════════════════════════════════════════════
-class _HomeFooter extends StatelessWidget {
+class _HomeFooter extends ConsumerWidget {
   const _HomeFooter();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
+    String tr(String key) {
+      final Map<String, String> dict = {
+        'STAY IN THE KNOW': isAr ? 'ابق على اطلاع' : 'STAY IN THE KNOW',
+        'Get exclusive offers & new arrivals': isAr ? 'احصل على عروض حصرية ووصل حديثاً' : 'Get exclusive offers & new arrivals',
+        'Enter your email address': isAr ? 'أدخل بريدك الإلكتروني' : 'Enter your email address',
+        'SUBSCRIBE': isAr ? 'اشتراك' : 'SUBSCRIBE',
+        'POMMASTORE': 'POMMASTORE',
+        'about': isAr 
+            ? 'وجهتك الأولى للعطور الفاخرة والأصلية 100٪. نقدم لك أفضل العطور العالمية مباشرة بضمان الجودة والأصالة في كل رشة.' 
+            : 'Your destination for 100% original luxury fragrances. We bring international perfumes directly to UAE & Gulf, ensuring premium quality and authenticity with every single spray.',
+        'CUSTOMER SERVICE': isAr ? 'خدمة العملاء' : 'CUSTOMER SERVICE',
+        'SHOP': isAr ? 'التسوق' : 'SHOP',
+        'Track Your Order': isAr ? 'تتبع طلبك' : 'Track Your Order',
+        'Return & Refund Policy': isAr ? 'سياسة الاسترجاع والاسترداد' : 'Return & Refund Policy',
+        'About Us': isAr ? 'من نحن' : 'About Us',
+        'FAQ': isAr ? 'الأسئلة الشائعة' : 'FAQ',
+        'Contact Us': isAr ? 'اتصل بنا' : 'Contact Us',
+        'Rewards Program': isAr ? 'برنامج المكافآت' : 'Rewards Program',
+        'Men': isAr ? 'رجالي' : 'Men',
+        'Women': isAr ? 'نسائي' : 'Women',
+        'Unisex': isAr ? 'الجنسين' : 'Unisex',
+        'New Arrivals': isAr ? 'وصل حديثاً' : 'New Arrivals',
+        'Bestsellers': isAr ? 'الأكثر مبيعاً' : 'Bestsellers',
+        'Sale': isAr ? 'العروض' : 'Sale',
+        'AUTHENTICITY GUARANTEED': isAr ? 'الأصالة مضمونة' : 'AUTHENTICITY GUARANTEED',
+        '100% original products. Certified & verified fragrance retailer.': isAr ? 'منتجات أصلية 100٪. متجر عطور معتمد وموثوق.' : '100% original products. Certified & verified fragrance retailer.',
+        'WE ACCEPT': isAr ? 'طرق الدفع المقبولة' : 'WE ACCEPT',
+        'Privacy': isAr ? 'الخصوصية' : 'Privacy',
+        'Terms': isAr ? 'الشروط والأحكام' : 'Terms',
+        'Returns': isAr ? 'الإرجاع' : 'Returns',
+      };
+      return dict[key] ?? key;
+    }
+
     return Container(
       color: const Color(0xFF0A0A0A), // neutral-950
       child: Column(
@@ -3197,14 +3242,14 @@ class _HomeFooter extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('STAY IN THE KNOW',
+                Text(tr('STAY IN THE KNOW'),
                     style: GoogleFonts.montserrat(
                         fontSize: 8,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 3.0,
                         color: AppTheme.primaryRose)),
                 const SizedBox(height: 6),
-                Text('Get exclusive offers & new arrivals',
+                Text(tr('Get exclusive offers & new arrivals'),
                     style: GoogleFonts.playfairDisplay(
                         fontSize: 18,
                         color: Colors.white,
@@ -3223,7 +3268,7 @@ class _HomeFooter extends StatelessWidget {
                           style: GoogleFonts.poppins(
                               color: Colors.white, fontSize: 12),
                           decoration: InputDecoration(
-                            hintText: 'Enter your email address',
+                            hintText: tr('Enter your email address'),
                             hintStyle: GoogleFonts.poppins(
                                 color: Colors.grey[600], fontSize: 12),
                             filled: true,
@@ -3240,7 +3285,7 @@ class _HomeFooter extends StatelessWidget {
                             const EdgeInsets.symmetric(horizontal: 16),
                         color: AppTheme.primaryRose,
                         alignment: Alignment.center,
-                        child: Text('SUBSCRIBE',
+                        child: Text(tr('SUBSCRIBE'),
                             style: GoogleFonts.montserrat(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w700,
@@ -3269,7 +3314,7 @@ class _HomeFooter extends StatelessWidget {
                         letterSpacing: 2.0)),
                 const SizedBox(height: 10),
                 Text(
-                  'Your destination for 100% original luxury fragrances. We bring international perfumes directly to India, ensuring premium quality and authenticity with every single spray.',
+                  tr('about'),
                   style: GoogleFonts.poppins(
                       color: Colors.grey[500], fontSize: 11, height: 1.6),
                 ),
@@ -3297,24 +3342,24 @@ class _HomeFooter extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _footerColumn('CUSTOMER SERVICE', [
-                        'Track Your Order',
-                        'Return & Refund Policy',
-                        'About Us',
-                        'FAQ',
-                        'Contact Us',
-                        'Rewards Program',
+                      child: _footerColumn(tr('CUSTOMER SERVICE'), [
+                        tr('Track Your Order'),
+                        tr('Return & Refund Policy'),
+                        tr('About Us'),
+                        tr('FAQ'),
+                        tr('Contact Us'),
+                        tr('Rewards Program'),
                       ]),
                     ),
                     const SizedBox(width: 20),
                     Expanded(
-                      child: _footerColumn('SHOP', [
-                        'Men',
-                        'Women',
-                        'Unisex',
-                        'New Arrivals',
-                        'Bestsellers',
-                        'Sale',
+                      child: _footerColumn(tr('SHOP'), [
+                        tr('Men'),
+                        tr('Women'),
+                        tr('Unisex'),
+                        tr('New Arrivals'),
+                        tr('Bestsellers'),
+                        tr('Sale'),
                       ]),
                     ),
                   ],
@@ -3334,7 +3379,7 @@ class _HomeFooter extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('AUTHENTICITY GUARANTEED',
+                      Text(tr('AUTHENTICITY GUARANTEED'),
                           style: GoogleFonts.montserrat(
                               fontSize: 8,
                               fontWeight: FontWeight.w700,
@@ -3342,7 +3387,7 @@ class _HomeFooter extends StatelessWidget {
                               color: AppTheme.primaryRose)),
                       const SizedBox(height: 4),
                       Text(
-                          '100% original products. Certified & verified fragrance retailer.',
+                          tr('100% original products. Certified & verified fragrance retailer.'),
                           style: GoogleFonts.poppins(
                               color: Colors.grey[600], fontSize: 10)),
                     ],
