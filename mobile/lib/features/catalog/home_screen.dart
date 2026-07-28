@@ -2458,11 +2458,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           slide['banner_url_mobile'] ??
                                           slide['image_mobile'])
                                       ?.toString());
-                              final title =
-                                  slide['title'] ?? 'The Signature Scent';
-                              final subtitle =
-                                  slide['subtitle'] ?? 'PREMIUM COLLECTION';
-                              final desc = slide['desc'] ?? '';
+
+                              final titleEn = slide['title'] ?? 'The Signature Scent';
+                              final titleAr = slide['title_ar'] ?? slide['titleAr'];
+                              final title = (isAr && titleAr != null && titleAr.toString().isNotEmpty)
+                                  ? titleAr.toString()
+                                  : titleEn.toString();
+
+                              final subtitleEn = slide['subtitle'] ?? 'PREMIUM COLLECTION';
+                              final subtitleAr = slide['subtitle_ar'] ?? slide['subtitleAr'];
+                              final subtitle = (isAr && subtitleAr != null && subtitleAr.toString().isNotEmpty)
+                                  ? subtitleAr.toString()
+                                  : subtitleEn.toString();
+
+                              final descEn = slide['desc'] ?? '';
+                              final descAr = slide['desc_ar'] ?? slide['descAr'];
+                              final desc = (isAr && descAr != null && descAr.toString().isNotEmpty)
+                                  ? descAr.toString()
+                                  : descEn.toString();
+
+                              final ctaEn = slide['cta'] ?? 'SHOP NOW';
+                              final ctaAr = slide['cta_ar'] ?? slide['ctaAr'];
+                              final cta = (isAr && ctaAr != null && ctaAr.toString().isNotEmpty)
+                                  ? ctaAr.toString()
+                                  : (isAr ? 'تسوق الآن' : ctaEn.toString());
 
                               return Stack(
                                 fit: StackFit.expand,
@@ -2557,7 +2576,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                     BorderRadius.circular(
                                                         16)),
                                           ),
-                                          child: Text('SHOP NOW',
+                                          child: Text(cta.toUpperCase(),
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 8,
                                                   fontWeight: FontWeight.w700,
@@ -2604,7 +2623,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Row(
                         children: [
                           Text(
-                            'SHOP BY CATEGORY',
+                            isAr ? 'التسوق حسب الفئة' : 'SHOP BY CATEGORY',
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w900,
