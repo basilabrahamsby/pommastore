@@ -689,7 +689,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              isAr ? 'MRP ${mrpPrice.toStringAsFixed(0)} د.إ' : 'MRP AED ${mrpPrice.toStringAsFixed(0)}',
+                              isAr ? '${mrpPrice.toStringAsFixed(0)} د.إ' : 'AED ${mrpPrice.toStringAsFixed(0)}',
                               style: GoogleFonts.montserrat(
                                 color: AppTheme.textMuted,
                                 fontSize: 14,
@@ -831,14 +831,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         _buildOlfactoryNoteCard(
                           icon: Icons.local_fire_department_outlined,
                           title: isAr ? 'المكونات العليا (المقدمة)' : 'Top Notes (Opening)',
-                          notes: topNotesStr,
+                          notes: locNotes(topNotesStr),
                           description: isAr ? 'الانطباع الأول خلال أول 15-30 دقيقة.' : 'First 15-30 minutes of initial impression.',
                         ),
                         const SizedBox(height: 10),
                         _buildOlfactoryNoteCard(
                           icon: Icons.favorite_border,
                           title: isAr ? 'المكونات الوسطى (قلب العطر)' : 'Heart Notes (Core Profile)',
-                          notes: heartNotesStr,
+                          notes: locNotes(heartNotesStr),
                           description: isAr ? 'البصمة العطرية الأساسية وتدوم 2-4 ساعات.' : 'Main olfactory signature lasting 2-4 hours.',
                         ),
                         const SizedBox(height: 10),

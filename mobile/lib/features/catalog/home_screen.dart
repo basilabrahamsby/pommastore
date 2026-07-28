@@ -2085,20 +2085,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: 5,
                             children: [
-                              Text('₹$sellingPrice',
+                              Text(isAr ? '$sellingPrice د.إ' : 'AED $sellingPrice',
                                   style: GoogleFonts.poppins(
                                       color: Colors.black,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13)),
                               if (hasDiscount) ...[
-                                Text('₹$mrp',
+                                Text(isAr ? '$mrp د.إ' : 'AED $mrp',
                                     style: GoogleFonts.poppins(
                                         color: const Color(0xFFA3A3A3),
                                         fontSize: 10,
                                         decoration: TextDecoration.lineThrough,
                                         decorationColor:
                                             const Color(0xFFA3A3A3))),
-                                Text('$discountPct% off',
+                                Text(isAr ? 'خصم $discountPct٪' : '$discountPct% off',
                                     style: GoogleFonts.poppins(
                                         color: AppTheme.primaryRose,
                                         fontSize: 10,
