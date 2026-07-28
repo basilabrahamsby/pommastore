@@ -391,6 +391,50 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       return m[f] ?? m[f.trim()] ?? f;
     }
 
+    String locNotes(String notesStr) {
+      if (!isAr || notesStr.isEmpty) return notesStr;
+      final Map<String, String> noteDict = {
+        'Ginger': 'زنجبيل',
+        'Rose': 'ورد',
+        'Nutmeg': 'جوزة الطيب',
+        'Cinnamon': 'قرفة',
+        'Benzoin': 'جاوي',
+        'Benzain': 'جاوي',
+        'Musk': 'مسك',
+        'Patchouli': 'باتشولي',
+        'Labdanum': 'لابدانوم',
+        'Ambergris': 'عنبر خام',
+        'Amber': 'عنبر',
+        'Agarwood': 'خشب العود',
+        'Oud': 'عود',
+        'Oudh': 'عود',
+        'Saffron': 'زعفران',
+        'Jasmine': 'ياسمين',
+        'Amberwood': 'خشب العنبر',
+        'Fir Resin': 'راتينج الصنوبر',
+        'Cedar': 'أرز',
+        'Cedarwood': 'خشب الأرز',
+        'Bergamot': 'برغموت',
+        'Sandalwood': 'صندل',
+        'Vanilla': 'فانيليا',
+        'Cardamom': 'هيل',
+        'Lavender': 'لافندر',
+        'Citrus': 'حمضيات',
+        'Lemon': 'ليمون',
+        'Grapefruit': 'جريب فروت',
+        'Vetiver': 'نجيل الهند',
+        'Tonka Bean': 'فول التونكا',
+        'Leather': 'جلد',
+        'Tobacco': 'تبغ',
+      };
+
+      String result = notesStr;
+      noteDict.forEach((en, ar) {
+        result = result.replaceAll(RegExp('\\b$en\\b', caseSensitive: false), ar);
+      });
+      return result;
+    }
+
     final List<dynamic> rawImages = activeProd['images'] as List<dynamic>? ?? [activeProd['image_url'] ?? ''];
     final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
     

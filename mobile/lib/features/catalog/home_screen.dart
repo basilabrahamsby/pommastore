@@ -1868,6 +1868,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
+        final isAr = ref.watch(localeProvider).languageCode == 'ar';
         final product = products[index];
         final id = product['id']?.toString() ?? '';
         final name = product['name'] ?? '';
