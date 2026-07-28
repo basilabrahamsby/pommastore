@@ -367,7 +367,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ],
               ),
               Text(
-                isFreeShipping ? 'FREE' : '₹${amountToFreeShipping.toInt()} AWAY',
+                isFreeShipping ? (isAr ? 'توصيل مجاني' : 'FREE') : '${isAr ? 'د.إ' : 'AED'} ${amountToFreeShipping.toInt()} ${isAr ? 'متبقي' : 'AWAY'}',
                 style: GoogleFonts.montserrat(
                   fontSize: 9.5,
                   fontWeight: FontWeight.bold,
@@ -391,8 +391,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           const SizedBox(height: 6),
           Text(
             isFreeShipping
-                ? '🎉 You qualify for free delivery!'
-                : 'Add ₹${amountToFreeShipping.toInt()} more to qualify for free shipping',
+                ? (isAr ? '🎉 أنت مؤهل للحصول على توصيل مجاني!' : '🎉 You qualify for free delivery!')
+                : (isAr ? 'أضف ${amountToFreeShipping.toInt()} د.إ أكثر للحصول على توصيل مجاني' : 'Add AED ${amountToFreeShipping.toInt()} more to qualify for free shipping'),
             style: GoogleFonts.poppins(
               fontSize: 9.5,
               color: isFreeShipping ? const Color(0xFF2E7D32) : Colors.black54,
@@ -573,25 +573,19 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${itemTotal.toInt()}',
+                                '${isAr ? 'د.إ' : 'AED'} ${itemTotal.toInt()}',
                                 style: GoogleFonts.montserrat(
                                   color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12.5,
-                                  textStyle: const TextStyle(
-                                    fontFamilyFallback: ['Roboto'],
-                                  ),
                                 ),
                               ),
                               if (item.quantity > 1)
                                 Text(
-                                  '₹${item.price.toInt()} each',
+                                  '${isAr ? 'د.إ' : 'AED'} ${item.price.toInt()} ${isAr ? 'للقطعة' : 'each'}',
                                   style: GoogleFonts.poppins(
                                     color: AppTheme.textMuted,
                                     fontSize: 8.5,
-                                    textStyle: const TextStyle(
-                                      fontFamilyFallback: ['Roboto'],
-                                    ),
                                   ),
                                 ),
                             ],
@@ -734,14 +728,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 // GST / Tax
                 _summaryRow(
                   isAr ? 'القيمة الخاضعة للضريبة' : 'Taxable Value',
-                  '${isAr ? 'د.إ' : 'AED'} ${(subtotal / 1.18).toStringAsFixed(2)}',
+                  '${isAr ? 'د.إ' : 'AED'} ${(subtotal / 1.05).toStringAsFixed(2)}',
                   AppTheme.textMuted,
                   isBold: false,
                 ),
                 const SizedBox(height: 4),
                 _summaryRow(
-                  isAr ? 'ضريبة القيمة المضافة (18٪)' : 'VAT (18.0% Incl.)',
-                  '${isAr ? 'د.إ' : 'AED'} ${(subtotal - (subtotal / 1.18)).toStringAsFixed(2)}',
+                  isAr ? 'ضريبة القيمة المضافة (5٪)' : 'VAT (5.0% Incl.)',
+                  '${isAr ? 'د.إ' : 'AED'} ${(subtotal - (subtotal / 1.05)).toStringAsFixed(2)}',
                   AppTheme.textMuted,
                   isBold: false,
                 ),
@@ -890,7 +884,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: ['UPI', 'Cards', 'Razorpay']
+                  children: [
+                    isAr ? 'البطاقات' : 'Cards',
+                    isAr ? 'أبل باي' : 'Apple Pay',
+                    isAr ? 'الدفع عند الاستلام' : 'COD',
+                  ]
                       .map((m) => Container(
                             margin: const EdgeInsets.symmetric(horizontal: 3),
                             padding:

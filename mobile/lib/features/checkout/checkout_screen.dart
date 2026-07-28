@@ -866,52 +866,29 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           const SizedBox(height: 12),
                           
                           // 4. ORDER SUMMARY ROW
-                          _buildSummaryLine('Subtotal', '₹${subtotal.toInt()}', isBold: false),
+                          _buildSummaryLine('Subtotal', 'AED ${subtotal.toInt()}', isBold: false),
                           const SizedBox(height: 6),
                           
-                          // Taxable Value & GST split (18% inclusive)
+                          // Taxable Value & UAE VAT (5.0% inclusive)
                           (() {
-                            final String stateLower = (_showNewAddressForm
-                                    ? _stateController.text
-                                    : (_selectedAddress?['state']?.toString() ?? ''))
-                                .toLowerCase();
-                            final bool isKerala = stateLower.contains('kerala') ||
-                                stateLower.contains(' kl') ||
-                                stateLower.contains('32');
-                            final double taxableVal = subtotal / 1.18;
-                            final double totalGst = subtotal - taxableVal;
+                            final double taxableVal = subtotal / 1.05;
+                            final double vatVal = subtotal - taxableVal;
 
                             return Column(
                               children: [
                                 _buildSummaryLine(
-                                  'Taxable Value',
-                                  '₹${taxableVal.toStringAsFixed(2)}',
+                                  isAr ? 'القيمة الخاضعة للضريبة' : 'Taxable Value',
+                                  '${isAr ? 'د.إ' : 'AED'} ${taxableVal.toStringAsFixed(2)}',
                                   color: AppTheme.textMuted,
                                   isBold: false,
                                 ),
                                 const SizedBox(height: 6),
-                                if (isKerala) ...[
-                                  _buildSummaryLine(
-                                    'CGST (9.0% Incl.)',
-                                    '₹${(totalGst / 2).toStringAsFixed(2)}',
-                                    color: AppTheme.textMuted,
-                                    isBold: false,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  _buildSummaryLine(
-                                    'SGST (9.0% Incl.)',
-                                    '₹${(totalGst / 2).toStringAsFixed(2)}',
-                                    color: AppTheme.textMuted,
-                                    isBold: false,
-                                  ),
-                                ] else ...[
-                                  _buildSummaryLine(
-                                    'IGST (18.0% Incl.)',
-                                    '₹${totalGst.toStringAsFixed(2)}',
-                                    color: AppTheme.textMuted,
-                                    isBold: false,
-                                  ),
-                                ],
+                                _buildSummaryLine(
+                                  isAr ? 'ضريبة القيمة المضافة (5٪)' : 'VAT (5.0% Incl.)',
+                                  '${isAr ? 'د.إ' : 'AED'} ${vatVal.toStringAsFixed(2)}',
+                                  color: AppTheme.textMuted,
+                                  isBold: false,
+                                ),
                                 const SizedBox(height: 6),
                               ],
                             );
@@ -919,7 +896,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
                           _buildSummaryLine(
                             'Shipping',
-                            isFreeShipping ? 'FREE' : '₹${shippingFee.toInt()}',
+                            isFreeShipping ? 'FREE' : 'AED ${shippingFee.toInt()}',
                             color: isFreeShipping ? const Color(0xFF4CAF50) : Colors.black87,
                             isBold: false,
                           ),
