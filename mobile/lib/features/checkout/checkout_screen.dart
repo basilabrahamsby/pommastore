@@ -2,11 +2,13 @@ import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_responsive.dart';
 import '../../core/api/api_client.dart';
+import '../../core/api/token_manager.dart';
 import '../../core/locale/locale_provider.dart';
 import '../cart/cart_provider.dart';
 
@@ -173,6 +175,29 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   Future<void> _placeOrder() async {
     final isAr = ref.read(localeProvider).languageCode == 'ar';
+
+    // ---- Auth Guard: ensure user is logged in before checkout ----
+    final token = await TokenManager.getToken();
+    if (token == null || token.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isAr ? '🔒 يرجى تسجيل الدخول لإتمام الطلب' : '🔒 Please login to complete your order',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: Colors.black87,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: isAr ? 'دخول' : 'Login',
+            textColor: const Color(0xFFE91E8C),
+            onPressed: () => context.push('/login'),
+          ),
+        ),
+      );
+      return;
+    }
+
     Map<String, dynamic> activeAddress;
 
     if (_showNewAddressForm) {
@@ -245,7 +270,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           'items': orderItems,
         };
 
-        final createRes = await _api.dio.post('/storefront/orders', data: body);
+        final createRes = await _api.dio.post('/storefront/orders/checkout', data: body);
         final resData = createRes.data as Map<String, dynamic>;
 
         ref.read(cartProvider.notifier).clearCart();
