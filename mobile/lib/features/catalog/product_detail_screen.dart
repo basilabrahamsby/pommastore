@@ -600,27 +600,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                  // Interactive Horizontal Zoom Gallery Card
-                  Container(
-                    height: 420,
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.borderLight, width: 0.8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Stack(
-                        children: [
-                          PageView.builder(
+                  // Interactive Horizontal Zoom Gallery (Transparent)
+                  SizedBox(
+                    height: 400,
+                    child: Stack(
+                      children: [
+                        PageView.builder(
                           itemCount: images.length,
                           onPageChanged: (index) {
                             setState(() {
@@ -678,7 +663,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ],
                     ),
                   ),
-                ),
                   
                   Padding(
                     padding: const EdgeInsets.all(20.0),
