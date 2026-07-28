@@ -2281,6 +2281,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
     ref.listen<String?>(homeScrollTargetProvider, (previous, next) {
       if (next == 'brands') {
         _scrollToSection(_brandsKey);
