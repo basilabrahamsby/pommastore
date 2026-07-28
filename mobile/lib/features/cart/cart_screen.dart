@@ -825,14 +825,52 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       final token = await TokenManager.getToken();
                       if (!mounted) return;
                       if (token == null || token.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(isAr ? 'يرجى تسجيل الدخول لمتابعة الدفع' : 'Please sign in to complete checkout')),
+                        // Not logged in → show login dialog then auto-redirect to checkout
+                        await showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            title: Row(
+                              children: [
+                                const Icon(Icons.lock_outline, color: Color(0xFFE91E8C), size: 22),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isAr ? 'تسجيل الدخول مطلوب' : 'Login Required',
+                                  style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              isAr
+                                  ? 'يرجى تسجيل الدخول أو إنشاء حساب للمتابعة إلى إتمام الطلب.'
+                                  : 'Please login or create an account to proceed to checkout.',
+                              style: GoogleFonts.poppins(fontSize: 12.5, color: Colors.black54),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text(isAr ? 'إلغاء' : 'Cancel', style: GoogleFonts.poppins(fontSize: 12)),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE91E8C),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginScreen(redirectToCheckout: true),
+                                    ),
+                                  ).then((_) => _fetchShippingFee());
+                                },
+                                child: Text(isAr ? 'تسجيل الدخول' : 'Login / Sign up',
+                                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ),
                         );
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        ).then((_) {
-                          _fetchShippingFee();
-                        });
                       } else {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (context) => const CheckoutScreen()),

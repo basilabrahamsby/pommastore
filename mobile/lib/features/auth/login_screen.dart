@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/token_manager.dart';
 import '../cart/cart_provider.dart';
+import '../checkout/checkout_screen.dart';
 
 // Brand Rose colors matching logo
 const Color kBrandRose = Color(0xFFD2168D);
@@ -13,7 +14,9 @@ const Color kBrandRoseLight = Color(0xFFFDF0F6);
 const Color kBrandRoseBorder = Color(0xFFF5D6E3);
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  /// If true, after successful login the user is automatically taken to checkout.
+  final bool redirectToCheckout;
+  const LoginScreen({super.key, this.redirectToCheckout = false});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -149,7 +152,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
       if (!mounted) return;
       setState(() => _isLoading = false);
-      Navigator.of(context).pop();
+
+      if (widget.redirectToCheckout) {
+        // Replace login screen with checkout directly
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const CheckoutScreen()),
+        );
+      } else {
+        Navigator.of(context).pop();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Logged in successfully! 🎉', style: GoogleFonts.poppins(fontSize: 12)),

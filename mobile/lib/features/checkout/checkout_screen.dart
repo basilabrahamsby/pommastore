@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
@@ -10,6 +9,7 @@ import '../../core/theme/app_responsive.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/token_manager.dart';
 import '../../core/locale/locale_provider.dart';
+import '../auth/login_screen.dart';
 import '../cart/cart_provider.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -180,19 +180,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final token = await TokenManager.getToken();
     if (token == null || token.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isAr ? '🔒 يرجى تسجيل الدخول لإتمام الطلب' : '🔒 Please login to complete your order',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: Colors.black87,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: isAr ? 'دخول' : 'Login',
-            textColor: const Color(0xFFE91E8C),
-            onPressed: () => context.push('/login'),
-          ),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const LoginScreen(redirectToCheckout: true),
         ),
       );
       return;
