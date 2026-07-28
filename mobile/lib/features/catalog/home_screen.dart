@@ -2037,20 +2037,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Product name — first (matches storefront ProductCard line 297)
+                          // 1st Priority: Product Name (Primary Bold Title)
                           Text(
                             name.toString().toUpperCase(),
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.montserrat(
                               fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.6,
-                              color: const Color(0xFF525252),
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
+                              color: AppTheme.textNeutral,
                               height: 1.2,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          // Brand name — below (matches storefront ProductCard line 300)
+                          // 2nd Priority: Brand Name (Secondary Subtitle)
                           if ((product['brand_name'] ??
                                       product['brand'] ??
                                       '')
@@ -2065,10 +2065,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     .toString()
                                     .toUpperCase(),
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.0,
-                                  color: Colors.black,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
+                                  color: AppTheme.textMuted,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

@@ -369,32 +369,33 @@ class _ProductCardState extends ConsumerState<ProductCard> {
               ),
             ),
             
-            // Text details section (Myntra Style Hierarchy)
+            // Text details section (Product Name 1st Priority, Brand 2nd Priority)
             Padding(
               padding: EdgeInsets.all(R.pad(context, 8)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Brand (Myntra Bold Brand Title)
+                  // 1st Priority: Product Name
                   Text(
-                    brand.isEmpty ? 'POMMASTORE' : brand.toUpperCase(),
+                    name,
                     style: GoogleFonts.montserrat(
-                      fontSize: R.font(context, 9.5),
-                      fontWeight: FontWeight.w900,
+                      fontSize: R.font(context, 11),
+                      fontWeight: FontWeight.bold,
                       color: AppTheme.textNeutral,
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.2,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: R.pad(context, 1.5)),
-                  // Product Subtitle / Short Name
+                  SizedBox(height: R.pad(context, 2)),
+                  // 2nd Priority: Brand Subtitle
                   Text(
-                    name,
+                    brand.isEmpty ? 'POMMASTORE' : brand.toUpperCase(),
                     style: GoogleFonts.poppins(
                       fontSize: R.font(context, 9.5),
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF535766),
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textMuted,
+                      letterSpacing: 0.5,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
