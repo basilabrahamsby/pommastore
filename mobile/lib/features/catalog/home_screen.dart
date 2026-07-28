@@ -11,6 +11,7 @@ import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/image_lightbox.dart';
 import '../../core/widgets/product_card.dart';
 import '../../core/widgets/animated_background.dart';
+import '../../core/widgets/logo_loader.dart';
 import '../../core/locale/locale_provider.dart';
 final homeScrollTargetProvider = StateProvider<String?>((ref) => null);
 
@@ -2310,27 +2311,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         error: (_, __) => _buildNavSideDrawer(context, []),
       ),
       body: homepageAsync.when(
-        loading: () => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/logo.png',
-                height: 32,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 20),
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  color: AppTheme.primaryRose,
-                  strokeWidth: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
+        loading: () => const LogoLoader(height: 85),
         error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
