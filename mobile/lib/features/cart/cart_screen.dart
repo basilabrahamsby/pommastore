@@ -133,7 +133,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           if (serviceable && mounted) {
             setState(() {
               _shippingFee =
-                  double.tryParse(verifyRes.data['shipping_fee']?.toString() ?? '150') ?? 150.0;
+                  double.tryParse(verifyRes.data['shipping_fee']?.toString() ?? '17') ?? 17.0;
             });
           }
         }

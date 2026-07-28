@@ -206,8 +206,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         final data = res.data;
         setState(() {
           if (data['serviceable'] == true) {
-            // Retrieve dynamic shipping fee from Delhivery API response
-            final double rawFee = double.tryParse(data['shipping_fee']?.toString() ?? '150') ?? 150.0;
+            // Retrieve dynamic shipping fee from Delivery Panda API response
+            final double rawFee = double.tryParse(data['shipping_fee']?.toString() ?? '17') ?? 17.0;
             
             // Check if product price qualifies for free shipping
             final product = _enrichedProduct ?? widget.product;
