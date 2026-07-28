@@ -151,6 +151,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildNavSideDrawer(BuildContext context, List<dynamic> categories) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
     return Drawer(
       backgroundColor: Colors.white,
       child: SafeArea(
@@ -199,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'LUXURY FRAGRANCE HOUSE',
+                    isAr ? 'دار العطور الفاخرة' : 'LUXURY FRAGRANCE HOUSE',
                     style: GoogleFonts.montserrat(
                       fontSize: 8,
                       fontWeight: FontWeight.w700,
@@ -218,7 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   _drawerTile(
                     icon: Icons.home_outlined,
-                    title: 'HOME',
+                    title: isAr ? 'الرئيسية' : 'HOME',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -233,55 +235,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   _drawerTile(
                     icon: Icons.male_outlined,
-                    title: 'MEN FRAGRANCES',
+                    title: isAr ? 'عطور رجالية' : 'MEN FRAGRANCES',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const SearchScreen(gender: 'Men', title: 'MEN FRAGRANCES'),
+                          builder: (context) => SearchScreen(gender: 'Men', title: isAr ? 'عطور رجالية' : 'MEN FRAGRANCES'),
                         ),
                       );
                     },
                   ),
                   _drawerTile(
                     icon: Icons.female_outlined,
-                    title: 'WOMEN FRAGRANCES',
+                    title: isAr ? 'عطور نسائية' : 'WOMEN FRAGRANCES',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const SearchScreen(gender: 'Women', title: 'WOMEN FRAGRANCES'),
+                          builder: (context) => SearchScreen(gender: 'Women', title: isAr ? 'عطور نسائية' : 'WOMEN FRAGRANCES'),
                         ),
                       );
                     },
                   ),
                   _drawerTile(
                     icon: Icons.wc_outlined,
-                    title: 'UNISEX FRAGRANCES',
+                    title: isAr ? 'عطور للجنسين' : 'UNISEX FRAGRANCES',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const SearchScreen(gender: 'Unisex', title: 'UNISEX FRAGRANCES'),
+                          builder: (context) => SearchScreen(gender: 'Unisex', title: isAr ? 'عطور للجنسين' : 'UNISEX FRAGRANCES'),
                         ),
                       );
                     },
                   ),
                   _drawerTile(
                     icon: Icons.grid_view_outlined,
-                    title: 'ALL PRODUCTS',
+                    title: isAr ? 'جميع المنتجات' : 'ALL PRODUCTS',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const SearchScreen(title: 'ALL PRODUCTS'),
+                          builder: (context) => SearchScreen(title: isAr ? 'جميع المنتجات' : 'ALL PRODUCTS'),
                         ),
                       );
                     },
                   ),
                   _drawerTile(
                     icon: Icons.workspace_premium_outlined,
-                    title: 'REWARDS GALLERY',
+                    title: isAr ? 'معرض المكافآت' : 'REWARDS GALLERY',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
@@ -293,7 +295,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   _drawerTile(
                     icon: Icons.diamond_outlined,
-                    title: 'ELITE BRAND HOUSES',
+                    title: isAr ? 'دور العطور العالمية' : 'ELITE BRAND HOUSES',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -302,7 +304,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   _drawerTile(
                     icon: Icons.local_offer_outlined,
-                    title: 'PROMOTIONAL OFFERS',
+                    title: isAr ? 'العروض الترويجية' : 'PROMOTIONAL OFFERS',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -310,18 +312,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                   ),
 
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final localeNotifier = ref.watch(localeProvider.notifier);
-                      final isAr = localeNotifier.isArabic;
-                      return _drawerTile(
-                        icon: Icons.language_outlined,
-                        title: isAr ? 'اللغة: English' : 'Language: العربية',
-                        onTap: () {
-                          localeNotifier.toggleLocale();
-                          Navigator.of(context).pop();
-                        },
-                      );
+                  _drawerTile(
+                    icon: Icons.language_outlined,
+                    title: isAr ? 'اللغة: الإنجليزية (English)' : 'Language: العربية',
+                    onTap: () {
+                      ref.read(localeProvider.notifier).toggleLocale();
+                      Navigator.of(context).pop();
                     },
                   ),
 
@@ -334,7 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                     child: Text(
-                      'ACCOUNT & SHOPPING',
+                      isAr ? 'الحساب والتسوق' : 'ACCOUNT & SHOPPING',
                       style: GoogleFonts.montserrat(
                         fontSize: 8,
                         fontWeight: FontWeight.w700,
@@ -345,7 +341,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   _drawerTile(
                     icon: Icons.person_outline,
-                    title: 'MY ACCOUNT',
+                    title: isAr ? 'حسابي' : 'MY ACCOUNT',
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push('/account');
@@ -353,7 +349,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   _drawerTile(
                     icon: Icons.favorite_border,
-                    title: 'MY WISHLIST',
+                    title: isAr ? 'قائمة رغباتي' : 'MY WISHLIST',
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push('/wishlist');
@@ -361,7 +357,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   _drawerTile(
                     icon: Icons.shopping_bag_outlined,
-                    title: 'SHOPPING BAG',
+                    title: isAr ? 'حقيبة التسوق' : 'SHOPPING BAG',
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push('/cart');
@@ -376,7 +372,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                       child: Text(
-                        'EXPLORE CATEGORIES',
+                        isAr ? 'استكشف الفئات' : 'EXPLORE CATEGORIES',
                         style: GoogleFonts.montserrat(
                           fontSize: 8,
                           fontWeight: FontWeight.w700,

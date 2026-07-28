@@ -353,6 +353,43 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final activeProd = _enrichedProduct ?? widget.product;
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
+    String locGender(String g) {
+      if (!isAr) return g;
+      final Map<String, String> m = {
+        'Men': 'للرجال',
+        'Women': 'للنساء',
+        'Unisex': 'للجنسين',
+      };
+      return m[g] ?? m[g.trim()] ?? g;
+    }
+
+    String locSillage(String s) {
+      if (!isAr) return s;
+      final Map<String, String> m = {
+        'Intense / Room-filling': 'فواح جداً / يملأ المكان',
+        'Intimate Projection': 'فواحان هادئ / قريب',
+        'Moderate Projection': 'فواحان متوسط',
+        'Strong Projection': 'فواحان قوي',
+        'Enormous Projection': 'فواحان هائل',
+      };
+      return m[s] ?? m[s.trim()] ?? s;
+    }
+
+    String locOlfactoryFamily(String f) {
+      if (!isAr) return f;
+      final Map<String, String> m = {
+        'Woody Fresh Spice': 'خشبي وتوابل منعشة',
+        'Woody': 'خشبي',
+        'Floral': 'زهري',
+        'Oriental': 'شرقي',
+        'Fresh': 'منعش',
+        'Citrus': 'حمضيات',
+        'Woody Spicy': 'خشبي توابلي',
+      };
+      return m[f] ?? m[f.trim()] ?? f;
+    }
 
     final List<dynamic> rawImages = activeProd['images'] as List<dynamic>? ?? [activeProd['image_url'] ?? ''];
     final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
@@ -431,22 +468,30 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     // Gallery images parsing
     final List<dynamic> galleryList = activeProd['gallery_images'] as List? ?? [];
 
-    final rawShort = activeProd['short_description']?.toString().trim();
-    final rawFull = activeProd['full_description']?.toString().trim();
-    final rawDesc = activeProd['description']?.toString().trim();
+    final rawShort = isAr 
+        ? (activeProd['short_description_ar'] ?? activeProd['desc_ar'] ?? activeProd['short_description']?.toString().trim())
+        : activeProd['short_description']?.toString().trim();
+    final rawFull = isAr
+        ? (activeProd['full_description_ar'] ?? activeProd['full_description']?.toString().trim())
+        : activeProd['full_description']?.toString().trim();
+    final rawDesc = isAr
+        ? (activeProd['description_ar'] ?? activeProd['description']?.toString().trim())
+        : activeProd['description']?.toString().trim();
 
-    final shortDescription = (rawShort != null && rawShort.isNotEmpty)
-        ? rawShort
-        : (rawDesc != null && rawDesc.isNotEmpty)
-            ? rawDesc
-            : 'An immersive sensory journey crafted by world-class perfumers. This signature masterpiece balances rare raw extracts with cutting-edge molecular engineering, producing a timeless scent trail that adapts dynamically to your skin chemistry. Designed for connoisseurs of authentic luxury.';
+    final shortDescription = (rawShort != null && rawShort.toString().isNotEmpty)
+        ? rawShort.toString()
+        : (rawDesc != null && rawDesc.toString().isNotEmpty)
+            ? rawDesc.toString()
+            : (isAr
+                ? 'رحلة حسية فاخرة صممها خبراء العطور حول العالم. تحفة عطارية تجمع بين المستخلصات النادرة والتصميم الجزيئي الحديث لترك أثر عطري يدوم طويلاً ويتفاعل مع بشرتك.'
+                : 'An immersive sensory journey crafted by world-class perfumers. This signature masterpiece balances rare raw extracts with cutting-edge molecular engineering, producing a timeless scent trail that adapts dynamically to your skin chemistry. Designed for connoisseurs of authentic luxury.');
 
-    final fullDescription = (rawFull != null && rawFull.isNotEmpty)
-        ? rawFull
-        : (rawDesc != null && rawDesc.isNotEmpty && rawShort != null && rawShort.isNotEmpty)
-            ? rawDesc
-            : (rawDesc != null && rawDesc.isNotEmpty && rawDesc != shortDescription)
-                ? rawDesc
+    final fullDescription = (rawFull != null && rawFull.toString().isNotEmpty)
+        ? rawFull.toString()
+        : (rawDesc != null && rawDesc.toString().isNotEmpty && rawShort != null && rawShort.toString().isNotEmpty)
+            ? rawDesc.toString()
+            : (rawDesc != null && rawDesc.toString().isNotEmpty && rawDesc.toString() != shortDescription)
+                ? rawDesc.toString()
                 : '';
 
     return Scaffold(
@@ -596,7 +641,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              '₹${sellingPrice.toStringAsFixed(0)}',
+                              isAr ? '${sellingPrice.toStringAsFixed(0)} د.إ' : 'AED ${sellingPrice.toStringAsFixed(0)}',
                               style: GoogleFonts.montserrat(
                                 color: AppTheme.primaryRose,
                                 fontSize: 24,
@@ -605,7 +650,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'MRP ₹${mrpPrice.toStringAsFixed(0)}',
+                              isAr ? 'MRP ${mrpPrice.toStringAsFixed(0)} د.إ' : 'MRP AED ${mrpPrice.toStringAsFixed(0)}',
                               style: GoogleFonts.montserrat(
                                 color: AppTheme.textMuted,
                                 fontSize: 14,
@@ -623,7 +668,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 border: Border.all(color: AppTheme.primaryRose.withValues(alpha: 0.3)),
                               ),
                               child: Text(
-                                '$discountPercent% OFF',
+                                isAr ? 'خصم $discountPercent%' : '$discountPercent% OFF',
                                 style: GoogleFonts.montserrat(
                                   color: AppTheme.primaryRose,
                                   fontSize: 10,
@@ -640,7 +685,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             const Icon(Icons.verified_outlined, size: 13, color: AppTheme.ratingGreen),
                             const SizedBox(width: 4),
                             Text(
-                              'Inclusive of all taxes • Save ₹$savings on this order',
+                              isAr 
+                                  ? 'شامل جميع الضرائب • وفر $savings د.إ في هذا الطلب'
+                                  : 'Inclusive of all taxes • Save AED $savings on this order',
                               style: GoogleFonts.poppins(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w500,
@@ -653,7 +700,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         
                         // Short Description
                         Text(
-                          'DESCRIPTION',
+                          isAr ? 'الوصف' : 'DESCRIPTION',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -663,7 +710,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          shortDescription!,
+                          shortDescription,
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             height: 1.6,
@@ -679,7 +726,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         // ── 1. Sensory Profile & Features ───────────────────
                         const SizedBox(height: 24),
                         Text(
-                          'SPECIFICATIONS',
+                          isAr ? 'المواصفات' : 'SPECIFICATIONS',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -689,7 +736,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Sensory Profile & Features'.toUpperCase(),
+                          (isAr ? 'الملامح والمميزات الحسية' : 'Sensory Profile & Features').toUpperCase(),
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 22,
                             fontWeight: FontWeight.normal,
@@ -702,20 +749,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           children: [
                             _buildSpecificationCard(
                               icon: Icons.opacity,
-                              title: 'Olfactory Family',
-                              value: olfactoryFamily,
+                              title: isAr ? 'العائلة العطرية' : 'Olfactory Family',
+                              value: locOlfactoryFamily(olfactoryFamily),
                             ),
                             const SizedBox(width: 8),
                             _buildSpecificationCard(
                               icon: Icons.air,
-                              title: 'Sillage',
-                              value: sillageText,
+                              title: isAr ? 'قوة الفواحان' : 'Sillage',
+                              value: locSillage(sillageText),
                             ),
                             const SizedBox(width: 8),
                             _buildSpecificationCard(
                               icon: Icons.person_outline,
-                              title: 'Gender',
-                              value: targetGender,
+                              title: isAr ? 'الجنس' : 'Gender',
+                              value: locGender(targetGender),
                             ),
                           ],
                         ),
@@ -723,7 +770,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         // ── 2. Olfactory Journey (Composition) ───────────────
                         const SizedBox(height: 32),
                         Text(
-                          'COMPOSITION',
+                          isAr ? 'المكونات' : 'COMPOSITION',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -733,7 +780,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Olfactory Journey'.toUpperCase(),
+                          (isAr ? 'الرحلة العطرية' : 'Olfactory Journey').toUpperCase(),
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 22,
                             fontWeight: FontWeight.normal,
@@ -744,30 +791,30 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         const SizedBox(height: 12),
                         _buildOlfactoryNoteCard(
                           icon: Icons.local_fire_department_outlined,
-                          title: 'Top Notes (Opening)',
+                          title: isAr ? 'المكونات العليا (المقدمة)' : 'Top Notes (Opening)',
                           notes: topNotesStr,
-                          description: 'First 15-30 minutes of initial impression.',
+                          description: isAr ? 'الانطباع الأول خلال أول 15-30 دقيقة.' : 'First 15-30 minutes of initial impression.',
                         ),
                         const SizedBox(height: 10),
                         _buildOlfactoryNoteCard(
                           icon: Icons.favorite_border,
-                          title: 'Heart Notes (Core Profile)',
+                          title: isAr ? 'المكونات الوسطى (قلب العطر)' : 'Heart Notes (Core Profile)',
                           notes: heartNotesStr,
-                          description: 'Main olfactory signature lasting 2-4 hours.',
+                          description: isAr ? 'البصمة العطرية الأساسية وتدوم 2-4 ساعات.' : 'Main olfactory signature lasting 2-4 hours.',
                         ),
                         const SizedBox(height: 10),
                         _buildOlfactoryNoteCard(
                           icon: Icons.auto_awesome_outlined,
-                          title: 'Base Notes (Dry Down)',
+                          title: isAr ? 'المكونات القاعدة (القاعدة العطرية)' : 'Base Notes (Dry Down)',
                           notes: baseNotesStr,
-                          description: 'Deep, rich foundational notes lasting 8+ hours.',
+                          description: isAr ? 'النوتات الثابتة والعميقة وتدوم أكثر من 8 ساعات.' : 'Deep, rich foundational notes lasting 8+ hours.',
                         ),
 
                         // ── 3. The Visual Gallery ────────────────────────────
                         if (galleryList.isNotEmpty) ...[
                           const SizedBox(height: 32),
                           Text(
-                            'OLFACTORY VIGNETTES',
+                            isAr ? 'المشاهد العطرية' : 'OLFACTORY VIGNETTES',
                             style: GoogleFonts.montserrat(
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
@@ -777,7 +824,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'The Visual Gallery'.toUpperCase(),
+                            (isAr ? 'معرض الصور' : 'The Visual Gallery').toUpperCase(),
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 22,
                               fontWeight: FontWeight.normal,
@@ -845,7 +892,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '🚚 CHECK DELIVERY DETAILS',
+                                isAr ? '🚚 التحقق من تفاصيل التوصيل' : '🚚 CHECK DELIVERY DETAILS',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 9,
                                   fontWeight: FontWeight.bold,
@@ -862,7 +909,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       child: TextField(
                                         controller: _pincodeController,
                                         decoration: InputDecoration(
-                                          labelText: 'PINCODE',
+                                          labelText: isAr ? 'الرمز البريدي' : 'PINCODE',
                                           fillColor: Colors.white,
                                           filled: true,
                                           labelStyle: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold),
@@ -894,7 +941,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       child: _isCheckingPincode
                                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 1.5))
                                           : Text(
-                                              'CHECK',
+                                              isAr ? 'تحقق' : 'CHECK',
                                               style: GoogleFonts.montserrat(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
@@ -919,8 +966,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   _deliveryCharge == 0.0
-                                      ? 'Shipping Charge: FREE'
-                                      : 'Shipping Charge: ₹${_deliveryCharge!.toInt()}',
+                                      ? (isAr ? 'رسوم التوصيل: مجاني' : 'Shipping Charge: FREE')
+                                      : (isAr ? 'رسوم التوصيل: ${_deliveryCharge!.toInt()} د.إ' : 'Shipping Charge: AED ${_deliveryCharge!.toInt()}'),
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
                                     color: _deliveryCharge == 0.0 ? Colors.green : Colors.black87,
@@ -930,7 +977,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 if (_deliveryCharge != 0.0) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    '(FREE on orders over ₹${_freeShippingLimit.toInt()})',
+                                    isAr ? '(مجاني للطلبات فوق ${_freeShippingLimit.toInt()} د.إ)' : '(FREE on orders over AED ${_freeShippingLimit.toInt()})',
                                     style: GoogleFonts.poppins(
                                       fontSize: 10,
                                       color: Colors.black45,
@@ -1039,9 +1086,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                     slug: slug,
                                                   );
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text('Added to Shopping Bag'),
-                                                  duration: Duration(seconds: 1),
+                                                SnackBar(
+                                                  content: Text(isAr ? 'تمت الإضافة إلى حقيبة التسوق' : 'Added to Shopping Bag'),
+                                                  duration: const Duration(seconds: 1),
                                                 ),
                                               );
                                             },
@@ -1054,7 +1101,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                   const EdgeInsets.symmetric(vertical: 14),
                                             ),
                                             child: Text(
-                                              'ADD TO BAG',
+                                              isAr ? 'إضافة للحقيبة' : 'ADD TO BAG',
                                               style: GoogleFonts.montserrat(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
@@ -1114,7 +1161,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
                                 child: Text(
-                                  'BUY NOW',
+                                  isAr ? 'شراء الآن' : 'BUY NOW',
                                   style: GoogleFonts.montserrat(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -1138,7 +1185,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'SENSORY SIBLING CURATIONS',
+                            isAr ? 'مجموعات متناغمة' : 'SENSORY SIBLING CURATIONS',
                             style: GoogleFonts.montserrat(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -1148,7 +1195,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Similar Scent Profile'.toUpperCase(),
+                            (isAr ? 'عطور بنفس الطابع العطري' : 'Similar Scent Profile').toUpperCase(),
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 22,
                               fontWeight: FontWeight.normal,
@@ -1189,7 +1236,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'SENSORY LINEAGE',
+                            isAr ? 'من نفس الدار' : 'SENSORY LINEAGE',
                             style: GoogleFonts.montserrat(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -1199,7 +1246,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'More from this Brand'.toUpperCase(),
+                            (isAr ? 'المزيد من هذه الماركة' : 'More from this Brand').toUpperCase(),
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 22,
                               fontWeight: FontWeight.normal,
@@ -1240,7 +1287,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'AFFORDABLE LUXURIES',
+                            isAr ? 'عطور من نفس الفئة السعرية' : 'AFFORDABLE LUXURIES',
                             style: GoogleFonts.montserrat(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -1250,7 +1297,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Same Price Level Items'.toUpperCase(),
+                            (isAr ? 'منتجات بنفس السعر' : 'Same Price Level Items').toUpperCase(),
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 22,
                               fontWeight: FontWeight.normal,
@@ -1309,65 +1356,72 @@ class _CreationNarrativeAccordionState extends State<CreationNarrativeAccordion>
   Widget build(BuildContext context) {
     if (widget.fullDescription.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F9FB),
-        border: Border.all(color: const Color(0xFFE5E5EA)),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'CREATION NARRATIVE (CLICK TO VIEW DETAILS)',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black87,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 16,
-                    color: Colors.black54,
-                  ),
-                ],
-              ),
-            ),
+    return Consumer(
+      builder: (context, ref, _) {
+        final isAr = ref.watch(localeProvider).languageCode == 'ar';
+        return Container(
+          margin: const EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9F9FB),
+            border: Border.all(color: const Color(0xFFE5E5EA)),
+            borderRadius: BorderRadius.circular(4),
           ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Container(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: Text(
-                widget.fullDescription,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  height: 1.5,
-                  color: Colors.black54,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          isAr
+                              ? 'قصة الابتكار (انقر لعرض التفاصيل)'
+                              : 'CREATION NARRATIVE (CLICK TO VIEW DETAILS)',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black87,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        _isExpanded ? Icons.expand_less : Icons.expand_more,
+                        size: 16,
+                        color: Colors.black54,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 300),
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: Container(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  child: Text(
+                    widget.fullDescription,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      height: 1.5,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
+                crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 300),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

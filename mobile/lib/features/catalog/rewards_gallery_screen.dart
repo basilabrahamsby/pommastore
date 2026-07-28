@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/token_manager.dart';
+import '../../core/locale/locale_provider.dart';
 import '../auth/login_screen.dart';
 import 'homepage_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -75,13 +76,17 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
   }
 
   Future<void> _handleRedeem(String rewardId, String rewardName, int ptsCost) async {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('REDEEM REWARD', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13)),
-        content: Text('Are you sure you want to redeem "$rewardName" for $ptsCost Loyalty Points?', style: GoogleFonts.poppins(fontSize: 12)),
+        title: Text(isAr ? 'استبدال المكافأة' : 'REDEEM REWARD', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13)),
+        content: Text(
+          isAr ? 'هل أنت تأكد من استبدال "$rewardName" مقابل $ptsCost نقطة ولاء؟' : 'Are you sure you want to redeem "$rewardName" for $ptsCost Loyalty Points?', 
+          style: GoogleFonts.poppins(fontSize: 12),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(isAr ? 'إلغاء' : 'CANCEL')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -89,18 +94,18 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                 final res = await ApiClient().dio.post('/storefront/loyalty/rewards/$rewardId/redeem');
                 if (res.statusCode == 200 || res.statusCode == 201) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('🎉 Congratulations! You have redeemed $rewardName.')),
+                    SnackBar(content: Text(isAr ? '🎉 تهانينا! لقد تم استبدال $rewardName بنجاح.' : '🎉 Congratulations! You have redeemed $rewardName.')),
                   );
                   _checkAuthAndPoints();
                 }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Redemption failed or reward unavailable.')),
+                  SnackBar(content: Text(isAr ? 'فشل استبدال المكافأة أو أن المكافأة غير متوفرة.' : 'Redemption failed or reward unavailable.')),
                 );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryRose),
-            child: const Text('CONFIRM REDEEM'),
+            child: Text(isAr ? 'تأكيد الاستبدال' : 'CONFIRM REDEEM'),
           ),
         ],
       ),
@@ -115,6 +120,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncRewards = ref.watch(rewardsDataProvider);
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
 
     final rewardsList = asyncRewards.when(
       data: (data) => data.isNotEmpty ? data : (widget.initialRewards ?? []),
@@ -151,7 +157,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
               Column(
                 children: [
                   Text(
-                    'LOYALTY & PRIVILEGES',
+                    isAr ? 'الولاء والمزايا' : 'LOYALTY & PRIVILEGES',
                     style: GoogleFonts.montserrat(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
@@ -161,7 +167,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'The Rewards Gallery.',
+                    isAr ? 'معرض المكافآت' : 'The Rewards Gallery.',
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 32,
                       fontStyle: FontStyle.italic,
@@ -178,7 +184,9 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'EXCHANGE YOUR ACCUMULATED LOYALTY POINTS FOR EXCLUSIVE SIGNATURE GIFTS AND PRIVILEGES.',
+                    isAr
+                        ? 'استبدل نقاط الولاء المتراكمة بهدايا ومزايا حصرية.'
+                        : 'EXCHANGE YOUR ACCUMULATED LOYALTY POINTS FOR EXCLUSIVE SIGNATURE GIFTS AND PRIVILEGES.',
                     style: GoogleFonts.montserrat(
                       fontSize: 8.5,
                       fontWeight: FontWeight.w600,
@@ -214,7 +222,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                       const Icon(Icons.card_giftcard, size: 36, color: Colors.black26),
                       const SizedBox(height: 12),
                       Text(
-                        'NO REWARDS AVAILABLE RIGHT NOW',
+                        isAr ? 'لا تتوفر مكافآت حالياً' : 'NO REWARDS AVAILABLE RIGHT NOW',
                         style: GoogleFonts.montserrat(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
@@ -245,7 +253,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'HOW REDEMPTION WORKS',
+                    isAr ? 'كيفية استبدال المكافآت' : 'HOW REDEMPTION WORKS',
                     style: GoogleFonts.montserrat(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -256,14 +264,18 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                   const SizedBox(height: 16),
                   _howItWorksItem(
                     num: '01',
-                    title: 'SELECT YOUR GIFT',
-                    desc: 'Choose from our curated collection of signature fragrances, discovery sets, and luxury accessories.',
+                    title: isAr ? 'اختر هديتك' : 'SELECT YOUR GIFT',
+                    desc: isAr 
+                        ? 'اختر من تشكيلتنا المختارة من العطور الفاخرة، ومجموعات الاستكشاف، والإكسسوارات.'
+                        : 'Choose from our curated collection of signature fragrances, discovery sets, and luxury accessories.',
                   ),
                   const SizedBox(height: 16),
                   _howItWorksItem(
                     num: '02',
-                    title: 'INSTANT FULFILLMENT',
-                    desc: 'Vouchers are credited instantly to your vault. Physical gifts are added to your next shipment or dispatched individually.',
+                    title: isAr ? 'تنفيذ فوري' : 'INSTANT FULFILLMENT',
+                    desc: isAr
+                        ? 'يتم إضافة القسائم فوراً إلى حسابك. تُضاف الهدايا العينية إلى شحنتك القادمة.'
+                        : 'Vouchers are credited instantly to your vault. Physical gifts are added to your next shipment or dispatched individually.',
                   ),
                 ],
               ),
@@ -281,7 +293,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Join the Pommastore Inner Circle.',
+                      isAr ? 'انضم إلى دائرة بوماتور الفاخرة' : 'Join the Pommastore Inner Circle.',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 20,
                         fontWeight: FontWeight.normal,
@@ -290,7 +302,9 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'SIGN UP TODAY AND RECEIVE COMPLIMENTARY POINTS INSTANTLY TO START YOUR JOURNEY.',
+                      isAr 
+                          ? 'سجل اليوم واحصل على نقاط ترحيبية فوراً لبدء رحلتك العطرية.'
+                          : 'SIGN UP TODAY AND RECEIVE COMPLIMENTARY POINTS INSTANTLY TO START YOUR JOURNEY.',
                       style: GoogleFonts.montserrat(
                         fontSize: 8,
                         fontWeight: FontWeight.w600,
@@ -312,7 +326,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                         ),
                       ),
                       child: Text(
-                        'INITIALIZE ACCOUNT',
+                        isAr ? 'إنشاء حساب جديد' : 'INITIALIZE ACCOUNT',
                         style: GoogleFonts.montserrat(
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
@@ -333,13 +347,35 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
   }
 
   Widget _buildRewardCard(BuildContext context, Map<String, dynamic> reward) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     final rewardId = reward['id']?.toString() ?? '';
-    final name = reward['name']?.toString() ?? 'Signature Gift';
-    final rewardType = reward['reward_type']?.toString() ?? 'PRIVILEGE';
-    final desc = reward['description']?.toString() ?? '';
+    final nameEn = reward['name']?.toString() ?? 'Signature Gift';
+    final nameAr = reward['name_ar'] ?? reward['nameAr'];
+    final name = (isAr && nameAr != null && nameAr.toString().isNotEmpty) ? nameAr.toString() : nameEn;
+
+    final rewardTypeEn = reward['reward_type']?.toString() ?? 'PRIVILEGE';
+    final rewardType = isAr 
+        ? ({'TRIP': 'رحلة فاخرة', 'PRIVILEGE': 'امتياز حصير', 'GIFT': 'هدية فاخرة'}[rewardTypeEn.toUpperCase()] ?? rewardTypeEn)
+        : rewardTypeEn;
+
+    final descEn = reward['description']?.toString() ?? '';
+    final descAr = reward['description_ar'] ?? reward['descriptionAr'];
+    final desc = (isAr && descAr != null && descAr.toString().isNotEmpty) ? descAr.toString() : descEn;
+
     final pointCost = reward['point_cost']?.toString() ?? '0';
     final imgUrl = _getMediaUrl(reward['image_url']?.toString());
     final metadata = reward['reward_metadata'] as Map<String, dynamic>? ?? {};
+
+    String locMetaKey(String k) {
+      if (!isAr) return k.toUpperCase();
+      final Map<String, String> m = {
+        'location': 'الموقع',
+        'event': 'الفعالية',
+        'duration': 'المدة',
+        'validity': 'الصلاحية',
+      };
+      return m[k.toLowerCase()] ?? k.toUpperCase();
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -404,7 +440,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                     ],
                   ),
                   child: Text(
-                    '$pointCost PTS',
+                    isAr ? '$pointCost نقطة' : '$pointCost PTS',
                     style: GoogleFonts.montserrat(
                       fontSize: 9,
                       fontWeight: FontWeight.w900,
@@ -478,7 +514,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                e.key.toString().toUpperCase(),
+                                locMetaKey(e.key.toString()),
                                 style: GoogleFonts.montserrat(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w700,
@@ -525,7 +561,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
                         ),
                         child: Text(
-                          'LOGIN TO REDEEM',
+                          isAr ? 'سجل الدخول للاستبدال' : 'LOGIN TO REDEEM',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
@@ -543,7 +579,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
                         ),
                         child: Text(
-                          'REDEEM REWARD ($pointCost PTS)',
+                          isAr ? 'استبدال المكافأة ($pointCost نقطة)' : 'REDEEM REWARD ($pointCost PTS)',
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
@@ -561,7 +597,7 @@ class _RewardsGalleryScreenState extends ConsumerState<RewardsGalleryScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
                         ),
                         child: Text(
-                          'NEED $diff MORE PTS TO REDEEM',
+                          isAr ? 'تحتاج $diff نقطة إضافية للاستبدال' : 'NEED $diff MORE PTS TO REDEEM',
                           style: GoogleFonts.montserrat(
                             fontSize: 8.5,
                             fontWeight: FontWeight.w800,
