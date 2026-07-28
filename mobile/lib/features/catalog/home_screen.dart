@@ -607,8 +607,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-                  icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 22),
-                  onPressed: () => context.push('/account'),
+                const Spacer(),
+                // Centered App Logo
+                SizedBox(
+                  height: 38,
+                  child: Image.asset(
+                    'assets/logo.png',
+                    height: 38,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Text(
+                        'POMMASTORE',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryRose,
+                          letterSpacing: 2.0,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.search, color: AppTheme.textNeutral, size: 20),
+                  onPressed: () => context.push('/search'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.favorite_border, color: AppTheme.textNeutral, size: 20),
+                  onPressed: () => context.push('/wishlist'),
                 ),
               ],
             ),
