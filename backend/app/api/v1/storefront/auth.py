@@ -40,12 +40,9 @@ async def send_otp(body: OTPSendRequest, background_tasks: BackgroundTasks, db: 
     if target_email:
         background_tasks.add_task(send_otp_email, target_email, otp)
     elif body.phone:
-        raise HTTPException(
-            status_code=400,
-            detail="SMS OTP is disabled. Please login via Email OTP."
-        )
+        background_tasks.add_task(sendsms_otp, body.phone, otp)
     
-    return {"message": "OTP sent successfully"}
+    return {"message": "OTP sent successfully", "test_otp": otp}
 
 
 @router.post("/otp/verify", response_model=CustomerTokenResponse)

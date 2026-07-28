@@ -334,6 +334,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     required double amountToFreeShipping,
     required double shippingProgressPct,
   }) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -404,6 +405,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   Widget _buildCartItem(BuildContext context, CartItem item) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     final itemTotal = item.price * item.quantity;
     final itemLoyalty = item.loyaltyPoints * item.quantity;
     final isRemoving = _removingId == item.id;
