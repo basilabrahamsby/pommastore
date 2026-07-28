@@ -451,9 +451,52 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.borderLight)),
                             ),
                             items: _uaeEmirates.map((emirate) {
+                              final isFeeFree = isFreeShipping;
+                              final feeVal = (emirate == 'Abu Dhabi' || emirate == 'Al Ain') ? 25 : 17;
+
                               return DropdownMenuItem(
                                 value: emirate,
-                                child: Text(emirate, style: GoogleFonts.poppins(fontSize: 11)),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      emirate,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: isFeeFree
+                                            ? const Color(0xFFE8F5E9)
+                                            : const Color(0xFFF5F5F5),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: isFeeFree
+                                              ? const Color(0xFFA5D6A7)
+                                              : Colors.black12,
+                                          width: 0.5,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        isFeeFree
+                                            ? (isAr ? 'مجاني' : 'FREE')
+                                            : (isAr ? 'د.إ $feeVal توصيل' : 'AED $feeVal Delivery'),
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isFeeFree
+                                              ? const Color(0xFF2E7D32)
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -466,6 +509,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               }
                             },
                           ),
+                          const SizedBox(height: 10),
+                          _buildTextField(_pincodeController, isAr ? 'الرمز البريدي / Pincode (اختياري)' : 'Postal / Pincode (Optional - e.g. 00000)'),
                           const SizedBox(height: 10),
                           _buildTextField(_phoneController, isAr ? 'رقم الهاتف' : 'Phone Number (+971)'),
                           if (_addresses.isNotEmpty) ...[
