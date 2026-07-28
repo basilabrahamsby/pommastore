@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_responsive.dart';
 import '../../core/widgets/product_card.dart';
+import '../../core/locale/locale_provider.dart';
 import 'wishlist_provider.dart';
 
 class WishlistScreen extends ConsumerWidget {
@@ -12,11 +13,12 @@ class WishlistScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wishlistItems = ref.watch(wishlistProvider);
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'MY FAVORITES',
+          isAr ? 'قائمة رغباتي' : 'MY FAVORITES',
           style: GoogleFonts.montserrat(
             fontSize: R.font(context, 14),
             fontWeight: FontWeight.w700,
@@ -55,7 +57,7 @@ class WishlistScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'YOUR WISHLIST IS EMPTY',
+                        isAr ? 'قائمة رغباتك فارغة' : 'YOUR WISHLIST IS EMPTY',
                         style: GoogleFonts.montserrat(
                           fontSize: R.font(context, 13),
                           fontWeight: FontWeight.bold,
@@ -65,7 +67,9 @@ class WishlistScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Explore our collection and add your favorite items to your wishlist.',
+                        isAr 
+                            ? 'استكشف تشكيلتنا الفاخرة وأضف عطورك المفضلة إلى قائمة رغباتك.'
+                            : 'Explore our collection and add your favorite items to your wishlist.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
                           fontSize: R.font(context, 11),
