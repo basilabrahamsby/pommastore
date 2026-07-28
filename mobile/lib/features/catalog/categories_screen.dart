@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/locale/locale_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_responsive.dart';
 import '../../core/widgets/animated_background.dart';
@@ -242,6 +243,28 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       categoryProducts = allProducts;
     }
 
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
+    String locCategoryName(String name) {
+      if (!isAr) return name;
+      final Map<String, String> dict = {
+        'Eau de Parfum (EDP)': 'أو دو بارفيوم (EDP)',
+        'Eau de Toilette (EDT)': 'أو دو تواليت (EDT)',
+        'Niche and Classic': 'عطور النيش والكلاسيكية',
+        'Oudh (Oriental)': 'العود والشرقيات',
+        'Oriental Oud': 'العود الشرقي',
+        'Attar & Oils': 'الدهن والعطور',
+        'Men': 'عطور رجالية',
+        'Women': 'عطور نسائية',
+        'Unisex': 'عطور للجنسين',
+        'Featured Fragrances': 'العطور المميزة',
+        'New Arrivals': 'وصل حديثاً',
+        'Best Sellers': 'الأكثر مبيعاً',
+        'Gift Collections': 'مجموعات الهدايا',
+      };
+      return dict[name] ?? dict[name.trim()] ?? name;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -251,7 +274,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         title: Row(
           children: [
             Text(
-              'CATEGORIES',
+              isAr ? 'الفئات' : 'CATEGORIES',
               style: GoogleFonts.montserrat(
                 color: AppTheme.textNeutral,
                 fontSize: R.font(context, 13),
@@ -267,7 +290,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                '${categoryProducts.length} ITEMS',
+                isAr ? '${categoryProducts.length} منتج' : '${categoryProducts.length} ITEMS',
                 style: GoogleFonts.poppins(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -304,7 +327,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 itemBuilder: (context, index) {
                   final cat = categoriesList[index];
                   final isSelected = index == _selectedCategoryIndex;
-                  final catName = cat['name']?.toString() ?? '';
+                  final catNameEn = cat['name']?.toString() ?? '';
+                  final catNameAr = cat['name_ar'] ?? cat['nameAr'];
+                  final catName = (isAr && catNameAr != null && catNameAr.toString().isNotEmpty)
+                      ? catNameAr.toString()
+                      : locCategoryName(catNameEn);
                   final catIcon = cat['icon'] as IconData? ?? LucideIcons.layers;
 
                   return GestureDetector(

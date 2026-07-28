@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
@@ -6,6 +7,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/token_manager.dart';
 import '../../core/widgets/cached_image.dart';
 import '../../core/widgets/logo_loader.dart';
+import '../../core/locale/locale_provider.dart';
 import '../auth/login_screen.dart';
 
 // Brand rose color tokens
@@ -36,7 +38,15 @@ Future<void> _launchURL(String urlString) async {
 }
 
 // Helper widget for Not Logged In states
-Widget _buildNotLoggedInPlaceholder(BuildContext context, String featureName, VoidCallback onBackFromLogin) {
+Widget _buildNotLoggedInPlaceholder(BuildContext context, WidgetRef ref, String featureName, VoidCallback onBackFromLogin) {
+  final isAr = ref.watch(localeProvider).languageCode == 'ar';
+  
+  final featureNameAr = {
+    'orders': 'طلباتك',
+    'addresses': 'عناوين الشحن الخاصة بك',
+    'wishlist': 'قائمة رغباتك',
+  }[featureName.toLowerCase()] ?? featureName;
+
   return Center(
     child: Padding(
       padding: const EdgeInsets.all(32.0),
@@ -57,7 +67,7 @@ Widget _buildNotLoggedInPlaceholder(BuildContext context, String featureName, Vo
           ),
           const SizedBox(height: 24),
           Text(
-            'SIGN IN REQUIRED',
+            isAr ? 'مطلوب تسجيل الدخول' : 'SIGN IN REQUIRED',
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -67,7 +77,9 @@ Widget _buildNotLoggedInPlaceholder(BuildContext context, String featureName, Vo
           ),
           const SizedBox(height: 10),
           Text(
-            'Please sign in to view and manage your $featureName.',
+            isAr 
+                ? 'يرجى تسجيل الدخول لعرض وإدارة $featureNameAr.' 
+                : 'Please sign in to view and manage your $featureName.',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: Colors.black54,
@@ -92,7 +104,7 @@ Widget _buildNotLoggedInPlaceholder(BuildContext context, String featureName, Vo
               ),
             ),
             child: Text(
-              'SIGN IN / REGISTER',
+              isAr ? 'تسجيل الدخول / إنشاء حساب' : 'SIGN IN / REGISTER',
               style: GoogleFonts.montserrat(
                 fontSize: 10.5,
                 fontWeight: FontWeight.bold,
@@ -110,14 +122,14 @@ Widget _buildNotLoggedInPlaceholder(BuildContext context, String featureName, Vo
 // 1. My Orders Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
-class MyOrdersScreen extends StatefulWidget {
+class MyOrdersScreen extends ConsumerStatefulWidget {
   const MyOrdersScreen({super.key});
 
   @override
-  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+  ConsumerState<MyOrdersScreen> createState() => _MyOrdersScreenState();
 }
 
-class _MyOrdersScreenState extends State<MyOrdersScreen> {
+class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
   final _api = ApiClient();
   List<dynamic> _orders = [];
   bool _isLoading = true;
@@ -176,11 +188,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          'MY ORDERS',
+          isAr ? 'طلباتي' : 'MY ORDERS',
           style: GoogleFonts.montserrat(
             fontSize: 13.5,
             fontWeight: FontWeight.bold,
@@ -203,7 +217,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       body: _isLoading
           ? const LogoLoader()
           : !_isLoggedIn
-              ? _buildNotLoggedInPlaceholder(context, 'orders', _fetchOrders)
+              ? _buildNotLoggedInPlaceholder(context, ref, 'orders', _fetchOrders)
               : _error.isNotEmpty
                   ? _buildErrorPlaceholder()
                   : _orders.isEmpty
@@ -475,14 +489,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 // 2. Shipping Addresses Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
-class ShippingAddressesScreen extends StatefulWidget {
+class ShippingAddressesScreen extends ConsumerStatefulWidget {
   const ShippingAddressesScreen({super.key});
 
   @override
-  State<ShippingAddressesScreen> createState() => _ShippingAddressesScreenState();
+  ConsumerState<ShippingAddressesScreen> createState() => _ShippingAddressesScreenState();
 }
 
-class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
+class _ShippingAddressesScreenState extends ConsumerState<ShippingAddressesScreen> {
   final _api = ApiClient();
   List<dynamic> _addresses = [];
   bool _isLoading = true;
@@ -681,11 +695,13 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          'SHIPPING ADDRESSES',
+          isAr ? 'عناوين الشحن' : 'SHIPPING ADDRESSES',
           style: GoogleFonts.montserrat(
             fontSize: 13.5,
             fontWeight: FontWeight.bold,
@@ -716,7 +732,7 @@ class _ShippingAddressesScreenState extends State<ShippingAddressesScreen> {
       body: _isLoading
           ? const LogoLoader()
           : !_isLoggedIn
-              ? _buildNotLoggedInPlaceholder(context, 'addresses', _fetchAddresses)
+              ? _buildNotLoggedInPlaceholder(context, ref, 'addresses', _fetchAddresses)
               : _addresses.isEmpty
                   ? _buildEmptyPlaceholder()
                   : ListView.builder(
