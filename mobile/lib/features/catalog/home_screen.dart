@@ -495,11 +495,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'Exquisite Collection': 'تشكيلة فاخرة',
       'Top Curated Fragrances': 'أفضل العطور المختارة',
       'Prestige Selection': 'تشكيلة مرموقة',
+      'POPULAR PICKS': 'الأكثر طلباً',
+      'STORE FAVORITES': 'العطور المفضلة لدى المتجر',
       'THE ELITE LIST': 'قائمة النخبة',
       'HOUSE FAVORITES': 'المفضلة لدى الدار',
       'REFINED & BOLD': 'أنيق وجذاب',
       'ELEGANT & SWEET': 'أنيقة وناعمة',
       'THE PRIVILEGE COLLECTION.': 'مجموعة الامتياز الفاخرة',
+      'We offer the best niche fragrances on the market selected by our team of experts.': 'نقدم أفضل العطور المتخصصة في السوق المختارة من قِبل فريق خبرائنا.',
+      'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.': 'نقدم أفضل العطور المتخصصة في السوق المختارة من قِبل فريق خبرائنا لتمنحك حضوراً فريداً ومتميزاً.',
       '100% Authentic Luxury': 'فخامة أصلي 100٪',
       'Sourced directly from global brand houses': 'مستورد مباشرة من دور العطور العالمية',
       'Express UAE & Gulf Delivery': 'توصيل سريع للإمارات والخليج',
@@ -853,32 +857,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? rightImgRaw 
         : (isAd3 ? '/model-banner-3.png' : '/model-banner-2.png'));
 
-    final leftTitleRaw = slide['left_title']?.toString();
+    final leftTitleRaw = (isAr ? (slide['left_title_ar'] ?? slide['left_titleAr'] ?? slide['left_title']) : slide['left_title'])?.toString();
     final leftTitle = leftTitleRaw != null && leftTitleRaw.isNotEmpty 
         ? leftTitleRaw 
         : (isAd3 ? 'Top Curated Fragrances' : 'Exclusive Fragrance');
 
-    final leftSubtitleRaw = slide['left_subtitle']?.toString();
+    final leftSubtitleRaw = (isAr ? (slide['left_subtitle_ar'] ?? slide['left_subtitleAr'] ?? slide['left_subtitle']) : slide['left_subtitle'])?.toString();
     final leftSubtitle = leftSubtitleRaw != null && leftSubtitleRaw.isNotEmpty 
         ? leftSubtitleRaw 
         : 'Exquisite Collection';
 
-    final leftDescRaw = slide['left_desc']?.toString();
+    final leftDescRaw = (isAr ? (slide['left_desc_ar'] ?? slide['left_descAr'] ?? slide['left_desc']) : slide['left_desc'])?.toString();
     final leftDesc = leftDescRaw != null && leftDescRaw.isNotEmpty 
         ? leftDescRaw 
         : 'We offer the best niche fragrances on the market selected by our team of experts.';
 
-    final rightTitleRaw = slide['right_title']?.toString();
+    final rightTitleRaw = (isAr ? (slide['right_title_ar'] ?? slide['right_titleAr'] ?? slide['right_title']) : slide['right_title'])?.toString();
     final rightTitle = rightTitleRaw != null && rightTitleRaw.isNotEmpty 
         ? rightTitleRaw 
         : (isAd3 ? 'Top Curated Fragrances' : 'Premium Fragrances');
 
-    final rightSubtitleRaw = slide['right_subtitle']?.toString();
+    final rightSubtitleRaw = (isAr ? (slide['right_subtitle_ar'] ?? slide['right_subtitleAr'] ?? slide['right_subtitle']) : slide['right_subtitle'])?.toString();
     final rightSubtitle = rightSubtitleRaw != null && rightSubtitleRaw.isNotEmpty 
         ? rightSubtitleRaw 
         : (isAd3 ? 'Prestige Selection' : 'Prestige Selection');
 
-    final rightDescRaw = slide['right_desc']?.toString();
+    final rightDescRaw = (isAr ? (slide['right_desc_ar'] ?? slide['right_descAr'] ?? slide['right_desc']) : slide['right_desc'])?.toString();
     final rightDesc = rightDescRaw != null && rightDescRaw.isNotEmpty 
         ? rightDescRaw 
         : 'We offer the best niche fragrances on the market selected by our team of experts.';
@@ -1702,21 +1706,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Full-Width Ad Banner (for grid_ads_2) ──────────────────────────────────
   Widget _buildFullWidthAdBanner(Map<String, dynamic> slide) {
+    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     final imgRaw = (slide['image_mobile'] ?? slide['image'])?.toString();
     final imgUrl = _getMediaUrl(imgRaw != null && imgRaw.isNotEmpty ? imgRaw : '/model-banner-3.png');
 
-    final titleRaw = slide['title']?.toString();
+    final titleRaw = (isAr ? (slide['title_ar'] ?? slide['titleAr'] ?? slide['title']) : slide['title'])?.toString();
     final title = titleRaw != null && titleRaw.isNotEmpty ? titleRaw : 'Top Curated Fragrances';
 
-    final subtitleRaw = slide['subtitle']?.toString();
+    final subtitleRaw = (isAr ? (slide['subtitle_ar'] ?? slide['subtitleAr'] ?? slide['subtitle']) : slide['subtitle'])?.toString();
     final subtitle = subtitleRaw != null && subtitleRaw.isNotEmpty ? subtitleRaw : 'Prestige Selection';
 
-    final descRaw = slide['desc']?.toString();
+    final descRaw = (isAr ? (slide['desc_ar'] ?? slide['descAr'] ?? slide['desc']) : slide['desc'])?.toString();
     final desc = descRaw != null && descRaw.isNotEmpty 
         ? descRaw 
         : 'We offer the best niche fragrances on the market selected by our team of experts. Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.';
 
-    if (title.isEmpty) return const SizedBox.shrink();
+    final locSubtitle = _locText(subtitle, isAr);
+    final locTitle = _locText(title, isAr);
+    final locDesc = _locText(desc, isAr);
+    final ctaText = isAr ? 'شراء الآن' : 'BUY NOW';
+
+    if (locTitle.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1738,9 +1748,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (subtitle.isNotEmpty)
+                    if (locSubtitle.isNotEmpty)
                       Text(
-                        subtitle.toUpperCase(),
+                        locSubtitle.toUpperCase(),
                         style: GoogleFonts.montserrat(
                           fontSize: 8,
                           fontWeight: FontWeight.w700,
@@ -1752,7 +1762,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     const SizedBox(height: 6),
                     Text(
-                      title.toUpperCase(),
+                      locTitle.toUpperCase(),
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 16,
                         color: Colors.white,
@@ -1763,10 +1773,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (desc.isNotEmpty) ...[
+                    if (locDesc.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        desc,
+                        locDesc,
                         style: GoogleFonts.poppins(
                           fontSize: 9,
                           color: Colors.white70,
@@ -1790,7 +1800,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: Text(
-                          'BUY NOW',
+                          ctaText,
                           style: GoogleFonts.montserrat(
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
