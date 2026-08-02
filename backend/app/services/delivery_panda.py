@@ -376,3 +376,136 @@ def generate_delivery_panda_label_html(order: Order) -> str:
 </body>
 </html>
 """
+
+
+async def track_delivery_panda_shipment(awb_number: str) -> Dict[str, Any]:
+    """
+    Queries Delivery Panda API to track consignment status by AWB Number.
+    URL: https://app.deliverypanda.me/webservice/TrackShipment
+    """
+    if not awb_number:
+        return {"success": False, "error": "Missing AWB number"}
+        
+    try:
+        api_key = settings.DELIVERY_PANDA_API_KEY
+        endpoint_url = "https://app.deliverypanda.me/webservice/TrackShipment"
+        payload = {
+            "AwbNumber": str(awb_number).strip(),
+            "CompanyCode": settings.DELIVERY_PANDA_COMPANY_CODE
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "API-KEY": api_key
+        }
+        
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(endpoint_url, json=payload, headers=headers)
+            
+        if resp.status_code == 200:
+            res_json = resp.json()
+            return {
+                "success": True,
+                "awb_number": awb_number,
+                "status": res_json.get("Status") or res_json.get("ShipmentStatus") or res_json.get("message") or "In Transit",
+                "raw_response": res_json
+            }
+        return {"success": False, "error": f"HTTP {resp.status_code}: {resp.text}"}
+    except Exception as e:
+        logger.error(f"Error tracking Delivery Panda shipment {awb_number}: {e}")
+        return {"success": False, "error": str(e)}
+
+
+async def process_delivery_panda_status_update(
+    order_ref_or_awb: str,
+    raw_status: str,
+    db,
+    background_tasks = None
+) -> Dict[str, Any]:
+    """
+    Auto-syncs Order status in DB based on status update from Delivery Panda.
+    """
+    if not order_ref_or_awb or not raw_status:
+        return {"success": False, "message": "Missing reference or status string"}
+
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload, joinedload
+    from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, OrderStatusHistory, PaymentMethod
+    from app.models.product import ProductVariant, Product
+
+    clean_ref = str(order_ref_or_awb).strip()
+    clean_status = str(raw_status).strip().lower()
+
+    # Query order by order_number, tracking_number, or payment_details awb_number
+    q = select(Order).where(
+        (Order.order_number == clean_ref) |
+        (Order.tracking_number == clean_ref) |
+        (Order.payment_details.op('->>')('awb_number') == clean_ref)
+    ).options(
+        selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product).selectinload(Product.images),
+        selectinload(Order.status_history),
+        joinedload(Order.customer)
+    )
+    res = await db.execute(q)
+    order = res.scalar_one_or_none()
+
+    if not order:
+        return {"success": False, "message": f"Order not found for reference '{clean_ref}'"}
+
+    status_changed = False
+    old_status = order.status
+
+    if any(k in clean_status for k in ["delivered", "completed", "successful", "received"]):
+        if order.status != OrderStatus.delivered:
+            order.status = OrderStatus.delivered
+            status_changed = True
+            # Auto-mark COD payment as paid when delivered by courier!
+            if order.payment_method == PaymentMethod.cod:
+                order.payment_status = PaymentStatus.paid
+
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=OrderStatus.delivered,
+                notes=f"Auto-synced from Delivery Panda status: '{raw_status}'"
+            )
+            db.add(history)
+
+    elif any(k in clean_status for k in ["out for delivery", "with courier", "on the way"]):
+        if order.status not in (OrderStatus.out_for_delivery, OrderStatus.delivered):
+            order.status = OrderStatus.out_for_delivery
+            status_changed = True
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=OrderStatus.out_for_delivery,
+                notes=f"Auto-synced from Delivery Panda status: '{raw_status}'"
+            )
+            db.add(history)
+
+    elif any(k in clean_status for k in ["picked up", "shipped", "in transit", "dispatched", "manifested"]):
+        if order.status not in (OrderStatus.shipped, OrderStatus.out_for_delivery, OrderStatus.delivered):
+            order.status = OrderStatus.shipped
+            status_changed = True
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=OrderStatus.shipped,
+                notes=f"Auto-synced from Delivery Panda status: '{raw_status}'"
+            )
+            db.add(history)
+
+    elif any(k in clean_status for k in ["returned", "failed", "cancelled", "refused", "undelivered"]):
+        if order.status != OrderStatus.cancelled:
+            order.status = OrderStatus.cancelled
+            status_changed = True
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=OrderStatus.cancelled,
+                notes=f"Auto-synced from Delivery Panda status: '{raw_status}'"
+            )
+            db.add(history)
+
+    if status_changed:
+        await db.commit()
+        logger.info(f"Order #{order.order_number} status updated: {old_status} -> {order.status} via Delivery Panda ({raw_status})")
+        return {"success": True, "order_number": order.order_number, "old_status": old_status, "new_status": order.status, "updated": True}
+
+    return {"success": True, "order_number": order.order_number, "current_status": order.status, "updated": False}
+

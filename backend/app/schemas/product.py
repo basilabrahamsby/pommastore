@@ -181,9 +181,27 @@ class ProductOut(BaseModel):
     def validate_images(cls, v):
         if v is None:
             return []
-        # If it's a list of ProductImage objects (from SQLAlchemy), extract URLs
-        if isinstance(v, list) and len(v) > 0 and not isinstance(v[0], str):
-            return [getattr(img, "url", str(img)) for img in v]
+        if isinstance(v, list):
+            cleaned = []
+            for img in v:
+                if img is None:
+                    continue
+                if isinstance(img, str):
+                    if img.startswith("{") and ("url" in img or "image" in img):
+                        match = re.search(r"['\"]?(?:url|image_url|image|src)['\"]?\s*:\s*['\"]?([^'\"}\s]+)['\"]?", img)
+                        if match:
+                            cleaned.append(match.group(1))
+                            continue
+                    cleaned.append(img)
+                elif isinstance(img, dict):
+                    url = img.get("url") or img.get("image_url") or img.get("image") or img.get("src") or ""
+                    if url:
+                        cleaned.append(str(url))
+                else:
+                    url = getattr(img, "url", str(img))
+                    if url:
+                        cleaned.append(str(url))
+            return cleaned
         return v
 
     model_config = {"from_attributes": True}

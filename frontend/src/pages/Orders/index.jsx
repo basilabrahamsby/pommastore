@@ -1180,6 +1180,26 @@ export default function Orders() {
   const settledTotal = transactions.filter(t => t.status === 'paid' || t.status === 'settled').reduce((sum, t) => sum + Number(t.amount || 0), 0)
   const pendingTotal = transactions.filter(t => ['pending', 'authorized'].includes(t.status)).reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
+  const [syncingCourier, setSyncingCourier] = useState(false)
+
+  const handleSyncCourier = async () => {
+    setSyncingCourier(true)
+    try {
+      const res = await api.post('/orders/sync-courier-status')
+      if (res.data && res.data.success) {
+        toast.success(res.data.message || 'Courier statuses auto-synced successfully!')
+        window.location.reload()
+      } else {
+        toast.error(res.data?.message || 'Sync completed with no updates.')
+      }
+    } catch (err) {
+      console.error('Failed to sync courier statuses:', err)
+      toast.error('Failed to sync with Delivery Panda courier API.')
+    } finally {
+      setSyncingCourier(false)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
@@ -1190,6 +1210,15 @@ export default function Orders() {
           <p className="page-subtitle">Track incoming consumer orders, customer accounts, and real-time transaction ledgers</p>
         </div>
         <div className="flex gap-2">
+          <button 
+            className="btn btn-secondary" 
+            onClick={handleSyncCourier}
+            disabled={syncingCourier}
+            style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
+          >
+            <Truck size={14} className={syncingCourier ? "animate-spin" : ""} />
+            {syncingCourier ? "Syncing Panda..." : "Sync Delivery Panda Status"}
+          </button>
           <button className="btn btn-secondary" onClick={() => exportToCSV('financials')}>
             <Download size={14} /> Bulk Export
           </button>
@@ -1198,6 +1227,7 @@ export default function Orders() {
           </button>
         </div>
       </div>
+
 
       {/* Global Context Filter Bar for Overview */}
       {tab === 'overview' && (

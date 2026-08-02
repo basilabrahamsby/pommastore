@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Body
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -825,3 +825,89 @@ async def get_customer_addresses(customer_id: str, db: AsyncSession = Depends(ge
         }
         for a in result.scalars().all()
     ]
+
+
+# -------------------------------------------------------
+# COURIER / DELIVERY PANDA AUTO-SYNC & WEBHOOK ENDPOINTS
+# -------------------------------------------------------
+from app.services.delivery_panda import track_delivery_panda_shipment, process_delivery_panda_status_update
+
+@router.post("/sync-courier-status", status_code=200)
+async def sync_courier_statuses(
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user)
+):
+    """
+    Polls Delivery Panda API for all active orders (processing/shipped/out_for_delivery)
+    that have an AWB tracking number, auto-updating order statuses and payment statuses.
+    """
+    # Fetch orders that are in transit or processing
+    q = select(Order).where(
+        Order.status.in_([OrderStatus.processing, OrderStatus.shipped, OrderStatus.out_for_delivery, OrderStatus.confirmed])
+    )
+    res = await db.execute(q)
+    active_orders = res.scalars().all()
+
+    synced_count = 0
+    updated_count = 0
+    results_summary = []
+
+    for order in active_orders:
+        awb = order.tracking_number or (order.payment_details or {}).get("awb_number")
+        if awb:
+            track_res = await track_delivery_panda_shipment(awb)
+            if track_res.get("success") and track_res.get("status"):
+                raw_status = track_res.get("status")
+                synced_count += 1
+                update_res = await process_delivery_panda_status_update(
+                    order_ref_or_awb=awb,
+                    raw_status=raw_status,
+                    db=db,
+                    background_tasks=background_tasks
+                )
+                if update_res.get("updated"):
+                    updated_count += 1
+                results_summary.append({
+                    "order_number": order.order_number,
+                    "awb": awb,
+                    "courier_status": raw_status,
+                    "updated": update_res.get("updated", False),
+                    "new_status": str(update_res.get("new_status") or order.status)
+                })
+
+    return {
+        "success": True,
+        "message": f"Polled Delivery Panda for {synced_count} active shipments. Updated {updated_count} orders.",
+        "synced_count": synced_count,
+        "updated_count": updated_count,
+        "details": results_summary
+    }
+
+
+@public_router.post("/delivery-panda/webhook", status_code=200)
+@public_router.post("/delivery-panda/callback", status_code=200)
+async def delivery_panda_webhook_listener(
+    payload: dict = Body(default={}),
+    background_tasks: BackgroundTasks = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Public Webhook endpoint called by Delivery Panda when a shipment status changes.
+    Payload typically contains AwbNumber, ReferenceNumber, Status / ShipmentStatus.
+    """
+    ref = payload.get("ReferenceNumber") or payload.get("AwbNumber") or payload.get("awb_number") or payload.get("order_number")
+    raw_status = payload.get("Status") or payload.get("ShipmentStatus") or payload.get("status") or payload.get("event")
+
+    if not ref or not raw_status:
+        return {"success": False, "message": "Missing reference number or status payload"}
+
+    result = await process_delivery_panda_status_update(
+        order_ref_or_awb=ref,
+        raw_status=raw_status,
+        db=db,
+        background_tasks=background_tasks
+    )
+
+    return result
+

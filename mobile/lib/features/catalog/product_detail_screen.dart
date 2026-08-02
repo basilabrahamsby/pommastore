@@ -435,8 +435,25 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       return result;
     }
 
+    String extractUrlStr(dynamic e) {
+      if (e == null) return '';
+      if (e is Map) {
+        return (e['url'] ?? e['image_url'] ?? e['image'] ?? e['src'])?.toString() ?? '';
+      }
+      if (e is String) {
+        if (e.trim().startsWith('{') && (e.contains('url') || e.contains('image'))) {
+          final match = RegExp(r'''['"]?(?:url|image_url|image|src)['"]?\s*:\s*['"]?([^'"}\s,]+)['"]?''').firstMatch(e);
+          if (match != null && match.group(1) != null) {
+            return match.group(1)!;
+          }
+        }
+        return e;
+      }
+      return e.toString();
+    }
+
     final List<dynamic> rawImages = activeProd['images'] as List<dynamic>? ?? [activeProd['image_url'] ?? ''];
-    final List<String> images = rawImages.map((e) => _getMediaUrl(e?.toString())).toList();
+    final List<String> images = rawImages.map((e) => _getMediaUrl(extractUrlStr(e))).where((url) => url.isNotEmpty).toList();
     
     final nameEn = activeProd['name'] ?? activeProd['title'] ?? 'Luxury Fragrance';
     final nameAr = activeProd['name_ar'] ?? activeProd['title_ar'] ?? activeProd['nameAr'];
