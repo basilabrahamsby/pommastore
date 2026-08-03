@@ -1086,6 +1086,7 @@ async def cancel_stripe_order(
     await db.commit()
     return {"status": "cancelled", "order_number": order_number}
 
+@router.post("/stripe/webhook")
 @router.post("/stripe/verify")
 async def verify_stripe_payment(
     background_tasks: BackgroundTasks,
@@ -1093,6 +1094,65 @@ async def verify_stripe_payment(
     db: AsyncSession = Depends(get_db),
     customer: Optional[Customer] = Depends(get_optional_customer)
 ):
+    # Detect if this is a direct Stripe Webhook event payload
+    is_stripe_webhook = bool(
+        body.get("type") or 
+        body.get("object") == "event" or 
+        ("data" in body and isinstance(body.get("data"), dict))
+    )
+
+    if is_stripe_webhook:
+        event_data = body.get("data", {}).get("object", {})
+        event_type = body.get("type", "")
+        
+        stripe_session_id = event_data.get("id") or event_data.get("payment_intent")
+        order_number = (event_data.get("metadata") or {}).get("order_number") or body.get("order_number")
+        
+        if not stripe_session_id:
+            return {"status": "success", "received": True, "message": "Stripe webhook received"}
+            
+        order = None
+        if order_number:
+            q = select(Order).where(Order.order_number == order_number).options(joinedload(Order.customer))
+            res = await db.execute(q)
+            order = res.scalar_one_or_none()
+            
+        if not order:
+            q2 = select(Order).where(
+                Order.payment_details.op('->>')('stripe_session_id') == stripe_session_id
+            ).options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(1)
+            res2 = await db.execute(q2)
+            order = res2.scalar_one_or_none()
+
+        if not order:
+            pi_id = event_data.get("payment_intent")
+            if pi_id:
+                q3 = select(Order).where(
+                    Order.payment_details.op('->>')('stripe_payment_intent') == pi_id
+                ).options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(1)
+                res3 = await db.execute(q3)
+                order = res3.scalar_one_or_none()
+
+        if order and order.payment_status != PaymentStatus.paid:
+            transaction_id = event_data.get("payment_intent") or stripe_session_id
+            order.payment_status = PaymentStatus.paid
+            order.transaction_id = transaction_id
+            order.status = OrderStatus.processing
+            
+            details = dict(order.payment_details or {})
+            details["stripe_payment_intent"] = transaction_id
+            order.payment_details = details
+            
+            history = OrderStatusHistory(
+                order_id=order.id,
+                status=order.status,
+                notes=f"Payment verified via Stripe Webhook ({event_type}): {transaction_id}"
+            )
+            db.add(history)
+            await db.commit()
+            
+        return {"status": "success", "received": True, "event": event_type}
+
     stripe_session_id = body.get("stripe_session_id")
     order_number = body.get("order_number")
     transaction_id = body.get("transaction_id") or stripe_session_id
