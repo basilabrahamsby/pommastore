@@ -498,47 +498,6 @@ export default function Home() {
                               </p>
 
                               {/* Dynamic Offer Rules / Details Block */}
-                              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white/5 border border-white/10 rounded-sm max-w-xs backdrop-blur-md">
-                                 <div className="text-[8px] sm:text-[9px] font-bold tracking-widest text-yellow-500 uppercase mb-1.5">Offer Rules & Details</div>
-                                 <div className="flex flex-col gap-1.5 text-[10px] sm:text-[11px]">
-                                    {promo.discount_type?.toLowerCase().includes('bogo') ? (
-                                       <>
-                                          <div className="flex items-start">
-                                             <span className="text-neutral-400 font-bold uppercase w-16 flex-shrink-0">Buy:</span>
-                                             <span className="text-white font-medium uppercase tracking-wide">{promo.buy_skus?.map((sku: string) => getSkuProductName(sku, promo.products || [])).join(', ')}</span>
-                                          </div>
-                                          <div className="flex items-start">
-                                             <span className="text-green-400 font-bold uppercase w-16 flex-shrink-0">Get Free:</span>
-                                             <span className="text-white font-medium uppercase tracking-wide">{promo.get_skus?.map((sku: string) => getSkuProductName(sku, promo.products || [])).join(', ')}</span>
-                                          </div>
-                                       </>
-                                    ) : promo.discount_type?.toLowerCase().includes('percent') || promo.discount_type?.includes('%') ? (
-                                       <>
-                                          <div className="flex items-start">
-                                             <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
-                                             <span className="text-white font-medium">{promo.discount_percentage}% OFF</span>
-                                          </div>
-                                          {promo.min_purchase_amount > 0 && (
-                                             <div className="flex items-start">
-                                                <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
-                                                <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
-                                             </div>
-                                          )}
-                                       </>
-                                    ) : (
-                                       <>
-                                          <div className="flex items-start">
-                                             <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
-                                             <span className="text-white font-medium">Flat AED {promo.flat_discount_amount?.toLocaleString()} OFF</span>
-                                          </div>
-                                          {promo.min_purchase_amount > 0 && (
-                                             <div className="flex items-start">
-                                                <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
-                                                <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
-                                             </div>
-                                          )}
-                                       </>
-                                    )}
                                  </div>
                               </div>
 
