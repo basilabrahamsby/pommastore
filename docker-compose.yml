@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: pommastore
       TZ: Asia/Dubai
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -47,7 +47,7 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
       TZ: Asia/Dubai
     ports:
-      - "8030:8000"
+      - "8000:8000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -60,11 +60,11 @@ services:
     build: ./frontend
     container_name: pommastore_admin
     environment:
-      VITE_API_BASE_URL: /pommastore/api/v1
+      VITE_API_BASE_URL: /api/v1
       VITE_STATIC_BASE_URL: ""
       TZ: Asia/Dubai
     ports:
-      - "5174:5173"
+      - "5173:5173"
     depends_on:
       - api
 
@@ -74,7 +74,7 @@ services:
     environment:
       TZ: Asia/Dubai
     ports:
-      - "3001:3000"
+      - "3000:3000"
     depends_on:
       - api
 
