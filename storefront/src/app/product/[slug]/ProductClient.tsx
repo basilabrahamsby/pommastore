@@ -407,10 +407,10 @@ export default function ProductClient({
 
       return `Buy: ${getBuyProductNames()} → Get FREE: ${getGetProductNames()}`;
     }
-    if (offer.discount_percentage) {
+    if (offer.discount_percentage && Number(offer.discount_percentage) > 0) {
       return `Get ${offer.discount_percentage}% off on your purchase.`;
     }
-    if (offer.flat_discount_amount) {
+    if (offer.flat_discount_amount && Number(offer.flat_discount_amount) > 0) {
       return `Flat AED ${offer.flat_discount_amount} off on qualifying items.`;
     }
     return '';
