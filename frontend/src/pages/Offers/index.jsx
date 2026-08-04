@@ -351,9 +351,9 @@ export default function Offers() {
     setLoyaltyModal(true)
   }
 
-  const isBogo = (type) => type.toLowerCase().includes('bogo') || type.toLowerCase().includes('buy')
-  const isPercentage = (type) => type.toLowerCase().includes('percent') || type.includes('%')
-  const isFlat = (type) => type.toLowerCase().includes('flat') || type.toLowerCase().includes('amount') || type.toLowerCase().includes('AED ')
+  const isBogo = (type) => Boolean(type && ((type || '').toLowerCase().includes('bogo') || (type || '').toLowerCase().includes('buy')))
+  const isPercentage = (type) => Boolean(type && ((type || '').toLowerCase().includes('percent') || (type || '').includes('%')))
+  const isFlat = (type) => Boolean(type && ((type || '').toLowerCase().includes('flat') || (type || '').toLowerCase().includes('amount') || (type || '').toLowerCase().includes('aed')))
 
   const totalAttributed = offers.reduce((acc, o) => acc + Number(o.attributed_revenue || 0), 0)
   
@@ -769,13 +769,13 @@ export default function Offers() {
               {isPercentage(form.discount_type) && (
                 <div>
                   <label className="form-label">Discount Percentage (%)</label>
-                  <input className="input" type="number" placeholder="20" value={form.discount_percentage} onChange={e => setForm({...form, discount_percentage: e.target.value})} required />
+                  <input className="input" type="number" placeholder="20 (or leave blank/0 if embedded in item price)" value={form.discount_percentage} onChange={e => setForm({...form, discount_percentage: e.target.value})} />
                 </div>
               )}
               {isFlat(form.discount_type) && (
                 <div>
                   <label className="form-label">Flat Discount Amount (AED )</label>
-                  <input className="input" type="number" placeholder="500" value={form.flat_discount_amount} onChange={e => setForm({...form, flat_discount_amount: e.target.value})} required />
+                  <input className="input" type="number" placeholder="0 (leave blank if discount is included in item price)" value={form.flat_discount_amount} onChange={e => setForm({...form, flat_discount_amount: e.target.value})} />
                 </div>
               )}
               
