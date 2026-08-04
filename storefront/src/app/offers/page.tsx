@@ -307,7 +307,7 @@ export default function OffersPage() {
 
       {/* ─── Hero Banner Slider ─── */}
       {promoCampaigns.length > 0 ? (
-        <section className="relative h-[320px] sm:h-[420px] md:h-[500px] lg:h-[580px] xl:h-[640px] bg-neutral-950 overflow-hidden group border-b border-neutral-900 mb-10">
+        <section className="relative w-full aspect-[16/8] sm:aspect-[16/7] md:aspect-[2.1/1] lg:aspect-[2.35/1] max-h-[720px] bg-neutral-950 overflow-hidden group border-b border-neutral-900 mb-10">
           {/* Background Slider Engine */}
           <div className="absolute inset-0">
             {promoCampaigns.map((promo: any, idx: number) => (
@@ -318,7 +318,7 @@ export default function OffersPage() {
                 <img
                   src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
                   alt={promo.title}
-                  className="absolute inset-0 w-full h-full object-cover object-center opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
+                  className="absolute inset-0 w-full h-full object-contain md:object-cover object-center opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
                 
