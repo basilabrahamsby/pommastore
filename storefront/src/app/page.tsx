@@ -497,9 +497,58 @@ export default function Home() {
                                  {promo.subtitle || 'Experience a masterfully curated collection of prestige fragrances, hand-selected to define your signature presence.'}
                               </p>
 
-                              {/* Dynamic Offer Rules / Details Block */}
-                                 </div>
-                              </div>
+                               {/* Dynamic Offer Rules / Details Block */}
+                               {(() => {
+                                  const isBogo = promo.discount_type?.toLowerCase().includes('bogo');
+                                  const isPct = promo.discount_type?.toLowerCase().includes('percent') || promo.discount_type?.includes('%');
+                                  const hasPercent = isPct && Number(promo.discount_percentage) > 0;
+                                  const hasFlat = Number(promo.flat_discount_amount) > 0;
+                                  const hasMinPurchase = Number(promo.min_purchase_amount) > 0;
+
+                                  const shouldShowRules = isBogo || hasPercent || hasFlat || hasMinPurchase;
+                                  if (!shouldShowRules) return null;
+
+                                  return (
+                                     <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white/5 border border-white/10 rounded-sm max-w-xs backdrop-blur-md">
+                                        <div className="text-[8px] sm:text-[9px] font-bold tracking-widest text-yellow-500 uppercase mb-1.5 font-sans">Offer Rules & Details</div>
+                                        <div className="flex flex-col gap-1.5 text-[10px] sm:text-[11px]">
+                                           {isBogo ? (
+                                              <>
+                                                 <div className="flex items-start">
+                                                    <span className="text-neutral-400 font-bold uppercase w-16 flex-shrink-0">Buy:</span>
+                                                    <span className="text-white font-medium uppercase tracking-wide">Qualifying Items</span>
+                                                 </div>
+                                                 <div className="flex items-start">
+                                                    <span className="text-green-400 font-bold uppercase w-16 flex-shrink-0">Get Free:</span>
+                                                    <span className="text-white font-medium uppercase tracking-wide">Free Pairing Item</span>
+                                                 </div>
+                                              </>
+                                           ) : (
+                                              <>
+                                                 {hasPercent && (
+                                                    <div className="flex items-start">
+                                                       <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
+                                                       <span className="text-white font-medium">{promo.discount_percentage}% OFF</span>
+                                                    </div>
+                                                 )}
+                                                 {hasFlat && (
+                                                    <div className="flex items-start">
+                                                       <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Benefit:</span>
+                                                       <span className="text-white font-medium">Flat AED {promo.flat_discount_amount?.toLocaleString()} OFF</span>
+                                                    </div>
+                                                 )}
+                                                 {hasMinPurchase && (
+                                                    <div className="flex items-start">
+                                                       <span className="text-neutral-400 font-bold uppercase w-24 flex-shrink-0">Min Purchase:</span>
+                                                       <span className="text-white font-medium">AED {promo.min_purchase_amount.toLocaleString()}</span>
+                                                    </div>
+                                                 )}
+                                              </>
+                                           )}
+                                        </div>
+                                     </div>
+                                  );
+                               })()}
 
                               <div className="flex flex-wrap items-center gap-3 sm:gap-6 font-sans">
                                  <Link 
