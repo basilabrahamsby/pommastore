@@ -454,48 +454,6 @@ export default function OffersPage() {
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-12 relative z-20 pb-32">
 
-        {/* ─── Loyalty Milestones ─── */}
-        {loyaltyRewards.length > 0 && (
-          <div className="mb-24 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-              <div>
-                <span className="text-[10px] font-black tracking-[0.4em] text-amber-600 uppercase mb-3 block">LOYALTY PRIVILEGES</span>
-                <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">Reach Point Milestones.</h2>
-              </div>
-              <Link href="/rewards" className="group flex items-center space-x-3 text-[10px] font-black tracking-widest uppercase text-neutral-400 hover:text-black transition-all">
-                <span>View All Rewards</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {loyaltyRewards.slice(0, 4).map((reward) => (
-                <div key={reward.id} className="bg-gradient-to-b from-white to-neutral-50/30 border border-neutral-100/80 p-8 flex flex-col hover:shadow-[0_20px_50px_rgba(210,22,141,0.06)] hover:-translate-y-2 rounded-lg transition-all duration-500 group relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[3px] before:bg-gradient-to-r before:from-amber-400 before:to-accent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
-                  <div className="absolute -right-4 -top-8 text-[120px] font-serif text-neutral-200/20 opacity-[0.25] group-hover:opacity-[0.35] transition-opacity font-bold select-none pointer-events-none">
-                    {reward.point_cost / 100}
-                  </div>
-                  <div className="relative z-10 flex flex-col h-full">
-                    <div className="mb-6 w-12 h-12 rounded-full bg-neutral-950 group-hover:bg-accent flex items-center justify-center text-amber-500 group-hover:text-white group-hover:scale-110 transition-all duration-500 shadow-md">
-                      <Sparkles size={20} />
-                    </div>
-                    <div className="mb-2">
-                      <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase font-sans">Requirement</span>
-                      <div className="text-xl font-serif font-bold text-black">{reward.point_cost} Points</div>
-                    </div>
-                    <div className="w-8 h-[1px] bg-neutral-200 my-5" />
-                    <h3 className="text-sm font-black text-black uppercase tracking-wide mb-2.5 font-sans group-hover:text-accent transition-colors duration-300">{reward.name}</h3>
-                    <p className="text-[10px] text-neutral-500 leading-relaxed font-semibold mb-8 uppercase tracking-widest font-sans">{reward.description}</p>
-                    <div className="mt-auto">
-                      <Link href="/rewards" className="inline-flex items-center text-[9px] font-bold tracking-[0.2em] uppercase text-black border-b border-black pb-1 hover:text-accent hover:border-accent transition-all duration-300 font-sans">
-                        Redeem Privilege
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* ─── Active Promo Campaigns ─── */}
         {promoCampaigns.length > 0 ? (
           <div className="flex flex-col gap-20">
@@ -710,6 +668,48 @@ export default function OffersPage() {
               </Link>
             </div>
           )
+        )}
+
+        {/* ─── Loyalty Milestones ─── */}
+        {loyaltyRewards.length > 0 && (
+          <div className="mt-24 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+              <div>
+                <span className="text-[10px] font-black tracking-[0.4em] text-amber-600 uppercase mb-3 block">LOYALTY PRIVILEGES</span>
+                <h2 className="text-2xl md:text-3xl font-serif font-normal text-black leading-none uppercase tracking-wide">Reach Point Milestones.</h2>
+              </div>
+              <Link href="/rewards" className="group flex items-center space-x-3 text-[10px] font-black tracking-widest uppercase text-neutral-400 hover:text-black transition-all">
+                <span>View All Rewards</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {loyaltyRewards.slice(0, 4).map((reward) => (
+                <div key={reward.id} className="bg-gradient-to-b from-white to-neutral-50/30 border border-neutral-100/80 p-8 flex flex-col hover:shadow-[0_20px_50px_rgba(210,22,141,0.06)] hover:-translate-y-2 rounded-lg transition-all duration-500 group relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[3px] before:bg-gradient-to-r before:from-amber-400 before:to-accent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
+                  <div className="absolute -right-4 -top-8 text-[120px] font-serif text-neutral-200/20 opacity-[0.25] group-hover:opacity-[0.35] transition-opacity font-bold select-none pointer-events-none">
+                    {reward.point_cost / 100}
+                  </div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="mb-6 w-12 h-12 rounded-full bg-neutral-950 group-hover:bg-accent flex items-center justify-center text-amber-500 group-hover:text-white group-hover:scale-110 transition-all duration-500 shadow-md">
+                      <Sparkles size={20} />
+                    </div>
+                    <div className="mb-2">
+                      <span className="text-[9px] font-bold tracking-[0.3em] text-neutral-400 uppercase font-sans">Requirement</span>
+                      <div className="text-xl font-serif font-bold text-black">{reward.point_cost} Points</div>
+                    </div>
+                    <div className="w-8 h-[1px] bg-neutral-200 my-5" />
+                    <h3 className="text-sm font-black text-black uppercase tracking-wide mb-2.5 font-sans group-hover:text-accent transition-colors duration-300">{reward.name}</h3>
+                    <p className="text-[10px] text-neutral-500 leading-relaxed font-semibold mb-8 uppercase tracking-widest font-sans">{reward.description}</p>
+                    <div className="mt-auto">
+                      <Link href="/rewards" className="inline-flex items-center text-[9px] font-bold tracking-[0.2em] uppercase text-black border-b border-black pb-1 hover:text-accent hover:border-accent transition-all duration-300 font-sans">
+                        Redeem Privilege
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
