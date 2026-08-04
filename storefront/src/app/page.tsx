@@ -466,7 +466,7 @@ export default function Home() {
 
           {/* Cinematic Hero Slider for Flash Offers */}
           {homepageOffers.length > 0 && (
-             <section className="relative h-[480px] sm:h-[420px] lg:h-[380px] xl:h-[400px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
+             <section className="relative h-[320px] sm:h-[420px] md:h-[500px] lg:h-[580px] xl:h-[640px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
                 {/* Background Slider Engine */}
                 <div className="absolute inset-0">
                    {homepageOffers.map((promo: any, idx: number) => (
@@ -478,14 +478,14 @@ export default function Home() {
                            <img
                               src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
                               alt={promo.title}
-                              className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-center opacity-85 group-hover:scale-[1.02] transition-transform duration-[3s]"
+                              className="absolute inset-0 w-full h-full object-cover object-center opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
                            />
                         </Link>
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
                         
                         <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex items-center justify-start">
-                           {/* Text Content */}
-                           <div className="max-w-2xl text-white pt-6 z-10">
+                           {/* Text Content Container with Glass Backdrop */}
+                           <div className="max-w-xl text-white p-5 sm:p-7 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 shadow-2xl z-10">
                               <div className="flex items-center gap-4 mb-2 sm:mb-3">
                                  <span className="h-[1.5px] w-8 bg-accent" />
                                  <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-accent uppercase font-sans">{promo.discount_type}</span>
