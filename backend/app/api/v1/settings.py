@@ -48,7 +48,7 @@ async def update_settings(
     await db.commit()
     
     try:
-        await redis_service.redis.delete("storefront:homepage")
+        await redis_service.redis.delete("storefront:homepage", "storefront:homepage:en", "storefront:homepage:ar")
     except Exception:
         pass
     
