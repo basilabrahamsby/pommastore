@@ -64,7 +64,7 @@ services:
       VITE_STATIC_BASE_URL: ""
       TZ: Asia/Dubai
     ports:
-      - "5173:5173"
+      - "5174:5173"
     depends_on:
       - api
 
