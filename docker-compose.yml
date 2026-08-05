@@ -47,7 +47,7 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
       TZ: Asia/Dubai
     ports:
-      - "8000:8000"
+      - "8030:8000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -74,7 +74,7 @@ services:
     environment:
       TZ: Asia/Dubai
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - api
 
