@@ -478,7 +478,7 @@ export default function Home() {
                            <img
                               src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
                               alt={promo.title}
-                              className="absolute inset-0 w-full h-full object-contain md:object-cover object-center opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
+                              className="absolute inset-0 w-full h-full object-cover object-center opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
                            />
                         </Link>
                         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
@@ -502,8 +502,8 @@ export default function Home() {
                                   const isBogo = promo.discount_type?.toLowerCase().includes('bogo');
                                   const isPct = promo.discount_type?.toLowerCase().includes('percent') || promo.discount_type?.includes('%');
                                   const hasPercent = isPct && Number(promo.discount_percentage) > 0;
-                                  const hasFlat = Number(promo.flat_discount_amount) > 0;
-                                  const hasMinPurchase = Number(promo.min_purchase_amount) > 0;
+                                  const hasFlat = Boolean(promo.flat_discount_amount && Number(promo.flat_discount_amount) > 0);
+                                  const hasMinPurchase = Boolean(promo.min_purchase_amount && Number(promo.min_purchase_amount) > 0);
 
                                   const shouldShowRules = isBogo || hasPercent || hasFlat || hasMinPurchase;
                                   if (!shouldShowRules) return null;

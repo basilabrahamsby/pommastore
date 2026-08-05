@@ -341,8 +341,8 @@ export default function OffersPage() {
                       const isBogo = promo.discount_type?.toLowerCase().includes('bogo');
                       const isPct = promo.discount_type?.toLowerCase().includes('percent') || promo.discount_type?.includes('%');
                       const hasPercent = isPct && Number(promo.discount_percentage) > 0;
-                      const hasFlat = Number(promo.flat_discount_amount) > 0;
-                      const hasMinPurchase = Number(promo.min_purchase_amount) > 0;
+                      const hasFlat = Boolean(promo.flat_discount_amount && Number(promo.flat_discount_amount) > 0);
+                      const hasMinPurchase = Boolean(promo.min_purchase_amount && Number(promo.min_purchase_amount) > 0);
 
                       const shouldShowRules = isBogo || hasPercent || hasFlat || hasMinPurchase;
                       if (!shouldShowRules) return null;
