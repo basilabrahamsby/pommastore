@@ -3,17 +3,8 @@ import { useState, useEffect } from 'react'
 
 
 import { 
-
-
-
   Monitor, Image as ImageIcon, Upload, Trash2, Plus, Save, Sparkles, 
-
-
-
-  LayoutTemplate, Type, AlignLeft, Link as LinkIcon, ShieldCheck
-
-
-
+  LayoutTemplate, Type, AlignLeft, Link as LinkIcon, ShieldCheck, ArrowUp, ArrowDown
 } from 'lucide-react'
 
 
@@ -1279,13 +1270,27 @@ export default function StorefrontCMS() {
 
 
   const removeHeroSlide = (index) => {
-
-
-
     setHeroSlides(heroSlides.filter((_, i) => i !== index))
+  }
 
+  const moveHeroSlideUp = (index) => {
+    if (index === 0) return
+    const copy = [...heroSlides]
+    const temp = copy[index]
+    copy[index] = copy[index - 1]
+    copy[index - 1] = temp
+    setHeroSlides(copy)
+    toast.success(`Banner moved up to Priority #${index}`)
+  }
 
-
+  const moveHeroSlideDown = (index) => {
+    if (index === heroSlides.length - 1) return
+    const copy = [...heroSlides]
+    const temp = copy[index]
+    copy[index] = copy[index + 1]
+    copy[index + 1] = temp
+    setHeroSlides(copy)
+    toast.success(`Banner moved down to Priority #${index + 2}`)
   }
 
 
@@ -1987,10 +1992,48 @@ export default function StorefrontCMS() {
 
 
              {heroSlides.map((slide, index) => (
-
-
-
                 <div key={index} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, position: 'relative' }}>
+                   {/* Banner Priority & Order Action Toolbar */}
+                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                         <span style={{ padding: '4px 12px', background: 'rgba(212, 175, 55, 0.15)', color: '#d4af37', border: '1px solid rgba(212, 175, 55, 0.4)', borderRadius: 20, fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Priority #{index + 1} {index === 0 ? '• (First Banner)' : ''}
+                         </span>
+                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            Display sequence on storefront slider
+                         </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                         <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => moveHeroSlideUp(index)}
+                            style={{ opacity: index === 0 ? 0.3 : 1, cursor: index === 0 ? 'not-allowed' : 'pointer', fontSize: '0.75rem', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 6, color: '#fff' }}
+                            title="Move banner up to higher priority"
+                         >
+                            <ArrowUp size={14} /> Move Up
+                         </button>
+                         <button
+                            type="button"
+                            disabled={index === heroSlides.length - 1}
+                            onClick={() => moveHeroSlideDown(index)}
+                            style={{ opacity: index === heroSlides.length - 1 ? 0.3 : 1, cursor: index === heroSlides.length - 1 ? 'not-allowed' : 'pointer', fontSize: '0.75rem', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 6, color: '#fff' }}
+                            title="Move banner down to lower priority"
+                         >
+                            <ArrowDown size={14} /> Move Down
+                         </button>
+                         {heroSlides.length > 1 && (
+                            <button
+                               type="button"
+                               onClick={() => removeHeroSlide(index)}
+                               style={{ fontSize: '0.75rem', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: 6, color: '#ef4444', cursor: 'pointer' }}
+                               title="Remove this slide"
+                            >
+                               <Trash2 size={14} /> Remove Slide
+                            </button>
+                         )}
+                      </div>
+                   </div>
 
 
 
@@ -2603,33 +2646,6 @@ export default function StorefrontCMS() {
 
 
                    </div>
-
-
-
-
-
-
-
-                   {heroSlides.length > 1 && (
-
-
-
-                      <button onClick={() => removeHeroSlide(index)} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }} title="Deprecate Slide">
-
-
-
-                         <Trash2 size={16} />
-
-
-
-                      </button>
-
-
-
-                   )}
-
-
-
                 </div>
 
 
