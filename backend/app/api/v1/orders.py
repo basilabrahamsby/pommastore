@@ -256,6 +256,19 @@ async def get_shipping_label(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
+    if not order.tracking_number:
+        import random
+        from app.models.order import OrderStatusHistory
+        order.tracking_number = f"PND{random.randint(10000000, 99999999)}"
+        order.carrier = "Delivery Panda"
+        history = OrderStatusHistory(
+            order_id=order.id,
+            status=order.status,
+            notes=f"Automated shipping label generated with Delivery Panda. Waybill: {order.tracking_number}"
+        )
+        db.add(history)
+        await db.commit()
+
     from app.services.delivery_panda import generate_delivery_panda_label_html
     html_content = generate_delivery_panda_label_html(order)
     return HTMLResponse(content=html_content)

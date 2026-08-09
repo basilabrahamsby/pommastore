@@ -1133,23 +1133,27 @@ async def verify_stripe_payment(
                 res3 = await db.execute(q3)
                 order = res3.scalar_one_or_none()
 
-        if order and order.payment_status != PaymentStatus.paid:
+        if order:
             transaction_id = event_data.get("payment_intent") or stripe_session_id
-            order.payment_status = PaymentStatus.paid
-            order.transaction_id = transaction_id
-            order.status = OrderStatus.processing
-            
-            details = dict(order.payment_details or {})
-            details["stripe_payment_intent"] = transaction_id
-            order.payment_details = details
-            
-            history = OrderStatusHistory(
-                order_id=order.id,
-                status=order.status,
-                notes=f"Payment verified via Stripe Webhook ({event_type}): {transaction_id}"
-            )
-            db.add(history)
-            await db.commit()
+            if order.payment_status != PaymentStatus.paid:
+                order.payment_status = PaymentStatus.paid
+                order.transaction_id = transaction_id
+                order.status = OrderStatus.processing
+                
+                details = dict(order.payment_details or {})
+                details["stripe_payment_intent"] = transaction_id
+                order.payment_details = details
+                
+                history = OrderStatusHistory(
+                    order_id=order.id,
+                    status=order.status,
+                    notes=f"Payment verified via Stripe Webhook ({event_type}): {transaction_id}"
+                )
+                db.add(history)
+                await db.commit()
+
+            if not order.tracking_number:
+                await book_panda_shipment_task(order.id)
             
         return {"status": "success", "received": True, "event": event_type}
 
@@ -1190,6 +1194,8 @@ async def verify_stripe_payment(
         raise HTTPException(status_code=404, detail="Order not found")
 
     if order.payment_status == PaymentStatus.paid:
+        if not order.tracking_number:
+            await book_panda_shipment_task(order.id)
         return {"status": "success", "order_number": order.order_number, "order": order}
 
     if settings.STRIPE_SECRET_KEY != "sk_test_placeholder" and not stripe_session_id.startswith("cs_test_mock_"):

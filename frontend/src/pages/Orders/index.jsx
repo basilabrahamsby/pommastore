@@ -2008,17 +2008,15 @@ export default function Orders() {
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Statutory digital transactional record</span>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                {selectedOrder.tracking_number && (
-                  <a 
-                    href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/shipping-label`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn btn-primary btn-sm" 
-                    style={{ background: '#FF5722', color: '#fff', borderRadius: 4, padding: '6px 14px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
-                  >
-                    🐼 Print Delivery Panda Label
-                  </a>
-                )}
+                <a 
+                  href={`${api.defaults.baseURL || '/api/v1'}/orders/${selectedOrder.id}/shipping-label`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-primary btn-sm" 
+                  style={{ background: '#FF5722', color: '#fff', borderRadius: 4, padding: '6px 14px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block', fontWeight: 'bold' }}
+                >
+                  🐼 Print Delivery Panda Label
+                </a>
                 {selectedOrder.tracking_number && (
                   <button 
                     type="button"
