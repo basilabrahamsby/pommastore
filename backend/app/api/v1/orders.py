@@ -274,6 +274,24 @@ async def get_shipping_label(
     return HTMLResponse(content=html_content)
 
 
+@public_router.post("/{order_id}/resend-email")
+async def resend_order_email(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        order_uuid = uuid.UUID(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order ID format")
+
+    from app.api.v1.storefront.orders import trigger_order_notifications
+    success = await trigger_order_notifications(db, background_tasks, order_uuid)
+    if not success:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"status": "success", "message": "Order confirmation and invoice copy emails queued successfully."}
+
+
 @router.post("", response_model=OrderOut, status_code=201)
 async def create_order(
     body: OrderCreate,

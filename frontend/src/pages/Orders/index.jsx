@@ -2017,6 +2017,21 @@ export default function Orders() {
                 >
                   🐼 Print Delivery Panda Label
                 </a>
+                <button 
+                  type="button"
+                  className="btn btn-secondary btn-sm" 
+                  style={{ borderRadius: 4, padding: '6px 12px', fontSize: '0.72rem', background: 'rgba(51,154,240,0.1)', color: '#339af0', border: '1px solid rgba(51,154,240,0.2)', fontWeight: 600 }}
+                  onClick={async () => {
+                    try {
+                      await api.post(`/orders/${selectedOrder.id}/resend-email`);
+                      toast.success('Confirmation & Admin Invoice emails queued!');
+                    } catch (e) {
+                      toast.error('Failed to send email notification');
+                    }
+                  }}
+                >
+                  ✉️ Resend Email
+                </button>
                 {selectedOrder.tracking_number && (
                   <button 
                     type="button"

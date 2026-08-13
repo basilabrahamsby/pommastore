@@ -1086,6 +1086,73 @@ async def cancel_stripe_order(
     await db.commit()
     return {"status": "cancelled", "order_number": order_number}
 
+async def trigger_order_notifications(
+    db: AsyncSession,
+    background_tasks: BackgroundTasks,
+    order_id: uuid.UUID,
+    transaction_id: str = ""
+) -> bool:
+    q = (
+        select(Order)
+        .where(Order.id == order_id)
+        .options(
+            selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product),
+            joinedload(Order.customer)
+        )
+    )
+    res = await db.execute(q)
+    enriched = res.unique().scalar_one_or_none()
+    if not enriched:
+        return False
+
+    items_list = []
+    for item in (enriched.items or []):
+        p_name = item.variant.product.name if (item.variant and item.variant.product) else (item.product_name or "Luxury Fragrance")
+        items_list.append({
+            "name": p_name,
+            "sku": item.sku or "",
+            "quantity": item.quantity,
+            "unit_price": float(item.unit_price),
+            "total_price": float(item.unit_price * item.quantity)
+        })
+
+    cust = enriched.customer
+    customer_name = enriched.customer_name or (cust.full_name if cust else "Valued Client")
+    customer_email = enriched.customer_email or (cust.email if cust else "")
+    customer_phone = enriched.customer_phone or (cust.phone if cust else "")
+
+    background_tasks.add_task(
+        send_order_confirmation_email,
+        to_email=customer_email,
+        customer_name=customer_name,
+        order_number=enriched.order_number,
+        items=items_list,
+        total=float(enriched.total_amount),
+        subtotal=float(enriched.subtotal),
+        discount=float(enriched.discount_amount),
+        shipping=float(enriched.shipping_amount),
+        tax=float(enriched.tax_amount),
+        loyalty_used=enriched.loyalty_points_used or 0,
+        shipping_address=enriched.shipping_address,
+        payment_method=enriched.payment_method or "",
+        coupon_code=enriched.coupon_code or "",
+        gift_message=enriched.gift_message or "",
+        customer_email=customer_email,
+        customer_phone=customer_phone,
+    )
+
+    if customer_phone:
+        msg = f"Payment confirmed! Order #{enriched.order_number} placed at POMMASTORE. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id or enriched.transaction_id or ''}. Track: https://pommastore.com/track-order?order={enriched.order_number}&contact={customer_phone}"
+        background_tasks.add_task(sendsms_ordercustomer, customer_phone, msg)
+
+    background_tasks.add_task(
+        sendsms_orderadmin,
+        "918848079307",
+        f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {customer_name}. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id or enriched.transaction_id or ''}"
+    )
+    return True
+
+
 @router.post("/stripe/webhook")
 @router.post("/stripe/verify")
 async def verify_stripe_payment(
@@ -1154,6 +1221,8 @@ async def verify_stripe_payment(
 
             if not order.tracking_number:
                 await book_panda_shipment_task(order.id)
+
+            await trigger_order_notifications(db, background_tasks, order.id, transaction_id)
             
         return {"status": "success", "received": True, "event": event_type}
 
@@ -1196,6 +1265,7 @@ async def verify_stripe_payment(
     if order.payment_status == PaymentStatus.paid:
         if not order.tracking_number:
             await book_panda_shipment_task(order.id)
+        await trigger_order_notifications(db, background_tasks, order.id, transaction_id)
         return {"status": "success", "order_number": order.order_number, "order": order}
 
     if settings.STRIPE_SECRET_KEY != "sk_test_placeholder" and not stripe_session_id.startswith("cs_test_mock_"):
@@ -1287,6 +1357,9 @@ async def verify_stripe_payment(
             db_offer.attributed_revenue += Decimal(str(order.total_amount))
 
     await book_panda_shipment_task(order.id)
+    await db.commit()
+
+    await trigger_order_notifications(db, background_tasks, order.id, transaction_id)
 
     final_result = await db.execute(
         select(Order)
@@ -1294,36 +1367,6 @@ async def verify_stripe_payment(
         .options(selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product))
     )
     enriched = final_result.unique().scalar_one()
-
-    # Trigger emails
-    background_tasks.add_task(
-        send_order_confirmation_email,
-        customer_name=cust.full_name if cust else "Valued Client",
-        order_number=enriched.order_number,
-        subtotal=float(enriched.subtotal),
-        discount=float(enriched.discount_amount),
-        shipping=float(enriched.shipping_amount),
-        tax=float(enriched.tax_amount),
-        loyalty_used=enriched.loyalty_points_used or 0,
-        shipping_address=enriched.shipping_address,
-        payment_method=enriched.payment_method or "",
-        coupon_code=enriched.coupon_code or "",
-        gift_message=enriched.gift_message or "",
-        customer_email=enriched.customer_email or "",
-        customer_phone=enriched.customer_phone or "",
-    )
-
-    # Send confirmation SMS
-    if enriched.customer_phone:
-        msg = f"Payment confirmed! Order #{enriched.order_number} placed at POMMASTORE. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id}. Track: https://pommastore.com/track-order?order={enriched.order_number}&contact={enriched.customer_phone}"
-        background_tasks.add_task(sendsms_ordercustomer, enriched.customer_phone, msg)
-
-    # Notify admin via SMS
-    background_tasks.add_task(
-        sendsms_orderadmin,
-        "918848079307",
-        f"ALERT: New Order #{enriched.order_number} confirmed. Customer: {enriched.customer_name or 'Unknown'}. Total: AED {float(enriched.total_amount):.2f}. Ref: {transaction_id}"
-    )
 
     return {"status": "success", "order_number": order.order_number, "order": enriched}
 
