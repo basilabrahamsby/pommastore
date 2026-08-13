@@ -1128,6 +1128,8 @@ def send_admin_invoice_email(
         print(f"Failed to generate PDF for admin email: {e}")
 
     ADMIN_RECIPIENTS = [
+        "admin@poshgallery.ae",
+        "sales@poshgallery.ae",
         "sales@pommastore.com",
         "admin@pommastore.com",
         "info@pommastore.com",
