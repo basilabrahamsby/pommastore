@@ -1089,12 +1089,29 @@ async def cancel_stripe_order(
 async def trigger_order_notifications(
     db: AsyncSession,
     background_tasks: BackgroundTasks,
-    order_id: uuid.UUID,
+    order_id_or_number: Any,
     transaction_id: str = ""
 ) -> bool:
+    is_uuid = False
+    target_uuid = None
+    try:
+        if isinstance(order_id_or_number, uuid.UUID):
+            target_uuid = order_id_or_number
+            is_uuid = True
+        else:
+            target_uuid = uuid.UUID(str(order_id_or_number))
+            is_uuid = True
+    except (ValueError, TypeError):
+        is_uuid = False
+
+    if is_uuid:
+        cond = (Order.id == target_uuid)
+    else:
+        cond = (Order.order_number == str(order_id_or_number))
+
     q = (
         select(Order)
-        .where(Order.id == order_id)
+        .where(cond)
         .options(
             selectinload(Order.items).joinedload(OrderItem.variant).joinedload(ProductVariant.product),
             joinedload(Order.customer)
