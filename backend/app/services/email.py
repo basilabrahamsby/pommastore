@@ -1129,11 +1129,7 @@ def send_admin_invoice_email(
 
     ADMIN_RECIPIENTS = [
         "admin@poshgallery.ae",
-        "sales@poshgallery.ae",
-        "sales@pommastore.com",
-        "admin@pommastore.com",
-        "info@pommastore.com",
-        "pommastoreretailers@gmail.com"
+        "sales@poshgallery.ae"
     ]
     
     success = False
