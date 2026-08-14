@@ -1690,7 +1690,7 @@ export default function Orders() {
                     status: ord.status,
                     customerName: 'Multiple Customers',
                     customerPhone: '91xxxxxxxxxx',
-                    customerEmail: 'bulk@pommastore.com',
+                    customerEmail: 'sales@poshgallery.ae',
                     isBulk: true,
                     ids: selectedOrderIds,
                     message: `Hello! This is an update from Pommastore regarding your order. We are processing it and will update you shortly.`

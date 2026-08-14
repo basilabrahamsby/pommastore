@@ -28,7 +28,7 @@ export default function Settings() {
     companyName: 'POMMASTORE TRADING L.L.C',
     gstin: '100489201900003',
     phone: '+971 4 288 9200',
-    email: 'support@pommastore.com',
+    email: 'sales@poshgallery.ae',
     registeredAddress: 'Business Bay, Dubai, United Arab Emirates'
   })
   const [seoConfig, setSeoConfig] = useState({
@@ -471,7 +471,7 @@ export default function Settings() {
                   <input 
                     type="email" 
                     className="input" 
-                    placeholder="e.g. support@pommastore.com"
+                    placeholder="e.g. sales@poshgallery.ae"
                     value={companyGst.email || ''}
                     onChange={e => setCompanyGst(prev => ({ ...prev, email: e.target.value }))}
                   />
