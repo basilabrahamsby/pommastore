@@ -102,6 +102,37 @@ export default function Home() {
       return () => clearInterval(interval);
    }, [heroSlidesToUse]);
 
+   const [offerTouchStartX, setOfferTouchStartX] = useState(0);
+   const [offerTouchEndX, setOfferTouchEndX] = useState(0);
+
+   const handleOfferTouchStart = (e: React.TouchEvent) => {
+      setOfferTouchStartX(e.targetTouches[0].clientX);
+   };
+
+   const handleOfferTouchMove = (e: React.TouchEvent) => {
+      setOfferTouchEndX(e.targetTouches[0].clientX);
+   };
+
+   const handleOfferTouchEnd = () => {
+      if (!offerTouchStartX || !offerTouchEndX) return;
+      const distance = offerTouchStartX - offerTouchEndX;
+      if (distance > 40) {
+         setCurrentPromoIdx((prev) => (prev + 1) % (homepageOffers.length || 1));
+      } else if (distance < -40) {
+         setCurrentPromoIdx((prev) => (prev - 1 + (homepageOffers.length || 1)) % (homepageOffers.length || 1));
+      }
+      setOfferTouchStartX(0);
+      setOfferTouchEndX(0);
+   };
+
+   useEffect(() => {
+      if (homepageOffers.length <= 1) return;
+      const interval = setInterval(() => {
+         setCurrentPromoIdx((prev) => (prev + 1) % homepageOffers.length);
+      }, 6000);
+      return () => clearInterval(interval);
+   }, [homepageOffers]);
+
    useEffect(() => {
       const len = Array.isArray(cmsLayout?.grid_ads_1) ? cmsLayout.grid_ads_1.length : 1;
       if (len <= 1) return;
@@ -520,19 +551,38 @@ export default function Home() {
 
           {/* Cinematic Hero Slider for Flash Offers */}
           {homepageOffers.length > 0 && (
-             <section className="relative w-full aspect-[16/8] sm:aspect-[16/7] md:aspect-[2.1/1] lg:aspect-[2.35/1] max-h-[720px] bg-neutral-950 overflow-hidden group border-b border-neutral-900">
+             <section 
+               onTouchStart={handleOfferTouchStart}
+               onTouchMove={handleOfferTouchMove}
+               onTouchEnd={handleOfferTouchEnd}
+               className="relative w-full aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-neutral-950 overflow-hidden group border-b border-neutral-900 select-none"
+             >
                 {/* Background Slider Engine */}
                 <div className="absolute inset-0">
                    {homepageOffers.map((promo: any, idx: number) => (
                      <div 
                        key={promo.id} 
-                       className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === currentPromoIdx ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'}`}
+                       className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === currentPromoIdx ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-110 pointer-events-none z-0'}`}
                      >
                         <Link href="/offers" className="absolute inset-0 block cursor-pointer">
+                           {/* Ambient blurred backdrop for seamless extra screen filling */}
+                           <img
+                              src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
+                              alt=""
+                              aria-hidden="true"
+                              className="hidden md:block absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110"
+                           />
+                           {/* Desktop/Web display - object-contain guarantees 100% full image visibility without any cropping */}
                            <img
                               src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
                               alt={promo.title}
-                              className="absolute inset-0 w-full h-full object-cover object-center opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
+                              className="hidden md:block absolute inset-0 w-full h-full object-contain object-center z-10 opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
+                           />
+                           {/* Mobile display view */}
+                           <img
+                              src={getMediaUrl(promo.banner_url_mobile || promo.banner_url || 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000')}
+                              alt={promo.title}
+                              className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100"
                            />
                         </Link>
                         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
