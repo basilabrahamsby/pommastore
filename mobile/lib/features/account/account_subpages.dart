@@ -933,10 +933,10 @@ class CustomerSupportScreen extends StatelessWidget {
               context,
               Icons.mail_outline_rounded,
               'EMAIL ASSISTANCE',
-              'info@pommastore.com',
+              'sales@poshgallery.ae',
               'Expect a response within 12-24 hours.',
               'EMAIL NOW',
-              () => _launchURL('mailto:info@pommastore.com'),
+              () => _launchURL('mailto:sales@poshgallery.ae'),
             ),
             const SizedBox(height: 16),
             _buildSupportCard(
