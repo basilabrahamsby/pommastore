@@ -17,7 +17,7 @@ export default function ContactUs() {
   }, []);
 
   const phone = companyInfo?.footer_settings?.phone || companyInfo?.company?.phone || '+971 4 453 9119';
-  const email = companyInfo?.footer_settings?.email || companyInfo?.company?.email || 'sales@pommastore.com';
+  const email = companyInfo?.footer_settings?.email || companyInfo?.company?.email || 'sales@poshgallery.ae';
   const companyName = companyInfo?.company?.companyName || 'POSH NICHE PERFUMES & COSMETICS TRADING LLC';
   const registeredAddress = companyInfo?.company?.registeredAddress || 'Office No. C-81, Al Muteena, Dubai, United Arab Emirates';
 

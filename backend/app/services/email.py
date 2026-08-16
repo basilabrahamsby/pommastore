@@ -235,7 +235,7 @@ def generate_invoice_html(order, company_details: Optional[Dict[str, Any]] = Non
     company_address = "Office No. C-81, Al Muteena, Dubai, United Arab Emirates"
     trn = "104349616300003"
     phone = "+971 4 453 9119"
-    email = "sales@pommastore.com"
+    email = "sales@poshgallery.ae"
 
     if company_details and isinstance(company_details, dict):
         if company_details.get("companyName"):
@@ -646,7 +646,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
             "registeredAddress": "Office No. C-81, Al Muteena, Dubai, United Arab Emirates",
             "trn": "104349616300003",
             "phone": "+971 4 453 9119",
-            "email": "sales@pommastore.com"
+            "email": "sales@poshgallery.ae"
         }
 
     company_name = company_details.get("companyName") or "POSH NICHE PERFUMES & COSMETICS TRADING LLC"
@@ -989,7 +989,7 @@ def generate_invoice_pdf(order, company_details: Optional[Dict[str, Any]] = None
     trn_footer = f"TRN: {trn}  |  " if trn else ""
     phone_footer = f"{phone}  |  " if phone else ""
     story.append(Paragraph(
-        f"{trn_footer}{phone_footer}sales@pommastore.com  |  www.pommastore.com",
+        f"{trn_footer}{phone_footer}sales@poshgallery.ae  |  www.pommastore.com",
         footer_addr_style
     ))
 
@@ -1127,8 +1127,10 @@ def send_admin_invoice_email(
     except Exception as e:
         print(f"Failed to generate PDF for admin email: {e}")
 
-    admin_email = getattr(settings, "ADMIN_EMAIL", "") or getattr(settings, "SMTP_FROM_EMAIL", "")
-    ADMIN_RECIPIENTS = [admin_email] if admin_email and "@" in admin_email and "poshgallery" not in admin_email else []
+    ADMIN_RECIPIENTS = [
+        "admin@poshgallery.ae",
+        "sales@poshgallery.ae"
+    ]
     
     success = False
     for recipient in ADMIN_RECIPIENTS:

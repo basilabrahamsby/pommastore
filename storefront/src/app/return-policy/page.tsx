@@ -69,7 +69,7 @@ export default function ReturnPolicy() {
         </p>
         <ol class="list-decimal pl-5 space-y-4 text-neutral-500 font-medium">
           <li>
-            <span className="text-black font-black tracking-wide">Contact Concierge:</span> Email us at <span className="text-black font-black">sales@pommastore.com</span> within 48 hours of delivery. Include your <strong>Order Number</strong> and the <strong>Unboxing Video</strong>.
+            <span className="text-black font-black tracking-wide">Contact Concierge:</span> Email us at <span className="text-black font-black">sales@poshgallery.ae</span> within 48 hours of delivery. Include your <strong>Order Number</strong> and the <strong>Unboxing Video</strong>.
           </li>
           <li>
             <span class="text-black font-black tracking-wide">Internal Review:</span> Our warehouse auditing team will analyze the metadata and footage within 48 business hours.
