@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Pommastore"
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
+    ADMIN_EMAIL: str = "sales@pommastore.com"
 
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5173",

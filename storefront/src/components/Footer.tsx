@@ -221,8 +221,8 @@ const Footer = () => {
                 <Mail size={15} className="text-accent mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest mb-0.5">{locale === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
-                  <a href={`mailto:${footer.email || layout?.company?.email || 'sales@poshgallery.ae'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
-                    {footer.email || layout?.company?.email || "sales@poshgallery.ae"}
+                  <a href={`mailto:${footer.email || layout?.company?.email || 'sales@pommastore.com'}`} className="text-neutral-300 text-sm font-medium hover:text-white transition-colors">
+                    {footer.email || layout?.company?.email || "sales@pommastore.com"}
                   </a>
                 </div>
               </li>

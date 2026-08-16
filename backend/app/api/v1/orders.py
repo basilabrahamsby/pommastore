@@ -671,7 +671,7 @@ async def update_order_status(
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.cancelled:
             reason = body.notes or "No reason specified"
-            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact: sales@poshgallery.ae."
+            msg = f"Your order #{enriched.order_number} has been cancelled. Reason: {reason}. Contact: sales@pommastore.com."
             background_tasks.add_task(sendsms_status, to_phone, msg)
         elif status == OrderStatus.return_requested:
             msg = f"Return request received for order #{enriched.order_number}. Our team will review in 24-48 hours and contact you."
