@@ -544,7 +544,7 @@ export default function Home() {
 
           {/* Cinematic Hero Slider for Flash Offers with Side Product Cards */}
           {homepageOffers.length > 0 && (
-             <section className="bg-neutral-950 py-6 sm:py-8 border-b border-neutral-900 overflow-hidden">
+             <section className="bg-gradient-to-b from-neutral-50 via-white to-neutral-100/60 py-6 sm:py-10 border-t border-b border-neutral-200/80 overflow-hidden relative">
                 <div className="max-w-[1750px] mx-auto px-4 sm:px-6">
                    <div className="flex flex-col xl:flex-row items-stretch gap-5 sm:gap-6">
                       
@@ -560,7 +560,7 @@ export default function Home() {
                          onTouchStart={handleOfferTouchStart}
                          onTouchMove={handleOfferTouchMove}
                          onTouchEnd={handleOfferTouchEnd}
-                         className="flex-1 w-full relative aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-black rounded-xl sm:rounded-2xl overflow-hidden group border border-white/10 select-none shadow-2xl"
+                         className="flex-1 w-full relative aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-white rounded-xl sm:rounded-2xl overflow-hidden group border border-neutral-200/80 select-none shadow-xl"
                       >
                          {/* Background Slider Engine */}
                          <div className="absolute inset-0">
@@ -604,13 +604,13 @@ export default function Home() {
                             <div className="absolute bottom-6 right-6 flex items-center gap-3 z-20">
                                <button 
                                   onClick={() => setCurrentPromoIdx((prev) => (prev - 1 + homepageOffers.length) % homepageOffers.length)}
-                                  className="w-9 h-9 border border-white/20 bg-black/40 hover:bg-white text-white hover:text-black rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md"
+                                  className="w-9 h-9 border border-neutral-200/80 bg-white/90 hover:bg-black text-black hover:text-white rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-md"
                                >
                                   <ChevronLeft size={18} />
                                </button>
                                <button 
                                   onClick={() => setCurrentPromoIdx((prev) => (prev + 1) % homepageOffers.length)}
-                                  className="w-9 h-9 border border-white/20 bg-black/40 hover:bg-white text-white hover:text-black rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md"
+                                  className="w-9 h-9 border border-neutral-200/80 bg-white/90 hover:bg-black text-black hover:text-white rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-md"
                                >
                                   <ChevronRight size={18} />
                                </button>
