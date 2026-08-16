@@ -330,9 +330,9 @@ export default function Home() {
                            </p>
                            <Link 
                               href={slideLink} 
-                              className={`bg-transparent border border-white/80 hover:bg-white text-white hover:text-black px-5 py-2.5 md:px-6 md:py-2.5 text-[10px] md:text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-900 transform ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat rounded-full`}
+                              className={`inline-flex items-center justify-center bg-white/10 hover:bg-white border-2 border-white/90 text-white hover:text-black px-7 py-3 md:px-10 md:py-4 text-xs md:text-sm font-extrabold tracking-[0.25em] uppercase transition-all duration-500 delay-900 transform hover:scale-105 shadow-2xl backdrop-blur-md rounded-full ${idx === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} font-montserrat`}
                            >
-                              {slideCta}
+                              {slideCta || (isAr ? 'تسوق الآن' : 'SHOP NOW')}
                            </Link>
                         </div>
                      </div>
