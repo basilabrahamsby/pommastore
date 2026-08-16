@@ -319,7 +319,7 @@ export default function Home() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="relative w-full aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-black overflow-hidden select-none"
+            className="relative w-full aspect-[3/4] md:aspect-[2.56/1] max-h-[620px] bg-black overflow-hidden select-none"
           >
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
@@ -356,19 +356,12 @@ export default function Home() {
                      className={`absolute inset-0 w-full h-full transition-all duration-[1500ms] ease-in-out transform ${idx === currentSlide ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'
                         }`}
                   >
-                     {/* Ambient blurred backdrop for seamless filling on ultra-wide screens */}
-                     <img
-                        src={slideImage}
-                        alt=""
-                        aria-hidden="true"
-                        className="hidden md:block absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110"
-                     />
-                     {/* Desktop/Web display - object-contain guarantees 100% full image visibility without any cropping */}
+                     {/* Desktop/Web display - aspect-[2.56/1] fills 100% screen width with 0% cropping for 2560x1000 banners */}
                      <img
                         src={slideImage}
                         alt={slideTitle}
                         fetchPriority={idx === 0 ? "high" : "low"}
-                        className="hidden md:block absolute inset-0 w-full h-full object-contain object-center z-10"
+                        className="hidden md:block absolute inset-0 w-full h-full object-cover object-center"
                      />
                      {/* Mobile display - fall back to Web image if mobile image is blank */}
                      <img
