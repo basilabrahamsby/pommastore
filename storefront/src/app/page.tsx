@@ -370,7 +370,7 @@ export default function Home() {
                         fetchPriority={idx === 0 ? "high" : "low"}
                         className="block md:hidden absolute inset-0 w-full h-full object-cover object-center"
                      />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
                      <div className="absolute inset-0 flex items-end pb-12 sm:pb-14 md:pb-16">
                         <div className={`max-w-[1400px] mx-auto w-full px-6 md:px-20 flex flex-col ${isAr ? 'items-end text-right' : 'items-start text-left'}`}>
@@ -578,11 +578,24 @@ export default function Home() {
                               className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100"
                            />
                         </Link>
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
+                        {/* Non-obstructive Sleek Floating Bottom Pill Bar for Offer Details */}
+                         <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex items-end justify-start pb-8 pointer-events-none z-20">
+                            <div className="pointer-events-auto bg-black/80 backdrop-blur-md border border-white/20 px-5 py-2 rounded-full flex items-center gap-3.5 text-white shadow-2xl">
+                               <span className="text-[9px] font-bold text-accent tracking-[0.2em] uppercase font-sans whitespace-nowrap">{promo.discount_type}</span>
+                               <span className="h-3 w-[1px] bg-white/20" />
+                               <span className="text-xs font-serif text-[#d4af37] tracking-wide uppercase truncate max-w-[200px] sm:max-w-xs">{promo.title}</span>
+                               <Link 
+                                  href="/offers" 
+                                  className="bg-white hover:bg-accent text-black hover:text-white px-3.5 py-1 rounded-full text-[9px] font-extrabold tracking-[0.15em] uppercase transition-all duration-300 flex items-center gap-1 font-sans ml-1 flex-shrink-0"
+                               >
+                                  {isAr ? 'تسوق العرض' : 'EXPLORE'} <ChevronRight size={13} />
+                               </Link>
+                            </div>
+                         </div>
                         
                         <div className="absolute inset-0 max-w-[1400px] mx-auto px-6 lg:px-12 flex items-center justify-start">
                            {/* Text Content Container with Glass Backdrop */}
-                           <div className="max-w-xl text-white p-5 sm:p-7 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 shadow-2xl z-10">
+                           <div className="hidden max-w-xl text-white p-5 sm:p-7 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 shadow-2xl z-10">
                               <div className="flex items-center gap-4 mb-2 sm:mb-3">
                                  <span className="h-[1.5px] w-8 bg-accent" />
                                  <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-accent uppercase font-sans">{promo.discount_type}</span>
