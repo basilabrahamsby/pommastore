@@ -319,7 +319,7 @@ export default function Home() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="relative w-full aspect-[3/4] md:aspect-[2.56/1] max-h-[620px] bg-black overflow-hidden select-none"
+            className="relative w-full aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-black overflow-hidden select-none"
           >
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
