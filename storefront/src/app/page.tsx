@@ -303,7 +303,7 @@ export default function Home() {
                         src={slideImage}
                         alt={slideTitle}
                         fetchPriority={idx === 0 ? "high" : "low"}
-                        className="hidden md:block absolute inset-0 w-full h-full object-contain md:object-cover object-center"
+                        className="hidden md:block absolute inset-0 w-full h-full object-cover object-top"
                      />
                      {/* Mobile display - fall back to Web image if mobile image is blank */}
                      <img
