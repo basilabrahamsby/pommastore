@@ -42,6 +42,7 @@ export default function Home() {
    const [currentPromoIdx, setCurrentPromoIdx] = useState(0);
    const [cmsLayout, setCmsLayout] = useState<any>(null);
    const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
+   const [seenCategories, setSeenCategories] = useState<string[]>([]);
    const [currentAds1, setCurrentAds1] = useState(0);
    const [currentAds2, setCurrentAds2] = useState(0);
    const [currentAds3, setCurrentAds3] = useState(0);
