@@ -262,7 +262,7 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-          <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[440px] md:h-[540px] lg:h-[640px] xl:h-[740px] 2xl:h-[840px] min-h-[400px] max-h-[85vh] bg-black overflow-hidden">
+          <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[380px] md:h-[450px] lg:h-[500px] xl:h-[540px] max-h-[580px] bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
@@ -298,12 +298,19 @@ export default function Home() {
                      className={`absolute inset-0 w-full h-full transition-all duration-[1500ms] ease-in-out transform ${idx === currentSlide ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'
                         }`}
                   >
-                     {/* Desktop/Web display */}
+                     {/* Ambient blurred backdrop for seamless side-filling */}
+                     <img
+                        src={slideImage}
+                        alt=""
+                        aria-hidden="true"
+                        className="hidden md:block absolute inset-0 w-full h-full object-cover blur-2xl opacity-35 scale-110"
+                     />
+                     {/* Desktop/Web display - object-contain ensures 100% full image visibility without any cropping */}
                      <img
                         src={slideImage}
                         alt={slideTitle}
                         fetchPriority={idx === 0 ? "high" : "low"}
-                        className="hidden md:block absolute inset-0 w-full h-full object-cover object-top"
+                        className="hidden md:block absolute inset-0 w-full h-full object-contain object-center z-10"
                      />
                      {/* Mobile display - fall back to Web image if mobile image is blank */}
                      <img
