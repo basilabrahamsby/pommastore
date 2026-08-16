@@ -42,10 +42,31 @@ export default function Home() {
    const [currentPromoIdx, setCurrentPromoIdx] = useState(0);
    const [cmsLayout, setCmsLayout] = useState<any>(null);
    const [activeStoryIdx, setActiveStoryIdx] = useState<number | null>(null);
-   const [seenCategories, setSeenCategories] = useState<string[]>([]);
    const [currentAds1, setCurrentAds1] = useState(0);
    const [currentAds2, setCurrentAds2] = useState(0);
    const [currentAds3, setCurrentAds3] = useState(0);
+   const [touchStartX, setTouchStartX] = useState(0);
+   const [touchEndX, setTouchEndX] = useState(0);
+
+   const handleTouchStart = (e: React.TouchEvent) => {
+      setTouchStartX(e.targetTouches[0].clientX);
+   };
+
+   const handleTouchMove = (e: React.TouchEvent) => {
+      setTouchEndX(e.targetTouches[0].clientX);
+   };
+
+   const handleTouchEnd = () => {
+      if (!touchStartX || !touchEndX) return;
+      const distance = touchStartX - touchEndX;
+      if (distance > 40) {
+         setCurrentSlide((prev) => (prev + 1) % (heroSlidesToUse.length || 1));
+      } else if (distance < -40) {
+         setCurrentSlide((prev) => (prev - 1 + (heroSlidesToUse.length || 1)) % (heroSlidesToUse.length || 1));
+      }
+      setTouchStartX(0);
+      setTouchEndX(0);
+   };
 
    useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -251,10 +272,10 @@ export default function Home() {
        left_desc: defaultDescShort,
        left_product_id: '',
        right_image: '/model-banner-3.png',
-       right_title: defaultCuratedTitle,
-       right_subtitle: defaultPrestige,
-       right_desc: defaultDescShort,
-       right_product_id: ''
+       left_title: defaultCuratedTitle,
+       left_subtitle: defaultPrestige,
+       left_desc: defaultDescShort,
+       left_product_id: ''
     }];
 
    return (
@@ -262,7 +283,12 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-          <section className="relative w-full aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-black overflow-hidden">
+          <section 
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="relative w-full aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-black overflow-hidden select-none"
+          >
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
@@ -339,6 +365,26 @@ export default function Home() {
                   </div>
                );
             })}
+
+            {/* Left / Right Navigation Arrows for Touch & Mouse Click */}
+            {heroSlidesToUse.length > 1 && (
+               <>
+                  <button 
+                     onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlidesToUse.length) % heroSlidesToUse.length)}
+                     aria-label="Previous Slide"
+                     className="hidden sm:flex absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 w-11 h-11 border border-white/20 bg-black/40 hover:bg-white text-white hover:text-black rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md z-20 shadow-xl group"
+                  >
+                     <ChevronLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" />
+                  </button>
+                  <button 
+                     onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlidesToUse.length)}
+                     aria-label="Next Slide"
+                     className="hidden sm:flex absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 w-11 h-11 border border-white/20 bg-black/40 hover:bg-white text-white hover:text-black rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md z-20 shadow-xl group"
+                  >
+                     <ChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+               </>
+            )}
 
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3">
                {heroSlidesToUse.map((_: any, idx: number) => (
