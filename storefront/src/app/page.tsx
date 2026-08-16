@@ -546,86 +546,98 @@ export default function Home() {
           {homepageOffers.length > 0 && (
              <section className="bg-gradient-to-b from-neutral-50 via-white to-neutral-100/60 py-6 sm:py-10 border-t border-b border-neutral-200/80 overflow-hidden relative">
                 <div className="max-w-[1750px] mx-auto px-4 sm:px-6">
-                   <div className="flex flex-col xl:flex-row items-stretch gap-5 sm:gap-6">
-                      
-                      {/* Left Side Product Card (Visible on XL Desktop Screens) */}
-                      {bestsellers.length >= 1 && (
-                         <div className="hidden xl:flex w-72 flex-shrink-0 flex-col justify-center">
-                            <ProductCard product={bestsellers[0]} />
-                         </div>
-                      )}
+                   {(() => {
+                      const currentPromo = homepageOffers[currentPromoIdx];
+                      const offerProducts = currentPromo?.products && currentPromo.products.length > 0
+                         ? currentPromo.products
+                         : bestsellers;
 
-                      {/* Center Main Flash Offer Banner Slider */}
-                      <div 
-                         onTouchStart={handleOfferTouchStart}
-                         onTouchMove={handleOfferTouchMove}
-                         onTouchEnd={handleOfferTouchEnd}
-                         className="flex-1 w-full relative aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-white rounded-xl sm:rounded-2xl overflow-hidden group border border-neutral-200/80 select-none shadow-xl"
-                      >
-                         {/* Background Slider Engine */}
-                         <div className="absolute inset-0">
-                            {homepageOffers.map((promo: any, idx: number) => (
-                              <div 
-                                key={promo.id} 
-                                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === currentPromoIdx ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-110 pointer-events-none z-0'}`}
-                              >
-                                 <Link href="/offers" className="absolute inset-0 block cursor-pointer">
-                                    <img
-                                       src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
-                                       alt={promo.title}
-                                       className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-10 opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
-                                    />
-                                    <img
-                                       src={getMediaUrl(promo.banner_url_mobile || promo.banner_url || 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000')}
-                                       alt={promo.title}
-                                       className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100"
-                                    />
-                                 </Link>
-                                 {/* Sleek Floating Bottom Pill Bar for Offer Details */}
-                                 <div className="absolute inset-0 max-w-[1400px] mx-auto px-4 sm:px-6 flex items-end justify-start pb-6 sm:pb-8 pointer-events-none z-20">
-                                    <div className="pointer-events-auto bg-black/85 backdrop-blur-md border border-white/20 px-4 sm:px-5 py-2 rounded-full flex items-center gap-3 sm:gap-3.5 text-white shadow-2xl">
-                                       <span className="text-[8px] sm:text-[9px] font-bold text-accent tracking-[0.2em] uppercase font-sans whitespace-nowrap">{promo.discount_type}</span>
-                                       <span className="h-3 w-[1px] bg-white/20" />
-                                       <span className="text-[11px] sm:text-xs font-serif text-[#d4af37] tracking-wide uppercase truncate max-w-[140px] sm:max-w-xs">{promo.title}</span>
-                                       <Link 
-                                          href="/offers" 
-                                          className="bg-white hover:bg-accent text-black hover:text-white px-3 sm:px-3.5 py-1 rounded-full text-[8px] sm:text-[9px] font-extrabold tracking-[0.15em] uppercase transition-all duration-300 flex items-center gap-1 font-sans ml-1 flex-shrink-0"
-                                       >
-                                          {isAr ? 'تسوق العرض' : 'EXPLORE'} <ChevronRight size={13} />
+                      const leftProduct = offerProducts[(currentPromoIdx * 2) % (offerProducts.length || 1)] || bestsellers[0];
+                      const rightProduct = offerProducts[(currentPromoIdx * 2 + 1) % (offerProducts.length || 1)] || bestsellers[1] || leftProduct;
+
+                      return (
+                         <div className="flex flex-col xl:flex-row items-stretch gap-5 sm:gap-6">
+                            
+                            {/* Left Side Product Card (Visible on XL Desktop - Auto changes with offer) */}
+                            {leftProduct && (
+                               <div key={`left-${currentPromoIdx}-${leftProduct.id}`} className="hidden xl:flex w-72 flex-shrink-0 flex-col justify-center transition-all duration-700 ease-in-out">
+                                  <ProductCard product={leftProduct} />
+                               </div>
+                            )}
+
+                            {/* Center Main Flash Offer Banner Slider */}
+                            <div 
+                               onTouchStart={handleOfferTouchStart}
+                               onTouchMove={handleOfferTouchMove}
+                               onTouchEnd={handleOfferTouchEnd}
+                               className="flex-1 w-full relative aspect-[3/4] md:aspect-[3.6/1] max-h-[520px] bg-white rounded-xl sm:rounded-2xl overflow-hidden group border border-neutral-200/80 select-none shadow-xl"
+                            >
+                               {/* Background Slider Engine */}
+                               <div className="absolute inset-0">
+                                  {homepageOffers.map((promo: any, idx: number) => (
+                                    <div 
+                                      key={promo.id} 
+                                      className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === currentPromoIdx ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-110 pointer-events-none z-0'}`}
+                                    >
+                                       <Link href="/offers" className="absolute inset-0 block cursor-pointer">
+                                          <img
+                                             src={promo.banner_url ? getMediaUrl(promo.banner_url) : 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000'}
+                                             alt={promo.title}
+                                             className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-10 opacity-100 group-hover:scale-[1.01] transition-transform duration-[3s] ease-out"
+                                          />
+                                          <img
+                                             src={getMediaUrl(promo.banner_url_mobile || promo.banner_url || 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=1000')}
+                                             alt={promo.title}
+                                             className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100"
+                                          />
                                        </Link>
+                                       {/* Sleek Floating Bottom Pill Bar for Offer Details */}
+                                       <div className="absolute inset-0 max-w-[1400px] mx-auto px-4 sm:px-6 flex items-end justify-start pb-6 sm:pb-8 pointer-events-none z-20">
+                                          <div className="pointer-events-auto bg-black/85 backdrop-blur-md border border-white/20 px-4 sm:px-5 py-2 rounded-full flex items-center gap-3 sm:gap-3.5 text-white shadow-2xl">
+                                             <span className="text-[8px] sm:text-[9px] font-bold text-accent tracking-[0.2em] uppercase font-sans whitespace-nowrap">{promo.discount_type}</span>
+                                             <span className="h-3 w-[1px] bg-white/20" />
+                                             <span className="text-[11px] sm:text-xs font-serif text-[#d4af37] tracking-wide uppercase truncate max-w-[140px] sm:max-w-xs">{promo.title}</span>
+                                             <Link 
+                                                href="/offers" 
+                                                className="bg-white hover:bg-accent text-black hover:text-white px-3 sm:px-3.5 py-1 rounded-full text-[8px] sm:text-[9px] font-extrabold tracking-[0.15em] uppercase transition-all duration-300 flex items-center gap-1 font-sans ml-1 flex-shrink-0"
+                                             >
+                                                {isAr ? 'تسوق العرض' : 'EXPLORE'} <ChevronRight size={13} />
+                                             </Link>
+                                          </div>
+                                       </div>
                                     </div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
+                                  ))}
+                               </div>
 
-                         {/* Navigation Controls & Counter */}
-                         {homepageOffers.length > 1 && (
-                            <div className="absolute bottom-6 right-6 flex items-center gap-3 z-20">
-                               <button 
-                                  onClick={() => setCurrentPromoIdx((prev) => (prev - 1 + homepageOffers.length) % homepageOffers.length)}
-                                  className="w-9 h-9 border border-neutral-200/80 bg-white/90 hover:bg-black text-black hover:text-white rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-md"
-                               >
-                                  <ChevronLeft size={18} />
-                               </button>
-                               <button 
-                                  onClick={() => setCurrentPromoIdx((prev) => (prev + 1) % homepageOffers.length)}
-                                  className="w-9 h-9 border border-neutral-200/80 bg-white/90 hover:bg-black text-black hover:text-white rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-md"
-                               >
-                                  <ChevronRight size={18} />
-                               </button>
+                               {/* Navigation Controls & Counter */}
+                               {homepageOffers.length > 1 && (
+                                  <div className="absolute bottom-6 right-6 flex items-center gap-3 z-20">
+                                     <button 
+                                        onClick={() => setCurrentPromoIdx((prev) => (prev - 1 + homepageOffers.length) % homepageOffers.length)}
+                                        className="w-9 h-9 border border-neutral-200/80 bg-white/90 hover:bg-black text-black hover:text-white rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-md"
+                                     >
+                                        <ChevronLeft size={18} />
+                                     </button>
+                                     <button 
+                                        onClick={() => setCurrentPromoIdx((prev) => (prev + 1) % homepageOffers.length)}
+                                        className="w-9 h-9 border border-neutral-200/80 bg-white/90 hover:bg-black text-black hover:text-white rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-md"
+                                     >
+                                        <ChevronRight size={18} />
+                                     </button>
+                                  </div>
+                               )}
                             </div>
-                         )}
-                      </div>
 
-                      {/* Right Side Product Card (Visible on XL Desktop Screens) */}
-                      {bestsellers.length >= 2 && (
-                         <div className="hidden xl:flex w-72 flex-shrink-0 flex-col justify-center">
-                            <ProductCard product={bestsellers[1]} />
+                            {/* Right Side Product Card (Visible on XL Desktop - Auto changes with offer) */}
+                            {rightProduct && (
+                               <div key={`right-${currentPromoIdx}-${rightProduct.id}`} className="hidden xl:flex w-72 flex-shrink-0 flex-col justify-center transition-all duration-700 ease-in-out">
+                                  <ProductCard product={rightProduct} />
+                               </div>
+                            )}
+
                          </div>
-                      )}
-
-                   </div>
+                      );
+                   })()}
                 </div>
              </section>
           )}
