@@ -34,18 +34,28 @@ async def upload_asset(
         file_content = await file.read()
         img = Image.open(io.BytesIO(file_content))
         
-        # Resize to max 1200px for web optimized layouts
-        max_size = 1200
+        # Max resolution for Ultra-HD / 4K banners & Retina displays (2560px max width/height)
+        max_size = 2560
         if img.width > max_size or img.height > max_size:
             img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
             
-        fmt = 'JPEG' if ext in ('.jpg', '.jpeg') else 'PNG'
-        if fmt == 'JPEG' and img.mode in ('RGBA', 'P'):
-            img = img.convert('RGB')
-            
-        img.save(save_to, fmt, quality=75)
+        if ext in ('.jpg', '.jpeg'):
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+            img.save(save_to, 'JPEG', quality=95, optimize=True)
+        elif ext == '.png':
+            img.save(save_to, 'PNG', optimize=True)
+        elif ext == '.webp':
+            img.save(save_to, 'WEBP', quality=95)
+        else:
+            with open(save_to, "wb") as f:
+                f.write(file_content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process and compress file stream: {str(e)}")
+        try:
+            with open(save_to, "wb") as f:
+                f.write(file_content)
+        except Exception:
+            raise HTTPException(status_code=500, detail=f"Failed to process and save file stream: {str(e)}")
     finally:
         file.file.close()
         
