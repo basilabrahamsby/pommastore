@@ -547,7 +547,7 @@ export default function Home() {
              <section className="bg-gradient-to-b from-neutral-50 via-white to-neutral-100/60 py-6 sm:py-10 border-t border-b border-neutral-200/80 overflow-hidden relative">
                 <div className="max-w-[1750px] mx-auto px-4 sm:px-6">
                    {(() => {
-                      const currentPromo = homepageOffers[currentPromoIdx];
+                      const currentPromo = homepageOffers[currentPromoIdx] as any;
                       const offerProducts = currentPromo?.products && currentPromo.products.length > 0
                          ? currentPromo.products
                          : bestsellers;
