@@ -262,7 +262,7 @@ export default function Home() {
 
          {/* Main Hero Banner Slider - only shown if CMS hero slides or active offer banners are configured */}
          {heroSlidesToUse.length > 0 && (
-         <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[400px] md:h-[480px] lg:h-[550px] bg-black overflow-hidden">
+          <section className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[440px] md:h-[540px] lg:h-[640px] xl:h-[740px] 2xl:h-[840px] min-h-[400px] max-h-[85vh] bg-black overflow-hidden">
             {heroSlidesToUse.map((slide: any, idx: number) => {
                const isPromo = !!slide.discount_type;
                const slideImage = getMediaUrl(slide.banner_url || slide.image);
