@@ -18,15 +18,14 @@ async def check():
             items = await session.execute(text("SELECT * FROM order_items WHERE order_id = :oid"), {"oid": m["id"]})
             print("ORDER ITEMS:", [dict(i._mapping) for i in items.fetchall()])
 
+        tables = await session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'"))
+        print("\n=== TABLES ===")
+        print([t[0] for t in tables.fetchall()])
+
         offers = await session.execute(text("SELECT * FROM offers"))
         print("\n=== OFFERS ===")
         for o in offers.fetchall():
             print(dict(o._mapping))
-
-        settings = await session.execute(text("SELECT key, value FROM sys_settings WHERE key LIKE '%offer%' OR key LIKE '%discount%' OR key LIKE '%promo%'"))
-        print("\n=== SETTINGS ===")
-        for s in settings.fetchall():
-            print(dict(s._mapping))
 
 if __name__ == "__main__":
     asyncio.run(check())
