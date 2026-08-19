@@ -89,18 +89,21 @@ export default function Checkout() {
           if (offer.target_scope === 'skus' || offer.target_scope === 'items') {
             items.forEach(item => {
               if (combinedSkus.includes(item.variantName)) {
+                const lineTotal = item.price * item.quantity;
                 if (offer.discount_percentage) {
-                  discount += (item.price * item.quantity) * (Number(offer.discount_percentage) / 100);
+                  const itemDisc = lineTotal * (Number(offer.discount_percentage) / 100);
+                  discount += Math.min(lineTotal, itemDisc);
                 } else if (offer.flat_discount_amount) {
-                  discount += Number(offer.flat_discount_amount) * item.quantity;
+                  const itemDisc = Number(offer.flat_discount_amount) * item.quantity;
+                  discount += Math.min(lineTotal, itemDisc);
                 }
               }
             });
           } else {
             if (offer.discount_percentage) {
-              discount = totalPrice() * (Number(offer.discount_percentage) / 100);
+              discount = Math.min(totalPrice(), totalPrice() * (Number(offer.discount_percentage) / 100));
             } else if (offer.flat_discount_amount) {
-              discount = Number(offer.flat_discount_amount);
+              discount = Math.min(totalPrice(), Number(offer.flat_discount_amount));
             }
           }
           

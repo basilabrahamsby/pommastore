@@ -265,9 +265,13 @@ async def storefront_checkout(
             detail="Mobile and email are compulsory to complete checkout."
         )
     
-    subtotal = sum(item.unit_price * item.quantity - item.discount_amount for item in body.items)
+    subtotal = sum(item.unit_price * item.quantity for item in body.items)
     
-    # Loyalty points redemption logic (1 point = ₹1)
+    # Cap discount amount so it cannot exceed subtotal
+    capped_discount = max(0.0, min(float(subtotal), float(body.discount_amount or 0.0)))
+    body.discount_amount = capped_discount
+    
+    # Loyalty points redemption logic (1 point = AED 1)
     redemption_amount = 0.0
     if body.loyalty_points_used > 0:
         if customer.loyalty_points < body.loyalty_points_used:
@@ -275,7 +279,7 @@ async def storefront_checkout(
         redemption_amount = float(body.loyalty_points_used)
         customer.loyalty_points -= body.loyalty_points_used
 
-    total = subtotal - body.discount_amount + body.tax_amount + body.shipping_amount - redemption_amount
+    total = max(0.0, subtotal - capped_discount + body.tax_amount + body.shipping_amount - redemption_amount)
 
     # Save the shipping address to CustomerAddress if it's a new one
     if body.shipping_address:
