@@ -1,5 +1,7 @@
-import asyncio
-from app.db.session import AsyncSessionLocal
+import sys
+sys.path.append('/app')
+
+from app.core.database import AsyncSessionLocal
 from sqlalchemy import text
 
 async def check():
