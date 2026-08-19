@@ -267,8 +267,46 @@ async def storefront_checkout(
     
     subtotal = sum(item.unit_price * item.quantity for item in body.items)
     
-    # Cap discount amount so it cannot exceed subtotal
+    # Server-side offer & coupon verification
+    max_allowed_discount = 0.0
+    if body.coupon_code:
+        offer_res = await db.execute(select(Offer).where(Offer.code == body.coupon_code))
+        db_offer = offer_res.scalar_one_or_none()
+        if db_offer:
+            st = (db_offer.status or "Active").lower()
+            if st == "active":
+                min_amt = float(db_offer.min_purchase_amount or 0.0)
+                if min_amt == 0.0 or float(subtotal) >= min_amt:
+                    combined_skus = (db_offer.target_skus or []) + (db_offer.buy_skus or []) + (db_offer.get_skus or [])
+                    scope = (db_offer.target_scope or "").lower()
+                    
+                    if scope in ("skus", "items") and combined_skus:
+                        for item in body.items:
+                            line_tot = float(item.unit_price * item.quantity)
+                            v_res = await db.execute(select(ProductVariant).where(ProductVariant.id == item.variant_id))
+                            variant = v_res.scalar_one_or_none()
+                            v_sku = variant.sku_code if variant else ""
+                            
+                            if v_sku in combined_skus or any(s in str(item) for s in combined_skus):
+                                if db_offer.discount_percentage:
+                                    disc = line_tot * (float(db_offer.discount_percentage) / 100.0)
+                                    max_allowed_discount += min(line_tot, disc)
+                                elif db_offer.flat_discount_amount:
+                                    disc = float(db_offer.flat_discount_amount) * item.quantity
+                                    max_allowed_discount += min(line_tot, disc)
+                    else:
+                        if db_offer.discount_percentage:
+                            max_allowed_discount = min(float(subtotal), float(subtotal) * (float(db_offer.discount_percentage) / 100.0))
+                        elif db_offer.flat_discount_amount:
+                            max_allowed_discount = min(float(subtotal), float(db_offer.flat_discount_amount))
+
+    # Cap discount amount so it cannot exceed subtotal or max_allowed_discount
     capped_discount = max(0.0, min(float(subtotal), float(body.discount_amount or 0.0)))
+    if body.coupon_code and max_allowed_discount > 0:
+        capped_discount = min(capped_discount, max_allowed_discount)
+    elif body.coupon_code and max_allowed_discount == 0:
+        capped_discount = 0.0
+
     body.discount_amount = capped_discount
     
     # Loyalty points redemption logic (1 point = AED 1)

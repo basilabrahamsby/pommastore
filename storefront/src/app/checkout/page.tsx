@@ -83,6 +83,10 @@ export default function Checkout() {
           const status = offer.status || 'Active';
           if (status.toLowerCase() !== 'active') continue;
           
+          if (offer.min_purchase_amount && totalPrice() < Number(offer.min_purchase_amount)) {
+            continue;
+          }
+          
           let discount = 0;
           const combinedSkus = (offer.target_skus || []).concat(offer.buy_skus || []).concat(offer.get_skus || []);
           
