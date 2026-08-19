@@ -1,4 +1,5 @@
 import sys
+import asyncio
 sys.path.append('/app')
 
 from app.core.database import AsyncSessionLocal
