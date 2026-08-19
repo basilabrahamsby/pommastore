@@ -15,7 +15,7 @@ async def check():
         for r in rows:
             m = dict(r._mapping)
             print("ORDER RECORD:", m)
-            items = await session.execute(text("SELECT product_name, quantity, unit_price, discount_amount, total_price FROM order_items WHERE order_id = :oid"), {"oid": m["id"]})
+            items = await session.execute(text("SELECT * FROM order_items WHERE order_id = :oid"), {"oid": m["id"]})
             print("ORDER ITEMS:", [dict(i._mapping) for i in items.fetchall()])
 
         offers = await session.execute(text("SELECT id, title, title_ar, offer_type, discount_type, discount_percentage, flat_discount_amount, is_active, conditions FROM offers"))
