@@ -259,10 +259,11 @@ async def storefront_checkout(
             customer.phone = body.customer_phone
             db.add(customer)
 
-    if not body.customer_phone or not body.customer_email:
+    sa_pin = str((body.shipping_address or {}).get("pincode", "")).strip()
+    if not body.customer_phone or not body.customer_email or not sa_pin or sa_pin in ("00000", "000", "0"):
         raise HTTPException(
             status_code=400, 
-            detail="Mobile and email are compulsory to complete checkout."
+            detail="Mobile, email, and a valid Postal/PIN code are compulsory to complete checkout."
         )
     
     subtotal = sum(item.unit_price * item.quantity for item in body.items)

@@ -367,15 +367,15 @@ export default function Checkout() {
       let shippingAddressData = {};
       if (selectedAddressId === 'new') {
         // Validate new address for UAE
-        if (!addressForm.address_line1 || !addressForm.city) {
-          alert('Please complete the delivery address details (Address line 1 & Emirate/City).');
+        if (!addressForm.address_line1 || !addressForm.city || !addressForm.pincode || addressForm.pincode === '00000') {
+          alert('Please enter a valid Postal / PIN Code for your delivery address.');
           setPlacingOrder(false);
           return;
         }
         shippingAddressData = { 
           ...addressForm, 
           country: addressForm.country || 'United Arab Emirates',
-          pincode: addressForm.pincode || '00000',
+          pincode: addressForm.pincode,
           state: addressForm.state || addressForm.city
         };
       } else {
@@ -842,10 +842,11 @@ export default function Checkout() {
                     })()}
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">P.O. Box / Postal Code (Optional)</label>
+                    <label className="block text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1.5">Postal Code / P.O. Box (Compulsory *)</label>
                     <input 
+                      required={selectedAddressId === 'new'}
                       type="text"
-                      placeholder="e.g. 00000 or P.O. Box"
+                      placeholder="e.g. 12345 or P.O. Box"
                       value={addressForm.pincode}
                       onChange={(e) => setAddressForm({...addressForm, pincode: e.target.value})}
                       className="w-full border border-neutral-200 px-4 py-3 text-xs focus:border-black outline-none"
