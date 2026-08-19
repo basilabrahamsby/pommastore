@@ -185,13 +185,21 @@ def _order_summary_block(order_number: str, total: float, subtotal: float,
 def _address_block(address: Optional[Dict[str, Any]]) -> str:
     if not address:
         return ""
+    pin = str(address.get("pincode", "")).strip()
+    valid_pin = pin if pin and pin not in ("00000", "0000", "000", "00", "0", "N/A", "n/a", "none") else ""
+    city = address.get("city", "")
+    state = address.get("state", "")
+    valid_state = state if state and state != city else ""
+    country = address.get("country", "United Arab Emirates")
+    valid_country = country if country != "India" else "United Arab Emirates"
+    
     parts = [
         address.get("address_line1", ""),
         address.get("address_line2", ""),
-        address.get("city", ""),
-        address.get("state", ""),
-        address.get("pincode", ""),
-        address.get("country", "India"),
+        city,
+        valid_state,
+        valid_pin,
+        valid_country,
     ]
     addr_str = ", ".join(p for p in parts if p)
     return f"""

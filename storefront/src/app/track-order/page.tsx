@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -517,8 +517,8 @@ function TrackOrderContent() {
                         <p className="font-bold text-black uppercase">{orderData.shipping_address?.name || orderData.customer_name}</p>
                         <p>{orderData.shipping_address?.address_line1}</p>
                         {orderData.shipping_address?.address_line2 && <p>{orderData.shipping_address?.address_line2}</p>}
-                        <p>{orderData.shipping_address?.city}, {orderData.shipping_address?.state} {orderData.shipping_address?.pincode}</p>
-                        <p>India</p>
+                        <p>{[orderData.shipping_address?.city, orderData.shipping_address?.state && orderData.shipping_address?.state !== orderData.shipping_address?.city ? orderData.shipping_address?.state : null].filter(Boolean).join(', ')}{orderData.shipping_address?.pincode && !['00000', '0000', '000', '00', '0', 'N/A', 'n/a'].includes(String(orderData.shipping_address.pincode).trim()) ? ` ${orderData.shipping_address.pincode}` : ''}</p>
+                        <p>United Arab Emirates</p>
                       </div>
                     </div>
 

@@ -1927,10 +1927,14 @@ export default function Orders() {
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 12, borderRadius: 8 }}>
                     <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>📍 Shipping Address Details</div>
                     <div style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 500, lineHeight: '1.4' }}>
-                      {selectedOrder.shipping_address.full_address || `${selectedOrder.shipping_address.address_line1}, ${selectedOrder.shipping_address.city} - ${selectedOrder.shipping_address.pincode}`}
+                      {(() => {
+                        const sa = selectedOrder.shipping_address;
+                        const full = (sa.full_address || `${sa.address_line1 || ''}, ${sa.city || ''}`).replace(/\s*-\s*(00000|0000|000|00|0|N\/A|n\/a)\b/gi, '').replace(/,\s*,/g, ',');
+                        return full;
+                      })()}
                     </div>
                     {selectedOrder.tracking_number && (
-                      <div style={{ marginTop: 8, padding: '4px 8px', background: 'rgba(201,168,76,0.1)', border: '1px dashed rgba(201,168,76,0.3)', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', color: 'var(--gold)' }}>
+                      <div style={{ marginTop: 8, padding: '4px 8px', background: 'rgba(201,168,76,0.1)', border: '1px dashed rgba(201,168,76,0.3)', borderRadius: 4, display: 'inline-flex', items: 'center', gap: 6, fontSize: '0.7rem', color: 'var(--gold)' }}>
                         🚚 AWB Tracking: <strong>{selectedOrder.tracking_number}</strong>
                       </div>
                     )}
@@ -1940,7 +1944,11 @@ export default function Orders() {
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: 12, borderRadius: 8 }}>
                     <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>🏦 Billing Address Details</div>
                     <div style={{ fontSize: '0.78rem', color: '#fff', fontWeight: 500, lineHeight: '1.4' }}>
-                      {selectedOrder.billing_address.full_address || `${selectedOrder.billing_address.address_line1}, ${selectedOrder.billing_address.city} - ${selectedOrder.billing_address.pincode}`}
+                      {(() => {
+                        const ba = selectedOrder.billing_address;
+                        const full = (ba.full_address || `${ba.address_line1 || ''}, ${ba.city || ''}`).replace(/\s*-\s*(00000|0000|000|00|0|N\/A|n\/a)\b/gi, '').replace(/,\s*,/g, ',');
+                        return full;
+                      })()}
                     </div>
                   </div>
                 )}
