@@ -23,8 +23,8 @@ async def check():
         for o in offers.fetchall():
             print(dict(o._mapping))
 
-        coupons = await session.execute(text("SELECT id, code, discount_type, discount_value, min_order_amount, is_active FROM coupons"))
-        print("\n--- COUPONS ---")
+        coupons = await session.execute(text("SELECT * FROM coupons WHERE code = '0988427' OR is_active = true"))
+        print("\n=== COUPONS ===")
         for c in coupons.fetchall():
             print(dict(c._mapping))
 
