@@ -19,14 +19,14 @@ async def check():
             print("ORDER ITEMS:", [dict(i._mapping) for i in items.fetchall()])
 
         offers = await session.execute(text("SELECT * FROM offers"))
-        print("\n--- OFFERS ---")
+        print("\n=== OFFERS ===")
         for o in offers.fetchall():
             print(dict(o._mapping))
 
-        coupons = await session.execute(text("SELECT * FROM coupons WHERE code = '0988427' OR is_active = true"))
-        print("\n=== COUPONS ===")
-        for c in coupons.fetchall():
-            print(dict(c._mapping))
+        settings = await session.execute(text("SELECT key, value FROM sys_settings WHERE key LIKE '%offer%' OR key LIKE '%discount%' OR key LIKE '%promo%'"))
+        print("\n=== SETTINGS ===")
+        for s in settings.fetchall():
+            print(dict(s._mapping))
 
 if __name__ == "__main__":
     asyncio.run(check())
