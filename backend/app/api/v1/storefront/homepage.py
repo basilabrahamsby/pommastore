@@ -212,6 +212,21 @@ async def get_homepage_data(
         out_obj.products = list(relevant_prods.values())
         offers_out.append(out_obj)
 
+    # Filter hero_slides so slides pointing to expired or inactive targeted offers are automatically hidden
+    valid_hero_slides = []
+    active_offer_ids = {str(o.id) for o in valid_offers}
+    active_offer_codes = {str(o.code) for o in valid_offers if o.code}
+    
+    if layout and "hero_slides" in layout:
+        for slide in layout.get("hero_slides", []):
+            off_id = str(slide.get("offer_id") or "").strip()
+            if off_id:
+                if off_id in active_offer_ids or off_id in active_offer_codes:
+                    valid_hero_slides.append(slide)
+            else:
+                valid_hero_slides.append(slide)
+        layout["hero_slides"] = valid_hero_slides
+
     # 7. Package and return the aggregated payload
     response_payload = {
         "layout": {

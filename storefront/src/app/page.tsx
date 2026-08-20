@@ -91,8 +91,16 @@ export default function Home() {
       });
    };
 
-   const activeSlides = cmsLayout?.hero_slides?.length ? cmsLayout.hero_slides : [];
-   const heroSlidesToUse = activeSlides.length > 0 ? activeSlides : homepageOffers;
+    // Filter hero slides so slides linking to expired or inactive targeted offers are automatically hidden
+    const validHeroSlides = (cmsLayout?.hero_slides || []).filter((slide: any) => {
+       if (slide.offer_id) {
+          const matchedOffer = homepageOffers.find((o: any) => o.id === slide.offer_id || o.code === slide.offer_id);
+          if (!matchedOffer) return false;
+       }
+       return true;
+    });
+
+    const heroSlidesToUse = validHeroSlides.length > 0 ? validHeroSlides : homepageOffers;
 
    useEffect(() => {
       if (heroSlidesToUse.length === 0) return;
