@@ -83,6 +83,11 @@ export default function Checkout() {
           const status = offer.status || 'Active';
           if (status.toLowerCase() !== 'active') continue;
           
+          if (offer.active_until) {
+            const expiryTime = new Date(offer.active_until).getTime();
+            if (expiryTime < Date.now()) continue;
+          }
+          
           if (offer.min_purchase_amount && totalPrice() < Number(offer.min_purchase_amount)) {
             continue;
           }

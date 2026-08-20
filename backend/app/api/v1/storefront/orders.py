@@ -275,7 +275,14 @@ async def storefront_checkout(
         db_offer = offer_res.scalar_one_or_none()
         if db_offer:
             st = (db_offer.status or "Active").lower()
-            if st == "active":
+            now = datetime.now(timezone.utc)
+            is_expired = False
+            if db_offer.active_until:
+                act_until = db_offer.active_until if db_offer.active_until.tzinfo else db_offer.active_until.replace(tzinfo=timezone.utc)
+                if act_until < now:
+                    is_expired = True
+
+            if st == "active" and not is_expired:
                 min_amt = float(db_offer.min_purchase_amount or 0.0)
                 if min_amt == 0.0 or float(subtotal) >= min_amt:
                     combined_skus = (db_offer.target_skus or []) + (db_offer.buy_skus or []) + (db_offer.get_skus or [])
